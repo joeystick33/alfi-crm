@@ -1,0 +1,127 @@
+import { NextRequest } from 'next/server'
+import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth-helpers'
+import { ProjetService } from '@/lib/services/projet-service'
+import { isRegularUser } from '@/lib/auth-types'
+
+/**
+ * GET /api/projets/[id]
+ * Récupérer un projet par ID
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const context = await requireAuth(request)
+    
+    if (!isRegularUser(context.user)) {
+      return createErrorResponse('Invalid user type', 400)
+    }
+
+    const service = new ProjetService(
+      context.cabinetId,
+      context.user.id,
+      context.isSuperAdmin
+    )
+
+    const projet = await service.getProjetById(params.id)
+
+    if (!projet) {
+      return createErrorResponse('Projet not found', 404)
+    }
+
+    return createSuccessResponse(projet)
+  } catch (error) {
+    console.error('Error in GET /api/projets/[id]:', error)
+    
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return createErrorResponse('Unauthorized', 401)
+    }
+    
+    return createErrorResponse('Internal server error', 500)
+  }
+}
+
+/**
+ * PATCH /api/projets/[id]
+ * Modifier un projet
+ */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const context = await requireAuth(request)
+    
+    if (!isRegularUser(context.user)) {
+      return createErrorResponse('Invalid user type', 400)
+    }
+
+    const body = await request.json()
+
+    const service = new ProjetService(
+      context.cabinetId,
+      context.user.id,
+      context.isSuperAdmin
+    )
+
+    const projet = await service.updateProjet(params.id, body)
+
+    return createSuccessResponse(projet)
+  } catch (error) {
+    console.error('Error in PATCH /api/projets/[id]:', error)
+    
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return createErrorResponse('Unauthorized', 401)
+    }
+    
+    if (error instanceof Error && error.message.includes('not found')) {
+      return createErrorResponse('Projet not found', 404)
+    }
+    
+    if (error instanceof Error) {
+      return createErrorResponse(error.message, 400)
+    }
+    
+    return createErrorResponse('Internal server error', 500)
+  }
+}
+
+/**
+ * DELETE /api/projets/[id]
+ * Supprimer un projet
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const context = await requireAuth(request)
+    
+    if (!isRegularUser(context.user)) {
+      return createErrorResponse('Invalid user type', 400)
+    }
+
+    const service = new ProjetService(
+      context.cabinetId,
+      context.user.id,
+      context.isSuperAdmin
+    )
+
+    await service.deleteProjet(params.id)
+
+    return createSuccessResponse({ message: 'Projet deleted successfully' })
+  } catch (error) {
+    console.error('Error in DELETE /api/projets/[id]:', error)
+    
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return createErrorResponse('Unauthorized', 401)
+    }
+    
+    if (error instanceof Error && error.message.includes('not found')) {
+      return createErrorResponse('Projet not found', 404)
+    }
+    
+    return createErrorResponse('Internal server error', 500)
+  }
+}
