@@ -143,6 +143,8 @@ model User {
   apporteurs            ApporteurAffaires[]
   simulations           Simulation[]
   auditLogs             AuditLog[]
+  notifications         Notification[]
+  calendarSyncs         CalendarSync[]
   
   @@index([cabinetId])
   @@index([cabinetId, role])
@@ -1486,3 +1488,146 @@ model ExportJob {
   @@index([status])
   @@map("export_jobs")
 }
+
+// ============================================
+// NOUVEAUX MODULES: Email, Automation, Alerts
+// ============================================
+
+// Modèle Email pour la synchronisation Gmail/Outlook
+enum EmailProvider {
+  GMAIL
+  OUTLOOK
+}
+
+enum EmailDirection {
+  INBOUND
+  OUTBOUND
+}
+
+model Email {
+  id              String         @id @default(cuid())
+  externalId      String         // ID Gmail ou Outlook
+  threadId        String?
+  provider        EmailProvider
+  from            String
+  to              String[]
+  cc              String[]
+  subject         String
+  body            String         @db.Text
+  bodyHtml        String?        @db.Text
+  snippet         String?
+  sentAt          DateTime
+  receivedAt      DateTime
+  isRead          Boolean        @default(false)
+  hasAttachments  Boolean        @default(false)
+  labels          String[]
+  direction       EmailDirection
+  
+  // Relations
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId        String?
+  client          Client?        @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  cabinetId       String
+  cabinet         Cabinet        @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  @@unique([externalId, provider])
+  @@index([userId])
+  @@index([clientId])
+  @@index([cabinetId])
+  @@index([receivedAt])
+  @@index([isRead])
+  @@map("emails")
+}
+
+// Modèle pour les actions planifiées
+enum ScheduledActionType {
+  SUSPEND
+  TERMINATE
+  RESTORE
+  DOWNGRADE_PLAN
+}
+
+enum ScheduledActionStatus {
+  PENDING
+  EXECUTED
+  FAILED
+  CANCELLED
+}
+
+model ScheduledAction {
+  id            String                @id @default(cuid())
+  cabinetId     String
+  action        ScheduledActionType
+  scheduledFor  DateTime
+  reason        String
+  performedBy   String
+  status        ScheduledActionStatus @default(PENDING)
+  executedAt    DateTime?
+  failedAt      DateTime?
+  error         String?
+  lastWarningAt DateTime?
+  
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  
+  @@index([cabinetId])
+  @@index([status])
+  @@index([scheduledFor])
+  @@map("scheduled_actions")
+}
+
+// Modèle pour les alertes de quota
+enum QuotaAlertLevel {
+  WARNING
+  CRITICAL
+}
+
+model QuotaAlert {
+  id         String          @id @default(cuid())
+  cabinetId  String
+  quotaName  String
+  level      QuotaAlertLevel
+  percentage Int
+  createdAt  DateTime        @default(now())
+  
+  @@index([cabinetId])
+  @@index([quotaName])
+  @@index([createdAt])
+  @@map("quota_alerts")
+}
+
+// Modèle pour la synchronisation calendrier
+enum CalendarProvider {
+  GOOGLE
+  OUTLOOK
+}
+
+model CalendarSync {
+  id            String           @id @default(cuid())
+  userId        String
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider      CalendarProvider
+  accessToken   String
+  refreshToken  String
+  expiryDate    DateTime?
+  calendarId    String           @default("primary")
+  syncToken     String?
+  enabled       Boolean          @default(true)
+  lastSyncAt    DateTime?
+  connectedAt   DateTime         @default(now())
+  disconnectedAt DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  
+  @@unique([userId, provider])
+  @@index([userId])
+  @@index([enabled])
+  @@map("calendar_syncs")
+}
+
+// Ajout des relations manquantes dans les modèles existants
+// Note: Ces relations doivent être ajoutées manuellement aux modèles User, Client, Cabinet
