@@ -21,14 +21,14 @@
   - Créer `components/ui/Tabs.tsx` pour navigation par onglets
   - _Requirements: 13.3, 13.6_
 
-- [ ] 3. Créer le client API
+- [x] 3. Créer le client API
   - Créer `lib/api-client.ts` avec fonction `apiCall()`
   - Gérer les erreurs HTTP (401, 403, 404, 500)
   - Ajouter retry logic pour erreurs réseau
   - Intégrer avec NextAuth pour authentification
   - _Requirements: 16.1, 16.9_
 
-- [ ] 4. Configurer React Query
+- [x] 4. Configurer React Query
   - Créer `lib/react-query-config.ts` avec QueryClient
   - Configurer cache times et stale times
   - Créer hooks personnalisés (`useClients`, `useClient`, etc.)
