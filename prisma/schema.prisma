@@ -2,13 +2,13 @@
 // Base de données: PostgreSQL (Supabase)
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -35,9 +35,9 @@ model SuperAdmin {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   lastLogin   DateTime?
-  
-  auditLogs   AuditLog[]
-  
+
+  auditLogs AuditLog[]
+
   @@index([email])
   @@index([isActive])
   @@map("super_admins")
@@ -61,9 +61,9 @@ enum CabinetStatus {
 }
 
 model Cabinet {
-  id                String          @id @default(cuid())
+  id                String           @id @default(cuid())
   name              String
-  slug              String          @unique
+  slug              String           @unique
   email             String
   phone             String?
   address           Json?
@@ -76,29 +76,31 @@ model Cabinet {
   usage             Json?
   features          Json?
   restrictions      Json?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
   createdBy         String?
-  
-  users             User[]
-  clients           Client[]
-  actifs            Actif[]
-  passifs           Passif[]
-  contrats          Contrat[]
-  documents         Document[]
-  taches            Tache[]
-  rendezvous        RendezVous[]
-  objectifs         Objectif[]
-  projets           Projet[]
-  opportunites      Opportunite[]
-  campagnes         Campagne[]
-  emails            Email[]
-  notifications     Notification[]
-  templates         Template[]
-  apporteurs        ApporteurAffaires[]
-  simulations       Simulation[]
-  auditLogs         AuditLog[]
-  
+
+  users          User[]
+  clients        Client[]
+  actifs         Actif[]
+  passifs        Passif[]
+  contrats       Contrat[]
+  documents      Document[]
+  taches         Tache[]
+  rendezvous     RendezVous[]
+  objectifs      Objectif[]
+  projets        Projet[]
+  opportunites   Opportunite[]
+  campagnes      Campagne[]
+  emails         Email[]
+  notifications  Notification[]
+  templates      Template[]
+  apporteurs     ApporteurAffaires[]
+  simulations    Simulation[]
+  auditLogs      AuditLog[]
+  syncedEmails   SyncedEmail[]
+  emailTemplates EmailTemplate[]
+
   @@index([slug])
   @@index([status])
   @@index([plan])
@@ -112,40 +114,42 @@ enum UserRole {
 }
 
 model User {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   cabinetId   String
-  cabinet     Cabinet  @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
-  email       String   @unique
+  cabinet     Cabinet   @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  email       String    @unique
   password    String
   firstName   String
   lastName    String
   phone       String?
   avatar      String?
-  role        UserRole @default(ADVISOR)
+  role        UserRole  @default(ADVISOR)
   permissions Json?
   stats       Json?
   preferences Json?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   lastLogin   DateTime?
-  
-  clientsPrincipaux     Client[]              @relation("ConseillerPrincipal")
-  clientsRemplacants    Client[]              @relation("ConseillerRemplacant")
-  assistantAssignments  AssistantAssignment[]
-  taches                Tache[]
-  tachesCreated         Tache[]               @relation("TacheCreatedBy")
-  rendezvous            RendezVous[]
-  opportunites          Opportunite[]
-  campagnes             Campagne[]
-  emails                Email[]
-  documents             Document[]            @relation("UploadedBy")
-  apporteurs            ApporteurAffaires[]
-  simulations           Simulation[]
-  auditLogs             AuditLog[]
-  notifications         Notification[]
-  calendarSyncs         CalendarSync[]
-  
+
+  clientsPrincipaux    Client[]              @relation("ConseillerPrincipal")
+  clientsRemplacants   Client[]              @relation("ConseillerRemplacant")
+  assistantAssignments AssistantAssignment[]
+  taches               Tache[]
+  tachesCreated        Tache[]               @relation("TacheCreatedBy")
+  rendezvous           RendezVous[]
+  opportunites         Opportunite[]
+  campagnes            Campagne[]
+  emails               Email[]
+  documents            Document[]            @relation("UploadedBy")
+  apporteurs           ApporteurAffaires[]
+  simulations          Simulation[]
+  auditLogs            AuditLog[]
+  notifications        Notification[]
+  calendarSyncs        CalendarSync[]
+  syncedEmails         SyncedEmail[]
+  emailIntegration     EmailIntegration?
+
   @@index([cabinetId])
   @@index([cabinetId, role])
   @@index([email])
@@ -162,7 +166,7 @@ model AssistantAssignment {
   permissions Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@unique([assistantId, advisorId])
   @@index([cabinetId])
   @@index([assistantId])
@@ -196,9 +200,9 @@ model ApporteurAffaires {
   isActive       Boolean       @default(true)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
-  
-  clients        Client[]
-  
+
+  clients Client[]
+
   @@index([cabinetId])
   @@index([ownerId])
   @@index([type])
@@ -219,11 +223,11 @@ enum MaritalStatus {
 }
 
 enum RiskProfile {
-  CONSERVATEUR    // Conservateur - Sécurité maximale
-  PRUDENT         // Prudent - Risque faible
-  EQUILIBRE       // Équilibré - Risque modéré
-  DYNAMIQUE       // Dynamique - Risque élevé
-  OFFENSIF        // Offensif - Risque maximum
+  CONSERVATEUR // Conservateur - Sécurité maximale
+  PRUDENT // Prudent - Risque faible
+  EQUILIBRE // Équilibré - Risque modéré
+  DYNAMIQUE // Dynamique - Risque élevé
+  OFFENSIF // Offensif - Risque maximum
 }
 
 enum InvestmentHorizon {
@@ -254,105 +258,106 @@ enum ClientType {
 }
 
 model Client {
-  id                     String          @id @default(cuid())
-  cabinetId              String
-  cabinet                Cabinet         @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
-  
+  id        String  @id @default(cuid())
+  cabinetId String
+  cabinet   Cabinet @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+
   // Type de client (Particulier ou Professionnel)
-  clientType             ClientType      @default(PARTICULIER)
+  clientType             ClientType         @default(PARTICULIER)
   conseillerId           String
-  conseiller             User            @relation("ConseillerPrincipal", fields: [conseillerId], references: [id])
+  conseiller             User               @relation("ConseillerPrincipal", fields: [conseillerId], references: [id])
   conseillerRemplacantId String?
-  conseillerRemplacant   User?           @relation("ConseillerRemplacant", fields: [conseillerRemplacantId], references: [id])
+  conseillerRemplacant   User?              @relation("ConseillerRemplacant", fields: [conseillerRemplacantId], references: [id])
   apporteurId            String?
   apporteur              ApporteurAffaires? @relation(fields: [apporteurId], references: [id], onDelete: SetNull)
-  
-  email                  String?
-  firstName              String
-  lastName               String
-  birthDate              DateTime?
-  birthPlace             String?
-  nationality            String?
-  phone                  String?
-  mobile                 String?
-  address                Json?
-  
-  maritalStatus          MaritalStatus?
-  marriageRegime         String?
-  numberOfChildren       Int?            @default(0)
-  
-  profession             String?
-  employerName           String?
-  professionalStatus     String?
-  
+
+  email       String?
+  firstName   String
+  lastName    String
+  birthDate   DateTime?
+  birthPlace  String?
+  nationality String?
+  phone       String?
+  mobile      String?
+  address     Json?
+
+  maritalStatus    MaritalStatus?
+  marriageRegime   String?
+  numberOfChildren Int?           @default(0)
+
+  profession         String?
+  employerName       String?
+  professionalStatus String?
+
   // Informations spécifiques pour clients PROFESSIONNELS
-  companyName            String?         // Nom de l'entreprise
-  siret                  String?         // SIRET
-  legalForm              String?         // SARL, SAS, SA, etc.
-  activitySector         String?         // Secteur d'activité
-  companyCreationDate    DateTime?       // Date de création
-  numberOfEmployees      Int?            // Nombre de salariés
-  annualRevenue          Decimal?        @db.Decimal(15, 2) // CA annuel
-  
-  annualIncome           Decimal?        @db.Decimal(12, 2)
-  taxBracket             String?
-  fiscalResidence        String?
-  
+  companyName         String? // Nom de l'entreprise
+  siret               String? // SIRET
+  legalForm           String? // SARL, SAS, SA, etc.
+  activitySector      String? // Secteur d'activité
+  companyCreationDate DateTime? // Date de création
+  numberOfEmployees   Int? // Nombre de salariés
+  annualRevenue       Decimal?  @db.Decimal(15, 2) // CA annuel
+
+  annualIncome    Decimal? @db.Decimal(12, 2)
+  taxBracket      String?
+  fiscalResidence String?
+
   // Fiscalité détaillée
-  irTaxRate              Decimal?        @db.Decimal(5, 2) // Taux marginal IR (%)
-  ifiSubject             Boolean         @default(false)   // Soumis à l'IFI
-  ifiAmount              Decimal?        @db.Decimal(15, 2) // Montant IFI payé
-  taxOptimizations       Json?           // Défiscalisations effectuées (Pinel, Malraux, etc.)
-  fiscalNotes            String?         @db.Text // Notes fiscales
-  
+  irTaxRate        Decimal? @db.Decimal(5, 2) // Taux marginal IR (%)
+  ifiSubject       Boolean  @default(false) // Soumis à l'IFI
+  ifiAmount        Decimal? @db.Decimal(15, 2) // Montant IFI payé
+  taxOptimizations Json? // Défiscalisations effectuées (Pinel, Malraux, etc.)
+  fiscalNotes      String?  @db.Text // Notes fiscales
+
   // Profil investisseur (MiFID II)
-  riskProfile            RiskProfile?
-  investmentHorizon      InvestmentHorizon?
-  investmentGoals        Json?
-  investmentKnowledge    String?         // Niveau de connaissance financière
-  investmentExperience   String?         // Expérience en investissement
-  
+  riskProfile          RiskProfile?
+  investmentHorizon    InvestmentHorizon?
+  investmentGoals      Json?
+  investmentKnowledge  String? // Niveau de connaissance financière
+  investmentExperience String? // Expérience en investissement
+
   // Patrimoine (calculé automatiquement)
-  wealth                 Json?           // { totalAssets, totalLiabilities, netWealth, managedAssets, unmanagedAssets, lastCalculated }
-  
+  wealth Json? // { totalAssets, totalLiabilities, netWealth, managedAssets, unmanagedAssets, lastCalculated }
+
   // Gestion du patrimoine
-  managedByFirm          Boolean         @default(false)   // Patrimoine géré par le cabinet
-  managementStartDate    DateTime?       // Date de début de gestion
-  managementFees         Decimal?        @db.Decimal(5, 2) // Frais de gestion (%)
-  managementType         String?         // Type de mandat (conseil, gestion pilotée, etc.)
-  
-  kycStatus              KYCStatus       @default(PENDING)
-  kycCompletedAt         DateTime?
-  kycNextReviewDate      DateTime?
-  
-  status                 ClientStatus    @default(PROSPECT)
-  
-  portalAccess           Boolean         @default(false)
-  portalPassword         String?
-  lastPortalLogin        DateTime?
-  
-  createdAt              DateTime        @default(now())
-  updatedAt              DateTime        @updatedAt
-  lastContactDate        DateTime?
-  
-  familyMembers          FamilyMember[]
-  actifs                 ClientActif[]
-  passifs                Passif[]
-  contrats               Contrat[]
-  objectifs              Objectif[]
-  projets                Projet[]
-  opportunites           Opportunite[]
-  taches                 Tache[]
-  rendezvous             RendezVous[]
-  documents              ClientDocument[]
-  emails                 Email[]
-  notifications          Notification[]
-  simulations            Simulation[]
-  kycDocuments           KYCDocument[]
-  consentements          Consentement[]
-  reclamations           Reclamation[]
-  timelineEvents         TimelineEvent[]
-  
+  managedByFirm       Boolean   @default(false) // Patrimoine géré par le cabinet
+  managementStartDate DateTime? // Date de début de gestion
+  managementFees      Decimal?  @db.Decimal(5, 2) // Frais de gestion (%)
+  managementType      String? // Type de mandat (conseil, gestion pilotée, etc.)
+
+  kycStatus         KYCStatus @default(PENDING)
+  kycCompletedAt    DateTime?
+  kycNextReviewDate DateTime?
+
+  status ClientStatus @default(PROSPECT)
+
+  portalAccess    Boolean   @default(false)
+  portalPassword  String?
+  lastPortalLogin DateTime?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  lastContactDate DateTime?
+
+  familyMembers  FamilyMember[]
+  actifs         ClientActif[]
+  passifs        Passif[]
+  contrats       Contrat[]
+  objectifs      Objectif[]
+  projets        Projet[]
+  opportunites   Opportunite[]
+  taches         Tache[]
+  rendezvous     RendezVous[]
+  documents      ClientDocument[]
+  emails         Email[]
+  notifications  Notification[]
+  simulations    Simulation[]
+  kycDocuments   KYCDocument[]
+  consentements  Consentement[]
+  reclamations   Reclamation[]
+  timelineEvents TimelineEvent[]
+  syncedEmails   SyncedEmail[]
+
   @@index([cabinetId])
   @@index([conseillerId])
   @@index([cabinetId, conseillerId])
@@ -385,7 +390,7 @@ model FamilyMember {
   isBeneficiary  Boolean            @default(false)
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
-  
+
   @@index([clientId])
   @@map("family_members")
 }
@@ -428,31 +433,31 @@ enum ActifCategory {
 }
 
 model Actif {
-  id               String         @id @default(cuid())
+  id               String        @id @default(cuid())
   cabinetId        String
-  cabinet          Cabinet        @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  cabinet          Cabinet       @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
   type             ActifType
   category         ActifCategory
   name             String
   description      String?
-  value            Decimal        @db.Decimal(15, 2)
+  value            Decimal       @db.Decimal(15, 2)
   acquisitionDate  DateTime?
-  acquisitionValue Decimal?       @db.Decimal(15, 2)
+  acquisitionValue Decimal?      @db.Decimal(15, 2)
   details          Json?
-  annualIncome     Decimal?       @db.Decimal(12, 2)
+  annualIncome     Decimal?      @db.Decimal(12, 2)
   taxDetails       Json?
-  
+
   // Gestion par le cabinet
-  managedByFirm    Boolean        @default(false)  // Actif géré par le cabinet
-  managementFees   Decimal?       @db.Decimal(5, 2) // Frais de gestion (%)
-  
-  isActive         Boolean        @default(true)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  
-  clients          ClientActif[]
-  documents        ActifDocument[]
-  
+  managedByFirm  Boolean  @default(false) // Actif géré par le cabinet
+  managementFees Decimal? @db.Decimal(5, 2) // Frais de gestion (%)
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clients   ClientActif[]
+  documents ActifDocument[]
+
   @@index([cabinetId])
   @@index([type])
   @@index([category])
@@ -460,15 +465,15 @@ model Actif {
 }
 
 model ClientActif {
-  id                  String  @id @default(cuid())
+  id                  String   @id @default(cuid())
   clientId            String
   actifId             String
-  client              Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  actif               Actif   @relation(fields: [actifId], references: [id], onDelete: Cascade)
-  ownershipPercentage Decimal @db.Decimal(5, 2) @default(100.00)
+  client              Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  actif               Actif    @relation(fields: [actifId], references: [id], onDelete: Cascade)
+  ownershipPercentage Decimal  @default(100.00) @db.Decimal(5, 2)
   ownershipType       String?
   createdAt           DateTime @default(now())
-  
+
   @@unique([clientId, actifId])
   @@index([clientId])
   @@index([actifId])
@@ -485,28 +490,28 @@ enum PassifType {
 }
 
 model Passif {
-  id              String      @id @default(cuid())
+  id              String     @id @default(cuid())
   cabinetId       String
-  cabinet         Cabinet     @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  cabinet         Cabinet    @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
   clientId        String
-  client          Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client          Client     @relation(fields: [clientId], references: [id], onDelete: Cascade)
   type            PassifType
   name            String
   description     String?
-  initialAmount   Decimal     @db.Decimal(15, 2)
-  remainingAmount Decimal     @db.Decimal(15, 2)
-  interestRate    Decimal     @db.Decimal(5, 2)
-  monthlyPayment  Decimal     @db.Decimal(12, 2)
+  initialAmount   Decimal    @db.Decimal(15, 2)
+  remainingAmount Decimal    @db.Decimal(15, 2)
+  interestRate    Decimal    @db.Decimal(5, 2)
+  monthlyPayment  Decimal    @db.Decimal(12, 2)
   startDate       DateTime
   endDate         DateTime
   linkedActifId   String?
   insurance       Json?
-  isActive        Boolean     @default(true)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  
-  documents       PassifDocument[]
-  
+  isActive        Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  documents PassifDocument[]
+
   @@index([cabinetId])
   @@index([clientId])
   @@index([type])
@@ -533,30 +538,30 @@ enum ContratStatus {
 }
 
 model Contrat {
-  id              String         @id @default(cuid())
+  id              String        @id @default(cuid())
   cabinetId       String
-  cabinet         Cabinet        @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  cabinet         Cabinet       @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
   clientId        String
-  client          Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client          Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
   type            ContratType
   name            String
   provider        String
   contractNumber  String?
   startDate       DateTime
   endDate         DateTime?
-  premium         Decimal?       @db.Decimal(12, 2)
-  coverage        Decimal?       @db.Decimal(15, 2)
-  value           Decimal?       @db.Decimal(15, 2)
+  premium         Decimal?      @db.Decimal(12, 2)
+  coverage        Decimal?      @db.Decimal(15, 2)
+  value           Decimal?      @db.Decimal(15, 2)
   beneficiaries   Json?
   details         Json?
-  commission      Decimal?       @db.Decimal(12, 2)
+  commission      Decimal?      @db.Decimal(12, 2)
   nextRenewalDate DateTime?
-  status          ContratStatus  @default(ACTIVE)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  
-  documents       ContratDocument[]
-  
+  status          ContratStatus @default(ACTIVE)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  documents ContratDocument[]
+
   @@index([cabinetId])
   @@index([clientId])
   @@index([type])
@@ -608,9 +613,9 @@ enum SignatureStatus {
 }
 
 model Document {
-  id                String           @id @default(cuid())
+  id                String            @id @default(cuid())
   cabinetId         String
-  cabinet           Cabinet          @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  cabinet           Cabinet           @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
   name              String
   description       String?
   fileUrl           String
@@ -619,27 +624,27 @@ model Document {
   type              DocumentType
   category          DocumentCategory?
   tags              Json?
-  version           Int              @default(1)
+  version           Int               @default(1)
   parentVersion     String?
   uploadedById      String
-  uploadedBy        User             @relation("UploadedBy", fields: [uploadedById], references: [id])
-  uploadedAt        DateTime         @default(now())
+  uploadedBy        User              @relation("UploadedBy", fields: [uploadedById], references: [id])
+  uploadedAt        DateTime          @default(now())
   signatureStatus   SignatureStatus?
   signatureProvider String?
   signedAt          DateTime?
   signedBy          Json?
-  isConfidential    Boolean          @default(false)
-  accessLevel       String           @default("NORMAL")
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  
-  clients           ClientDocument[]
-  actifs            ActifDocument[]
-  passifs           PassifDocument[]
-  contrats          ContratDocument[]
-  projets           ProjetDocument[]
-  taches            TacheDocument[]
-  
+  isConfidential    Boolean           @default(false)
+  accessLevel       String            @default("NORMAL")
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  clients  ClientDocument[]
+  actifs   ActifDocument[]
+  passifs  PassifDocument[]
+  contrats ContratDocument[]
+  projets  ProjetDocument[]
+  taches   TacheDocument[]
+
   @@index([cabinetId])
   @@index([type])
   @@index([uploadedById])
@@ -653,7 +658,7 @@ model ClientDocument {
   client     Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
   document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
-  
+
   @@unique([clientId, documentId])
   @@index([clientId])
   @@index([documentId])
@@ -667,7 +672,7 @@ model ActifDocument {
   actif      Actif    @relation(fields: [actifId], references: [id], onDelete: Cascade)
   document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
-  
+
   @@unique([actifId, documentId])
   @@map("actif_documents")
 }
@@ -679,7 +684,7 @@ model PassifDocument {
   passif     Passif   @relation(fields: [passifId], references: [id], onDelete: Cascade)
   document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
-  
+
   @@unique([passifId, documentId])
   @@map("passif_documents")
 }
@@ -691,7 +696,7 @@ model ContratDocument {
   contrat    Contrat  @relation(fields: [contratId], references: [id], onDelete: Cascade)
   document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
-  
+
   @@unique([contratId, documentId])
   @@map("contrat_documents")
 }
@@ -725,7 +730,7 @@ model KYCDocument {
   expiresAt   DateTime?
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
-  
+
   @@index([clientId])
   @@index([status])
   @@map("kyc_documents")
@@ -771,7 +776,7 @@ model Objectif {
   description         String?
   targetAmount        Decimal          @db.Decimal(15, 2)
   targetDate          DateTime
-  currentAmount       Decimal?         @db.Decimal(15, 2) @default(0)
+  currentAmount       Decimal?         @default(0) @db.Decimal(15, 2)
   progress            Int?             @default(0)
   priority            ObjectifPriority @default(MEDIUM)
   monthlyContribution Decimal?         @db.Decimal(12, 2)
@@ -780,7 +785,7 @@ model Objectif {
   createdAt           DateTime         @default(now())
   updatedAt           DateTime         @updatedAt
   achievedAt          DateTime?
-  
+
   @@index([cabinetId])
   @@index([clientId])
   @@index([type])
@@ -807,27 +812,27 @@ enum ProjetStatus {
 }
 
 model Projet {
-  id              String        @id @default(cuid())
+  id              String       @id @default(cuid())
   cabinetId       String
-  cabinet         Cabinet       @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  cabinet         Cabinet      @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
   clientId        String
-  client          Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client          Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
   name            String
   description     String?
   type            ProjetType
-  estimatedBudget Decimal?      @db.Decimal(15, 2)
-  actualBudget    Decimal?      @db.Decimal(15, 2)
+  estimatedBudget Decimal?     @db.Decimal(15, 2)
+  actualBudget    Decimal?     @db.Decimal(15, 2)
   startDate       DateTime?
   targetDate      DateTime?
   endDate         DateTime?
-  progress        Int           @default(0)
-  status          ProjetStatus  @default(PLANNED)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
-  taches          Tache[]
-  documents       ProjetDocument[]
-  
+  progress        Int          @default(0)
+  status          ProjetStatus @default(PLANNED)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  taches    Tache[]
+  documents ProjetDocument[]
+
   @@index([cabinetId])
   @@index([clientId])
   @@index([status])
@@ -841,7 +846,7 @@ model ProjetDocument {
   projet     Projet   @relation(fields: [projetId], references: [id], onDelete: Cascade)
   document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
-  
+
   @@unique([projetId, documentId])
   @@map("projet_documents")
 }
@@ -910,7 +915,7 @@ model Opportunite {
   actions             Json?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
-  
+
   @@index([cabinetId])
   @@index([conseillerId])
   @@index([clientId])
@@ -971,9 +976,9 @@ model Tache {
   reminderDate DateTime?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
-  
-  documents    TacheDocument[]
-  
+
+  documents TacheDocument[]
+
   @@index([cabinetId])
   @@index([assignedToId])
   @@index([clientId])
@@ -989,7 +994,7 @@ model TacheDocument {
   tache      Tache    @relation(fields: [tacheId], references: [id], onDelete: Cascade)
   document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
-  
+
   @@unique([tacheId, documentId])
   @@map("tache_documents")
 }
@@ -1013,32 +1018,32 @@ enum RendezVousStatus {
 }
 
 model RendezVous {
-  id                 String            @id @default(cuid())
+  id                 String           @id @default(cuid())
   cabinetId          String
-  cabinet            Cabinet           @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  cabinet            Cabinet          @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
   conseillerId       String
-  conseiller         User              @relation(fields: [conseillerId], references: [id])
+  conseiller         User             @relation(fields: [conseillerId], references: [id])
   clientId           String?
-  client             Client?           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client             Client?          @relation(fields: [clientId], references: [id], onDelete: Cascade)
   title              String
   description        String?
   type               RendezVousType
   startDate          DateTime
   endDate            DateTime
   location           String?
-  isVirtual          Boolean           @default(false)
+  isVirtual          Boolean          @default(false)
   meetingUrl         String?
-  status             RendezVousStatus  @default(SCHEDULED)
-  reminderSent       Boolean           @default(false)
+  status             RendezVousStatus @default(SCHEDULED)
+  reminderSent       Boolean          @default(false)
   notes              String?
-  hasMinutes         Boolean           @default(false)
+  hasMinutes         Boolean          @default(false)
   minutesDocId       String?
   externalCalendarId String?
   externalEventId    String?
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
   cancelledAt        DateTime?
-  
+
   @@index([cabinetId])
   @@index([conseillerId])
   @@index([clientId])
@@ -1066,7 +1071,8 @@ model CalendarSync {
   lastSyncStatus String?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
-  
+  user           User             @relation(fields: [userId], references: [id])
+
   @@index([userId])
   @@map("calendar_syncs")
 }
@@ -1108,13 +1114,176 @@ model Email {
   campagneId  String?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-  
+
   @@index([cabinetId])
   @@index([senderId])
   @@index([clientId])
   @@index([status])
   @@index([sentAt])
   @@map("emails")
+}
+
+enum EmailProvider {
+  GMAIL
+  OUTLOOK
+}
+
+enum EmailDirection {
+  INBOUND
+  OUTBOUND
+}
+
+// Emails synchronisés depuis Gmail/Outlook
+model SyncedEmail {
+  id        String  @id @default(cuid())
+  cabinetId String
+  cabinet   Cabinet @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+  clientId  String?
+  client    Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  // Identifiants externes
+  externalId String // ID Gmail/Outlook
+  threadId   String? // Thread ID
+  provider   EmailProvider
+
+  // Contenu
+  from     String
+  to       Json // Array of emails
+  cc       Json? // Array of emails
+  bcc      Json? // Array of emails
+  subject  String
+  body     String  @db.Text
+  bodyHtml String? @db.Text
+  snippet  String? // Preview
+
+  // Métadonnées
+  direction      EmailDirection
+  isRead         Boolean        @default(false)
+  hasAttachments Boolean        @default(false)
+  labels         Json? // Array of labels/categories
+
+  // Classification automatique
+  autoClassified Boolean @default(false)
+  classifiedAs   Json? // Array: CLIENT, PROSPECT, INTERNAL, IMPORTANT
+
+  // Dates
+  sentAt     DateTime
+  receivedAt DateTime
+  readAt     DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  // Relations
+  attachments EmailAttachment[]
+  replies     EmailReply[]
+
+  @@unique([externalId, provider])
+  @@index([cabinetId])
+  @@index([userId])
+  @@index([clientId])
+  @@index([provider])
+  @@index([isRead])
+  @@index([sentAt])
+  @@index([receivedAt])
+  @@map("synced_emails")
+}
+
+// Pièces jointes d'emails
+model EmailAttachment {
+  id            String      @id @default(cuid())
+  syncedEmailId String
+  syncedEmail   SyncedEmail @relation(fields: [syncedEmailId], references: [id], onDelete: Cascade)
+
+  filename   String
+  mimeType   String
+  size       Int // Size in bytes
+  url        String? // URL de téléchargement (si stocké)
+  externalId String? // ID externe (Gmail/Outlook)
+
+  createdAt DateTime @default(now())
+
+  @@index([syncedEmailId])
+  @@map("email_attachments")
+}
+
+// Réponses rapides aux emails
+model EmailReply {
+  id            String      @id @default(cuid())
+  syncedEmailId String
+  syncedEmail   SyncedEmail @relation(fields: [syncedEmailId], references: [id], onDelete: Cascade)
+  userId        String
+
+  body       String        @db.Text
+  sentAt     DateTime
+  sentVia    EmailProvider
+  externalId String? // ID de l'email envoyé
+
+  createdAt DateTime @default(now())
+
+  @@index([syncedEmailId])
+  @@index([userId])
+  @@map("email_replies")
+}
+
+// Templates d'emails
+model EmailTemplate {
+  id        String  @id @default(cuid())
+  cabinetId String
+  cabinet   Cabinet @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  createdBy String
+
+  name      String
+  subject   String
+  body      String  @db.Text
+  bodyHtml  String? @db.Text
+  category  String? // PROSPECTION, SUIVI, RELANCE, etc.
+  variables Json? // Variables disponibles: {clientName}, {conseillerName}, etc.
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([cabinetId])
+  @@index([category])
+  @@index([isActive])
+  @@map("email_templates")
+}
+
+// Configuration de synchronisation email par utilisateur
+model EmailIntegration {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  provider EmailProvider
+  email    String // Email address connected
+
+  // OAuth tokens
+  accessToken  String    @db.Text
+  refreshToken String?   @db.Text
+  expiresAt    DateTime?
+  scope        String?
+
+  // Sync settings
+  syncEnabled    Boolean   @default(true)
+  syncFrequency  Int       @default(5) // minutes
+  lastSyncAt     DateTime?
+  lastSyncStatus String?
+  nextSyncToken  String?   @db.Text // For incremental sync
+
+  // Preferences
+  autoClassify    Boolean @default(true)
+  autoMatchClient Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([provider])
+  @@index([syncEnabled])
+  @@map("email_integrations")
 }
 
 enum NotificationType {
@@ -1144,7 +1313,8 @@ model Notification {
   isRead    Boolean          @default(false)
   readAt    DateTime?
   createdAt DateTime         @default(now())
-  
+  user      User?            @relation(fields: [userId], references: [id])
+
   @@index([cabinetId])
   @@index([userId])
   @@index([clientId])
@@ -1169,23 +1339,23 @@ enum CampagneStatus {
 }
 
 model Campagne {
-  id            String          @id @default(cuid())
+  id            String         @id @default(cuid())
   cabinetId     String
-  cabinet       Cabinet         @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  cabinet       Cabinet        @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
   createdById   String
-  createdBy     User            @relation(fields: [createdById], references: [id])
+  createdBy     User           @relation(fields: [createdById], references: [id])
   name          String
   description   String?
   type          CampagneType
   targetSegment Json?
   templateId    String?
   scheduledAt   DateTime?
-  status        CampagneStatus  @default(DRAFT)
+  status        CampagneStatus @default(DRAFT)
   stats         Json?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   sentAt        DateTime?
-  
+
   @@index([cabinetId])
   @@index([createdById])
   @@index([status])
@@ -1233,7 +1403,7 @@ model Template {
   isActive     Boolean          @default(true)
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
-  
+
   @@index([cabinetId])
   @@index([type])
   @@index([category])
@@ -1264,13 +1434,13 @@ enum SimulationStatus {
 }
 
 model Simulation {
-  id               String            @id @default(cuid())
+  id               String           @id @default(cuid())
   cabinetId        String
-  cabinet          Cabinet           @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  cabinet          Cabinet          @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
   clientId         String
-  client           Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client           Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
   createdById      String
-  createdBy        User              @relation(fields: [createdById], references: [id])
+  createdBy        User             @relation(fields: [createdById], references: [id])
   type             SimulationType
   name             String
   description      String?
@@ -1278,12 +1448,12 @@ model Simulation {
   results          Json
   recommendations  Json?
   feasibilityScore Int?
-  status           SimulationStatus  @default(DRAFT)
-  sharedWithClient Boolean           @default(false)
+  status           SimulationStatus @default(DRAFT)
+  sharedWithClient Boolean          @default(false)
   sharedAt         DateTime?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
   @@index([cabinetId])
   @@index([clientId])
   @@index([type])
@@ -1317,7 +1487,7 @@ model Consentement {
   userAgent   String?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
-  
+
   @@index([clientId])
   @@index([type])
   @@map("consentements")
@@ -1341,24 +1511,24 @@ enum ReclamationStatus {
 }
 
 model Reclamation {
-  id                  String             @id @default(cuid())
+  id                  String            @id @default(cuid())
   cabinetId           String
   clientId            String
-  client              Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client              Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
   subject             String
-  description         String             @db.Text
+  description         String            @db.Text
   type                ReclamationType
-  status              ReclamationStatus  @default(RECEIVED)
+  status              ReclamationStatus @default(RECEIVED)
   assignedToId        String?
-  responseText        String?            @db.Text
+  responseText        String?           @db.Text
   resolutionDate      DateTime?
-  receivedAt          DateTime           @default(now())
+  receivedAt          DateTime          @default(now())
   deadline            DateTime
-  escalatedToMediator Boolean            @default(false)
+  escalatedToMediator Boolean           @default(false)
   escalatedAt         DateTime?
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-  
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
   @@index([cabinetId])
   @@index([clientId])
   @@index([status])
@@ -1396,7 +1566,7 @@ model AuditLog {
   ipAddress    String?
   userAgent    String?
   createdAt    DateTime    @default(now())
-  
+
   @@index([cabinetId])
   @@index([userId])
   @@index([entityType, entityId])
@@ -1430,7 +1600,7 @@ model TimelineEvent {
   relatedEntityId   String?
   createdAt         DateTime          @default(now())
   createdBy         String?
-  
+
   @@index([clientId])
   @@index([type])
   @@index([createdAt])
@@ -1482,152 +1652,11 @@ model ExportJob {
   createdAt    DateTime     @default(now())
   completedAt  DateTime?
   expiresAt    DateTime?
-  
+
   @@index([cabinetId])
   @@index([createdById])
   @@index([status])
   @@map("export_jobs")
 }
 
-// ============================================
-// NOUVEAUX MODULES: Email, Automation, Alerts
-// ============================================
-
-// Modèle Email pour la synchronisation Gmail/Outlook
-enum EmailProvider {
-  GMAIL
-  OUTLOOK
-}
-
-enum EmailDirection {
-  INBOUND
-  OUTBOUND
-}
-
-model Email {
-  id              String         @id @default(cuid())
-  externalId      String         // ID Gmail ou Outlook
-  threadId        String?
-  provider        EmailProvider
-  from            String
-  to              String[]
-  cc              String[]
-  subject         String
-  body            String         @db.Text
-  bodyHtml        String?        @db.Text
-  snippet         String?
-  sentAt          DateTime
-  receivedAt      DateTime
-  isRead          Boolean        @default(false)
-  hasAttachments  Boolean        @default(false)
-  labels          String[]
-  direction       EmailDirection
-  
-  // Relations
-  userId          String
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  clientId        String?
-  client          Client?        @relation(fields: [clientId], references: [id], onDelete: SetNull)
-  cabinetId       String
-  cabinet         Cabinet        @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
-  
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  
-  @@unique([externalId, provider])
-  @@index([userId])
-  @@index([clientId])
-  @@index([cabinetId])
-  @@index([receivedAt])
-  @@index([isRead])
-  @@map("emails")
-}
-
-// Modèle pour les actions planifiées
-enum ScheduledActionType {
-  SUSPEND
-  TERMINATE
-  RESTORE
-  DOWNGRADE_PLAN
-}
-
-enum ScheduledActionStatus {
-  PENDING
-  EXECUTED
-  FAILED
-  CANCELLED
-}
-
-model ScheduledAction {
-  id            String                @id @default(cuid())
-  cabinetId     String
-  action        ScheduledActionType
-  scheduledFor  DateTime
-  reason        String
-  performedBy   String
-  status        ScheduledActionStatus @default(PENDING)
-  executedAt    DateTime?
-  failedAt      DateTime?
-  error         String?
-  lastWarningAt DateTime?
-  
-  createdAt     DateTime              @default(now())
-  updatedAt     DateTime              @updatedAt
-  
-  @@index([cabinetId])
-  @@index([status])
-  @@index([scheduledFor])
-  @@map("scheduled_actions")
-}
-
-// Modèle pour les alertes de quota
-enum QuotaAlertLevel {
-  WARNING
-  CRITICAL
-}
-
-model QuotaAlert {
-  id         String          @id @default(cuid())
-  cabinetId  String
-  quotaName  String
-  level      QuotaAlertLevel
-  percentage Int
-  createdAt  DateTime        @default(now())
-  
-  @@index([cabinetId])
-  @@index([quotaName])
-  @@index([createdAt])
-  @@map("quota_alerts")
-}
-
-// Modèle pour la synchronisation calendrier
-enum CalendarProvider {
-  GOOGLE
-  OUTLOOK
-}
-
-model CalendarSync {
-  id            String           @id @default(cuid())
-  userId        String
-  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  provider      CalendarProvider
-  accessToken   String
-  refreshToken  String
-  expiryDate    DateTime?
-  calendarId    String           @default("primary")
-  syncToken     String?
-  enabled       Boolean          @default(true)
-  lastSyncAt    DateTime?
-  connectedAt   DateTime         @default(now())
-  disconnectedAt DateTime?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  
-  @@unique([userId, provider])
-  @@index([userId])
-  @@index([enabled])
-  @@map("calendar_syncs")
-}
-
-// Ajout des relations manquantes dans les modèles existants
-// Note: Ces relations doivent être ajoutées manuellement aux modèles User, Client, Cabinet
+// Note: Email sync models (SyncedEmail, EmailIntegration) are defined above in Module 8

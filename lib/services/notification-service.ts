@@ -1,43 +1,11 @@
-/**
- * Service de Notifications
- * Gère l'envoi de notifications email et in-app
- */
+import { getPrismaClient, setRLSContext } from '@/lib/prisma'
+import { NotificationType } from '@prisma/client'
 
-import prisma from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
-
-/**
- * Types de notifications
- */
-export enum NotificationType {
-  PLAN_CHANGED = 'PLAN_CHANGED',
-  ORGANIZATION_RESTRICTED = 'ORGANIZATION_RESTRICTED',
-  ORGANIZATION_SUSPENDED = 'ORGANIZATION_SUSPENDED',
-  ORGANIZATION_TERMINATED = 'ORGANIZATION_TERMINATED',
-  ORGANIZATION_RESTORED = 'ORGANIZATION_RESTORED',
-  QUOTA_WARNING = 'QUOTA_WARNING',
-  QUOTA_EXCEEDED = 'QUOTA_EXCEEDED',
-  SCHEDULED_ACTION_WARNING = 'SCHEDULED_ACTION_WARNING',
-  TASK_ASSIGNED = 'TASK_ASSIGNED',
-  TASK_DUE_SOON = 'TASK_DUE_SOON',
-  APPOINTMENT_REMINDER = 'APPOINTMENT_REMINDER',
-  DOCUMENT_SIGNED = 'DOCUMENT_SIGNED',
-  KYC_EXPIRING = 'KYC_EXPIRING',
-  CONTRACT_EXPIRING = 'CONTRACT_EXPIRING',
-  GOAL_ACHIEVED = 'GOAL_ACHIEVED',
-  OPPORTUNITY_CONVERTED = 'OPPORTUNITY_CONVERTED'
-}
-
-/**
- * Templates d'emails
- */
-const EMAIL_TEMPLATES: Record<string, {
-  subject: (data: any) => string;
-  body: (data: any) => string;
-}> = {
+// Email templates for notifications
+const EMAIL_TEMPLATES = {
   PLAN_CHANGED: {
-    subject: (data) => `Votre plan a été modifié - ${data.newPlan}`,
-    body: (data) => `
+    subject: (data: any) => `Votre plan a été modifié - ${data.newPlan}`,
+    body: (data: any) => `
       <h2>Changement de Plan</h2>
       <p>Bonjour,</p>
       <p>Votre plan d'abonnement a été modifié par un administrateur.</p>
@@ -48,34 +16,11 @@ const EMAIL_TEMPLATES: Record<string, {
       </ul>
       ${data.reason ? `<p><strong>Raison:</strong> ${data.reason}</p>` : ''}
       <p>Pour plus d'informations, connectez-vous à votre espace.</p>
-    `
+    `,
   },
-
-  ORGANIZATION_RESTRICTED: {
-    subject: () => 'Votre compte a été restreint',
-    body: (data) => `
-      <h2>Compte Restreint</h2>
-      <p>Bonjour,</p>
-      <p>Votre compte a été restreint. Certaines fonctionnalités sont temporairement désactivées.</p>
-      <p><strong>Raison:</strong> ${data.reason}</p>
-      <p>Veuillez contacter le support pour plus d'informations.</p>
-    `
-  },
-
-  ORGANIZATION_SUSPENDED: {
-    subject: () => 'Votre compte a été suspendu',
-    body: (data) => `
-      <h2>Compte Suspendu</h2>
-      <p>Bonjour,</p>
-      <p>Votre compte a été suspendu. L'accès à la plateforme est temporairement bloqué.</p>
-      <p><strong>Raison:</strong> ${data.reason}</p>
-      <p>Pour réactiver votre compte, veuillez contacter le support.</p>
-    `
-  },
-
   QUOTA_WARNING: {
-    subject: (data) => `Attention: Quota ${data.quotaName} bientôt atteint`,
-    body: (data) => `
+    subject: (data: any) => `Attention: Quota ${data.quotaName} bientôt atteint`,
+    body: (data: any) => `
       <h2>Alerte Quota</h2>
       <p>Bonjour,</p>
       <p>Vous approchez de la limite de votre quota <strong>${data.quotaName}</strong>.</p>
@@ -84,334 +29,305 @@ const EMAIL_TEMPLATES: Record<string, {
         <li><strong>Pourcentage:</strong> ${data.percentage}%</li>
       </ul>
       <p>Pour augmenter vos quotas, vous pouvez upgrader votre plan d'abonnement.</p>
-    `
+    `,
   },
-
-  TASK_ASSIGNED: {
-    subject: (data) => `Nouvelle tâche assignée: ${data.taskTitle}`,
-    body: (data) => `
-      <h2>Nouvelle Tâche</h2>
+  QUOTA_EXCEEDED: {
+    subject: (data: any) => `Quota ${data.quotaName} dépassé`,
+    body: (data: any) => `
+      <h2>Quota Dépassé</h2>
       <p>Bonjour,</p>
-      <p>Une nouvelle tâche vous a été assignée:</p>
+      <p>Vous avez atteint la limite de votre quota <strong>${data.quotaName}</strong>.</p>
       <ul>
-        <li><strong>Titre:</strong> ${data.taskTitle}</li>
-        <li><strong>Priorité:</strong> ${data.priority}</li>
-        <li><strong>Date d'échéance:</strong> ${data.dueDate ? new Date(data.dueDate).toLocaleDateString('fr-FR') : 'Non définie'}</li>
+        <li><strong>Limite:</strong> ${data.max}</li>
+        <li><strong>Utilisation actuelle:</strong> ${data.current}</li>
       </ul>
-      ${data.description ? `<p><strong>Description:</strong> ${data.description}</p>` : ''}
-      <p>Connectez-vous pour voir les détails.</p>
-    `
+      <p><strong>Impact:</strong> Certaines fonctionnalités peuvent être temporairement bloquées.</p>
+    `,
   },
-
-  APPOINTMENT_REMINDER: {
-    subject: (data) => `Rappel: Rendez-vous ${data.title}`,
-    body: (data) => `
-      <h2>Rappel de Rendez-vous</h2>
-      <p>Bonjour,</p>
-      <p>Vous avez un rendez-vous prévu:</p>
-      <ul>
-        <li><strong>Titre:</strong> ${data.title}</li>
-        <li><strong>Date:</strong> ${new Date(data.startTime).toLocaleString('fr-FR')}</li>
-        <li><strong>Durée:</strong> ${data.duration} minutes</li>
-        ${data.location ? `<li><strong>Lieu:</strong> ${data.location}</li>` : ''}
-        ${data.visioUrl ? `<li><strong>Lien visio:</strong> <a href="${data.visioUrl}">${data.visioUrl}</a></li>` : ''}
-      </ul>
-    `
-  },
-
-  DOCUMENT_SIGNED: {
-    subject: (data) => `Document signé: ${data.documentName}`,
-    body: (data) => `
-      <h2>Document Signé</h2>
-      <p>Bonjour,</p>
-      <p>Le document <strong>${data.documentName}</strong> a été signé par ${data.signerName}.</p>
-      <p>Connectez-vous pour consulter le document.</p>
-    `
-  },
-
-  KYC_EXPIRING: {
-    subject: () => 'Documents KYC expirant bientôt',
-    body: (data) => `
-      <h2>Documents KYC à Renouveler</h2>
-      <p>Bonjour,</p>
-      <p>Les documents KYC suivants expirent bientôt:</p>
-      <ul>
-        ${data.documents.map((doc: any) => `
-          <li><strong>${doc.type}</strong> - Expire le ${new Date(doc.expiryDate).toLocaleDateString('fr-FR')}</li>
-        `).join('')}
-      </ul>
-      <p>Veuillez mettre à jour ces documents.</p>
-    `
-  },
-
-  CONTRACT_EXPIRING: {
-    subject: (data) => `Contrat à renouveler: ${data.contractName}`,
-    body: (data) => `
-      <h2>Renouvellement de Contrat</h2>
-      <p>Bonjour,</p>
-      <p>Le contrat <strong>${data.contractName}</strong> arrive à échéance le ${new Date(data.endDate).toLocaleDateString('fr-FR')}.</p>
-      <p>Pensez à le renouveler.</p>
-    `
-  },
-
-  GOAL_ACHIEVED: {
-    subject: (data) => `Objectif atteint: ${data.goalTitle}`,
-    body: (data) => `
-      <h2>🎉 Félicitations !</h2>
-      <p>Bonjour,</p>
-      <p>L'objectif <strong>${data.goalTitle}</strong> a été atteint !</p>
-      <p><strong>Montant cible:</strong> ${data.targetAmount}€</p>
-      <p>Bravo pour cette réussite !</p>
-    `
-  }
-};
-
-/**
- * Titres des notifications
- */
-function getNotificationTitle(type: string): string {
-  const titles: Record<string, string> = {
-    PLAN_CHANGED: 'Plan modifié',
-    ORGANIZATION_RESTRICTED: 'Compte restreint',
-    ORGANIZATION_SUSPENDED: 'Compte suspendu',
-    ORGANIZATION_TERMINATED: 'Compte résilié',
-    ORGANIZATION_RESTORED: 'Compte restauré',
-    QUOTA_WARNING: 'Alerte quota',
-    QUOTA_EXCEEDED: 'Quota dépassé',
-    SCHEDULED_ACTION_WARNING: 'Action planifiée',
-    TASK_ASSIGNED: 'Nouvelle tâche',
-    TASK_DUE_SOON: 'Tâche à échéance',
-    APPOINTMENT_REMINDER: 'Rappel rendez-vous',
-    DOCUMENT_SIGNED: 'Document signé',
-    KYC_EXPIRING: 'KYC à renouveler',
-    CONTRACT_EXPIRING: 'Contrat à renouveler',
-    GOAL_ACHIEVED: 'Objectif atteint',
-    OPPORTUNITY_CONVERTED: 'Opportunité convertie'
-  };
-  return titles[type] || 'Notification';
 }
 
 /**
- * Messages des notifications
+ * Notification Service
+ * Handles in-app and email notifications
  */
-function getNotificationMessage(type: string, data: any): string {
-  const messages: Record<string, (data: any) => string> = {
-    PLAN_CHANGED: (d) => `Votre plan a été changé de ${d.oldPlan} à ${d.newPlan}`,
-    ORGANIZATION_RESTRICTED: (d) => `Votre compte a été restreint: ${d.reason}`,
-    QUOTA_WARNING: (d) => `Attention: ${d.quotaName} à ${d.percentage}%`,
-    TASK_ASSIGNED: (d) => `Nouvelle tâche: ${d.taskTitle}`,
-    APPOINTMENT_REMINDER: (d) => `Rendez-vous: ${d.title} le ${new Date(d.startTime).toLocaleDateString('fr-FR')}`,
-    DOCUMENT_SIGNED: (d) => `${d.documentName} signé par ${d.signerName}`,
-    KYC_EXPIRING: (d) => `${d.documents.length} document(s) KYC à renouveler`,
-    CONTRACT_EXPIRING: (d) => `${d.contractName} expire le ${new Date(d.endDate).toLocaleDateString('fr-FR')}`,
-    GOAL_ACHIEVED: (d) => `Objectif ${d.goalTitle} atteint !`,
-    OPPORTUNITY_CONVERTED: (d) => `Opportunité ${d.opportunityTitle} convertie en projet`
-  };
+export class NotificationService {
+  private prisma
 
-  const messageFn = messages[type];
-  return messageFn ? messageFn(data) : 'Nouvelle notification';
-}
-
-/**
- * Créer une notification in-app
- */
-export async function createNotification(
-  userId: string,
-  type: NotificationType | string,
-  data: any
-): Promise<string> {
-  const notification = await prisma.notification.create({
-    data: {
-      userId,
-      type,
-      title: getNotificationTitle(type),
-      message: getNotificationMessage(type, data),
-      data: data as Prisma.InputJsonValue,
-      read: false
-    }
-  });
-
-  return notification.id;
-}
-
-/**
- * Envoyer une notification email
- * Note: Nécessite un service d'email (SendGrid, AWS SES, etc.)
- */
-export async function sendEmailNotification(
-  userId: string,
-  type: NotificationType | string,
-  data: any
-): Promise<void> {
-  // Récupérer l'utilisateur
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { email: true, firstName: true, lastName: true }
-  });
-
-  if (!user || !user.email) {
-    console.warn('User not found or no email:', userId);
-    return;
+  constructor(
+    private cabinetId: string,
+    private userId?: string,
+    private isSuperAdmin: boolean = false
+  ) {
+    this.prisma = getPrismaClient(cabinetId, isSuperAdmin)
   }
 
-  const template = EMAIL_TEMPLATES[type];
-  if (!template) {
-    console.warn('Email template not found:', type);
-    return;
-  }
+  /**
+   * Create in-app notification
+   */
+  async createNotification(data: {
+    userId?: string
+    clientId?: string
+    type: NotificationType
+    title: string
+    message: string
+    actionUrl?: string
+  }) {
+    await setRLSContext(this.cabinetId, this.isSuperAdmin)
 
-  const emailData = {
-    to: user.email,
-    subject: template.subject(data),
-    html: template.body(data),
-    type,
-    sentAt: new Date()
-  };
-
-  // TODO: Intégrer un service d'email réel (SendGrid, AWS SES, etc.)
-  console.log('📧 Email à envoyer:', emailData);
-
-  // Pour le développement, on log seulement
-  // En production, utiliser un vrai service d'email
-  // await sendGridClient.send(emailData);
-}
-
-/**
- * Envoyer une notification complète (in-app + email)
- */
-export async function sendNotification(
-  userId: string,
-  type: NotificationType | string,
-  data: any,
-  options: {
-    emailOnly?: boolean;
-    inAppOnly?: boolean;
-  } = {}
-): Promise<{ notificationId?: string }> {
-  const { emailOnly = false, inAppOnly = false } = options;
-
-  let notificationId: string | undefined;
-
-  // Notification in-app
-  if (!emailOnly) {
-    notificationId = await createNotification(userId, type, data);
-  }
-
-  // Notification email
-  if (!inAppOnly) {
-    await sendEmailNotification(userId, type, data);
-  }
-
-  return { notificationId };
-}
-
-/**
- * Récupérer les notifications d'un utilisateur
- */
-export async function getNotifications(
-  userId: string,
-  options: {
-    unreadOnly?: boolean;
-    limit?: number;
-    skip?: number;
-  } = {}
-): Promise<{
-  notifications: any[];
-  total: number;
-  unreadCount: number;
-}> {
-  const { unreadOnly = false, limit = 50, skip = 0 } = options;
-
-  const where: Prisma.NotificationWhereInput = { userId };
-  if (unreadOnly) {
-    where.read = false;
-  }
-
-  const [notifications, total, unreadCount] = await Promise.all([
-    prisma.notification.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      skip,
-      take: limit
-    }),
-    prisma.notification.count({ where }),
-    prisma.notification.count({
-      where: { userId, read: false }
+    return this.prisma.notification.create({
+      data: {
+        cabinetId: this.cabinetId,
+        userId: data.userId,
+        clientId: data.clientId,
+        type: data.type,
+        title: data.title,
+        message: data.message,
+        actionUrl: data.actionUrl,
+        isRead: false,
+      },
     })
-  ]);
+  }
 
-  return {
-    notifications,
-    total,
-    unreadCount
-  };
-}
+  /**
+   * Get notifications for current user
+   */
+  async getNotifications(filters?: {
+    unreadOnly?: boolean
+    type?: NotificationType
+    limit?: number
+    offset?: number
+  }) {
+    await setRLSContext(this.cabinetId, this.isSuperAdmin)
 
-/**
- * Marquer une notification comme lue
- */
-export async function markAsRead(notificationId: string): Promise<void> {
-  await prisma.notification.update({
-    where: { id: notificationId },
-    data: {
-      read: true,
-      readAt: new Date()
+    const where: any = {}
+
+    if (this.userId) {
+      where.userId = this.userId
     }
-  });
-}
 
-/**
- * Marquer toutes les notifications comme lues
- */
-export async function markAllAsRead(userId: string): Promise<number> {
-  const result = await prisma.notification.updateMany({
-    where: {
-      userId,
-      read: false
-    },
-    data: {
-      read: true,
-      readAt: new Date()
+    if (filters?.unreadOnly) {
+      where.isRead = false
     }
-  });
 
-  return result.count;
-}
-
-/**
- * Supprimer une notification
- */
-export async function deleteNotification(notificationId: string): Promise<void> {
-  await prisma.notification.delete({
-    where: { id: notificationId }
-  });
-}
-
-/**
- * Supprimer les anciennes notifications (> 30 jours)
- */
-export async function cleanupOldNotifications(): Promise<number> {
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-  const result = await prisma.notification.deleteMany({
-    where: {
-      createdAt: { lt: thirtyDaysAgo },
-      read: true
+    if (filters?.type) {
+      where.type = filters.type
     }
-  });
 
-  return result.count;
+    const [notifications, total, unreadCount] = await Promise.all([
+      this.prisma.notification.findMany({
+        where,
+        include: {
+          client: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: filters?.limit || 50,
+        skip: filters?.offset || 0,
+      }),
+      this.prisma.notification.count({ where }),
+      this.prisma.notification.count({
+        where: { ...where, isRead: false },
+      }),
+    ])
+
+    return { notifications, total, unreadCount }
+  }
+
+  /**
+   * Mark notification as read
+   */
+  async markAsRead(notificationId: string) {
+    await setRLSContext(this.cabinetId, this.isSuperAdmin)
+
+    return this.prisma.notification.update({
+      where: { id: notificationId },
+      data: {
+        isRead: true,
+        readAt: new Date(),
+      },
+    })
+  }
+
+  /**
+   * Mark all notifications as read
+   */
+  async markAllAsRead() {
+    await setRLSContext(this.cabinetId, this.isSuperAdmin)
+
+    const where: any = { isRead: false }
+
+    if (this.userId) {
+      where.userId = this.userId
+    }
+
+    return this.prisma.notification.updateMany({
+      where,
+      data: {
+        isRead: true,
+        readAt: new Date(),
+      },
+    })
+  }
+
+  /**
+   * Delete notification
+   */
+  async deleteNotification(notificationId: string) {
+    await setRLSContext(this.cabinetId, this.isSuperAdmin)
+
+    return this.prisma.notification.delete({
+      where: { id: notificationId },
+    })
+  }
+
+  /**
+   * Get unread count
+   */
+  async getUnreadCount() {
+    await setRLSContext(this.cabinetId, this.isSuperAdmin)
+
+    const where: any = { isRead: false }
+
+    if (this.userId) {
+      where.userId = this.userId
+    }
+
+    return this.prisma.notification.count({ where })
+  }
+
+  /**
+   * Send email notification (placeholder - requires email service)
+   */
+  async sendEmailNotification(type: string, data: any, recipients: string[]) {
+    const template = EMAIL_TEMPLATES[type as keyof typeof EMAIL_TEMPLATES]
+
+    if (!template) {
+      throw new Error(`Email template not found for type: ${type}`)
+    }
+
+    const emailData = {
+      to: recipients,
+      subject: template.subject(data),
+      html: template.body(data),
+    }
+
+    // TODO: Integrate with email sending service
+    console.log('Email notification to send:', emailData)
+
+    return emailData
+  }
+
+  /**
+   * Notify about important email
+   */
+  async notifyImportantEmail(emailData: {
+    from: string
+    subject: string
+    emailId: string
+    userId: string
+  }) {
+    return this.createNotification({
+      userId: emailData.userId,
+      type: 'CLIENT_MESSAGE',
+      title: 'Nouvel email important',
+      message: `De: ${emailData.from}\nSujet: ${emailData.subject}`,
+      actionUrl: `/emails/${emailData.emailId}`,
+    })
+  }
+
+  /**
+   * Notify about task due
+   */
+  async notifyTaskDue(taskData: {
+    title: string
+    dueDate: Date
+    taskId: string
+    userId: string
+  }) {
+    return this.createNotification({
+      userId: taskData.userId,
+      type: 'TASK_DUE',
+      title: 'Tâche à échéance',
+      message: `La tâche "${taskData.title}" est due le ${taskData.dueDate.toLocaleDateString('fr-FR')}`,
+      actionUrl: `/taches/${taskData.taskId}`,
+    })
+  }
+
+  /**
+   * Notify about appointment reminder
+   */
+  async notifyAppointmentReminder(appointmentData: {
+    title: string
+    startDate: Date
+    appointmentId: string
+    userId: string
+  }) {
+    return this.createNotification({
+      userId: appointmentData.userId,
+      type: 'APPOINTMENT_REMINDER',
+      title: 'Rappel de rendez-vous',
+      message: `Rendez-vous "${appointmentData.title}" le ${appointmentData.startDate.toLocaleDateString('fr-FR')} à ${appointmentData.startDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`,
+      actionUrl: `/rendez-vous/${appointmentData.appointmentId}`,
+    })
+  }
+
+  /**
+   * Notify about KYC expiring
+   */
+  async notifyKYCExpiring(kycData: {
+    clientName: string
+    expiryDate: Date
+    clientId: string
+    userId: string
+  }) {
+    return this.createNotification({
+      userId: kycData.userId,
+      type: 'KYC_EXPIRING',
+      title: 'KYC à renouveler',
+      message: `Le KYC de ${kycData.clientName} expire le ${kycData.expiryDate.toLocaleDateString('fr-FR')}`,
+      actionUrl: `/clients/${kycData.clientId}/kyc`,
+    })
+  }
+
+  /**
+   * Notify about contract renewal
+   */
+  async notifyContractRenewal(contractData: {
+    contractName: string
+    renewalDate: Date
+    contractId: string
+    userId: string
+  }) {
+    return this.createNotification({
+      userId: contractData.userId,
+      type: 'CONTRACT_RENEWAL',
+      title: 'Contrat à renouveler',
+      message: `Le contrat "${contractData.contractName}" doit être renouvelé le ${contractData.renewalDate.toLocaleDateString('fr-FR')}`,
+      actionUrl: `/contrats/${contractData.contractId}`,
+    })
+  }
+
+  /**
+   * Notify about opportunity detected
+   */
+  async notifyOpportunityDetected(opportunityData: {
+    title: string
+    value: number
+    clientName: string
+    opportunityId: string
+    userId: string
+  }) {
+    return this.createNotification({
+      userId: opportunityData.userId,
+      type: 'OPPORTUNITY_DETECTED',
+      title: 'Nouvelle opportunité détectée',
+      message: `Opportunité "${opportunityData.title}" (${opportunityData.value}€) pour ${opportunityData.clientName}`,
+      actionUrl: `/opportunites/${opportunityData.opportunityId}`,
+    })
+  }
 }
-
-export default {
-  NotificationType,
-  createNotification,
-  sendEmailNotification,
-  sendNotification,
-  getNotifications,
-  markAsRead,
-  markAllAsRead,
-  deleteNotification,
-  cleanupOldNotifications
-};
