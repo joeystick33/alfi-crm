@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { NavigationSidebar } from '@/components/dashboard/NavigationSidebar'
 import { ServicesSidebar } from '@/components/dashboard/ServicesSidebar'
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 
 export default function DashboardLayout({
   children,
@@ -45,9 +46,11 @@ export default function DashboardLayout({
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-6">
-          <div className={presentationMode ? 'blur-sm' : ''}>
-            {children}
-          </div>
+          <ErrorBoundary>
+            <div className={presentationMode ? 'blur-sm' : ''}>
+              {children}
+            </div>
+          </ErrorBoundary>
         </main>
       </div>
 

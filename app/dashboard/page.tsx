@@ -2,28 +2,31 @@
 
 import { useDashboardCounters } from '@/hooks/use-api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Skeleton } from '@/components/ui/Skeleton'
+import { LoadingState } from '@/components/ui/LoadingState'
+import { ErrorState, getErrorVariant } from '@/components/ui/ErrorState'
 import { Users, CheckSquare, Calendar, TrendingUp, AlertCircle, Bell } from 'lucide-react'
 
 export default function DashboardPage() {
-  const { data: counters, isLoading } = useDashboardCounters()
+  const { data: counters, isLoading, isError, error, refetch } = useDashboardCounters()
 
   if (isLoading) {
     return (
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">Tableau de bord</h1>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-4 w-24" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-8 w-16" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <LoadingState variant="cards" count={6} />
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold">Tableau de bord</h1>
+        <ErrorState
+          error={error as Error}
+          variant={getErrorVariant(error as Error)}
+          onRetry={() => refetch()}
+        />
       </div>
     )
   }

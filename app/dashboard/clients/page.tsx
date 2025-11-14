@@ -1,37 +1,60 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { useClients } from '@/hooks/use-api'
+import { useInfiniteScroll } from '@/hooks/use-infinite-scroll'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { ClientCard } from '@/components/clients/ClientCard'
 import { ClientFilters } from '@/components/clients/ClientFilters'
 import { CreateClientModal } from '@/components/clients/CreateClientModal'
-import { Skeleton } from '@/components/ui/Skeleton'
-import { Plus, Search } from 'lucide-react'
-import type { ClientFilters as ClientFiltersType } from '@/lib/api-types'
+import { LoadingState } from '@/components/ui/LoadingState'
+import { ErrorState, getErrorVariant } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Plus, Search, Loader2, Users } from 'lucide-react'
+import type { ClientListItem, ClientFilters as ClientFiltersType } from '@/lib/api-types'
+import { buildQueryString } from '@/lib/api-client'
+import { debounce } from '@/lib/performance'
 
 export default function ClientsPage() {
   const router = useRouter()
-  const [filters, setFilters] = useState<ClientFiltersType>({
-    page: 1,
-    pageSize: 20,
-  })
+  const [filters, setFilters] = useState<Partial<ClientFiltersType>>({})
+  const [searchTerm, setSearchTerm] = useState('')
   const [createModalOpen, setCreateModalOpen] = useState(false)
 
-  const { data, isLoading } = useClients(filters)
+  // Build endpoint with filters
+  const endpoint = useMemo(() => {
+    const params = { ...filters, search: searchTerm }
+    return `/clients${buildQueryString(params)}`
+  }, [filters, searchTerm])
 
-  const handleSearch = (search: string) => {
-    setFilters({ ...filters, search, page: 1 })
-  }
+  const {
+    items: clients,
+    totalCount,
+    isLoading,
+    isError,
+    error,
+    hasNextPage,
+    isFetchingNextPage,
+    loadMoreRef,
+    refetch,
+  } = useInfiniteScroll<ClientListItem>({
+    queryKey: ['clients', 'infinite', filters, searchTerm],
+    endpoint,
+    pageSize: 20,
+  })
 
-  const handleFilterChange = (newFilters: Partial<ClientFiltersType>) => {
-    setFilters({ ...filters, ...newFilters, page: 1 })
-  }
+  // Debounced search to avoid too many API calls
+  const handleSearch = useMemo(
+    () =>
+      debounce((value: string) => {
+        setSearchTerm(value)
+      }, 300),
+    []
+  )
 
-  const handlePageChange = (page: number) => {
-    setFilters({ ...filters, page })
+  const handleFilterChange = (newFilters: any) => {
+    setFilters({ ...filters, ...newFilters })
   }
 
   return (
@@ -41,7 +64,7 @@ export default function ClientsPage() {
         <div>
           <h1 className="text-3xl font-bold">Clients</h1>
           <p className="text-muted-foreground mt-1">
-            {data ? `${data.pagination.total} clients` : 'Chargement...'}
+            {isLoading ? 'Chargement...' : `${totalCount} client${totalCount > 1 ? 's' : ''}`}
           </p>
         </div>
         <Button onClick={() => setCreateModalOpen(true)}>
@@ -59,6 +82,7 @@ export default function ClientsPage() {
               placeholder="Rechercher par nom, email..."
               className="pl-9"
               onChange={(e) => handleSearch(e.target.value)}
+              defaultValue={searchTerm}
             />
           </div>
         </div>
@@ -67,27 +91,17 @@ export default function ClientsPage() {
 
       {/* Client List */}
       {isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="rounded-lg border p-6 space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="space-y-2 flex-1">
-                  <Skeleton className="h-5 w-32" />
-                  <Skeleton className="h-4 w-24" />
-                </div>
-                <Skeleton className="h-6 w-20" />
-              </div>
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : data && data.data.length > 0 ? (
+        <LoadingState variant="cards" count={6} />
+      ) : isError ? (
+        <ErrorState
+          error={error as Error}
+          variant={getErrorVariant(error as Error)}
+          onRetry={() => refetch()}
+        />
+      ) : clients.length > 0 ? (
         <>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {data.data.map((client) => (
+            {clients.map((client) => (
               <ClientCard
                 key={client.id}
                 client={client}
@@ -96,44 +110,36 @@ export default function ClientsPage() {
             ))}
           </div>
 
-          {/* Pagination */}
-          {data.pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Page {data.pagination.page} sur {data.pagination.totalPages}
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(data.pagination.page - 1)}
-                  disabled={data.pagination.page === 1}
-                >
-                  Précédent
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(data.pagination.page + 1)}
-                  disabled={data.pagination.page === data.pagination.totalPages}
-                >
-                  Suivant
-                </Button>
+          {/* Infinite scroll trigger */}
+          <div ref={loadMoreRef} className="flex justify-center py-4">
+            {isFetchingNextPage && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Chargement...</span>
               </div>
-            </div>
-          )}
+            )}
+            {!hasNextPage && clients.length > 0 && (
+              <p className="text-sm text-muted-foreground">
+                Tous les clients ont été chargés
+              </p>
+            )}
+          </div>
         </>
       ) : (
-        <div className="flex flex-col items-center justify-center py-12 text-center border rounded-lg">
-          <p className="text-lg font-medium">Aucun client trouvé</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Commencez par créer votre premier client
-          </p>
-          <Button className="mt-4" onClick={() => setCreateModalOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Créer un client
-          </Button>
-        </div>
+        <EmptyState
+          icon={Users}
+          title="Aucun client trouvé"
+          description={
+            searchTerm || Object.keys(filters).length > 0
+              ? 'Aucun client ne correspond à vos critères de recherche. Essayez de modifier vos filtres.'
+              : 'Commencez par créer votre premier client pour gérer votre portefeuille.'
+          }
+          action={{
+            label: 'Créer un client',
+            onClick: () => setCreateModalOpen(true),
+            icon: Plus,
+          }}
+        />
       )}
 
       {/* Create Client Modal */}

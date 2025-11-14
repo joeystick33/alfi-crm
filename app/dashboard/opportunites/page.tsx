@@ -5,14 +5,16 @@ import { useRouter } from 'next/navigation'
 import { 
   Plus, Search, Filter, TrendingUp, AlertCircle, 
   DollarSign, Target, Clock, CheckCircle2, XCircle,
-  ArrowRight, Sparkles
+  ArrowRight, Sparkles, Lightbulb
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { Skeleton } from '@/components/ui/Skeleton'
+import { LoadingState } from '@/components/ui/LoadingState'
+import { ErrorState, getErrorVariant } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { Modal, ModalContent, ModalHeader, ModalTitle } from '@/components/ui/Modal'
 import { useToast } from '@/hooks/use-toast'
 
@@ -465,28 +467,40 @@ export default function OpportunitesPage() {
       )}
 
       {/* List View */}
-      {!loading && viewMode === 'list' && (
+      {loading && <LoadingState variant="cards" count={6} />}
+
+      {error && (
+        <ErrorState
+          error={error}
+          variant={getErrorVariant(error)}
+          onRetry={() => {
+            setError(null)
+            fetchOpportunites()
+          }}
+        />
+      )}
+
+      {!loading && !error && viewMode === 'list' && (
         <div className="space-y-4">
           {filteredOpportunites.length === 0 ? (
-            <Card className="p-12">
-              <div className="text-center">
-                <Sparkles className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Aucune opportunité trouvée
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  {searchTerm || typeFilter !== 'ALL' || priorityFilter !== 'ALL'
-                    ? 'Aucune opportunité ne correspond à vos critères'
-                    : 'Commencez par créer votre première opportunité'}
-                </p>
-                {!searchTerm && typeFilter === 'ALL' && priorityFilter === 'ALL' && (
-                  <Button onClick={() => setShowCreateModal(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Créer une opportunité
-                  </Button>
-                )}
-              </div>
-            </Card>
+            <EmptyState
+              icon={Lightbulb}
+              title="Aucune opportunité trouvée"
+              description={
+                searchTerm || typeFilter !== 'ALL' || priorityFilter !== 'ALL'
+                  ? 'Aucune opportunité ne correspond à vos critères de recherche. Essayez de modifier vos filtres.'
+                  : 'Commencez par créer votre première opportunité pour développer votre portefeuille.'
+              }
+              action={
+                !searchTerm && typeFilter === 'ALL' && priorityFilter === 'ALL'
+                  ? {
+                      label: 'Créer une opportunité',
+                      onClick: () => setShowCreateModal(true),
+                      icon: Plus,
+                    }
+                  : undefined
+              }
+            />
           ) : (
             filteredOpportunites.map(opp => (
               <OpportuniteCard

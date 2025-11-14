@@ -96,7 +96,7 @@ const calculators: CalculatorItem[] = [
     description: 'Calculez l\'épargne nécessaire pour atteindre un objectif',
     category: 'objectifs',
     icon: Target,
-    path: '/dashboard/calculators/objective-calculator',
+    path: '/dashboard/calculators/objective',
     tags: ['objectif', 'épargne', 'projet']
   },
   {

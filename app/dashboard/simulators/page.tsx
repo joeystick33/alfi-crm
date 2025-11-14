@@ -104,7 +104,7 @@ const simulators: SimulatorItem[] = [
     description: 'Comparez différentes stratégies d\'optimisation fiscale',
     category: 'fiscalite',
     icon: TrendingUp,
-    path: '/dashboard/simulators/tax-strategy',
+    path: '/dashboard/simulators/tax-strategy-comparison',
     tags: ['défiscalisation', 'Pinel', 'Malraux'],
     complexity: 'advanced'
   },
@@ -114,7 +114,7 @@ const simulators: SimulatorItem[] = [
     description: 'Comparez les enveloppes d\'investissement (AV, PEA, CTO)',
     category: 'fiscalite',
     icon: Home,
-    path: '/dashboard/simulators/investment-vehicles',
+    path: '/dashboard/simulators/investment-vehicle-comparison',
     tags: ['AV', 'PEA', 'CTO', 'fiscalité'],
     complexity: 'intermediate'
   },

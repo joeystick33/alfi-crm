@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Filter, Search, Calendar, TrendingUp, AlertCircle, CheckCircle2, Clock, XCircle, Pause } from 'lucide-react'
+import { Plus, Filter, Search, Calendar, TrendingUp, AlertCircle, CheckCircle2, Clock, XCircle, Pause, FolderOpen } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { Skeleton } from '@/components/ui/Skeleton'
+import { LoadingState } from '@/components/ui/LoadingState'
+import { ErrorState, getErrorVariant } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { Modal, ModalContent, ModalHeader, ModalTitle } from '@/components/ui/Modal'
 import { useToast } from '@/hooks/use-toast'
 
@@ -249,35 +251,40 @@ export default function ProjetsPage() {
       )}
 
       {/* Loading State */}
-      {loading && (
-        <div className="space-y-4">
-          {[1, 2, 3].map(i => (
-            <Skeleton key={i} className="h-32 w-full" />
-          ))}
-        </div>
+      {loading && <LoadingState variant="list" count={3} />}
+
+      {/* Error State */}
+      {error && (
+        <ErrorState
+          error={error}
+          variant={getErrorVariant(error)}
+          onRetry={() => {
+            setError(null)
+            fetchProjets()
+          }}
+        />
       )}
 
       {/* Empty State */}
-      {!loading && filteredProjets.length === 0 && (
-        <Card className="p-12">
-          <div className="text-center">
-            <TrendingUp className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Aucun projet trouvé
-            </h3>
-            <p className="text-gray-600 mb-6">
-              {searchTerm || statusFilter !== 'ALL' || typeFilter !== 'ALL'
-                ? 'Aucun projet ne correspond à vos critères de recherche'
-                : 'Commencez par créer votre premier projet'}
-            </p>
-            {!searchTerm && statusFilter === 'ALL' && typeFilter === 'ALL' && (
-              <Button onClick={() => setShowCreateModal(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Créer un projet
-              </Button>
-            )}
-          </div>
-        </Card>
+      {!loading && !error && filteredProjets.length === 0 && (
+        <EmptyState
+          icon={FolderOpen}
+          title="Aucun projet trouvé"
+          description={
+            searchTerm || statusFilter !== 'ALL' || typeFilter !== 'ALL'
+              ? 'Aucun projet ne correspond à vos critères de recherche. Essayez de modifier vos filtres.'
+              : 'Commencez par créer votre premier projet pour suivre les objectifs de vos clients.'
+          }
+          action={
+            !searchTerm && statusFilter === 'ALL' && typeFilter === 'ALL'
+              ? {
+                  label: 'Créer un projet',
+                  onClick: () => setShowCreateModal(true),
+                  icon: Plus,
+                }
+              : undefined
+          }
+        />
       )}
 
       {/* Projets List */}

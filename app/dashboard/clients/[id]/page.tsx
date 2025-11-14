@@ -6,7 +6,9 @@ import { useClient, useClientWealth } from '@/hooks/use-api'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
-import { Skeleton } from '@/components/ui/Skeleton'
+import { LoadingState } from '@/components/ui/LoadingState'
+import { ErrorState, getErrorVariant } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { TabOverview } from '@/components/client360/TabOverview'
 import { TabProfile } from '@/components/client360/TabProfile'
 import { TabWealth } from '@/components/client360/TabWealth'
@@ -23,6 +25,7 @@ import {
   MoreVertical,
   User,
   Building2,
+  UserX,
 } from 'lucide-react'
 
 interface ClientPageProps {
@@ -32,29 +35,55 @@ interface ClientPageProps {
 export default function ClientPage({ params }: ClientPageProps) {
   const { id } = use(params)
   const router = useRouter()
-  const { data: client, isLoading } = useClient(id)
+  const { data: client, isLoading, isError, error, refetch } = useClient(id)
   const { data: wealth } = useClientWealth(id)
 
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Skeleton className="h-10 w-10" />
-          <Skeleton className="h-8 w-48" />
-        </div>
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-96 w-full" />
+        <LoadingState variant="spinner" message="Chargement du client..." />
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <Button
+          variant="ghost"
+          onClick={() => router.push('/dashboard/clients')}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Retour aux clients
+        </Button>
+        <ErrorState
+          error={error as Error}
+          variant={getErrorVariant(error as Error)}
+          onRetry={() => refetch()}
+        />
       </div>
     )
   }
 
   if (!client) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <p className="text-lg font-medium">Client non trouvé</p>
-        <Button className="mt-4" onClick={() => router.push('/dashboard/clients')}>
-          Retour à la liste
+      <div className="space-y-6">
+        <Button
+          variant="ghost"
+          onClick={() => router.push('/dashboard/clients')}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Retour aux clients
         </Button>
+        <EmptyState
+          icon={UserX}
+          title="Client non trouvé"
+          description="Ce client n'existe pas ou a été supprimé."
+          action={{
+            label: 'Retour à la liste',
+            onClick: () => router.push('/dashboard/clients'),
+          }}
+        />
       </div>
     )
   }

@@ -4,7 +4,9 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { Skeleton } from '@/components/ui/Skeleton'
+import { LoadingState } from '@/components/ui/LoadingState'
+import { ErrorState, getErrorVariant } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { formatDate, formatDateTime } from '@/lib/utils'
 import {
   Plus,
@@ -22,7 +24,10 @@ export default function AgendaPage() {
 
   // TODO: Replace with real API call
   const isLoading = false
+  const isError = false
+  const error = null
   const rendezvous: any[] = []
+  const refetch = () => {}
 
   const statusConfig = {
     SCHEDULED: { label: 'Planifié', variant: 'outline' as const },
@@ -199,11 +204,27 @@ export default function AgendaPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-24 w-full" />
-              ))}
-            </div>
+            <LoadingState variant="list" count={5} />
+          ) : isError ? (
+            <ErrorState
+              error={error as Error}
+              variant={getErrorVariant(error as Error)}
+              onRetry={refetch}
+            />
+          ) : rendezvous.length === 0 ? (
+            <EmptyState
+              icon={CalendarIcon}
+              title="Aucun rendez-vous"
+              description="Vous n'avez aucun rendez-vous prévu. Créez votre premier rendez-vous pour organiser votre agenda."
+              action={{
+                label: 'Créer un rendez-vous',
+                onClick: () => {
+                  // TODO: Open create appointment modal
+                  console.log('Create appointment')
+                },
+                icon: Plus,
+              }}
+            />
           ) : rendezvous.length > 0 ? (
             <div className="space-y-4">
               {rendezvous.map((rdv) => {

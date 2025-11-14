@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client'
-import { createTenantMiddleware, createLoggingMiddleware } from './prisma-middleware'
+import { createTenantExtension } from './prisma-middleware'
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
@@ -17,22 +17,15 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
  * 
  * @param cabinetId - ID du cabinet pour l'isolation des données
  * @param isSuperAdmin - Si true, bypass l'isolation (accès à tous les cabinets)
- * @returns Client Prisma avec middleware appliqué
+ * @returns Client Prisma avec extension appliquée
  */
 export function getPrismaClient(cabinetId: string, isSuperAdmin: boolean = false) {
   const client = new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   })
 
-  // Appliquer le middleware d'isolation multi-tenant
-  client.$use(createTenantMiddleware(cabinetId, isSuperAdmin))
-
-  // En développement, ajouter le logging
-  if (process.env.NODE_ENV === 'development') {
-    client.$use(createLoggingMiddleware())
-  }
-
-  return client
+  // Appliquer l'extension d'isolation multi-tenant
+  return client.$extends(createTenantExtension(cabinetId, isSuperAdmin)) as any
 }
 
 /**

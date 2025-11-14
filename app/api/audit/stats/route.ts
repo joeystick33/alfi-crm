@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       context.isSuperAdmin
     )
 
-    const stats = await service.getAuditStats(startDate, endDate)
+    const stats = await service.getStatistics(startDate, endDate)
 
     return createSuccessResponse(stats)
   } catch (error) {

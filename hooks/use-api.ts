@@ -130,18 +130,37 @@ export function useCreateClient(
 }
 
 /**
- * Update existing client
+ * Update existing client with optimistic updates
  */
 export function useUpdateClient(
-  options?: UseMutationOptions<ClientDetail, Error, { id: string; data: UpdateClientRequest }>
+  options?: UseMutationOptions<ClientDetail, Error, { id: string; data: UpdateClientRequest }, { previousClient?: ClientDetail }>
 ) {
   const queryClient = useQueryClient()
   
   return useMutation({
     mutationFn: ({ id, data }) => api.patch<ClientDetail>(`/clients/${id}`, data),
+    // Optimistic update
+    onMutate: async ({ id, data }): Promise<{ previousClient?: ClientDetail }> => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: queryKeys.client(id) })
+      
+      // Snapshot previous value
+      const previousClient = queryClient.getQueryData<ClientDetail>(queryKeys.client(id))
+      
+      // Optimistically update
+      if (previousClient) {
+        queryClient.setQueryData<ClientDetail>(queryKeys.client(id), {
+          ...previousClient,
+          ...data,
+        } as ClientDetail)
+      }
+      
+      // Return context with snapshot
+      return { previousClient }
+    },
     onSuccess: (data, variables) => {
-      // Invalidate specific client
-      queryClient.invalidateQueries({ queryKey: queryKeys.client(variables.id) })
+      // Update with server data
+      queryClient.setQueryData(queryKeys.client(variables.id), data)
       // Invalidate clients list
       queryClient.invalidateQueries({ queryKey: queryKeys.clients })
       
@@ -151,7 +170,12 @@ export function useUpdateClient(
         variant: 'success',
       })
     },
-    onError: (error) => {
+    onError: (error, variables, context) => {
+      // Rollback on error
+      if (context?.previousClient) {
+        queryClient.setQueryData(queryKeys.client(variables.id), context.previousClient)
+      }
+      
       toast({
         title: 'Erreur',
         description: error.message || 'Impossible de mettre à jour le client.',
@@ -250,19 +274,62 @@ export function useUnreadNotificationCount(
 }
 
 /**
- * Mark notification as read
+ * Mark notification as read with optimistic update
  */
 export function useMarkNotificationRead(
-  options?: UseMutationOptions<void, Error, string>
+  options?: UseMutationOptions<void, Error, string, { previousNotifications: any[]; previousCount?: { count: number } }>
 ) {
   const queryClient = useQueryClient()
   
   return useMutation({
     mutationFn: (id: string) => api.patch(`/notifications/${id}`, { isRead: true }),
-    onSuccess: () => {
-      // Invalidate notifications list
+    // Optimistic update
+    onMutate: async (id): Promise<{ previousNotifications: any[]; previousCount?: { count: number } }> => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: queryKeys.notifications })
+      await queryClient.cancelQueries({ queryKey: queryKeys.unreadCount })
+      
+      // Snapshot previous values
+      const previousNotifications = queryClient.getQueriesData({ queryKey: queryKeys.notifications })
+      const previousCount = queryClient.getQueryData<{ count: number }>(queryKeys.unreadCount)
+      
+      // Optimistically update notification lists
+      queryClient.setQueriesData<PaginatedResponse<NotificationListItem>>(
+        { queryKey: queryKeys.notifications },
+        (old) => {
+          if (!old) return old
+          return {
+            ...old,
+            data: old.data.map((notif) =>
+              notif.id === id ? { ...notif, isRead: true } : notif
+            ),
+          }
+        }
+      )
+      
+      // Optimistically update unread count
+      if (previousCount && previousCount.count > 0) {
+        queryClient.setQueryData<{ count: number }>(queryKeys.unreadCount, {
+          count: previousCount.count - 1,
+        })
+      }
+      
+      return { previousNotifications, previousCount }
+    },
+    onError: (error, id, context) => {
+      // Rollback on error
+      if (context?.previousNotifications) {
+        context.previousNotifications.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data)
+        })
+      }
+      if (context?.previousCount) {
+        queryClient.setQueryData(queryKeys.unreadCount, context.previousCount)
+      }
+    },
+    onSettled: () => {
+      // Refetch to ensure consistency
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications })
-      // Invalidate unread count
       queryClient.invalidateQueries({ queryKey: queryKeys.unreadCount })
     },
     ...options,
@@ -288,6 +355,107 @@ export function useMarkAllNotificationsRead(
       toast({
         title: 'Notifications marquées comme lues',
         variant: 'success',
+      })
+    },
+    ...options,
+  })
+}
+
+// ============================================================================
+// Task Hooks
+// ============================================================================
+
+/**
+ * Update task with optimistic update
+ */
+export function useUpdateTask(
+  options?: UseMutationOptions<any, Error, { id: string; data: any }, { previousTasks: any[] }>
+) {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: ({ id, data }) => api.patch(`/taches/${id}`, data),
+    // Optimistic update
+    onMutate: async ({ id, data }): Promise<{ previousTasks: any[] }> => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: queryKeys.tasks })
+      
+      // Snapshot previous values
+      const previousTasks = queryClient.getQueriesData({ queryKey: queryKeys.tasks })
+      
+      // Optimistically update task in all queries
+      queryClient.setQueriesData<any>(
+        { queryKey: queryKeys.tasks },
+        (old: any) => {
+          if (!old) return old
+          if (Array.isArray(old)) {
+            return old.map((task: any) =>
+              task.id === id ? { ...task, ...data } : task
+            )
+          }
+          if (old.data && Array.isArray(old.data)) {
+            return {
+              ...old,
+              data: old.data.map((task: any) =>
+                task.id === id ? { ...task, ...data } : task
+              ),
+            }
+          }
+          return old
+        }
+      )
+      
+      return { previousTasks }
+    },
+    onError: (error, variables, context) => {
+      // Rollback on error
+      if (context?.previousTasks) {
+        context.previousTasks.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data)
+        })
+      }
+      
+      toast({
+        title: 'Erreur',
+        description: error.message || 'Impossible de mettre à jour la tâche.',
+        variant: 'destructive',
+      })
+    },
+    onSettled: () => {
+      // Refetch to ensure consistency
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks })
+    },
+    ...options,
+  })
+}
+
+/**
+ * Create task with optimistic update
+ */
+export function useCreateTask(
+  options?: UseMutationOptions<any, Error, any>
+) {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: (data: any) => api.post('/taches', data),
+    onSuccess: () => {
+      // Invalidate tasks list
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks })
+      // Invalidate dashboard counters
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardCounters })
+      
+      toast({
+        title: 'Tâche créée',
+        description: 'La tâche a été créée avec succès.',
+        variant: 'success',
+      })
+    },
+    onError: (error) => {
+      toast({
+        title: 'Erreur',
+        description: error.message || 'Impossible de créer la tâche.',
+        variant: 'destructive',
       })
     },
     ...options,

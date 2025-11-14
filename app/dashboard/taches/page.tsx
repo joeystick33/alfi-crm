@@ -14,7 +14,9 @@ import {
   SelectValue,
 } from '@/components/ui/Select'
 import { DataTable, type Column } from '@/components/ui/DataTable'
-import { Skeleton } from '@/components/ui/Skeleton'
+import { LoadingState } from '@/components/ui/LoadingState'
+import { ErrorState, getErrorVariant } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { formatDate } from '@/lib/utils'
 import {
   Plus,
@@ -22,7 +24,7 @@ import {
   CheckSquare,
   Clock,
   AlertCircle,
-  Filter,
+  ListTodo,
 } from 'lucide-react'
 
 export default function TachesPage() {
@@ -35,7 +37,10 @@ export default function TachesPage() {
 
   // TODO: Replace with real API call
   const isLoading = false
+  const isError = false
+  const error = null
   const taches: any[] = []
+  const refetch = () => {}
 
   const statusConfig = {
     TODO: { label: 'À faire', variant: 'outline' as const, icon: Clock },
@@ -260,11 +265,31 @@ export default function TachesPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full" />
-              ))}
-            </div>
+            <LoadingState variant="table" count={5} />
+          ) : isError ? (
+            <ErrorState
+              error={error as Error}
+              variant={getErrorVariant(error as Error)}
+              onRetry={refetch}
+            />
+          ) : filteredTaches.length === 0 ? (
+            <EmptyState
+              icon={ListTodo}
+              title="Aucune tâche trouvée"
+              description={
+                filters.search || filters.status !== 'all' || filters.priority !== 'all'
+                  ? 'Aucune tâche ne correspond à vos critères. Essayez de modifier vos filtres.'
+                  : 'Commencez par créer votre première tâche pour organiser votre travail.'
+              }
+              action={{
+                label: 'Créer une tâche',
+                onClick: () => {
+                  // TODO: Open create task modal
+                  console.log('Create task')
+                },
+                icon: Plus,
+              }}
+            />
           ) : (
             <DataTable
               data={filteredTaches}

@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { formatCurrency, formatPercentage } from '@/lib/utils'
-import { TrendingUp, TrendingDown, AlertCircle, CheckCircle } from 'lucide-react'
+import { AlertCircle, CheckCircle } from 'lucide-react'
 import type { ClientDetail, WealthSummary } from '@/lib/api-types'
+import { SimulationHistory } from './SimulationHistory'
 
 interface TabOverviewProps {
   clientId: string
@@ -182,6 +183,9 @@ export function TabOverview({ clientId, client, wealth }: TabOverviewProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Simulation History */}
+      <SimulationHistory clientId={clientId} />
 
       {/* Recent Timeline */}
       <Card>
