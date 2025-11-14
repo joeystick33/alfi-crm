@@ -230,7 +230,7 @@
   - Intégrer avec calendriers externes (Google, Outlook)
   - _Requirements: 9.4, 9.5, 9.6_
 
-- [ ] 27. Créer la page Projets
+- [x] 27. Créer la page Projets
   - Créer `app/dashboard/projets/page.tsx`
   - Charger les projets depuis `/api/projets`
   - Afficher les projets avec statuts et progress
@@ -238,7 +238,7 @@
   - Lier les tâches aux projets
   - _Requirements: 7.4, 7.5_
 
-- [ ] 28. Créer la page Opportunités
+- [x] 28. Créer la page Opportunités
   - Créer `app/dashboard/opportunites/page.tsx`
   - Charger les opportunités depuis `/api/opportunites`
   - Implémenter la vue pipeline (Kanban)
@@ -248,14 +248,14 @@
 
 ## Phase 6: Calculateurs & Simulateurs
 
-- [ ] 29. Créer la page hub Calculateurs
+- [x] 29. Créer la page hub Calculateurs
   - Créer `app/dashboard/calculators/page.tsx`
   - Afficher les catégories (Fiscalité, Budget, Objectifs)
   - Lister tous les calculateurs disponibles
   - Permettre l'accès rapide à chaque calculateur
   - _Requirements: 10.1_
 
-- [ ] 30. Créer la page hub Simulateurs
+- [x] 30. Créer la page hub Simulateurs
   - Créer `app/dashboard/simulators/page.tsx`
   - Afficher les catégories (Retraite, Succession, Fiscalité)
   - Lister tous les simulateurs disponibles
