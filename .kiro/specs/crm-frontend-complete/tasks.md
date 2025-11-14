@@ -2,13 +2,13 @@
 
 ## Phase 1: Infrastructure & Composants de Base
 
-- [ ] 1. Setup projet et dépendances
+- [x] 1. Setup projet et dépendances
   - Installer les dépendances UI (Radix UI, Recharts, React Query, Framer Motion)
   - Configurer Tailwind CSS avec le design system
   - Configurer TypeScript strict mode
   - _Requirements: 13.1, 13.2, 13.3_
 
-- [ ] 2. Créer les composants UI de base
+- [x] 2. Créer les composants UI de base
   - Créer `components/ui/Button.tsx` avec variants (primary, secondary, outline, ghost)
   - Créer `components/ui/Input.tsx` avec validation
   - Créer `components/ui/Select.tsx` avec recherche
