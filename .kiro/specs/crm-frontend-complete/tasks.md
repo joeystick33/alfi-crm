@@ -36,14 +36,14 @@
 
 ## Phase 2: Layout Dashboard & Navigation
 
-- [ ] 5. Créer le layout dashboard principal
+- [x] 5. Créer le layout dashboard principal
   - Créer `app/dashboard/layout.tsx` avec structure 2 sidebars
   - Gérer l'état d'expansion des sidebars (hover)
   - Intégrer NextAuth pour session utilisateur
   - Charger les compteurs temps réel depuis `/api/dashboard/counters`
   - _Requirements: 1.1, 1.2, 1.7_
 
-- [ ] 6. Créer la sidebar de navigation (gauche)
+- [x] 6. Créer la sidebar de navigation (gauche)
   - Créer `components/dashboard/NavigationSidebar.tsx`
   - Implémenter les 6 sections (Pilotage, Portefeuille, Commercial, Organisation, Outils, Conformité)
   - Afficher les badges avec compteurs dynamiques
@@ -51,14 +51,14 @@
   - Ajouter les icônes Lucide pour chaque item
   - _Requirements: 1.3, 1.4_
 
-- [ ] 7. Créer la sidebar de services (droite)
+- [x] 7. Créer la sidebar de services (droite)
   - Créer `components/dashboard/ServicesSidebar.tsx`
   - Afficher les statistiques des services
   - Implémenter les actions contextuelles selon la page
   - Gérer l'état d'expansion
   - _Requirements: 1.1_
 
-- [ ] 8. Créer le header dashboard
+- [x] 8. Créer le header dashboard
   - Créer `components/dashboard/DashboardHeader.tsx`
   - Intégrer la recherche globale
   - Ajouter les boutons d'actions rapides
@@ -66,14 +66,14 @@
   - Intégrer le mode présentation (Ctrl+H)
   - _Requirements: 1.5, 1.6, 14.1, 14.2, 14.3_
 
-- [ ] 9. Créer la command palette
+- [x] 9. Créer la command palette
   - Créer `components/dashboard/CommandPalette.tsx`
   - Implémenter la recherche fuzzy
   - Ajouter les raccourcis clavier (Ctrl+K)
   - Navigation rapide vers clients, documents, tâches
   - _Requirements: 1.5_
 
-- [ ] 10. Créer le centre de notifications
+- [x] 10. Créer le centre de notifications
   - Créer `components/dashboard/NotificationCenter.tsx`
   - Charger les notifications depuis `/api/notifications`
   - Catégoriser par type (Task, KYC, Contract, etc.)
