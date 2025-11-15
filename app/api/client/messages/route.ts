@@ -220,6 +220,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    if (!client) {
+      return NextResponse.json(
+        { error: 'Client not found' },
+        { status: 404 }
+      );
+    }
+
     // Create notification for advisor
     await prisma.notification.create({
       data: {

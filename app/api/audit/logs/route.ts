@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth-helpers'
 import { AuditService } from '@/lib/services/audit-service'
 import { isRegularUser } from '@/lib/auth-types'
+import { AuditAction } from '@prisma/client'
 
 /**
  * GET /api/audit/logs
@@ -17,8 +18,9 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     
+    const actionParam = searchParams.get('action');
     const filters = {
-      action: searchParams.get('action') || undefined,
+      action: actionParam ? (actionParam as AuditAction) : undefined,
       entityType: searchParams.get('entityType') || undefined,
       entityId: searchParams.get('entityId') || undefined,
       userId: searchParams.get('userId') || undefined,

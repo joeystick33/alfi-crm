@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     const stats = await documentService.getDocumentStats()
 
     // Formater les documents pour le widget
-    const formattedDocuments = documents.map(doc => {
+    const formattedDocuments = documents.map((doc: any) => {
       // Calculer la date d'échéance si applicable
       let dueLabel = null
       if (doc.expiresAt) {
@@ -61,10 +61,10 @@ export async function GET(request: NextRequest) {
 
     // Calculer les statistiques du widget
     const pendingSignatures = documents.filter(
-      d => d.signatureStatus === 'PENDING'
+      (d: any) => d.signatureStatus === 'PENDING'
     ).length
 
-    const expiringSoon = documents.filter(d => {
+    const expiringSoon = documents.filter((d: any) => {
       if (!d.expiresAt) return false
       const daysUntil = Math.ceil(
         (new Date(d.expiresAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)

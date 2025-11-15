@@ -108,7 +108,7 @@ export async function DELETE(
       context.isSuperAdmin
     )
 
-    await service.deleteActif(params.id)
+    await service.deactivateActif(params.id)
 
     return createSuccessResponse({ message: 'Actif deleted successfully' })
   } catch (error) {

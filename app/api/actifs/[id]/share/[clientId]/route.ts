@@ -24,7 +24,7 @@ export async function DELETE(
       context.isSuperAdmin
     )
 
-    await service.removeOwner(params.id, params.clientId)
+    await service.removeClientFromActif(params.id, params.clientId)
 
     return createSuccessResponse({ message: 'Owner removed successfully' })
   } catch (error) {

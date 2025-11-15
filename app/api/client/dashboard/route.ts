@@ -47,6 +47,13 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    if (!client) {
+      return NextResponse.json(
+        { error: 'Client not found' },
+        { status: 404 }
+      );
+    }
+
     // Get wealth summary
     const [actifs, passifs] = await Promise.all([
       prisma.clientActif.findMany({
@@ -230,7 +237,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: error.errors },
+        { error: 'Invalid request data', details: error.issues },
         { status: 400 }
       );
     }
