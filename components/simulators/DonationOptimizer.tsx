@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import { ModernBarChart } from '@/components/charts/ModernBarChart';
+import Input from '@/components/ui/Input';
+import Button from '@/components/ui/Button';
+import { TimelineTemplate } from '@/components/ui/bento/TimelineTemplate';
 import { ModernLineChart } from '@/components/charts/ModernLineChart';
+import { ModernBarChart } from '@/components/charts/ModernBarChart';
 import { 
   Gift, 
   Plus,
@@ -20,41 +21,6 @@ import {
   Heart
 } from 'lucide-react';
 
-interface Beneficiary {
-  id: number;
-  name: string;
-  relationship: string;
-  share: string;
-  previousDonations: string;
-}
-
-interface DonationScheduleItem {
-  year: number;
-  donorAge: number;
-  totalDonationAmount: number;
-  totalTax: number;
-  taxSavings?: number;
-  cumulativeTaxSavings?: number;
-}
-
-interface BeneficiaryBreakdown {
-  name: string;
-  totalDonations: number;
-  totalTax: number;
-  netReceived: number;
-}
-
-interface OptimizationResult {
-  totalDonations: number;
-  totalDonationTax: number;
-  totalTaxSavings: number;
-  numberOfDonations?: number;
-  donationSchedule?: DonationScheduleItem[];
-  beneficiaryBreakdown?: BeneficiaryBreakdown[];
-  strategy?: string;
-  recommendations?: string[];
-}
-
 const RELATIONSHIP_OPTIONS = [
   { value: 'spouse', label: 'Conjoint', icon: Heart, color: 'text-pink-600' },
   { value: 'child', label: 'Enfant', icon: Users, color: 'text-blue-600' },
@@ -64,6 +30,14 @@ const RELATIONSHIP_OPTIONS = [
   { value: 'nephew_niece', label: 'Neveu/Nièce', icon: Users, color: 'text-yellow-600' },
   { value: 'other', label: 'Autre', icon: Users, color: 'text-gray-600' }
 ];
+
+interface Beneficiary {
+  id: number;
+  name: string;
+  relationship: string;
+  share: string;
+  previousDonations: string;
+}
 
 export function DonationOptimizer() {
   // Donor information
@@ -89,7 +63,7 @@ export function DonationOptimizer() {
     }
   ]);
 
-  const [result, setResult] = useState<OptimizationResult | null>(null);
+  const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -190,8 +164,8 @@ export function DonationOptimizer() {
 
       const data = await response.json();
       setResult(data.optimization);
-    } catch (err) {
-      setError((err as Error).message || 'Erreur lors de l\'optimisation des donations');
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors de l\'optimisation des donations');
       console.error(err);
     } finally {
       setLoading(false);
@@ -212,26 +186,62 @@ export function DonationOptimizer() {
   };
 
   // Prepare donation schedule chart data
-  const donationScheduleData = result?.donationSchedule ? result.donationSchedule.map(d => ({
+  const donationScheduleData = result?.donationSchedule ? result.donationSchedule.map((d: any) => ({
     year: d.year,
     age: d.donorAge,
     'Montant de la donation': d.totalDonationAmount,
-    'Droits de donation': d.totalTax
+    'Droits de donation': d.totalTax,
+    'Économie fiscale': d.taxSavings || 0
   })) : [];
 
-  // Prepare tax savings over time chart data
-  const taxSavingsData = result?.donationSchedule ? result.donationSchedule.map(d => ({
-    year: d.year,
-    'Économie fiscale cumulée': d.cumulativeTaxSavings || 0
-  })) : [];
+  // Prepare KPIs for Timeline Template
+  const kpis = result ? [
+    {
+      title: 'Donations totales',
+      value: formatCurrency(result.totalDonations),
+      icon: <Gift className="h-5 w-5" />,
+      variant: 'default' as const
+    },
+    {
+      title: 'Droits de donation',
+      value: formatCurrency(result.totalDonationTax),
+      icon: <DollarSign className="h-5 w-5" />,
+      variant: 'default' as const
+    },
+    {
+      title: 'Économie fiscale',
+      value: formatCurrency(result.totalTaxSavings),
+      change: { value: (result.totalTaxSavings / result.totalDonations) * 100, trend: 'up' as const },
+      icon: <TrendingDown className="h-5 w-5" />,
+      variant: 'default' as const
+    }
+  ] : [];
 
-  // Prepare beneficiary distribution chart data
-  const beneficiaryDistributionData = result?.beneficiaryBreakdown ? result.beneficiaryBreakdown.map(b => ({
-    name: b.name,
-    'Donations totales': b.totalDonations,
-    'Droits payés': b.totalTax,
-    'Montant net reçu': b.netReceived
-  })) : [];
+  // Prepare recommendations component
+  const recommendationsComponent = result?.recommendations && result.recommendations.length > 0 ? (
+    <div className="p-4">
+      <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+        <Info className="h-5 w-5 text-blue-600" />
+        Recommandations
+      </h4>
+      <ul className="space-y-2">
+        {result.recommendations.map((rec: string, index: number) => (
+          <li key={index} className="text-sm text-gray-700 flex items-start gap-2">
+            <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-green-600" />
+            <span>{rec}</span>
+          </li>
+        ))}
+      </ul>
+      {result.strategy && (
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <p className="text-sm text-gray-700">
+            <span className="font-medium">Stratégie: </span>
+            {result.strategy}
+          </p>
+        </div>
+      )}
+    </div>
+  ) : null;
 
   return (
     <div className="space-y-6">
@@ -267,32 +277,31 @@ export function DonationOptimizer() {
                   placeholder="60"
                   min="18"
                   max="100"
+                  icon={<Calendar className="h-4 w-4" />}
                 />
 
-                <div>
-                  <Input
-                    label="Patrimoine total (€)"
-                    type="number"
-                    value={totalWealth}
-                    onChange={(e) => setTotalWealth(e.target.value)}
-                    placeholder="1000000"
-                    min="0"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Patrimoine à transmettre</p>
-                </div>
+                <Input
+                  label="Patrimoine total (€)"
+                  type="number"
+                  value={totalWealth}
+                  onChange={(e) => setTotalWealth(e.target.value)}
+                  placeholder="1000000"
+                  min="0"
+                  icon={<DollarSign className="h-4 w-4" />}
+                  helperText="Patrimoine à transmettre"
+                />
 
-                <div>
-                  <Input
-                    label="Âge cible de transmission"
-                    type="number"
-                    value={targetAge}
-                    onChange={(e) => setTargetAge(e.target.value)}
-                    placeholder="80"
-                    min="18"
-                    max="100"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Âge souhaité pour finaliser</p>
-                </div>
+                <Input
+                  label="Âge cible de transmission"
+                  type="number"
+                  value={targetAge}
+                  onChange={(e) => setTargetAge(e.target.value)}
+                  placeholder="80"
+                  min="18"
+                  max="100"
+                  icon={<Calendar className="h-4 w-4" />}
+                  helperText="Âge souhaité pour finaliser"
+                />
               </div>
             </div>
 
@@ -326,6 +335,7 @@ export function DonationOptimizer() {
                             value={beneficiary.name}
                             onChange={(e) => updateBeneficiary(beneficiary.id, 'name', e.target.value)}
                             placeholder="Ex: Marie Dupont"
+                            icon={<RelationIcon className="h-4 w-4" />}
                           />
 
                           <div>
@@ -345,31 +355,27 @@ export function DonationOptimizer() {
                             </select>
                           </div>
 
-                          <div>
-                            <Input
-                              label="Part (%)"
-                              type="number"
-                              value={beneficiary.share}
-                              onChange={(e) => updateBeneficiary(beneficiary.id, 'share', e.target.value)}
-                              placeholder="50"
-                              min="0"
-                              max="100"
-                              step="0.1"
-                            />
-                            <p className="text-xs text-gray-500 mt-1">Part du patrimoine</p>
-                          </div>
+                          <Input
+                            label="Part (%)"
+                            type="number"
+                            value={beneficiary.share}
+                            onChange={(e) => updateBeneficiary(beneficiary.id, 'share', e.target.value)}
+                            placeholder="50"
+                            min="0"
+                            max="100"
+                            step="0.1"
+                            helperText="Part du patrimoine"
+                          />
 
-                          <div>
-                            <Input
-                              label="Donations antérieures (€)"
-                              type="number"
-                              value={beneficiary.previousDonations}
-                              onChange={(e) => updateBeneficiary(beneficiary.id, 'previousDonations', e.target.value)}
-                              placeholder="0"
-                              min="0"
-                            />
-                            <p className="text-xs text-gray-500 mt-1">Derniers 15 ans</p>
-                          </div>
+                          <Input
+                            label="Donations antérieures (€)"
+                            type="number"
+                            value={beneficiary.previousDonations}
+                            onChange={(e) => updateBeneficiary(beneficiary.id, 'previousDonations', e.target.value)}
+                            placeholder="0"
+                            min="0"
+                            helperText="Derniers 15 ans"
+                          />
                         </div>
 
                         <button
@@ -427,48 +433,42 @@ export function DonationOptimizer() {
             )}
 
             {result && (
-              <div className="space-y-6 mt-8">
-                {/* Summary Metrics */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
-                    <div className="text-sm text-blue-600 font-medium mb-1">Donations totales</div>
-                    <div className="text-2xl font-bold text-blue-900">
-                      {formatCurrency(result.totalDonations)}
-                    </div>
-                  </div>
+              <div className="mt-8">
+                {/* Timeline Template with Bento Grid */}
+                <TimelineTemplate
+                  timelineTitle="Calendrier des donations recommandé"
+                  timelineDescription={`Planification sur ${parseFloat(targetAge) - parseFloat(donorAge)} ans`}
+                  timeline={
+                    donationScheduleData.length > 0 ? (
+                      <ModernLineChart
+                        data={donationScheduleData}
+                        dataKeys={['Montant de la donation', 'Droits de donation', 'Économie fiscale']}
+                        xAxisKey="year"
+                        formatValue={formatCurrency}
+                        xAxisLabel="Année"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-gray-500">
+                        Aucune donnée disponible
+                      </div>
+                    )
+                  }
+                  kpis={kpis}
+                  feasibility={
+                    result.totalTaxSavings > result.totalDonationTax
+                      ? { status: 'FEASIBLE', message: 'Stratégie très avantageuse - économies significatives' }
+                      : result.totalTaxSavings > 0
+                      ? { status: 'CHALLENGING', message: 'Stratégie modérément avantageuse' }
+                      : { status: 'NOT_FEASIBLE', message: 'Stratégie peu avantageuse - revoir les paramètres' }
+                  }
+                  recommendations={recommendationsComponent}
+                  loading={loading}
+                />
 
-                  <div className="p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-lg border border-red-200">
-                    <div className="text-sm text-red-600 font-medium mb-1">Droits de donation</div>
-                    <div className="text-2xl font-bold text-red-900">
-                      {formatCurrency(result.totalDonationTax)}
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
-                    <div className="text-sm text-green-600 font-medium mb-1">Économie fiscale</div>
-                    <div className="text-2xl font-bold text-green-900">
-                      {formatCurrency(result.totalTaxSavings)}
-                    </div>
-                    <div className="text-xs text-green-600 mt-1">
-                      vs succession directe
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
-                    <div className="text-sm text-purple-600 font-medium mb-1">Nombre de donations</div>
-                    <div className="text-2xl font-bold text-purple-900">
-                      {result.numberOfDonations || result.donationSchedule?.length || 0}
-                    </div>
-                    <div className="text-xs text-purple-600 mt-1">
-                      Sur {parseFloat(targetAge) - parseFloat(donorAge)} ans
-                    </div>
-                  </div>
-                </div>
-
-                {/* Donation Schedule */}
+                {/* Donation Schedule Table */}
                 {result.donationSchedule && result.donationSchedule.length > 0 && (
-                  <div>
-                    <h4 className="text-lg font-semibold mb-4">Calendrier des donations recommandé</h4>
+                  <div className="mt-8">
+                    <h4 className="text-lg font-semibold mb-4">Détail du calendrier</h4>
                     <div className="overflow-x-auto">
                       <table className="w-full border-collapse">
                         <thead>
@@ -481,7 +481,7 @@ export function DonationOptimizer() {
                           </tr>
                         </thead>
                         <tbody>
-                          {result.donationSchedule.map((donation, index) => (
+                          {result.donationSchedule.map((donation: any, index: number) => (
                             <tr key={index} className="bg-white hover:bg-gray-50">
                               <td className="p-3 border font-semibold">{donation.year}</td>
                               <td className="p-3 text-center border">{donation.donorAge} ans</td>
@@ -502,89 +502,28 @@ export function DonationOptimizer() {
                   </div>
                 )}
 
-                {/* Charts */}
-                <div className="grid grid-cols-1 gap-6">
-                  {/* Donation Schedule Chart */}
-                  {donationScheduleData.length > 0 && (
-                    <div>
-                      <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <Calendar className="h-5 w-5 text-primary-600" />
-                        Évolution des donations dans le temps
-                      </h4>
-                      <ModernLineChart
-                        data={donationScheduleData}
-                        dataKeys={['Montant de la donation', 'Droits de donation']}
-                        xAxisKey="year"
-                        formatValue={formatCurrency}
-                        xAxisLabel="Année"
-                      />
-                    </div>
-                  )}
-
-                  {/* Tax Savings Over Time */}
-                  {taxSavingsData.length > 0 && (
-                    <div>
-                      <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <TrendingDown className="h-5 w-5 text-green-600" />
-                        Économies fiscales cumulées
-                      </h4>
-                      <ModernLineChart
-                        data={taxSavingsData}
-                        dataKeys={['Économie fiscale cumulée']}
-                        xAxisKey="year"
-                        formatValue={formatCurrency}
-                        xAxisLabel="Année"
-                      />
-                    </div>
-                  )}
-
-                  {/* Beneficiary Distribution */}
-                  {beneficiaryDistributionData.length > 0 && (
-                    <div>
-                      <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <Users className="h-5 w-5 text-primary-600" />
-                        Répartition par bénéficiaire
-                      </h4>
-                      <ModernBarChart
-                        data={beneficiaryDistributionData}
-                        dataKeys={['Donations totales', 'Droits payés', 'Montant net reçu']}
-                        formatValue={formatCurrency}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Strategy Explanation */}
-                {result.strategy && (
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-                      <Info className="h-5 w-5" />
-                      Stratégie recommandée
+                {/* Beneficiary Distribution */}
+                {result.beneficiaryBreakdown && result.beneficiaryBreakdown.length > 0 && (
+                  <div className="mt-8">
+                    <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <Users className="h-5 w-5 text-primary-600" />
+                      Répartition par bénéficiaire
                     </h4>
-                    <p className="text-sm text-blue-800">{result.strategy}</p>
-                  </div>
-                )}
-
-                {/* Recommendations */}
-                {result.recommendations && result.recommendations.length > 0 && (
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                      <Info className="h-5 w-5" />
-                      Recommandations
-                    </h4>
-                    <ul className="space-y-2">
-                      {result.recommendations.map((rec, index) => (
-                        <li key={index} className="text-sm text-blue-800 flex items-start gap-2">
-                          <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                          <span>{rec}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <ModernBarChart
+                      data={result.beneficiaryBreakdown.map((b: any) => ({
+                        name: b.name,
+                        'Donations totales': b.totalDonations,
+                        'Droits payés': b.totalTax,
+                        'Montant net reçu': b.netReceived
+                      }))}
+                      dataKeys={['Donations totales', 'Droits payés', 'Montant net reçu']}
+                      formatValue={formatCurrency}
+                    />
                   </div>
                 )}
 
                 {/* Info Box */}
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="flex gap-3">
                     <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-blue-900">

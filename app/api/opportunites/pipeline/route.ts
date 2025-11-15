@@ -15,16 +15,13 @@ export async function GET(request: NextRequest) {
       return createErrorResponse('Invalid user type', 400)
     }
 
-    const { searchParams } = new URL(request.url)
-    const conseillerId = searchParams.get('conseillerId') || undefined
-
     const service = new OpportuniteService(
       context.cabinetId,
       context.user.id,
       context.isSuperAdmin
     )
 
-    const pipeline = await service.getPipeline(conseillerId)
+    const pipeline = await service.getPipeline()
 
     return createSuccessResponse(pipeline)
   } catch (error) {

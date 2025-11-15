@@ -31,10 +31,10 @@ export async function PATCH(
       context.isSuperAdmin
     )
 
-    const kycDocument = await service.validateKYCDocument(params.docId, {
+    const kycDocument = await service.validateKYCDocument({
+      kycDocumentId: params.docId,
       status,
       validatedBy: validatedBy || context.user.id,
-      notes,
     })
 
     return createSuccessResponse(kycDocument)

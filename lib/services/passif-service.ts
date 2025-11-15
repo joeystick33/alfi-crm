@@ -170,6 +170,29 @@ export class PassifService {
   }
 
   /**
+   * Liste les passifs avec informations clients (alias)
+   */
+  async listPassifsWithClients(filters?: {
+    clientId?: string
+    type?: PassifType
+    isActive?: boolean
+    search?: string
+  }) {
+    const passifs = await this.listPassifs(filters)
+    
+    // Transform to match expected format
+    return passifs.map(passif => ({
+      ...passif,
+      montantRestant: Number(passif.remainingAmount),
+      tauxInteret: Number(passif.interestRate),
+      mensualite: Number(passif.monthlyPayment),
+      dateFin: passif.endDate,
+      organisme: passif.lender,
+      nom: passif.name
+    }))
+  }
+
+  /**
    * Liste les passifs d'un client
    */
   async getClientPassifs(clientId: string) {

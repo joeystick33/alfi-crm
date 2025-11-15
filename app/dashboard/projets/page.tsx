@@ -260,7 +260,7 @@ export default function ProjetsPage() {
           variant={getErrorVariant(error)}
           onRetry={() => {
             setError(null)
-            fetchProjets()
+            loadProjets()
           }}
         />
       )}

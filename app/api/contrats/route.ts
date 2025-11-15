@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       context.isSuperAdmin
     )
 
-    const contrats = await service.listContrats(filters)
+    const contrats = await service.listContratsWithClients(filters)
 
     return createSuccessResponse(contrats)
   } catch (error) {

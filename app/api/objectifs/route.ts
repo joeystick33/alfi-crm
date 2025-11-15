@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       context.isSuperAdmin
     )
 
-    const objectifs = await service.listObjectifs(filters)
+    const objectifs = await service.getObjectifs(filters)
 
     return createSuccessResponse(objectifs)
   } catch (error) {

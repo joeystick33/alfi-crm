@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     
-    const filters = {
+    const filters: any = {
       type: searchParams.get('type') || undefined,
       status: searchParams.get('status') || undefined,
       priority: searchParams.get('priority') || undefined,

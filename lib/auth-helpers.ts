@@ -1,28 +1,24 @@
 import { NextRequest } from 'next/server'
 import { AuthContext, SessionData, isSuperAdmin } from './auth-types'
 import { getPermissions } from './permissions'
+import { auth } from './auth'
 
 /**
  * Extrait le contexte d'authentification depuis la requête
- * TODO: Implémenter avec NextAuth ou votre solution d'auth
- * 
- * Pour l'instant, ceci est un placeholder qui devra être remplacé
- * par votre vraie logique d'authentification
+ * Utilise NextAuth pour récupérer la session
  */
-export async function getAuthContext(request: NextRequest): Promise<AuthContext | null> {
-  // TODO: Récupérer la session depuis NextAuth ou votre système d'auth
-  // const session = await getServerSession()
-  // if (!session) return null
+export async function getAuthContext(request?: NextRequest): Promise<AuthContext | null> {
+  const session = await auth()
   
-  // Placeholder - à remplacer par votre vraie logique
-  const authHeader = request.headers.get('authorization')
-  if (!authHeader) {
+  if (!session?.user) {
     return null
   }
 
-  // TODO: Valider le token et récupérer l'utilisateur
-  // Pour l'instant, on retourne null
-  return null
+  return {
+    user: session.user as SessionData,
+    cabinetId: session.user.cabinetId || '',
+    isSuperAdmin: session.user.isSuperAdmin,
+  }
 }
 
 /**

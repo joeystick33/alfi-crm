@@ -1,3 +1,6 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -10,12 +13,14 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
+  Loader2,
 } from 'lucide-react'
-import type { ClientDetail } from '@/lib/api-types'
+import { CreateObjectifModal } from './CreateObjectifModal'
+import { CreateProjetModal } from './CreateProjetModal'
+import type { Objectif, Projet } from '@prisma/client'
 
 interface TabObjectivesProps {
   clientId: string
-  client: ClientDetail
 }
 
 const objectifTypeLabels = {
@@ -54,7 +59,57 @@ const projetStatusConfig = {
   ON_HOLD: { label: 'En pause', variant: 'warning' as const },
 }
 
-export function TabObjectives({ clientId, client }: TabObjectivesProps) {
+export function TabObjectives({ clientId }: TabObjectivesProps) {
+  const [objectifs, setObjectifs] = useState<Objectif[]>([])
+  const [projets, setProjets] = useState<Projet[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showObjectifModal, setShowObjectifModal] = useState(false)
+  const [showProjetModal, setShowProjetModal] = useState(false)
+
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      const [objectifsRes, projetsRes] = await Promise.all([
+        fetch(`/api/clients/${clientId}/objectifs`),
+        fetch(`/api/clients/${clientId}/projets`),
+      ])
+
+      if (objectifsRes.ok) {
+        const objectifsData = await objectifsRes.json()
+        setObjectifs(objectifsData.data || [])
+      }
+
+      if (projetsRes.ok) {
+        const projetsData = await projetsRes.json()
+        setProjets(projetsData.data || [])
+      }
+    } catch (error) {
+      console.error('Error fetching objectives and projects:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [clientId])
+
+  const handleObjectifSuccess = () => {
+    fetchData()
+  }
+
+  const handleProjetSuccess = () => {
+    fetchData()
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Objectifs Section */}
@@ -64,20 +119,18 @@ export function TabObjectives({ clientId, client }: TabObjectivesProps) {
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
               Objectifs financiers
-              {client.objectifs && (
-                <Badge variant="secondary">{client.objectifs.length}</Badge>
-              )}
+              <Badge variant="secondary">{objectifs.length}</Badge>
             </CardTitle>
-            <Button size="sm">
+            <Button size="sm" onClick={() => setShowObjectifModal(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Nouvel objectif
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          {client.objectifs && client.objectifs.length > 0 ? (
+          {objectifs.length > 0 ? (
             <div className="space-y-4">
-              {client.objectifs.map((objectif: any) => {
+              {objectifs.map((objectif) => {
                 const statusConfig = objectifStatusConfig[objectif.status as keyof typeof objectifStatusConfig]
                 const StatusIcon = statusConfig.icon
                 const progress = objectif.progress || 0
@@ -168,7 +221,7 @@ export function TabObjectives({ clientId, client }: TabObjectivesProps) {
               <p className="text-sm text-muted-foreground">
                 Aucun objectif défini
               </p>
-              <Button className="mt-4" size="sm">
+              <Button className="mt-4" size="sm" onClick={() => setShowObjectifModal(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Créer le premier objectif
               </Button>
@@ -184,20 +237,18 @@ export function TabObjectives({ clientId, client }: TabObjectivesProps) {
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
               Projets
-              {client.projets && (
-                <Badge variant="secondary">{client.projets.length}</Badge>
-              )}
+              <Badge variant="secondary">{projets.length}</Badge>
             </CardTitle>
-            <Button size="sm">
+            <Button size="sm" onClick={() => setShowProjetModal(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Nouveau projet
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          {client.projets && client.projets.length > 0 ? (
+          {projets.length > 0 ? (
             <div className="space-y-4">
-              {client.projets.map((projet: any) => {
+              {projets.map((projet) => {
                 const statusConfig = projetStatusConfig[projet.status as keyof typeof projetStatusConfig]
                 const progress = projet.progress || 0
 
@@ -289,7 +340,7 @@ export function TabObjectives({ clientId, client }: TabObjectivesProps) {
               <p className="text-sm text-muted-foreground">
                 Aucun projet en cours
               </p>
-              <Button className="mt-4" size="sm">
+              <Button className="mt-4" size="sm" onClick={() => setShowProjetModal(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Créer le premier projet
               </Button>
@@ -297,6 +348,21 @@ export function TabObjectives({ clientId, client }: TabObjectivesProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Modals */}
+      <CreateObjectifModal
+        open={showObjectifModal}
+        onClose={() => setShowObjectifModal(false)}
+        clientId={clientId}
+        onSuccess={handleObjectifSuccess}
+      />
+
+      <CreateProjetModal
+        open={showProjetModal}
+        onClose={() => setShowProjetModal(false)}
+        clientId={clientId}
+        onSuccess={handleProjetSuccess}
+      />
     </div>
   )
 }

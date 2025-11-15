@@ -1,0 +1,1879 @@
+{
+  "timestamp": "2025-11-14T20:33:41.489Z",
+  "stats": {
+    "crmTotal": 225,
+    "alfiTotal": 184,
+    "duplicates": 147,
+    "crmOnly": 70,
+    "alfiOnly": 15
+  },
+  "duplicates": [
+    {
+      "name": "Accordion",
+      "crmPaths": [
+        "ui/Accordion.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Accordion.jsx"
+      ]
+    },
+    {
+      "name": "AdvisorRankingList",
+      "crmPaths": [
+        "dashboard/AdvisorRankingList.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/AdvisorRankingList.jsx"
+      ]
+    },
+    {
+      "name": "Alert",
+      "crmPaths": [
+        "ui/Alert.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Alert.jsx"
+      ]
+    },
+    {
+      "name": "Alert-dialog",
+      "crmPaths": [
+        "ui/Alert-dialog.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Alert-dialog.jsx"
+      ]
+    },
+    {
+      "name": "AlertCard",
+      "crmPaths": [
+        "ui/AlertCard.jsx"
+      ],
+      "alfiPaths": [
+        "ui/AlertCard.jsx"
+      ]
+    },
+    {
+      "name": "AlertsWidget",
+      "crmPaths": [
+        "dashboard/AlertsWidget.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/AlertsWidget.jsx"
+      ]
+    },
+    {
+      "name": "Animated-button",
+      "crmPaths": [
+        "ui/Animated-button.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Animated-button.jsx"
+      ]
+    },
+    {
+      "name": "Animated-card",
+      "crmPaths": [
+        "ui/Animated-card.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Animated-card.jsx"
+      ]
+    },
+    {
+      "name": "Animated-container",
+      "crmPaths": [
+        "ui/Animated-container.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Animated-container.jsx"
+      ]
+    },
+    {
+      "name": "Aspect-ratio",
+      "crmPaths": [
+        "ui/Aspect-ratio.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Aspect-ratio.jsx"
+      ]
+    },
+    {
+      "name": "Avatar",
+      "crmPaths": [
+        "ui/Avatar.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Avatar.jsx"
+      ]
+    },
+    {
+      "name": "Badge",
+      "crmPaths": [
+        "ui/Badge.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Badge.jsx",
+        "ui/Badge.tsx"
+      ]
+    },
+    {
+      "name": "Breadcrumb",
+      "crmPaths": [
+        "ui/Breadcrumb.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Breadcrumb.jsx"
+      ]
+    },
+    {
+      "name": "BudgetAnalyzer",
+      "crmPaths": [
+        "calculators/BudgetAnalyzer.tsx"
+      ],
+      "alfiPaths": [
+        "calculators/BudgetAnalyzer.tsx"
+      ]
+    },
+    {
+      "name": "Button",
+      "crmPaths": [
+        "ui/Button.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Button.jsx",
+        "ui/Button.tsx"
+      ]
+    },
+    {
+      "name": "Calendar",
+      "crmPaths": [
+        "ui/Calendar.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Calendar.jsx"
+      ]
+    },
+    {
+      "name": "CalendarCentralWidget",
+      "crmPaths": [
+        "dashboard/CalendarCentralWidget.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/CalendarCentralWidget.jsx"
+      ]
+    },
+    {
+      "name": "CampaignsWidget",
+      "crmPaths": [
+        "dashboard/CampaignsWidget.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/CampaignsWidget.jsx"
+      ]
+    },
+    {
+      "name": "CapitalGainsTaxCalculator",
+      "crmPaths": [
+        "calculators/CapitalGainsTaxCalculator.tsx"
+      ],
+      "alfiPaths": [
+        "calculators/CapitalGainsTaxCalculator.tsx"
+      ]
+    },
+    {
+      "name": "Card",
+      "crmPaths": [
+        "ui/Card.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Card.jsx",
+        "ui/Card.tsx"
+      ]
+    },
+    {
+      "name": "Carousel",
+      "crmPaths": [
+        "ui/Carousel.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Carousel.jsx"
+      ]
+    },
+    {
+      "name": "Chart",
+      "crmPaths": [
+        "ui/Chart.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Chart.jsx"
+      ]
+    },
+    {
+      "name": "Checkbox",
+      "crmPaths": [
+        "ui/Checkbox.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Checkbox.jsx"
+      ]
+    },
+    {
+      "name": "Collapsible",
+      "crmPaths": [
+        "ui/Collapsible.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Collapsible.jsx"
+      ]
+    },
+    {
+      "name": "Combobox",
+      "crmPaths": [
+        "ui/Combobox.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Combobox.jsx"
+      ]
+    },
+    {
+      "name": "Command",
+      "crmPaths": [
+        "ui/Command.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Command.jsx"
+      ]
+    },
+    {
+      "name": "CommandPalette",
+      "crmPaths": [
+        "ui/CommandPalette.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/CommandPalette.tsx",
+        "ui/CommandPalette.jsx"
+      ]
+    },
+    {
+      "name": "ConflictWarningModal",
+      "crmPaths": [
+        "dashboard/ConflictWarningModal.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/ConflictWarningModal.jsx"
+      ]
+    },
+    {
+      "name": "Context-menu",
+      "crmPaths": [
+        "ui/Context-menu.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Context-menu.jsx"
+      ]
+    },
+    {
+      "name": "DashboardConfigPanel",
+      "crmPaths": [
+        "dashboard/DashboardConfigPanel.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/DashboardConfigPanel.jsx"
+      ]
+    },
+    {
+      "name": "DashboardCustomizer",
+      "crmPaths": [
+        "dashboard/DashboardCustomizer.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/DashboardCustomizer.jsx"
+      ]
+    },
+    {
+      "name": "DataTable",
+      "crmPaths": [
+        "ui/DataTable.jsx"
+      ],
+      "alfiPaths": [
+        "ui/DataTable.jsx",
+        "ui/DataTable.tsx"
+      ]
+    },
+    {
+      "name": "Date-field",
+      "crmPaths": [
+        "ui/Date-field.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Date-field.jsx"
+      ]
+    },
+    {
+      "name": "DatePicker",
+      "crmPaths": [
+        "ui/DatePicker.jsx"
+      ],
+      "alfiPaths": [
+        "ui/DatePicker.jsx"
+      ]
+    },
+    {
+      "name": "DebtCapacityCalculator",
+      "crmPaths": [
+        "calculators/DebtCapacityCalculator.tsx"
+      ],
+      "alfiPaths": [
+        "calculators/DebtCapacityCalculator.tsx"
+      ]
+    },
+    {
+      "name": "Dialog",
+      "crmPaths": [
+        "ui/Dialog.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Dialog.jsx"
+      ]
+    },
+    {
+      "name": "Divider",
+      "crmPaths": [
+        "ui/Divider.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Divider.jsx"
+      ]
+    },
+    {
+      "name": "DocumentsWidget",
+      "crmPaths": [
+        "dashboard/DocumentsWidget.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/DocumentsWidget.jsx"
+      ]
+    },
+    {
+      "name": "DonationOptimizer",
+      "crmPaths": [
+        "simulators/DonationOptimizer.jsx"
+      ],
+      "alfiPaths": [
+        "simulators/DonationOptimizer.tsx"
+      ]
+    },
+    {
+      "name": "DonationTaxCalculator",
+      "crmPaths": [
+        "calculators/DonationTaxCalculator.tsx"
+      ],
+      "alfiPaths": [
+        "calculators/DonationTaxCalculator.tsx"
+      ]
+    },
+    {
+      "name": "DraggableAppointment",
+      "crmPaths": [
+        "dashboard/DraggableAppointment.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/DraggableAppointment.jsx"
+      ]
+    },
+    {
+      "name": "DraggableDashboard",
+      "crmPaths": [
+        "dashboard/DraggableDashboard.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/DraggableDashboard.jsx"
+      ]
+    },
+    {
+      "name": "Drawer",
+      "crmPaths": [
+        "ui/Drawer.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Drawer.jsx"
+      ]
+    },
+    {
+      "name": "Dropdown",
+      "crmPaths": [
+        "ui/Dropdown.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Dropdown.jsx"
+      ]
+    },
+    {
+      "name": "Dropdown-menu",
+      "crmPaths": [
+        "ui/Dropdown-menu.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Dropdown-menu.jsx"
+      ]
+    },
+    {
+      "name": "DropZone",
+      "crmPaths": [
+        "dashboard/DropZone.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/DropZone.jsx"
+      ]
+    },
+    {
+      "name": "EducationFundingCalculator",
+      "crmPaths": [
+        "calculators/EducationFundingCalculator.tsx"
+      ],
+      "alfiPaths": [
+        "calculators/EducationFundingCalculator.tsx"
+      ]
+    },
+    {
+      "name": "EmailsWidget",
+      "crmPaths": [
+        "dashboard/EmailsWidget.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/EmailsWidget.jsx"
+      ]
+    },
+    {
+      "name": "EmptyState",
+      "crmPaths": [
+        "ui/EmptyState.jsx"
+      ],
+      "alfiPaths": [
+        "ui/EmptyState.jsx",
+        "ui/EmptyState.tsx"
+      ]
+    },
+    {
+      "name": "ErrorBoundary",
+      "crmPaths": [
+        "ui/ErrorBoundary.jsx"
+      ],
+      "alfiPaths": [
+        "ui/ErrorBoundary.jsx",
+        "ui/ErrorBoundary.tsx"
+      ]
+    },
+    {
+      "name": "ExportButton",
+      "crmPaths": [
+        "export/ExportButton.jsx"
+      ],
+      "alfiPaths": [
+        "exports/ExportButton.tsx"
+      ]
+    },
+    {
+      "name": "FileUpload",
+      "crmPaths": [
+        "ui/FileUpload.jsx"
+      ],
+      "alfiPaths": [
+        "ui/FileUpload.jsx"
+      ]
+    },
+    {
+      "name": "Filter-select",
+      "crmPaths": [
+        "ui/Filter-select.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Filter-select.jsx"
+      ]
+    },
+    {
+      "name": "Form",
+      "crmPaths": [
+        "ui/Form.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Form.jsx"
+      ]
+    },
+    {
+      "name": "Glass-card",
+      "crmPaths": [
+        "ui/Glass-card.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Glass-card.jsx"
+      ]
+    },
+    {
+      "name": "GlobalSearch",
+      "crmPaths": [
+        "dashboard/GlobalSearch.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/GlobalSearch.jsx"
+      ]
+    },
+    {
+      "name": "HomePurchaseCalculator",
+      "crmPaths": [
+        "calculators/HomePurchaseCalculator.tsx"
+      ],
+      "alfiPaths": [
+        "calculators/HomePurchaseCalculator.tsx"
+      ]
+    },
+    {
+      "name": "Hover-card",
+      "crmPaths": [
+        "ui/Hover-card.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Hover-card.jsx"
+      ]
+    },
+    {
+      "name": "IncomeTaxCalculator",
+      "crmPaths": [
+        "calculators/IncomeTaxCalculator.tsx"
+      ],
+      "alfiPaths": [
+        "calculators/IncomeTaxCalculator.tsx"
+      ]
+    },
+    {
+      "name": "index",
+      "crmPaths": [
+        "calculators/index.ts",
+        "charts/index.js",
+        "simulators/index.ts",
+        "ui/index.js"
+      ],
+      "alfiPaths": [
+        "calculators/index.ts",
+        "exports/index.ts",
+        "simulators/index.ts",
+        "ui/index.js",
+        "ui/index.ts"
+      ]
+    },
+    {
+      "name": "InheritanceTaxCalculator",
+      "crmPaths": [
+        "calculators/InheritanceTaxCalculator.tsx"
+      ],
+      "alfiPaths": [
+        "calculators/InheritanceTaxCalculator.tsx"
+      ]
+    },
+    {
+      "name": "Input",
+      "crmPaths": [
+        "ui/Input.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Input.jsx",
+        "ui/Input.tsx"
+      ]
+    },
+    {
+      "name": "Input-otp",
+      "crmPaths": [
+        "ui/Input-otp.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Input-otp.jsx"
+      ]
+    },
+    {
+      "name": "InvestmentVehicleComparison",
+      "crmPaths": [
+        "simulators/InvestmentVehicleComparison.jsx"
+      ],
+      "alfiPaths": [
+        "simulators/InvestmentVehicleComparison.tsx"
+      ]
+    },
+    {
+      "name": "KeyboardShortcutsHelp",
+      "crmPaths": [
+        "accessibility/KeyboardShortcutsHelp.jsx",
+        "dashboard/KeyboardShortcutsHelp.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/KeyboardShortcutsHelp.jsx"
+      ]
+    },
+    {
+      "name": "KPICard",
+      "crmPaths": [
+        "dashboard/KPICard.jsx",
+        "management/KPICard.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/KPICard.jsx"
+      ]
+    },
+    {
+      "name": "KYCWidget",
+      "crmPaths": [
+        "dashboard/KYCWidget.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/KYCWidget.jsx"
+      ]
+    },
+    {
+      "name": "Label",
+      "crmPaths": [
+        "ui/Label.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Label.jsx"
+      ]
+    },
+    {
+      "name": "LazyImage",
+      "crmPaths": [
+        "ui/LazyImage.jsx"
+      ],
+      "alfiPaths": [
+        "ui/LazyImage.jsx"
+      ]
+    },
+    {
+      "name": "Menubar",
+      "crmPaths": [
+        "ui/Menubar.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Menubar.jsx"
+      ]
+    },
+    {
+      "name": "MetricCard",
+      "crmPaths": [
+        "ui/MetricCard.jsx"
+      ],
+      "alfiPaths": [
+        "ui/MetricCard.jsx"
+      ]
+    },
+    {
+      "name": "MobileNav",
+      "crmPaths": [
+        "layout/MobileNav.jsx"
+      ],
+      "alfiPaths": [
+        "layout/MobileNav.jsx"
+      ]
+    },
+    {
+      "name": "Modal",
+      "crmPaths": [
+        "ui/Modal.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Modal.jsx",
+        "ui/Modal.tsx"
+      ]
+    },
+    {
+      "name": "ModernBarChart",
+      "crmPaths": [
+        "charts/ModernBarChart.jsx"
+      ],
+      "alfiPaths": [
+        "charts/ModernBarChart.tsx"
+      ]
+    },
+    {
+      "name": "ModernPieChart",
+      "crmPaths": [
+        "charts/ModernPieChart.jsx"
+      ],
+      "alfiPaths": [
+        "charts/ModernPieChart.tsx"
+      ]
+    },
+    {
+      "name": "MultiObjectivePlanner",
+      "crmPaths": [
+        "calculators/MultiObjectivePlanner.tsx"
+      ],
+      "alfiPaths": [
+        "calculators/MultiObjectivePlanner.tsx"
+      ]
+    },
+    {
+      "name": "MultiSelect",
+      "crmPaths": [
+        "ui/MultiSelect.jsx"
+      ],
+      "alfiPaths": [
+        "ui/MultiSelect.jsx"
+      ]
+    },
+    {
+      "name": "Navigation-menu",
+      "crmPaths": [
+        "ui/Navigation-menu.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Navigation-menu.jsx"
+      ]
+    },
+    {
+      "name": "NavigationItem",
+      "crmPaths": [
+        "layout/NavigationItem.jsx"
+      ],
+      "alfiPaths": [
+        "layout/NavigationItem.jsx"
+      ]
+    },
+    {
+      "name": "NavigationSection",
+      "crmPaths": [
+        "layout/NavigationSection.jsx"
+      ],
+      "alfiPaths": [
+        "layout/NavigationSection.jsx"
+      ]
+    },
+    {
+      "name": "NotificationCenter",
+      "crmPaths": [
+        "notifications/NotificationCenter.jsx",
+        "ui/NotificationCenter.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/NotificationCenter.tsx",
+        "ui/NotificationCenter.jsx"
+      ]
+    },
+    {
+      "name": "ObjectiveCalculator",
+      "crmPaths": [
+        "calculators/ObjectiveCalculator.tsx"
+      ],
+      "alfiPaths": [
+        "calculators/ObjectiveCalculator.tsx"
+      ]
+    },
+    {
+      "name": "OpportunitiesWidget",
+      "crmPaths": [
+        "dashboard/OpportunitiesWidget.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/OpportunitiesWidget.jsx"
+      ]
+    },
+    {
+      "name": "page-tabs",
+      "crmPaths": [
+        "ui/page-tabs.js"
+      ],
+      "alfiPaths": [
+        "ui/page-tabs.js"
+      ]
+    },
+    {
+      "name": "Page-tabs",
+      "crmPaths": [
+        "ui/Page-tabs.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Page-tabs.jsx"
+      ]
+    },
+    {
+      "name": "Pagination",
+      "crmPaths": [
+        "ui/Pagination.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Pagination.jsx"
+      ]
+    },
+    {
+      "name": "PensionEstimator",
+      "crmPaths": [
+        "simulators/PensionEstimator.tsx"
+      ],
+      "alfiPaths": [
+        "simulators/PensionEstimator.tsx"
+      ]
+    },
+    {
+      "name": "Popover",
+      "crmPaths": [
+        "ui/Popover.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Popover.jsx"
+      ]
+    },
+    {
+      "name": "Progress",
+      "crmPaths": [
+        "ui/Progress.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Progress.jsx"
+      ]
+    },
+    {
+      "name": "QueryProvider",
+      "crmPaths": [
+        "providers/QueryProvider.jsx"
+      ],
+      "alfiPaths": [
+        "providers/QueryProvider.tsx"
+      ]
+    },
+    {
+      "name": "QuickActions",
+      "crmPaths": [
+        "dashboard/QuickActions.jsx",
+        "ui/QuickActions.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/QuickActions.jsx",
+        "ui/QuickActions.jsx"
+      ]
+    },
+    {
+      "name": "QuickCreate",
+      "crmPaths": [
+        "dashboard/QuickCreate.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/QuickCreate.jsx"
+      ]
+    },
+    {
+      "name": "QuickStats",
+      "crmPaths": [
+        "dashboard/QuickStats.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/QuickStats.jsx"
+      ]
+    },
+    {
+      "name": "QuickStats.test",
+      "crmPaths": [
+        "dashboard/__tests__/QuickStats.test.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/__tests__/QuickStats.test.jsx"
+      ]
+    },
+    {
+      "name": "Radio",
+      "crmPaths": [
+        "ui/Radio.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Radio.jsx"
+      ]
+    },
+    {
+      "name": "Radio-group",
+      "crmPaths": [
+        "ui/Radio-group.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Radio-group.jsx"
+      ]
+    },
+    {
+      "name": "RangePicker",
+      "crmPaths": [
+        "ui/RangePicker.jsx"
+      ],
+      "alfiPaths": [
+        "ui/RangePicker.jsx"
+      ]
+    },
+    {
+      "name": "ReclamationsWidget",
+      "crmPaths": [
+        "dashboard/ReclamationsWidget.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/ReclamationsWidget.jsx"
+      ]
+    },
+    {
+      "name": "Resizable",
+      "crmPaths": [
+        "ui/Resizable.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Resizable.jsx"
+      ]
+    },
+    {
+      "name": "RetirementComparison",
+      "crmPaths": [
+        "simulators/RetirementComparison.tsx"
+      ],
+      "alfiPaths": [
+        "simulators/RetirementComparison.tsx"
+      ]
+    },
+    {
+      "name": "RetirementSimulator",
+      "crmPaths": [
+        "simulators/RetirementSimulator.tsx"
+      ],
+      "alfiPaths": [
+        "simulators/RetirementSimulator.tsx"
+      ]
+    },
+    {
+      "name": "Scroll-area",
+      "crmPaths": [
+        "ui/Scroll-area.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Scroll-area.jsx"
+      ]
+    },
+    {
+      "name": "SearchBar",
+      "crmPaths": [
+        "ui/SearchBar.jsx"
+      ],
+      "alfiPaths": [
+        "ui/SearchBar.jsx"
+      ]
+    },
+    {
+      "name": "Select",
+      "crmPaths": [
+        "ui/Select.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Select.jsx",
+        "ui/Select.tsx"
+      ]
+    },
+    {
+      "name": "Separator",
+      "crmPaths": [
+        "ui/Separator.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Separator.jsx"
+      ]
+    },
+    {
+      "name": "ServicesSidebar",
+      "crmPaths": [
+        "dashboard/ServicesSidebar.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/ServicesSidebar.jsx",
+        "dashboard/ServicesSidebar.tsx"
+      ]
+    },
+    {
+      "name": "Sheet",
+      "crmPaths": [
+        "ui/Sheet.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Sheet.jsx"
+      ]
+    },
+    {
+      "name": "Sidebar",
+      "crmPaths": [
+        "layout/Sidebar.jsx",
+        "ui/Sidebar.jsx"
+      ],
+      "alfiPaths": [
+        "layout/Sidebar.jsx",
+        "ui/Sidebar.jsx"
+      ]
+    },
+    {
+      "name": "Skeleton",
+      "crmPaths": [
+        "ui/Skeleton.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Skeleton.jsx",
+        "ui/Skeleton.tsx"
+      ]
+    },
+    {
+      "name": "Slider",
+      "crmPaths": [
+        "ui/Slider.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Slider.jsx"
+      ]
+    },
+    {
+      "name": "Sonner",
+      "crmPaths": [
+        "ui/Sonner.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Sonner.jsx"
+      ]
+    },
+    {
+      "name": "Spinner",
+      "crmPaths": [
+        "ui/Spinner.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Spinner.jsx"
+      ]
+    },
+    {
+      "name": "StatCard",
+      "crmPaths": [
+        "ui/StatCard.jsx"
+      ],
+      "alfiPaths": [
+        "ui/StatCard.jsx"
+      ]
+    },
+    {
+      "name": "StatusBadge",
+      "crmPaths": [
+        "ui/StatusBadge.jsx"
+      ],
+      "alfiPaths": [
+        "ui/StatusBadge.jsx"
+      ]
+    },
+    {
+      "name": "Stepper",
+      "crmPaths": [
+        "ui/Stepper.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Stepper.jsx"
+      ]
+    },
+    {
+      "name": "SuccessionComparison",
+      "crmPaths": [
+        "simulators/SuccessionComparison.jsx"
+      ],
+      "alfiPaths": [
+        "simulators/SuccessionComparison.tsx"
+      ]
+    },
+    {
+      "name": "SuccessionSimulator",
+      "crmPaths": [
+        "simulators/SuccessionSimulator.jsx"
+      ],
+      "alfiPaths": [
+        "simulators/SuccessionSimulator.tsx"
+      ]
+    },
+    {
+      "name": "SuggestionsIAWidget",
+      "crmPaths": [
+        "dashboard/SuggestionsIAWidget.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/SuggestionsIAWidget.jsx"
+      ]
+    },
+    {
+      "name": "Switch",
+      "crmPaths": [
+        "ui/Switch.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Switch.jsx"
+      ]
+    },
+    {
+      "name": "TabDocuments",
+      "crmPaths": [
+        "client360/TabDocuments.jsx"
+      ],
+      "alfiPaths": [
+        "client360/TabDocuments.tsx"
+      ]
+    },
+    {
+      "name": "TabKYC",
+      "crmPaths": [
+        "client360/TabKYC.jsx"
+      ],
+      "alfiPaths": [
+        "client360/TabKYC.tsx"
+      ]
+    },
+    {
+      "name": "Table",
+      "crmPaths": [
+        "ui/Table.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Table.jsx"
+      ]
+    },
+    {
+      "name": "TabObjectives",
+      "crmPaths": [
+        "client360/TabObjectives.jsx"
+      ],
+      "alfiPaths": [
+        "client360/TabObjectives.tsx"
+      ]
+    },
+    {
+      "name": "TabOverview",
+      "crmPaths": [
+        "client360/TabOverview.jsx"
+      ],
+      "alfiPaths": [
+        "client360/TabOverview.tsx"
+      ]
+    },
+    {
+      "name": "Tabs",
+      "crmPaths": [
+        "ui/Tabs.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Tabs.jsx",
+        "ui/Tabs.tsx"
+      ]
+    },
+    {
+      "name": "TabTimeline",
+      "crmPaths": [
+        "client360/TabTimeline.jsx"
+      ],
+      "alfiPaths": [
+        "client360/TabTimeline.tsx"
+      ]
+    },
+    {
+      "name": "TabWealth",
+      "crmPaths": [
+        "client360/TabWealth.jsx"
+      ],
+      "alfiPaths": [
+        "client360/TabWealth.tsx"
+      ]
+    },
+    {
+      "name": "TasksWidget",
+      "crmPaths": [
+        "dashboard/TasksWidget.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/TasksWidget.jsx"
+      ]
+    },
+    {
+      "name": "TasksWidget.test",
+      "crmPaths": [
+        "dashboard/__tests__/TasksWidget.test.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/__tests__/TasksWidget.test.jsx"
+      ]
+    },
+    {
+      "name": "TaxProjector",
+      "crmPaths": [
+        "simulators/TaxProjector.tsx"
+      ],
+      "alfiPaths": [
+        "simulators/TaxProjector.tsx"
+      ]
+    },
+    {
+      "name": "TaxStrategyComparison",
+      "crmPaths": [
+        "simulators/TaxStrategyComparison.jsx"
+      ],
+      "alfiPaths": [
+        "simulators/TaxStrategyComparison.tsx"
+      ]
+    },
+    {
+      "name": "TeamKPICards",
+      "crmPaths": [
+        "dashboard/TeamKPICards.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/TeamKPICards.jsx"
+      ]
+    },
+    {
+      "name": "Textarea",
+      "crmPaths": [
+        "ui/Textarea.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Textarea.jsx"
+      ]
+    },
+    {
+      "name": "Theme-provider",
+      "crmPaths": [
+        "ui/Theme-provider.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Theme-provider.jsx"
+      ]
+    },
+    {
+      "name": "ThemeToggle",
+      "crmPaths": [
+        "ui/ThemeToggle.jsx"
+      ],
+      "alfiPaths": [
+        "ui/ThemeToggle.jsx"
+      ]
+    },
+    {
+      "name": "Timeline",
+      "crmPaths": [
+        "ui/Timeline.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Timeline.jsx"
+      ]
+    },
+    {
+      "name": "TimePicker",
+      "crmPaths": [
+        "ui/TimePicker.jsx"
+      ],
+      "alfiPaths": [
+        "ui/TimePicker.jsx"
+      ]
+    },
+    {
+      "name": "Toast",
+      "crmPaths": [
+        "ui/Toast.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Toast.jsx",
+        "ui/Toast.tsx"
+      ]
+    },
+    {
+      "name": "Toaster",
+      "crmPaths": [
+        "ui/Toaster.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Toaster.jsx",
+        "ui/Toaster.tsx"
+      ]
+    },
+    {
+      "name": "TodayWidget",
+      "crmPaths": [
+        "dashboard/TodayWidget.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/TodayWidget.jsx"
+      ]
+    },
+    {
+      "name": "Toggle",
+      "crmPaths": [
+        "ui/Toggle.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Toggle.jsx"
+      ]
+    },
+    {
+      "name": "Toggle-group",
+      "crmPaths": [
+        "ui/Toggle-group.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Toggle-group.jsx"
+      ]
+    },
+    {
+      "name": "Tooltip",
+      "crmPaths": [
+        "ui/Tooltip.jsx"
+      ],
+      "alfiPaths": [
+        "ui/Tooltip.jsx"
+      ]
+    },
+    {
+      "name": "use-toast",
+      "crmPaths": [
+        "ui/use-toast.js"
+      ],
+      "alfiPaths": [
+        "ui/use-toast.js"
+      ]
+    },
+    {
+      "name": "VirtualList",
+      "crmPaths": [
+        "ui/VirtualList.jsx"
+      ],
+      "alfiPaths": [
+        "ui/VirtualList.jsx"
+      ]
+    },
+    {
+      "name": "WealthTaxCalculator",
+      "crmPaths": [
+        "calculators/WealthTaxCalculator.tsx"
+      ],
+      "alfiPaths": [
+        "calculators/WealthTaxCalculator.tsx"
+      ]
+    },
+    {
+      "name": "WidgetSettingsForm",
+      "crmPaths": [
+        "dashboard/WidgetSettingsForm.jsx"
+      ],
+      "alfiPaths": [
+        "dashboard/WidgetSettingsForm.jsx"
+      ]
+    }
+  ],
+  "crmOnly": [
+    {
+      "name": "ActivityFeed",
+      "paths": [
+        "activity/ActivityFeed.jsx"
+      ]
+    },
+    {
+      "name": "ActivityFilters",
+      "paths": [
+        "activity/ActivityFilters.jsx"
+      ]
+    },
+    {
+      "name": "ActivityItem",
+      "paths": [
+        "activity/ActivityItem.jsx"
+      ]
+    },
+    {
+      "name": "ActivityTimeline",
+      "paths": [
+        "client/ActivityTimeline.jsx"
+      ]
+    },
+    {
+      "name": "AdvancedUIExample",
+      "paths": [
+        "examples/AdvancedUIExample.jsx"
+      ]
+    },
+    {
+      "name": "AlertsPanel",
+      "paths": [
+        "management/AlertsPanel.jsx"
+      ]
+    },
+    {
+      "name": "AuditLogViewer",
+      "paths": [
+        "superadmin/AuditLogViewer.jsx"
+      ]
+    },
+    {
+      "name": "BottomNavigation",
+      "paths": [
+        "mobile/BottomNavigation.jsx"
+      ]
+    },
+    {
+      "name": "ClientHeader",
+      "paths": [
+        "client/ClientHeader.jsx"
+      ]
+    },
+    {
+      "name": "ClientLink",
+      "paths": [
+        "common/ClientLink.jsx"
+      ]
+    },
+    {
+      "name": "ClientSidebar",
+      "paths": [
+        "client/ClientSidebar.jsx"
+      ]
+    },
+    {
+      "name": "ClientsNavTabs",
+      "paths": [
+        "clients/ClientsNavTabs.jsx"
+      ]
+    },
+    {
+      "name": "ComplianceScore",
+      "paths": [
+        "compliance/ComplianceScore.jsx"
+      ]
+    },
+    {
+      "name": "ContactsSection",
+      "paths": [
+        "client/ContactsSection.jsx"
+      ]
+    },
+    {
+      "name": "CreateOrganizationModal",
+      "paths": [
+        "superadmin/CreateOrganizationModal.jsx"
+      ]
+    },
+    {
+      "name": "CreateTaskModal",
+      "paths": [
+        "tasks/CreateTaskModal.jsx"
+      ]
+    },
+    {
+      "name": "CreateUserModal",
+      "paths": [
+        "superadmin/CreateUserModal.jsx"
+      ]
+    },
+    {
+      "name": "EmailsSection",
+      "paths": [
+        "client/EmailsSection.jsx"
+      ]
+    },
+    {
+      "name": "EmailSyncSettings",
+      "paths": [
+        "settings/EmailSyncSettings.jsx"
+      ]
+    },
+    {
+      "name": "ExpandableSection",
+      "paths": [
+        "mobile/ExpandableSection.jsx"
+      ]
+    },
+    {
+      "name": "ExpandableSection.test",
+      "paths": [
+        "mobile/__tests__/ExpandableSection.test.jsx"
+      ]
+    },
+    {
+      "name": "FeatureToggles",
+      "paths": [
+        "superadmin/FeatureToggles.jsx"
+      ]
+    },
+    {
+      "name": "GoalsSection",
+      "paths": [
+        "client/GoalsSection.jsx"
+      ]
+    },
+    {
+      "name": "KanbanBoard",
+      "paths": [
+        "workflow/KanbanBoard.jsx"
+      ]
+    },
+    {
+      "name": "KYCSection",
+      "paths": [
+        "client/KYCSection.jsx"
+      ]
+    },
+    {
+      "name": "LCBFTSection",
+      "paths": [
+        "client/LCBFTSection.jsx"
+      ]
+    },
+    {
+      "name": "MifidQuestionnaireForm",
+      "paths": [
+        "compliance/MifidQuestionnaireForm.jsx"
+      ]
+    },
+    {
+      "name": "MobileDashboardLayout",
+      "paths": [
+        "mobile/MobileDashboardLayout.jsx"
+      ]
+    },
+    {
+      "name": "MobileQuickActions",
+      "paths": [
+        "mobile/MobileQuickActions.jsx"
+      ]
+    },
+    {
+      "name": "MobileWidgetOptimizer",
+      "paths": [
+        "mobile/MobileWidgetOptimizer.jsx"
+      ]
+    },
+    {
+      "name": "ModernAreaChart",
+      "paths": [
+        "charts/ModernAreaChart.jsx"
+      ]
+    },
+    {
+      "name": "ModernChartWrapper",
+      "paths": [
+        "charts/ModernChartWrapper.jsx"
+      ]
+    },
+    {
+      "name": "ModernDesignShowcase",
+      "paths": [
+        "examples/ModernDesignShowcase.jsx"
+      ]
+    },
+    {
+      "name": "ModernMetricCard",
+      "paths": [
+        "charts/ModernMetricCard.jsx"
+      ]
+    },
+    {
+      "name": "ModernProgressRing",
+      "paths": [
+        "charts/ModernProgressRing.jsx"
+      ]
+    },
+    {
+      "name": "ModernUIExample",
+      "paths": [
+        "examples/ModernUIExample.jsx"
+      ]
+    },
+    {
+      "name": "MonitoringDashboard",
+      "paths": [
+        "monitoring/MonitoringDashboard.jsx"
+      ]
+    },
+    {
+      "name": "NotesSection",
+      "paths": [
+        "client/NotesSection.jsx"
+      ]
+    },
+    {
+      "name": "NotificationBell",
+      "paths": [
+        "notifications/NotificationBell.jsx"
+      ]
+    },
+    {
+      "name": "NotificationItem",
+      "paths": [
+        "notifications/NotificationItem.jsx"
+      ]
+    },
+    {
+      "name": "OrganizationSettingsModal",
+      "paths": [
+        "superadmin/OrganizationSettingsModal.jsx"
+      ]
+    },
+    {
+      "name": "PlanSelector",
+      "paths": [
+        "superadmin/PlanSelector.jsx"
+      ]
+    },
+    {
+      "name": "PremiumThemeExample",
+      "paths": [
+        "examples/PremiumThemeExample.jsx"
+      ]
+    },
+    {
+      "name": "PullToRefresh",
+      "paths": [
+        "mobile/PullToRefresh.jsx"
+      ]
+    },
+    {
+      "name": "QuotaEditor",
+      "paths": [
+        "superadmin/QuotaEditor.jsx"
+      ]
+    },
+    {
+      "name": "RestrictionManager",
+      "paths": [
+        "superadmin/RestrictionManager.jsx"
+      ]
+    },
+    {
+      "name": "SessionProvider",
+      "paths": [
+        "providers/SessionProvider.js"
+      ]
+    },
+    {
+      "name": "SimulatorLayout",
+      "paths": [
+        "simulators/SimulatorLayout.jsx"
+      ]
+    },
+    {
+      "name": "SkipLinks",
+      "paths": [
+        "accessibility/SkipLinks.jsx"
+      ]
+    },
+    {
+      "name": "StepActivite",
+      "paths": [
+        "onboarding/StepActivite.jsx"
+      ]
+    },
+    {
+      "name": "StepBanques",
+      "paths": [
+        "onboarding/StepBanques.jsx"
+      ]
+    },
+    {
+      "name": "StepBilans",
+      "paths": [
+        "onboarding/StepBilans.jsx"
+      ]
+    },
+    {
+      "name": "StepDirigeants",
+      "paths": [
+        "onboarding/StepDirigeants.jsx"
+      ]
+    },
+    {
+      "name": "StepDocuments",
+      "paths": [
+        "onboarding/StepDocuments.jsx"
+      ]
+    },
+    {
+      "name": "StepDocumentsEntreprise",
+      "paths": [
+        "onboarding/StepDocumentsEntreprise.jsx"
+      ]
+    },
+    {
+      "name": "StepFamille",
+      "paths": [
+        "onboarding/StepFamille.jsx"
+      ]
+    },
+    {
+      "name": "StepFiscalite",
+      "paths": [
+        "onboarding/StepFiscalite.jsx"
+      ]
+    },
+    {
+      "name": "StepFiscaliteEntreprise",
+      "paths": [
+        "onboarding/StepFiscaliteEntreprise.jsx"
+      ]
+    },
+    {
+      "name": "StepIdentite",
+      "paths": [
+        "onboarding/StepIdentite.jsx"
+      ]
+    },
+    {
+      "name": "StepMIFID",
+      "paths": [
+        "onboarding/StepMIFID.jsx"
+      ]
+    },
+    {
+      "name": "StepPatrimoine",
+      "paths": [
+        "onboarding/StepPatrimoine.jsx"
+      ]
+    },
+    {
+      "name": "StepProfession",
+      "paths": [
+        "onboarding/StepProfession.jsx"
+      ]
+    },
+    {
+      "name": "StepSociete",
+      "paths": [
+        "onboarding/StepSociete.jsx"
+      ]
+    },
+    {
+      "name": "SuperAdminDashboard",
+      "paths": [
+        "superadmin/SuperAdminDashboard.jsx"
+      ]
+    },
+    {
+      "name": "TabBudget",
+      "paths": [
+        "client360/TabBudget.jsx"
+      ]
+    },
+    {
+      "name": "TabContracts",
+      "paths": [
+        "client360/TabContracts.jsx"
+      ]
+    },
+    {
+      "name": "TabFamily",
+      "paths": [
+        "client360/TabFamily.jsx"
+      ]
+    },
+    {
+      "name": "TabTaxation",
+      "paths": [
+        "client360/TabTaxation.jsx"
+      ]
+    },
+    {
+      "name": "TaskCard",
+      "paths": [
+        "tasks/TaskCard.jsx"
+      ]
+    },
+    {
+      "name": "TwoFactorSetup",
+      "paths": [
+        "security/TwoFactorSetup.jsx"
+      ]
+    }
+  ],
+  "alfiOnly": [
+    {
+      "name": "ClientCard",
+      "paths": [
+        "clients/ClientCard.tsx"
+      ]
+    },
+    {
+      "name": "ClientFilters",
+      "paths": [
+        "clients/ClientFilters.tsx"
+      ]
+    },
+    {
+      "name": "CreateClientModal",
+      "paths": [
+        "clients/CreateClientModal.tsx"
+      ]
+    },
+    {
+      "name": "DashboardHeader",
+      "paths": [
+        "dashboard/DashboardHeader.tsx"
+      ]
+    },
+    {
+      "name": "ErrorState",
+      "paths": [
+        "ui/ErrorState.tsx"
+      ]
+    },
+    {
+      "name": "ExportExample",
+      "paths": [
+        "exports/ExportExample.tsx"
+      ]
+    },
+    {
+      "name": "ExportModal",
+      "paths": [
+        "exports/ExportModal.tsx"
+      ]
+    },
+    {
+      "name": "ExportPDFExample",
+      "paths": [
+        "exports/ExportPDFExample.tsx"
+      ]
+    },
+    {
+      "name": "LoadingState",
+      "paths": [
+        "ui/LoadingState.tsx"
+      ]
+    },
+    {
+      "name": "ModernLineChart",
+      "paths": [
+        "charts/ModernLineChart.tsx"
+      ]
+    },
+    {
+      "name": "NavigationSidebar",
+      "paths": [
+        "dashboard/NavigationSidebar.tsx"
+      ]
+    },
+    {
+      "name": "SaveSimulationButton",
+      "paths": [
+        "common/SaveSimulationButton.tsx"
+      ]
+    },
+    {
+      "name": "SimulationHistory",
+      "paths": [
+        "client360/SimulationHistory.tsx"
+      ]
+    },
+    {
+      "name": "TabOpportunities",
+      "paths": [
+        "client360/TabOpportunities.tsx"
+      ]
+    },
+    {
+      "name": "TabProfile",
+      "paths": [
+        "client360/TabProfile.tsx"
+      ]
+    }
+  ]
+}

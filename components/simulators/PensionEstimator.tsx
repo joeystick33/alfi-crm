@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { ModernBarChart } from '@/components/charts/ModernBarChart';
+import { TimelineTemplate } from '@/components/ui/bento/TimelineTemplate';
 import { 
   Award, 
   CheckCircle, 
@@ -11,7 +12,9 @@ import {
   DollarSign,
   Calendar,
   User,
-  Briefcase
+  Briefcase,
+  Percent,
+  TrendingUp
 } from 'lucide-react';
 
 export function PensionEstimator() {
@@ -236,40 +239,71 @@ export function PensionEstimator() {
 
             {result && (
               <div className="space-y-6 mt-8">
-                {/* Key Metrics */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
-                    <div className="text-sm text-blue-600 font-medium mb-1">Pension mensuelle brute</div>
-                    <div className="text-2xl font-bold text-blue-900">
-                      {formatCurrency(result.monthlyPension)}
-                    </div>
-                    <div className="text-xs text-blue-600 mt-1">
-                      {formatCurrency(result.annualPension)} par an
-                    </div>
-                  </div>
+                <TimelineTemplate
+                  timeline={
+                    <ModernBarChart
+                      data={pensionBreakdownData}
+                      dataKeys={['Pension de base', 'Pension complémentaire']}
+                      title="Composition de la pension"
+                      formatValue={formatCurrency}
+                    />
+                  }
+                  timelineTitle="Estimation de votre pension"
+                  timelineDescription={`Régime: ${getRegimeLabel(result.regime)}`}
+                  kpis={[
+                    {
+                      title: 'Pension mensuelle brute',
+                      value: formatCurrency(result.monthlyPension),
+                      description: `${formatCurrency(result.annualPension)} par an`,
+                      icon: <DollarSign className="h-5 w-5" />,
+                    },
+                    {
+                      title: 'Taux de remplacement',
+                      value: formatPercent(result.replacementRate),
+                      description: 'Du salaire moyen',
+                      icon: <Percent className="h-5 w-5" />,
+                    },
+                    {
+                      title: 'Trimestres validés',
+                      value: result.quartersValidated,
+                      description: `Sur ${result.quartersRequired} requis`,
+                      icon: <Calendar className="h-5 w-5" />,
+                    },
+                    {
+                      title: 'Taux de liquidation',
+                      value: formatPercent(result.pensionRate),
+                      description: result.hasDiscount ? `Décote: -${formatPercent(result.discountRate)}` : result.hasBonus ? `Surcote: +${formatPercent(result.bonusRate)}` : 'Taux plein',
+                      icon: <TrendingUp className="h-5 w-5" />,
+                    },
+                  ]}
+                  feasibility={{
+                    status: result.missingQuarters === 0 && result.replacementRate >= 0.7 ? 'FEASIBLE' : result.missingQuarters > 8 || result.replacementRate < 0.5 ? 'NOT_FEASIBLE' : 'CHALLENGING',
+                    message: result.missingQuarters === 0 
+                      ? `Vous avez validé tous les trimestres requis. Taux de remplacement: ${formatPercent(result.replacementRate)}.`
+                      : `Il vous manque ${result.missingQuarters} trimestres pour le taux plein. Taux de remplacement estimé: ${formatPercent(result.replacementRate)}.`
+                  }}
+                  recommendations={
+                    result.recommendations && result.recommendations.length > 0 ? (
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                          <Info className="h-5 w-5 text-blue-600" />
+                          Recommandations
+                        </h4>
+                        <ul className="space-y-2">
+                          {result.recommendations.map((rec: string, index: number) => (
+                            <li key={index} className="text-sm text-gray-700 flex items-start gap-2">
+                              <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-green-600" />
+                              <span>{rec}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : undefined
+                  }
+                  loading={loading}
+                />
 
-                  <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
-                    <div className="text-sm text-green-600 font-medium mb-1">Taux de remplacement</div>
-                    <div className="text-2xl font-bold text-green-900">
-                      {formatPercent(result.replacementRate)}
-                    </div>
-                    <div className="text-xs text-green-600 mt-1">
-                      Du salaire moyen
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
-                    <div className="text-sm text-purple-600 font-medium mb-1">Trimestres validés</div>
-                    <div className="text-2xl font-bold text-purple-900">
-                      {result.quartersValidated}
-                    </div>
-                    <div className="text-xs text-purple-600 mt-1">
-                      Sur {result.quartersRequired} requis
-                    </div>
-                  </div>
-                </div>
-
-                {/* Pension Breakdown */}
+                {/* Pension Breakdown Details */}
                 <div className="p-6 bg-gray-50 rounded-lg border border-gray-200">
                   <h4 className="text-lg font-semibold mb-4">Détail de la pension</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -302,78 +336,6 @@ export function PensionEstimator() {
                     </div>
                   </div>
                 </div>
-
-                {/* Pension Rate Details */}
-                <div className="p-6 bg-gray-50 rounded-lg border border-gray-200">
-                  <h4 className="text-lg font-semibold mb-4">Calcul du taux</h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center p-3 bg-white rounded border border-gray-200">
-                      <span className="text-sm text-gray-600">Taux de liquidation</span>
-                      <span className="text-lg font-bold text-gray-900">
-                        {formatPercent(result.pensionRate)}
-                      </span>
-                    </div>
-
-                    {result.hasDiscount && (
-                      <div className="flex justify-between items-center p-3 bg-orange-50 rounded border border-orange-200">
-                        <span className="text-sm text-orange-700">Décote appliquée</span>
-                        <span className="text-lg font-bold text-orange-700">
-                          -{formatPercent(result.discountRate)}
-                        </span>
-                      </div>
-                    )}
-
-                    {result.hasBonus && (
-                      <div className="flex justify-between items-center p-3 bg-green-50 rounded border border-green-200">
-                        <span className="text-sm text-green-700">Surcote appliquée</span>
-                        <span className="text-lg font-bold text-green-700">
-                          +{formatPercent(result.bonusRate)}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="flex justify-between items-center p-3 bg-white rounded border border-gray-200">
-                      <span className="text-sm text-gray-600">Trimestres manquants</span>
-                      <span className={`text-lg font-bold ${result.missingQuarters > 0 ? 'text-orange-600' : 'text-green-600'}`}>
-                        {result.missingQuarters}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Pension Breakdown Chart */}
-                {pensionBreakdownData.length > 0 && (
-                  <div>
-                    <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <Award className="h-5 w-5 text-primary-600" />
-                      Composition de la pension
-                    </h4>
-                    <ModernBarChart
-                      data={pensionBreakdownData}
-                      dataKeys={['Pension de base', 'Pension complémentaire']}
-                      title="Composition de la pension"
-                      formatValue={formatCurrency}
-                    />
-                  </div>
-                )}
-
-                {/* Recommendations */}
-                {result.recommendations && result.recommendations.length > 0 && (
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                      <Info className="h-5 w-5" />
-                      Recommandations
-                    </h4>
-                    <ul className="space-y-2">
-                      {result.recommendations.map((rec: string, index: number) => (
-                        <li key={index} className="text-sm text-blue-800 flex items-start gap-2">
-                          <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                          <span>{rec}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
 
                 {/* Info Box */}
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">

@@ -215,6 +215,96 @@ export class ActifService {
   }
 
   /**
+   * Liste les actifs avec informations clients
+   */
+  async listActifsWithClients(filters?: {
+    type?: ActifType
+    category?: ActifCategory
+    isActive?: boolean
+    managedByFirm?: boolean
+    search?: string
+    minValue?: number
+    maxValue?: number
+  }) {
+    await setRLSContext(this.cabinetId, this.isSuperAdmin)
+
+    const where: any = {}
+
+    if (filters?.type) {
+      where.type = filters.type
+    }
+
+    if (filters?.category) {
+      where.category = filters.category
+    }
+
+    if (filters?.isActive !== undefined) {
+      where.isActive = filters.isActive
+    }
+
+    if (filters?.managedByFirm !== undefined) {
+      where.managedByFirm = filters.managedByFirm
+    }
+
+    if (filters?.search) {
+      where.OR = [
+        { name: { contains: filters.search, mode: 'insensitive' } },
+        { description: { contains: filters.search, mode: 'insensitive' } },
+      ]
+    }
+
+    if (filters?.minValue !== undefined || filters?.maxValue !== undefined) {
+      where.value = {}
+      if (filters.minValue !== undefined) {
+        where.value.gte = filters.minValue
+      }
+      if (filters.maxValue !== undefined) {
+        where.value.lte = filters.maxValue
+      }
+    }
+
+    const actifs = await this.prisma.actif.findMany({
+      where,
+      include: {
+        clients: {
+          include: {
+            client: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true
+              }
+            }
+          }
+        },
+        _count: {
+          select: {
+            clients: true,
+            documents: true,
+          },
+        },
+      },
+      orderBy: {
+        value: 'desc',
+      },
+    })
+
+    // Transform to include primary client info
+    return actifs.map(actif => {
+      const primaryClient = actif.clients[0]?.client
+      return {
+        ...actif,
+        client: primaryClient,
+        clientId: primaryClient?.id,
+        valeurActuelle: Number(actif.value),
+        gere: actif.managedByFirm,
+        performance: 0, // TODO: Calculate from historical data
+      }
+    })
+  }
+
+  /**
    * Liste les actifs d'un client
    */
   async getClientActifs(clientId: string) {

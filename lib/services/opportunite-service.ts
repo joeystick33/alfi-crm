@@ -232,7 +232,7 @@ export class OpportuniteService {
   /**
    * Convertir une opportunité en projet
    */
-  async convertToProjet(id: string) {
+  async convertToProjet(id: string, projectData?: any) {
     await setRLSContext(this.cabinetId, this.isSuperAdmin)
 
     const opportunite = await this.prisma.opportunite.findUnique({
@@ -248,11 +248,11 @@ export class OpportuniteService {
       data: {
         cabinetId: this.cabinetId,
         clientId: opportunite.clientId,
-        type: 'OTHER',
-        name: opportunite.name,
-        description: opportunite.description,
-        estimatedBudget: opportunite.estimatedValue,
-        priority: opportunite.priority as any,
+        type: projectData?.type || 'OTHER',
+        name: projectData?.name || opportunite.name,
+        description: projectData?.description || opportunite.description,
+        estimatedBudget: projectData?.estimatedBudget || opportunite.estimatedValue,
+        priority: projectData?.priority || (opportunite.priority as any),
         status: 'PLANNED',
       },
     })
@@ -300,11 +300,6 @@ export class OpportuniteService {
     await setRLSContext(this.cabinetId, this.isSuperAdmin)
 
     const opportunites = await this.prisma.opportunite.findMany({
-      where: {
-        status: {
-          in: ['DETECTED', 'CONTACTED', 'QUALIFIED', 'PROPOSAL_SENT', 'NEGOTIATION'],
-        },
-      },
       include: {
         client: {
           select: {
@@ -321,37 +316,48 @@ export class OpportuniteService {
           },
         },
       },
+      orderBy: [{ priority: 'asc' }, { confidence: 'desc' }],
     })
 
     // Grouper par statut
     const pipeline = {
-      DETECTED: opportunites.filter((o) => o.status === 'DETECTED'),
-      CONTACTED: opportunites.filter((o) => o.status === 'CONTACTED'),
-      QUALIFIED: opportunites.filter((o) => o.status === 'QUALIFIED'),
-      PROPOSAL_SENT: opportunites.filter((o) => o.status === 'PROPOSAL_SENT'),
-      NEGOTIATION: opportunites.filter((o) => o.status === 'NEGOTIATION'),
+      DETECTED: opportunites.filter((o: any) => o.status === 'DETECTED'),
+      CONTACTED: opportunites.filter((o: any) => o.status === 'CONTACTED'),
+      QUALIFIED: opportunites.filter((o: any) => o.status === 'QUALIFIED'),
+      PROPOSAL_SENT: opportunites.filter((o: any) => o.status === 'PROPOSAL_SENT'),
+      NEGOTIATION: opportunites.filter((o: any) => o.status === 'NEGOTIATION'),
+      WON: opportunites.filter((o: any) => o.status === 'WON'),
+      LOST: opportunites.filter((o: any) => o.status === 'LOST'),
     }
 
     // Calculer les valeurs totales par étape
     const values = {
       DETECTED: pipeline.DETECTED.reduce(
-        (sum, o) => sum + (o.estimatedValue?.toNumber() || 0),
+        (sum: number, o: any) => sum + (o.estimatedValue?.toNumber() || 0),
         0
       ),
       CONTACTED: pipeline.CONTACTED.reduce(
-        (sum, o) => sum + (o.estimatedValue?.toNumber() || 0),
+        (sum: number, o: any) => sum + (o.estimatedValue?.toNumber() || 0),
         0
       ),
       QUALIFIED: pipeline.QUALIFIED.reduce(
-        (sum, o) => sum + (o.estimatedValue?.toNumber() || 0),
+        (sum: number, o: any) => sum + (o.estimatedValue?.toNumber() || 0),
         0
       ),
       PROPOSAL_SENT: pipeline.PROPOSAL_SENT.reduce(
-        (sum, o) => sum + (o.estimatedValue?.toNumber() || 0),
+        (sum: number, o: any) => sum + (o.estimatedValue?.toNumber() || 0),
         0
       ),
       NEGOTIATION: pipeline.NEGOTIATION.reduce(
-        (sum, o) => sum + (o.estimatedValue?.toNumber() || 0),
+        (sum: number, o: any) => sum + (o.estimatedValue?.toNumber() || 0),
+        0
+      ),
+      WON: pipeline.WON.reduce(
+        (sum: number, o: any) => sum + (o.estimatedValue?.toNumber() || 0),
+        0
+      ),
+      LOST: pipeline.LOST.reduce(
+        (sum: number, o: any) => sum + (o.estimatedValue?.toNumber() || 0),
         0
       ),
     }

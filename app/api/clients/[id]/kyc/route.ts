@@ -24,9 +24,9 @@ export async function GET(
       context.isSuperAdmin
     )
 
-    const kycStatus = await service.checkKYCCompleteness(params.id)
+    const kycCheck = await service.checkClientKYC(params.id)
 
-    return createSuccessResponse(kycStatus)
+    return createSuccessResponse(kycCheck)
   } catch (error) {
     console.error('Error in GET /api/clients/[id]/kyc:', error)
     
@@ -63,9 +63,9 @@ export async function POST(
       context.isSuperAdmin
     )
 
-    const kycStatus = await service.checkKYCCompleteness(params.id)
+    const kycCheck = await service.checkClientKYC(params.id)
 
-    return createSuccessResponse(kycStatus)
+    return createSuccessResponse(kycCheck)
   } catch (error) {
     console.error('Error in POST /api/clients/[id]/kyc:', error)
     

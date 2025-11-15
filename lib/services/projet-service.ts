@@ -1,5 +1,5 @@
 import { getPrismaClient, setRLSContext } from '@/lib/prisma'
-import { ProjetType, ProjetStatus, ProjetPriority } from '@prisma/client'
+import { ProjetType, ProjetStatus } from '@prisma/client'
 
 export class ProjetService {
   private prisma
@@ -23,7 +23,7 @@ export class ProjetService {
     estimatedBudget?: number
     startDate?: Date
     endDate?: Date
-    priority: ProjetPriority
+    priority?: string
   }) {
     await setRLSContext(this.cabinetId, this.isSuperAdmin)
 
@@ -47,8 +47,7 @@ export class ProjetService {
         estimatedBudget: data.estimatedBudget,
         actualBudget: 0,
         startDate: data.startDate,
-        endDate: data.endDate,
-        priority: data.priority,
+        targetDate: data.endDate,
         status: 'PLANNED',
         progress: 0,
       },
@@ -77,7 +76,6 @@ export class ProjetService {
     clientId?: string
     type?: ProjetType
     status?: ProjetStatus
-    priority?: ProjetPriority
     search?: string
   }) {
     await setRLSContext(this.cabinetId, this.isSuperAdmin)
@@ -94,10 +92,6 @@ export class ProjetService {
 
     if (filters?.status) {
       where.status = filters.status
-    }
-
-    if (filters?.priority) {
-      where.priority = filters.priority
     }
 
     if (filters?.search) {
@@ -124,7 +118,7 @@ export class ProjetService {
           },
         },
       },
-      orderBy: [{ priority: 'asc' }, { startDate: 'desc' }],
+      orderBy: [{ startDate: 'desc' }],
     })
   }
 
@@ -171,8 +165,7 @@ export class ProjetService {
       estimatedBudget?: number
       actualBudget?: number
       startDate?: Date
-      endDate?: Date
-      priority?: ProjetPriority
+      targetDate?: Date
       status?: ProjetStatus
       progress?: number
     }
@@ -187,10 +180,10 @@ export class ProjetService {
       throw new Error('Projet not found')
     }
 
-    // Si le statut change à COMPLETED, mettre à jour completedAt
+    // Si le statut change à COMPLETED, mettre à jour endDate
     const updateData: any = { ...data }
     if (data.status === 'COMPLETED' && projet.status !== 'COMPLETED') {
-      updateData.completedAt = new Date()
+      updateData.endDate = new Date()
       updateData.progress = 100
     }
 
@@ -232,7 +225,7 @@ export class ProjetService {
       data: {
         progress: validProgress,
         status,
-        completedAt: validProgress === 100 ? new Date() : null,
+        endDate: validProgress === 100 ? new Date() : projet.endDate,
       },
     })
 
@@ -303,7 +296,7 @@ export class ProjetService {
 
     return this.prisma.projet.findMany({
       where: {
-        endDate: { lt: today },
+        targetDate: { lt: today },
         status: { in: ['PLANNED', 'IN_PROGRESS'] },
         progress: { lt: 100 },
       },
@@ -317,7 +310,7 @@ export class ProjetService {
           },
         },
       },
-      orderBy: { endDate: 'asc' },
+      orderBy: { targetDate: 'asc' },
     })
   }
 

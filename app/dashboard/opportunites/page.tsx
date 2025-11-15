@@ -16,6 +16,7 @@ import { LoadingState } from '@/components/ui/LoadingState'
 import { ErrorState, getErrorVariant } from '@/components/ui/ErrorState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Modal, ModalContent, ModalHeader, ModalTitle } from '@/components/ui/Modal'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { useToast } from '@/hooks/use-toast'
 
 interface Opportunite {
@@ -61,13 +62,12 @@ const opportuniteTypes = [
 
 const pipelineStages = [
   { value: 'DETECTED', label: 'Détectée', color: 'bg-gray-100 text-gray-800' },
-  { value: 'QUALIFIED', label: 'Qualifiée', color: 'bg-blue-100 text-blue-800' },
   { value: 'CONTACTED', label: 'Contactée', color: 'bg-purple-100 text-purple-800' },
-  { value: 'PRESENTED', label: 'Présentée', color: 'bg-indigo-100 text-indigo-800' },
-  { value: 'ACCEPTED', label: 'Acceptée', color: 'bg-green-100 text-green-800' },
-  { value: 'CONVERTED', label: 'Convertie', color: 'bg-emerald-100 text-emerald-800' },
-  { value: 'REJECTED', label: 'Rejetée', color: 'bg-red-100 text-red-800' },
-  { value: 'LOST', label: 'Perdue', color: 'bg-orange-100 text-orange-800' },
+  { value: 'QUALIFIED', label: 'Qualifiée', color: 'bg-blue-100 text-blue-800' },
+  { value: 'PROPOSAL_SENT', label: 'Proposition envoyée', color: 'bg-indigo-100 text-indigo-800' },
+  { value: 'NEGOTIATION', label: 'Négociation', color: 'bg-yellow-100 text-yellow-800' },
+  { value: 'WON', label: 'Gagnée', color: 'bg-emerald-100 text-emerald-800' },
+  { value: 'LOST', label: 'Perdue', color: 'bg-red-100 text-red-800' },
 ]
 
 const priorityConfig = {
@@ -119,7 +119,8 @@ export default function OpportunitesPage() {
       }
 
       const data = await response.json()
-      setPipelineData(data)
+      // The API returns { pipeline: {...}, values: {...}, totalValue, totalCount }
+      setPipelineData(data.pipeline || {})
     } catch (error) {
       console.error('Erreur chargement pipeline:', error)
       setError(error instanceof Error ? error.message : 'Erreur inconnue')
@@ -170,6 +171,7 @@ export default function OpportunitesPage() {
       const response = await fetch(`/api/opportunites/${opportuniteId}/convert`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectData: {} })
       })
 
       if (!response.ok) {
@@ -193,7 +195,7 @@ export default function OpportunitesPage() {
 
       // Navigate to projet
       if (data.projet?.id) {
-        router.push(`/dashboard/projets`)
+        router.push(`/dashboard/projets/${data.projet.id}`)
       }
     } catch (error) {
       console.error('Erreur conversion:', error)
@@ -317,10 +319,10 @@ export default function OpportunitesPage() {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Converties</p>
+              <p className="text-sm text-gray-600">Gagnées</p>
               <p className="text-2xl font-bold mt-1">
-                {pipelineData['CONVERTED']?.length || 
-                 opportunites.filter(o => o.status === 'CONVERTED').length}
+                {pipelineData['WON']?.length || 
+                 opportunites.filter(o => o.status === 'WON').length}
               </p>
             </div>
             <div className="p-3 rounded-lg bg-emerald-100">
@@ -336,9 +338,9 @@ export default function OpportunitesPage() {
               <p className="text-2xl font-bold mt-1">
                 {(() => {
                   const total = Object.values(pipelineData).flat().length || opportunites.length
-                  const converted = pipelineData['CONVERTED']?.length || 
-                    opportunites.filter(o => o.status === 'CONVERTED').length
-                  return total > 0 ? `${Math.round((converted / total) * 100)}%` : '0%'
+                  const won = pipelineData['WON']?.length || 
+                    opportunites.filter(o => o.status === 'WON').length
+                  return total > 0 ? `${Math.round((won / total) * 100)}%` : '0%'
                 })()}
               </p>
             </div>
@@ -467,54 +469,41 @@ export default function OpportunitesPage() {
       )}
 
       {/* List View */}
-      {loading && <LoadingState variant="cards" count={6} />}
-
-      {error && (
-        <ErrorState
-          error={error}
-          variant={getErrorVariant(error)}
-          onRetry={() => {
-            setError(null)
-            fetchOpportunites()
-          }}
+      {!loading && !error && viewMode === 'list' && filteredOpportunites.length === 0 && (
+        <EmptyState
+          icon={Lightbulb}
+          title="Aucune opportunité trouvée"
+          description={
+            searchTerm || typeFilter !== 'ALL' || priorityFilter !== 'ALL'
+              ? 'Aucune opportunité ne correspond à vos critères de recherche. Essayez de modifier vos filtres.'
+              : 'Commencez par créer votre première opportunité pour développer votre portefeuille.'
+          }
+          action={
+            !searchTerm && typeFilter === 'ALL' && priorityFilter === 'ALL'
+              ? {
+                  label: 'Créer une opportunité',
+                  onClick: () => setShowCreateModal(true),
+                  icon: Plus,
+                }
+              : undefined
+          }
         />
       )}
 
-      {!loading && !error && viewMode === 'list' && (
+      {!loading && !error && viewMode === 'list' && filteredOpportunites.length > 0 && (
         <div className="space-y-4">
-          {filteredOpportunites.length === 0 ? (
-            <EmptyState
-              icon={Lightbulb}
-              title="Aucune opportunité trouvée"
-              description={
-                searchTerm || typeFilter !== 'ALL' || priorityFilter !== 'ALL'
-                  ? 'Aucune opportunité ne correspond à vos critères de recherche. Essayez de modifier vos filtres.'
-                  : 'Commencez par créer votre première opportunité pour développer votre portefeuille.'
-              }
-              action={
-                !searchTerm && typeFilter === 'ALL' && priorityFilter === 'ALL'
-                  ? {
-                      label: 'Créer une opportunité',
-                      onClick: () => setShowCreateModal(true),
-                      icon: Plus,
-                    }
-                  : undefined
-              }
+          {filteredOpportunites.map(opp => (
+            <OpportuniteCard
+              key={opp.id}
+              opportunite={opp}
+              onConvert={handleConvertToProjet}
+              converting={convertingId === opp.id}
+              formatCurrency={formatCurrency}
+              formatDate={formatDate}
+              getTypeLabel={getTypeLabel}
+              getPriorityConfig={getPriorityConfig}
             />
-          ) : (
-            filteredOpportunites.map(opp => (
-              <OpportuniteCard
-                key={opp.id}
-                opportunite={opp}
-                onConvert={handleConvertToProjet}
-                converting={convertingId === opp.id}
-                formatCurrency={formatCurrency}
-                formatDate={formatDate}
-                getTypeLabel={getTypeLabel}
-                getPriorityConfig={getPriorityConfig}
-              />
-            ))
-          )}
+          ))}
         </div>
       )}
 
@@ -615,7 +604,7 @@ function OpportuniteCard({
           </div>
         )}
 
-        {opportunite.status === 'ACCEPTED' && (
+        {(opportunite.status === 'NEGOTIATION' || opportunite.status === 'PROPOSAL_SENT') && (
           <Button
             size="sm"
             className="w-full"
@@ -681,9 +670,18 @@ function CreateOpportuniteModal({ onClose, onSuccess }: CreateOpportuniteModalPr
     setLoading(true)
 
     try {
+      // Get current user session to set conseillerId
+      const sessionResponse = await fetch('/api/auth/session')
+      const session = await sessionResponse.json()
+      
       const payload = {
-        ...formData,
+        clientId: formData.clientId,
+        conseillerId: session?.user?.id || '',
+        name: formData.name,
+        description: formData.description || undefined,
+        type: formData.type,
         estimatedValue: formData.estimatedValue ? parseFloat(formData.estimatedValue) : undefined,
+        priority: formData.priority,
         actionDeadline: formData.actionDeadline || undefined,
       }
 

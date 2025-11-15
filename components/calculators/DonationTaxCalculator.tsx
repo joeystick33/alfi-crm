@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Input } from '@/components/ui/Input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import { ModernBarChart } from '@/components/charts/ModernBarChart';
+import { ChartHeroTemplate } from '@/components/ui/bento/ChartHeroTemplate';
 import { Gift, Info, Heart } from 'lucide-react';
 
 interface DonationTaxResult {
@@ -172,146 +173,138 @@ export function DonationTaxCalculator() {
           )}
 
           {result && (
-            <div className="space-y-6">
-              {/* Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <div className="text-sm text-blue-600 dark:text-blue-400 font-medium mb-1">Montant donné</div>
-                  <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                    {formatCurrency(result.donationAmount)}
-                  </div>
-                </div>
-
-                <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 rounded-lg border border-green-200 dark:border-green-800">
-                  <div className="text-sm text-green-600 dark:text-green-400 font-medium mb-1">Abattement disponible</div>
-                  <div className="text-2xl font-bold text-green-900 dark:text-green-100">
-                    {formatCurrency(result.remainingAllowance)}
-                  </div>
-                  <div className="text-xs text-green-600 dark:text-green-400 mt-1">
-                    sur {formatCurrency(result.allowance)} total
-                  </div>
-                </div>
-
-                <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 rounded-lg border border-purple-200 dark:border-purple-800">
-                  <div className="text-sm text-purple-600 dark:text-purple-400 font-medium mb-1">Droits à payer</div>
-                  <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                    {formatCurrency(result.donationTax)}
-                  </div>
-                  <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
-                    Taux effectif: {formatPercent(result.effectiveRate)}
-                  </div>
-                </div>
-
-                <div className="p-4 bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-950 dark:to-pink-900 rounded-lg border border-pink-200 dark:border-pink-800">
-                  <div className="text-sm text-pink-600 dark:text-pink-400 font-medium mb-1">Montant net reçu</div>
-                  <div className="text-2xl font-bold text-pink-900 dark:text-pink-100">
-                    {formatCurrency(result.donationAmount - result.donationTax)}
-                  </div>
-                </div>
-              </div>
-
-              {/* Allowance Progress */}
-              <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950 rounded-lg border border-green-200 dark:border-green-800">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">Utilisation de l'abattement</span>
-                  <span className="text-sm font-bold">
-                    {formatCurrency(result.previousDonations + Math.min(result.donationAmount, result.remainingAllowance))} / {formatCurrency(result.allowance)}
-                  </span>
-                </div>
-                <div className="w-full bg-muted rounded-full h-3">
-                  <div
-                    className="bg-gradient-to-r from-green-500 to-blue-500 h-3 rounded-full transition-all duration-500"
-                    style={{
-                      width: `${Math.min(100, ((result.previousDonations + Math.min(result.donationAmount, result.remainingAllowance)) / result.allowance) * 100)}%`
-                    }}
-                  />
-                </div>
-                <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                  <span>Donations antérieures: {formatCurrency(result.previousDonations)}</span>
-                  <span>Restant: {formatCurrency(Math.max(0, result.allowance - result.previousDonations - result.donationAmount))}</span>
-                </div>
-              </div>
-
-              {/* Breakdown Chart */}
-              {chartData.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <Heart className="h-5 w-5 text-pink-600" />
-                    Répartition par tranche
-                  </h4>
+            <ChartHeroTemplate
+              mainChart={
+                chartData.length > 0 ? (
                   <ModernBarChart
                     data={chartData}
                     dataKeys={['Montant taxable', 'Droits']}
                     formatValue={formatCurrency}
                     title=""
                   />
-                </div>
-              )}
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    Aucune donnée à afficher
+                  </div>
+                )
+              }
+              chartTitle="Droits de donation par tranche"
+              chartDescription="Calcul selon le lien de parenté et l'abattement"
+              kpis={[
+                {
+                  title: 'Montant donné',
+                  value: formatCurrency(result.donationAmount),
+                  variant: 'default' as const,
+                },
+                {
+                  title: 'Abattement disponible',
+                  value: formatCurrency(result.remainingAllowance),
+                  description: `sur ${formatCurrency(result.allowance)} total`,
+                  variant: 'default' as const,
+                },
+                {
+                  title: 'Droits à payer',
+                  value: formatCurrency(result.donationTax),
+                  description: `Taux: ${formatPercent(result.effectiveRate)}`,
+                  variant: 'accent' as const,
+                },
+                {
+                  title: 'Montant net reçu',
+                  value: formatCurrency(result.donationAmount - result.donationTax),
+                  variant: 'default' as const,
+                },
+              ]}
+              details={
+                <div className="space-y-6">
+                  {/* Allowance Progress */}
+                  <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950 rounded-lg border border-green-200 dark:border-green-800">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">Utilisation de l'abattement</span>
+                      <span className="text-sm font-bold">
+                        {formatCurrency(result.previousDonations + Math.min(result.donationAmount, result.remainingAllowance))} / {formatCurrency(result.allowance)}
+                      </span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-3">
+                      <div
+                        className="bg-gradient-to-r from-green-500 to-blue-500 h-3 rounded-full transition-all duration-500"
+                        style={{
+                          width: `${Math.min(100, ((result.previousDonations + Math.min(result.donationAmount, result.remainingAllowance)) / result.allowance) * 100)}%`
+                        }}
+                      />
+                    </div>
+                    <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+                      <span>Donations antérieures: {formatCurrency(result.previousDonations)}</span>
+                      <span>Restant: {formatCurrency(Math.max(0, result.allowance - result.previousDonations - result.donationAmount))}</span>
+                    </div>
+                  </div>
 
-              {/* Breakdown Table */}
-              {result.breakdown.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="text-lg font-semibold mb-4">Détail par tranche</h4>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-muted border-b">
-                        <tr>
-                          <th className="px-4 py-3 text-left font-medium">Tranche</th>
-                          <th className="px-4 py-3 text-left font-medium">Taux</th>
-                          <th className="px-4 py-3 text-right font-medium">Montant taxable</th>
-                          <th className="px-4 py-3 text-right font-medium">Droits</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        {result.breakdown.map((bracket, index) => (
-                          <tr key={index} className="hover:bg-muted/50">
-                            <td className="px-4 py-3">
-                              {formatCurrency(bracket.min)} - {bracket.max ? formatCurrency(bracket.max) : '∞'}
-                            </td>
-                            <td className="px-4 py-3">{formatPercent(bracket.rate)}</td>
-                            <td className="px-4 py-3 text-right font-medium">
-                              {formatCurrency(bracket.taxableAmount)}
-                            </td>
-                            <td className="px-4 py-3 text-right font-bold text-pink-600 dark:text-pink-400">
-                              {formatCurrency(bracket.taxAmount)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot className="bg-muted border-t-2">
-                        <tr>
-                          <td colSpan={3} className="px-4 py-3 font-bold">Total droits</td>
-                          <td className="px-4 py-3 text-right font-bold text-pink-600 dark:text-pink-400">
-                            {formatCurrency(result.donationTax)}
-                          </td>
-                        </tr>
-                      </tfoot>
-                    </table>
+                  {/* Breakdown Table */}
+                  {result.breakdown.length > 0 && (
+                    <div>
+                      <h4 className="text-lg font-semibold mb-4">Détail par tranche</h4>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead className="bg-muted border-b">
+                            <tr>
+                              <th className="px-4 py-3 text-left font-medium">Tranche</th>
+                              <th className="px-4 py-3 text-left font-medium">Taux</th>
+                              <th className="px-4 py-3 text-right font-medium">Montant taxable</th>
+                              <th className="px-4 py-3 text-right font-medium">Droits</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y">
+                            {result.breakdown.map((bracket, index) => (
+                              <tr key={index} className="hover:bg-muted/50">
+                                <td className="px-4 py-3">
+                                  {formatCurrency(bracket.min)} - {bracket.max ? formatCurrency(bracket.max) : '∞'}
+                                </td>
+                                <td className="px-4 py-3">{formatPercent(bracket.rate)}</td>
+                                <td className="px-4 py-3 text-right font-medium">
+                                  {formatCurrency(bracket.taxableAmount)}
+                                </td>
+                                <td className="px-4 py-3 text-right font-bold text-pink-600 dark:text-pink-400">
+                                  {formatCurrency(bracket.taxAmount)}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                          <tfoot className="bg-muted border-t-2">
+                            <tr>
+                              <td colSpan={3} className="px-4 py-3 font-bold">Total droits</td>
+                              <td className="px-4 py-3 text-right font-bold text-pink-600 dark:text-pink-400">
+                                {formatCurrency(result.donationTax)}
+                              </td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Info Box */}
+                  <div className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <div className="flex gap-3">
+                      <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-blue-900 dark:text-blue-100">
+                        <p className="font-medium mb-2">Abattements sur les donations (2024)</p>
+                        <ul className="list-disc list-inside space-y-1">
+                          <li>Enfant: 100 000 € tous les 15 ans</li>
+                          <li>Petit-enfant: 31 865 € tous les 15 ans</li>
+                          <li>Arrière-petit-enfant: 5 310 € tous les 15 ans</li>
+                          <li>Frère/Sœur: 15 932 € tous les 15 ans</li>
+                          <li>Neveu/Nièce: 7 967 € tous les 15 ans</li>
+                          <li>Personne handicapée: 159 325 € supplémentaires</li>
+                        </ul>
+                        <p className="mt-2 font-medium">
+                          Les abattements se renouvellent tous les 15 ans entre le même donateur et le même bénéficiaire.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              )}
-
-              {/* Info Box */}
-              <div className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <div className="flex gap-3">
-                  <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                  <div className="text-sm text-blue-900 dark:text-blue-100">
-                    <p className="font-medium mb-2">Abattements sur les donations (2024)</p>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li>Enfant: 100 000 € tous les 15 ans</li>
-                      <li>Petit-enfant: 31 865 € tous les 15 ans</li>
-                      <li>Arrière-petit-enfant: 5 310 € tous les 15 ans</li>
-                      <li>Frère/Sœur: 15 932 € tous les 15 ans</li>
-                      <li>Neveu/Nièce: 7 967 € tous les 15 ans</li>
-                      <li>Personne handicapée: 159 325 € supplémentaires</li>
-                    </ul>
-                    <p className="mt-2 font-medium">
-                      Les abattements se renouvellent tous les 15 ans entre le même donateur et le même bénéficiaire.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+              }
+              loading={loading}
+            />
           )}
         </CardContent>
       </Card>

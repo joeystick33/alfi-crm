@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { ModernBarChart } from '@/components/charts/ModernBarChart';
+import { TimelineTemplate } from '@/components/ui/bento/TimelineTemplate';
 import { 
   GitCompare, 
   Plus,
@@ -16,7 +17,8 @@ import {
   Percent,
   User,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  Target
 } from 'lucide-react';
 
 interface Scenario {
@@ -359,25 +361,80 @@ export function RetirementComparison() {
 
             {result && (
               <div className="space-y-6 mt-8">
-                {/* Best Scenario Indicator */}
-                {result.bestScenario && (
-                  <div className="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border-2 border-green-300">
-                    <div className="flex items-center gap-4">
-                      <div className="text-green-600">
-                        <CheckCircle className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-gray-600">Meilleur scénario</div>
-                        <div className="text-2xl font-bold text-green-900">
-                          {result.bestScenario.name}
+                <TimelineTemplate
+                  timeline={
+                    <ModernBarChart
+                      data={savingsComparisonData}
+                      dataKeys={['Capital à la retraite', 'Contributions totales']}
+                      title="Comparaison du capital à la retraite"
+                      formatValue={formatCurrency}
+                    />
+                  }
+                  timelineTitle="Comparaison des scénarios de retraite"
+                  timelineDescription={`${result.scenarios.length} scénarios analysés`}
+                  kpis={result.bestScenario ? [
+                    {
+                      title: 'Meilleur scénario',
+                      value: result.bestScenario.name,
+                      description: result.bestScenario.description,
+                      icon: <CheckCircle className="h-5 w-5" />,
+                    },
+                    {
+                      title: 'Capital optimal',
+                      value: formatCurrency(result.bestScenario.savingsAtRetirement),
+                      description: `À ${result.bestScenario.retirementAge} ans`,
+                      icon: <DollarSign className="h-5 w-5" />,
+                    },
+                    {
+                      title: 'Revenu disponible',
+                      value: formatCurrency(result.bestScenario.sustainableAnnualIncome),
+                      description: 'Par an',
+                      icon: <TrendingUp className="h-5 w-5" />,
+                    },
+                    {
+                      title: 'Scénarios faisables',
+                      value: `${result.scenarios.filter((s: any) => s.isRetirementFeasible).length}/${result.scenarios.length}`,
+                      description: 'Objectifs atteignables',
+                      icon: <Target className="h-5 w-5" />,
+                    },
+                  ] : []}
+                  feasibility={{
+                    status: result.scenarios.some((s: any) => s.isRetirementFeasible) ? 'FEASIBLE' : 'NOT_FEASIBLE',
+                    message: result.bestScenario 
+                      ? `Le scénario "${result.bestScenario.name}" offre le meilleur équilibre entre capital et revenus.`
+                      : 'Aucun scénario ne permet d\'atteindre vos objectifs. Ajustements nécessaires.'
+                  }}
+                  recommendations={
+                    <div>
+                      {result.summary && (
+                        <div className="mb-4">
+                          <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                            <Info className="h-5 w-5 text-blue-600" />
+                            Résumé de la comparaison
+                          </h4>
+                          <p className="text-sm text-gray-700">{result.summary}</p>
                         </div>
-                        <div className="text-sm text-green-700 mt-1">
-                          {result.bestScenario.description}
+                      )}
+                      {result.recommendations && result.recommendations.length > 0 && (
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                            <CheckCircle className="h-5 w-5 text-green-600" />
+                            Recommandations
+                          </h4>
+                          <ul className="space-y-2">
+                            {result.recommendations.map((rec: string, index: number) => (
+                              <li key={index} className="text-sm text-gray-700 flex items-start gap-2">
+                                <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-green-600" />
+                                <span>{rec}</span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
-                      </div>
+                      )}
                     </div>
-                  </div>
-                )}
+                  }
+                  loading={loading}
+                />
 
                 {/* Scenarios Comparison Table */}
                 <div className="overflow-x-auto">
@@ -419,67 +476,19 @@ export function RetirementComparison() {
                   </table>
                 </div>
 
-                {/* Charts */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Savings Comparison */}
-                  {savingsComparisonData.length > 0 && (
-                    <div>
-                      <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <DollarSign className="h-5 w-5 text-primary-600" />
-                        Capital à la retraite
-                      </h4>
-                      <ModernBarChart
-                        data={savingsComparisonData}
-                        dataKeys={['Capital à la retraite', 'Contributions totales']}
-                        title="Capital à la retraite"
-                        formatValue={formatCurrency}
-                      />
-                    </div>
-                  )}
-
-                  {/* Income Comparison */}
-                  {incomeComparisonData.length > 0 && (
-                    <div>
-                      <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <TrendingUp className="h-5 w-5 text-primary-600" />
-                        Revenus de retraite
-                      </h4>
-                      <ModernBarChart
-                        data={incomeComparisonData}
-                        dataKeys={['Revenu souhaité', 'Revenu disponible']}
-                        title="Revenus de retraite"
-                        formatValue={formatCurrency}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Summary */}
-                {result.summary && (
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-                      <Info className="h-5 w-5" />
-                      Résumé de la comparaison
+                {/* Income Comparison Chart */}
+                {incomeComparisonData.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5 text-primary-600" />
+                      Revenus de retraite
                     </h4>
-                    <p className="text-sm text-blue-800">{result.summary}</p>
-                  </div>
-                )}
-
-                {/* Recommendations */}
-                {result.recommendations && result.recommendations.length > 0 && (
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                      <Info className="h-5 w-5" />
-                      Recommandations
-                    </h4>
-                    <ul className="space-y-2">
-                      {result.recommendations.map((rec: string, index: number) => (
-                        <li key={index} className="text-sm text-blue-800 flex items-start gap-2">
-                          <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                          <span>{rec}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <ModernBarChart
+                      data={incomeComparisonData}
+                      dataKeys={['Revenu souhaité', 'Revenu disponible']}
+                      title="Revenus de retraite"
+                      formatValue={formatCurrency}
+                    />
                   </div>
                 )}
 

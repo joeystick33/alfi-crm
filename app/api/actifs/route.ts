@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       context.isSuperAdmin
     )
 
-    const actifs = await actifService.listActifs(filters)
+    const actifs = await actifService.listActifsWithClients(filters)
 
     return createSuccessResponse(actifs)
   } catch (error) {

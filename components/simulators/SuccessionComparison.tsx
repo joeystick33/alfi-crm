@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Button from '@/components/ui/Button';
+import { TimelineTemplate } from '@/components/ui/bento/TimelineTemplate';
 import { ModernBarChart } from '@/components/charts/ModernBarChart';
 import { 
   GitCompare, 
@@ -18,31 +19,6 @@ import {
   Heart
 } from 'lucide-react';
 
-interface Heir {
-  id: number;
-  name: string;
-  relationship: string;
-  share: string;
-  previousDonations: string;
-}
-
-interface Strategy {
-  name: string;
-  description: string;
-  totalTax: number;
-  effectiveTaxRate: number;
-  netEstate: number;
-  taxSavings?: number;
-  details?: string[];
-}
-
-interface ComparisonResult {
-  strategies: Strategy[];
-  bestStrategy?: Strategy;
-  summary?: string;
-  recommendations?: string[];
-}
-
 const RELATIONSHIP_OPTIONS = [
   { value: 'spouse', label: 'Conjoint', icon: Heart, color: 'text-pink-600' },
   { value: 'child', label: 'Enfant', icon: Users, color: 'text-blue-600' },
@@ -52,6 +28,14 @@ const RELATIONSHIP_OPTIONS = [
   { value: 'nephew_niece', label: 'Neveu/Nièce', icon: Users, color: 'text-yellow-600' },
   { value: 'other', label: 'Autre', icon: Users, color: 'text-gray-600' }
 ];
+
+interface Heir {
+  id: number;
+  name: string;
+  relationship: string;
+  share: string;
+  previousDonations: string;
+}
 
 export function SuccessionComparison() {
   // Base input
@@ -75,7 +59,7 @@ export function SuccessionComparison() {
     }
   ]);
 
-  const [result, setResult] = useState<ComparisonResult | null>(null);
+  const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -162,8 +146,8 @@ export function SuccessionComparison() {
 
       const data = await response.json();
       setResult(data.comparison);
-    } catch (err) {
-      setError((err as Error).message || 'Erreur lors de la comparaison des stratégies');
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors de la comparaison des stratégies');
       console.error(err);
     } finally {
       setLoading(false);
@@ -188,17 +172,62 @@ export function SuccessionComparison() {
   };
 
   // Prepare strategy comparison chart data
-  const strategyComparisonData = result?.strategies ? result.strategies.map(s => ({
+  const strategyComparisonData = result?.strategies ? result.strategies.map((s: any) => ({
     name: s.name,
     'Droits de succession': s.totalTax,
     'Patrimoine net transmis': s.netEstate
   })) : [];
 
   // Prepare tax savings chart data
-  const taxSavingsData = result?.strategies ? result.strategies.map(s => ({
+  const taxSavingsData = result?.strategies ? result.strategies.map((s: any) => ({
     name: s.name,
     'Économie fiscale': s.taxSavings || 0
   })) : [];
+
+  // Prepare KPIs for Timeline Template
+  const kpis = result && result.bestStrategy ? [
+    {
+      title: 'Meilleure stratégie',
+      value: result.bestStrategy.name,
+      icon: <CheckCircle className="h-5 w-5" />,
+      variant: 'hero' as const
+    },
+    {
+      title: 'Économie maximale',
+      value: formatCurrency(result.bestStrategy.taxSavings || 0),
+      icon: <TrendingDown className="h-5 w-5" />,
+      variant: 'default' as const
+    },
+    {
+      title: 'Patrimoine net',
+      value: formatCurrency(result.bestStrategy.netEstate),
+      icon: <DollarSign className="h-5 w-5" />,
+      variant: 'default' as const
+    }
+  ] : [];
+
+  // Prepare recommendations component
+  const recommendationsComponent = result?.recommendations && result.recommendations.length > 0 ? (
+    <div className="p-4">
+      <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+        <Info className="h-5 w-5 text-blue-600" />
+        Recommandations
+      </h4>
+      <ul className="space-y-2">
+        {result.recommendations.map((rec: string, index: number) => (
+          <li key={index} className="text-sm text-gray-700 flex items-start gap-2">
+            <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-green-600" />
+            <span>{rec}</span>
+          </li>
+        ))}
+      </ul>
+      {result.summary && (
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <p className="text-sm text-gray-700">{result.summary}</p>
+        </div>
+      )}
+    </div>
+  ) : null;
 
   return (
     <div className="space-y-6">
@@ -232,8 +261,9 @@ export function SuccessionComparison() {
                 onChange={(e) => setEstateValue(e.target.value)}
                 placeholder="1000000"
                 min="0"
+                icon={<DollarSign className="h-4 w-4" />}
+                helperText="Valeur nette après déduction des dettes"
               />
-              <p className="text-xs text-gray-500 mt-1">Valeur nette après déduction des dettes</p>
             </div>
 
             {/* Heirs Configuration */}
@@ -266,6 +296,7 @@ export function SuccessionComparison() {
                             value={heir.name}
                             onChange={(e) => updateHeir(heir.id, 'name', e.target.value)}
                             placeholder="Ex: Marie Dupont"
+                            icon={<RelationIcon className="h-4 w-4" />}
                           />
 
                           <div>
@@ -285,31 +316,27 @@ export function SuccessionComparison() {
                             </select>
                           </div>
 
-                          <div>
-                            <Input
-                              label="Part (%)"
-                              type="number"
-                              value={heir.share}
-                              onChange={(e) => updateHeir(heir.id, 'share', e.target.value)}
-                              placeholder="50"
-                              min="0"
-                              max="100"
-                              step="0.1"
-                            />
-                            <p className="text-xs text-gray-500 mt-1">Part de l'héritage</p>
-                          </div>
+                          <Input
+                            label="Part (%)"
+                            type="number"
+                            value={heir.share}
+                            onChange={(e) => updateHeir(heir.id, 'share', e.target.value)}
+                            placeholder="50"
+                            min="0"
+                            max="100"
+                            step="0.1"
+                            helperText="Part de l'héritage"
+                          />
 
-                          <div>
-                            <Input
-                              label="Donations antérieures (€)"
-                              type="number"
-                              value={heir.previousDonations}
-                              onChange={(e) => updateHeir(heir.id, 'previousDonations', e.target.value)}
-                              placeholder="0"
-                              min="0"
-                            />
-                            <p className="text-xs text-gray-500 mt-1">Derniers 15 ans</p>
-                          </div>
+                          <Input
+                            label="Donations antérieures (€)"
+                            type="number"
+                            value={heir.previousDonations}
+                            onChange={(e) => updateHeir(heir.id, 'previousDonations', e.target.value)}
+                            placeholder="0"
+                            min="0"
+                            helperText="Derniers 15 ans"
+                          />
                         </div>
 
                         <button
@@ -367,35 +394,36 @@ export function SuccessionComparison() {
             )}
 
             {result && (
-              <div className="space-y-6 mt-8">
-                {/* Best Strategy Indicator */}
-                {result.bestStrategy && (
-                  <div className="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border-2 border-green-300">
-                    <div className="flex items-center gap-4">
-                      <div className="text-green-600">
-                        <CheckCircle className="h-6 w-6" />
+              <div className="mt-8">
+                {/* Timeline Template with Bento Grid */}
+                <TimelineTemplate
+                  timelineTitle="Comparaison des stratégies"
+                  timelineDescription="Analyse comparative des différentes options de transmission"
+                  timeline={
+                    strategyComparisonData.length > 0 ? (
+                      <ModernBarChart
+                        data={strategyComparisonData}
+                        dataKeys={['Droits de succession', 'Patrimoine net transmis']}
+                        formatValue={formatCurrency}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-gray-500">
+                        Aucune donnée disponible
                       </div>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-600">Stratégie recommandée</div>
-                        <div className="text-2xl font-bold text-green-900">
-                          {result.bestStrategy.name}
-                        </div>
-                        <div className="text-sm text-green-700 mt-1">
-                          {result.bestStrategy.description}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm text-green-600">Économie fiscale</div>
-                        <div className="text-2xl font-bold text-green-900">
-                          {formatCurrency(result.bestStrategy.taxSavings || 0)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                    )
+                  }
+                  kpis={kpis}
+                  feasibility={
+                    result.bestStrategy && result.bestStrategy.taxSavings > 0
+                      ? { status: 'FEASIBLE', message: result.bestStrategy.description }
+                      : { status: 'CHALLENGING', message: 'Optimisation limitée possible' }
+                  }
+                  recommendations={recommendationsComponent}
+                  loading={loading}
+                />
 
                 {/* Strategies Comparison Table */}
-                <div>
+                <div className="mt-8">
                   <h4 className="text-lg font-semibold mb-4">Comparaison détaillée des stratégies</h4>
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
@@ -409,7 +437,7 @@ export function SuccessionComparison() {
                         </tr>
                       </thead>
                       <tbody>
-                        {result.strategies.map((strategy, index) => (
+                        {result.strategies.map((strategy: any, index: number) => (
                           <tr 
                             key={index} 
                             className={strategy.name === result.bestStrategy?.name ? 'bg-green-50' : 'bg-white'}
@@ -437,42 +465,24 @@ export function SuccessionComparison() {
                   </div>
                 </div>
 
-                {/* Charts */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Strategy Comparison Chart */}
-                  {strategyComparisonData.length > 0 && (
-                    <div>
-                      <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <GitCompare className="h-5 w-5 text-primary-600" />
-                        Comparaison des stratégies
-                      </h4>
-                      <ModernBarChart
-                        data={strategyComparisonData}
-                        dataKeys={['Droits de succession', 'Patrimoine net transmis']}
-                        formatValue={formatCurrency}
-                      />
-                    </div>
-                  )}
-
-                  {/* Tax Savings Chart */}
-                  {taxSavingsData.length > 0 && taxSavingsData.some(d => d['Économie fiscale'] > 0) && (
-                    <div>
-                      <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <TrendingDown className="h-5 w-5 text-green-600" />
-                        Économies fiscales
-                      </h4>
-                      <ModernBarChart
-                        data={taxSavingsData}
-                        dataKeys={['Économie fiscale']}
-                        formatValue={formatCurrency}
-                      />
-                    </div>
-                  )}
-                </div>
+                {/* Tax Savings Chart */}
+                {taxSavingsData.length > 0 && taxSavingsData.some((d: any) => d['Économie fiscale'] > 0) && (
+                  <div className="mt-8">
+                    <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <TrendingDown className="h-5 w-5 text-green-600" />
+                      Économies fiscales par stratégie
+                    </h4>
+                    <ModernBarChart
+                      data={taxSavingsData}
+                      dataKeys={['Économie fiscale']}
+                      formatValue={formatCurrency}
+                    />
+                  </div>
+                )}
 
                 {/* Strategy Details */}
-                {result.strategies.map((strategy, index) => (
-                  <div key={index} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                {result.strategies.map((strategy: any, index: number) => (
+                  <div key={index} className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                     <h5 className="font-semibold text-gray-900 mb-3">{strategy.name}</h5>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -483,7 +493,7 @@ export function SuccessionComparison() {
                         <div>
                           <div className="text-sm text-gray-600 mb-2">Détails</div>
                           <ul className="text-sm text-gray-800 space-y-1">
-                            {strategy.details.map((detail, idx) => (
+                            {strategy.details.map((detail: string, idx: number) => (
                               <li key={idx} className="flex items-start gap-2">
                                 <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
                                 <span>{detail}</span>
@@ -496,37 +506,8 @@ export function SuccessionComparison() {
                   </div>
                 ))}
 
-                {/* Summary */}
-                {result.summary && (
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-                      <Info className="h-5 w-5" />
-                      Résumé de la comparaison
-                    </h4>
-                    <p className="text-sm text-blue-800">{result.summary}</p>
-                  </div>
-                )}
-
-                {/* Recommendations */}
-                {result.recommendations && result.recommendations.length > 0 && (
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                      <Info className="h-5 w-5" />
-                      Recommandations
-                    </h4>
-                    <ul className="space-y-2">
-                      {result.recommendations.map((rec, index) => (
-                        <li key={index} className="text-sm text-blue-800 flex items-start gap-2">
-                          <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                          <span>{rec}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
                 {/* Info Box */}
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="flex gap-3">
                     <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-blue-900">

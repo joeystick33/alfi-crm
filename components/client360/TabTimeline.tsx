@@ -4,7 +4,11 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { LoadingState } from '@/components/ui/LoadingState'
+import { ErrorState } from '@/components/ui/ErrorState'
 import { formatDate, getRelativeTime } from '@/lib/utils'
+import { useClientTimeline } from '@/hooks/use-timeline'
+import { CreateTimelineEventModal } from './CreateTimelineEventModal'
 import {
   Clock,
   User,
@@ -15,6 +19,7 @@ import {
   Mail,
   Shield,
   Filter,
+  Plus,
 } from 'lucide-react'
 import type { ClientDetail } from '@/lib/api-types'
 
@@ -25,7 +30,7 @@ interface TabTimelineProps {
 
 const eventTypeConfig = {
   CLIENT_CREATED: { label: 'Client créé', icon: User, color: 'bg-blue-500' },
-  MEETING: { label: 'Rendez-vous', icon: Calendar, color: 'bg-green-500' },
+  MEETING_HELD: { label: 'Rendez-vous', icon: Calendar, color: 'bg-green-500' },
   DOCUMENT_SIGNED: { label: 'Document signé', icon: FileText, color: 'bg-purple-500' },
   ASSET_ADDED: { label: 'Actif ajouté', icon: TrendingUp, color: 'bg-emerald-500' },
   GOAL_ACHIEVED: { label: 'Objectif atteint', icon: CheckSquare, color: 'bg-yellow-500' },
@@ -39,13 +44,45 @@ const eventTypeConfig = {
 
 export function TabTimeline({ clientId, client }: TabTimelineProps) {
   const [selectedType, setSelectedType] = useState<string | null>(null)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  
+  const { data: events, isLoading, isError, error, refetch } = useClientTimeline(clientId)
 
   const filteredEvents = selectedType
-    ? client.timelineEvents?.filter((event: any) => event.type === selectedType)
-    : client.timelineEvents
+    ? events?.filter((event) => event.type === selectedType)
+    : events
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <LoadingState variant="spinner" message="Chargement de la timeline..." />
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <ErrorState
+          error={error as Error}
+          variant="default"
+          onRetry={() => refetch()}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
+      {/* Header with Add Button */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Timeline du client</h2>
+        <Button onClick={() => setIsCreateModalOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Ajouter un événement
+        </Button>
+      </div>
+
       {/* Filters */}
       <Card>
         <CardHeader>
@@ -62,16 +99,14 @@ export function TabTimeline({ clientId, client }: TabTimelineProps) {
               onClick={() => setSelectedType(null)}
             >
               Tous
-              {client.timelineEvents && (
+              {events && (
                 <Badge variant="secondary" className="ml-2">
-                  {client.timelineEvents.length}
+                  {events.length}
                 </Badge>
               )}
             </Button>
             {Object.entries(eventTypeConfig).map(([type, config]) => {
-              const count = client.timelineEvents?.filter(
-                (e: any) => e.type === type
-              ).length || 0
+              const count = events?.filter((e) => e.type === type).length || 0
               
               if (count === 0) return null
 
@@ -109,7 +144,7 @@ export function TabTimeline({ clientId, client }: TabTimelineProps) {
 
               {/* Events */}
               <div className="space-y-6">
-                {filteredEvents.map((event: any, index: number) => {
+                {filteredEvents.map((event) => {
                   const config = eventTypeConfig[event.type as keyof typeof eventTypeConfig] || eventTypeConfig.OTHER
                   const Icon = config.icon
 
@@ -145,25 +180,19 @@ export function TabTimeline({ clientId, client }: TabTimelineProps) {
                           </p>
                         )}
 
-                        {event.metadata && (
+                        {event.relatedEntityType && event.relatedEntityId && (
                           <div className="mt-3 pt-3 border-t">
-                            <div className="grid gap-2 text-xs">
-                              {Object.entries(event.metadata).map(([key, value]) => (
-                                <div key={key} className="flex justify-between">
-                                  <span className="text-muted-foreground capitalize">
-                                    {key.replace(/_/g, ' ')}:
-                                  </span>
-                                  <span className="font-medium">{String(value)}</span>
-                                </div>
-                              ))}
+                            <div className="text-xs text-muted-foreground">
+                              <span className="font-medium">Lié à:</span>{' '}
+                              {event.relatedEntityType} ({event.relatedEntityId})
                             </div>
                           </div>
                         )}
 
-                        {event.userId && (
+                        {event.createdBy && (
                           <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
                             <User className="h-3 w-3" />
-                            <span>Par {event.userId}</span>
+                            <span>Par {event.createdBy}</span>
                           </div>
                         )}
                       </div>
@@ -180,10 +209,26 @@ export function TabTimeline({ clientId, client }: TabTimelineProps) {
                   ? 'Aucun événement de ce type'
                   : 'Aucun événement enregistré'}
               </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4"
+                onClick={() => setIsCreateModalOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Ajouter le premier événement
+              </Button>
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Create Event Modal */}
+      <CreateTimelineEventModal
+        clientId={clientId}
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
     </div>
   )
 }

@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Button from '@/components/ui/Button';
+import { TimelineTemplate } from '@/components/ui/bento/TimelineTemplate';
 import { ModernBarChart } from '@/components/charts/ModernBarChart';
 import { 
   Users, 
@@ -19,42 +20,6 @@ import {
   PiggyBank,
   Heart
 } from 'lucide-react';
-
-interface Asset {
-  id: number;
-  name: string;
-  type: 'real_estate' | 'financial' | 'business' | 'other';
-  value: string;
-  debt: string;
-}
-
-interface Heir {
-  id: number;
-  name: string;
-  relationship: string;
-  share: string;
-  previousDonations: string;
-  disabled: boolean;
-}
-
-interface HeirResult {
-  name: string;
-  relationship: string;
-  share: number;
-  grossInheritance: number;
-  allowance: number;
-  tax: number;
-  netInheritance: number;
-}
-
-interface SimulationResult {
-  grossEstate: number;
-  totalTax: number;
-  effectiveTaxRate: number;
-  netEstate: number;
-  heirs: HeirResult[];
-  recommendations?: string[];
-}
 
 const RELATIONSHIP_OPTIONS = [
   { value: 'spouse', label: 'Conjoint', icon: Heart, color: 'text-pink-600' },
@@ -72,6 +37,23 @@ const ASSET_TYPES = [
   { value: 'business', label: 'Entreprise', icon: Briefcase },
   { value: 'other', label: 'Autre', icon: PiggyBank }
 ];
+
+interface Asset {
+  id: number;
+  name: string;
+  type: string;
+  value: string;
+  debt: string;
+}
+
+interface Heir {
+  id: number;
+  name: string;
+  relationship: string;
+  share: string;
+  previousDonations: string;
+  disabled?: boolean;
+}
 
 export function SuccessionSimulator() {
   // Assets state
@@ -97,7 +79,7 @@ export function SuccessionSimulator() {
     }
   ]);
 
-  const [result, setResult] = useState<SimulationResult | null>(null);
+  const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -234,8 +216,8 @@ export function SuccessionSimulator() {
 
       const data = await response.json();
       setResult(data.simulation);
-    } catch (err) {
-      setError((err as Error).message || 'Erreur lors de la simulation de succession');
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors de la simulation de succession');
       console.error(err);
     } finally {
       setLoading(false);
@@ -264,7 +246,7 @@ export function SuccessionSimulator() {
   };
 
   // Prepare heir tax chart data
-  const heirTaxData = result?.heirs ? result.heirs.map(h => ({
+  const heirTaxData = result?.heirs ? result.heirs.map((h: any) => ({
     name: h.name,
     'Héritage brut': h.grossInheritance,
     'Droits de succession': h.tax,
@@ -277,6 +259,47 @@ export function SuccessionSimulator() {
     const debt = parseFloat(a.debt) || 0;
     return sum + (value - debt);
   }, 0);
+
+  // Prepare KPIs for Timeline Template
+  const kpis = result ? [
+    {
+      title: 'Patrimoine brut',
+      value: formatCurrency(result.grossEstate),
+      icon: <DollarSign className="h-5 w-5" />,
+      variant: 'default' as const
+    },
+    {
+      title: 'Droits totaux',
+      value: formatCurrency(result.totalTax),
+      change: { value: result.effectiveTaxRate * 100, trend: 'down' as const },
+      icon: <TrendingDown className="h-5 w-5" />,
+      variant: 'default' as const
+    },
+    {
+      title: 'Patrimoine net transmis',
+      value: formatCurrency(result.netEstate),
+      icon: <CheckCircle className="h-5 w-5" />,
+      variant: 'default' as const
+    }
+  ] : [];
+
+  // Prepare recommendations component
+  const recommendationsComponent = result?.recommendations && result.recommendations.length > 0 ? (
+    <div className="p-4">
+      <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+        <Info className="h-5 w-5 text-blue-600" />
+        Recommandations
+      </h4>
+      <ul className="space-y-2">
+        {result.recommendations.map((rec: string, index: number) => (
+          <li key={index} className="text-sm text-gray-700 flex items-start gap-2">
+            <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-green-600" />
+            <span>{rec}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  ) : null;
 
   return (
     <div className="space-y-6">
@@ -514,43 +537,39 @@ export function SuccessionSimulator() {
             )}
 
             {result && (
-              <div className="space-y-6 mt-8">
-                {/* Summary Metrics */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
-                    <div className="text-sm text-blue-600 font-medium mb-1">Patrimoine brut</div>
-                    <div className="text-2xl font-bold text-blue-900">
-                      {formatCurrency(result.grossEstate)}
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-lg border border-red-200">
-                    <div className="text-sm text-red-600 font-medium mb-1">Droits totaux</div>
-                    <div className="text-2xl font-bold text-red-900">
-                      {formatCurrency(result.totalTax)}
-                    </div>
-                    <div className="text-xs text-red-600 mt-1">
-                      {formatPercent(result.effectiveTaxRate)} du patrimoine
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
-                    <div className="text-sm text-green-600 font-medium mb-1">Patrimoine net transmis</div>
-                    <div className="text-2xl font-bold text-green-900">
-                      {formatCurrency(result.netEstate)}
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
-                    <div className="text-sm text-purple-600 font-medium mb-1">Nombre d'héritiers</div>
-                    <div className="text-2xl font-bold text-purple-900">
-                      {result.heirs.length}
-                    </div>
-                  </div>
-                </div>
+              <div className="mt-8">
+                {/* Timeline Template with Bento Grid */}
+                <TimelineTemplate
+                  timelineTitle="Répartition par héritier"
+                  timelineDescription="Distribution du patrimoine et droits de succession"
+                  timeline={
+                    heirTaxData.length > 0 ? (
+                      <ModernBarChart
+                        data={heirTaxData}
+                        dataKeys={['Héritage brut', 'Droits de succession', 'Héritage net']}
+                        formatValue={formatCurrency}
+                        stacked={false}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-gray-500">
+                        Aucune donnée disponible
+                      </div>
+                    )
+                  }
+                  kpis={kpis}
+                  feasibility={
+                    result.effectiveTaxRate < 0.15
+                      ? { status: 'FEASIBLE', message: 'Taux de taxation favorable' }
+                      : result.effectiveTaxRate < 0.30
+                      ? { status: 'CHALLENGING', message: 'Taux de taxation modéré - optimisation possible' }
+                      : { status: 'NOT_FEASIBLE', message: 'Taux de taxation élevé - optimisation recommandée' }
+                  }
+                  recommendations={recommendationsComponent}
+                  loading={loading}
+                />
 
                 {/* Heirs Details Table */}
-                <div>
+                <div className="mt-8">
                   <h4 className="text-lg font-semibold mb-4">Détail par héritier</h4>
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
@@ -566,7 +585,7 @@ export function SuccessionSimulator() {
                         </tr>
                       </thead>
                       <tbody>
-                        {result.heirs.map((heir, index) => {
+                        {result.heirs.map((heir: any, index: number) => {
                           const relationshipInfo = getRelationshipInfo(heir.relationship);
                           return (
                             <tr key={index} className="bg-white hover:bg-gray-50">
@@ -589,42 +608,8 @@ export function SuccessionSimulator() {
                   </div>
                 </div>
 
-                {/* Heir Tax Chart */}
-                {heirTaxData.length > 0 && (
-                  <div>
-                    <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <Users className="h-5 w-5 text-primary-600" />
-                      Répartition par héritier
-                    </h4>
-                    <ModernBarChart
-                      data={heirTaxData}
-                      dataKeys={['Héritage brut', 'Droits de succession', 'Héritage net']}
-                      formatValue={formatCurrency}
-                      stacked={false}
-                    />
-                  </div>
-                )}
-
-                {/* Recommendations */}
-                {result.recommendations && result.recommendations.length > 0 && (
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                      <Info className="h-5 w-5" />
-                      Recommandations
-                    </h4>
-                    <ul className="space-y-2">
-                      {result.recommendations.map((rec, index) => (
-                        <li key={index} className="text-sm text-blue-800 flex items-start gap-2">
-                          <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                          <span>{rec}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
                 {/* Info Box */}
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="flex gap-3">
                     <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-blue-900">

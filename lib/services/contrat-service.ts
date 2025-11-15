@@ -168,6 +168,31 @@ export class ContratService {
   }
 
   /**
+   * Liste les contrats avec informations clients (alias)
+   */
+  async listContratsWithClients(filters?: {
+    clientId?: string
+    type?: ContratType
+    status?: ContratStatus
+    provider?: string
+    search?: string
+  }) {
+    const contrats = await this.listContrats(filters)
+    
+    // Transform to match expected format
+    return contrats.map(contrat => ({
+      ...contrat,
+      numeroContrat: contrat.contractNumber,
+      compagnie: contrat.provider,
+      valeur: Number(contrat.value),
+      primeAnnuelle: Number(contrat.annualPremium || 0),
+      dateEcheance: contrat.endDate,
+      statut: contrat.status,
+      nom: contrat.name
+    }))
+  }
+
+  /**
    * Liste les contrats d'un client
    */
   async getClientContrats(clientId: string) {

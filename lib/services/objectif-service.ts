@@ -50,7 +50,7 @@ export class ObjectifService {
         targetDate: data.targetDate,
         priority: data.priority,
         monthlyContribution: data.monthlyContribution,
-        status: 'IN_PROGRESS',
+        status: 'ACTIVE',
         progress: 0,
       },
     })
@@ -185,8 +185,6 @@ export class ObjectifService {
     let status = objectif.status
     if (progress >= 100) {
       status = 'ACHIEVED'
-    } else if (new Date() > objectif.targetDate && progress < 100) {
-      status = 'DELAYED'
     }
 
     const updated = await this.prisma.objectif.update({
@@ -275,7 +273,7 @@ export class ObjectifService {
     return this.prisma.objectif.findMany({
       where: {
         targetDate: { lt: today },
-        status: { in: ['IN_PROGRESS', 'DELAYED'] },
+        status: { in: ['ACTIVE'] },
         progress: { lt: 100 },
       },
       include: {
@@ -298,24 +296,24 @@ export class ObjectifService {
   async getStatistics() {
     await setRLSContext(this.cabinetId, this.isSuperAdmin)
 
-    const [total, achieved, inProgress, delayed, cancelled] = await Promise.all([
+    const [total, achieved, active, onHold, cancelled] = await Promise.all([
       this.prisma.objectif.count(),
       this.prisma.objectif.count({ where: { status: 'ACHIEVED' } }),
-      this.prisma.objectif.count({ where: { status: 'IN_PROGRESS' } }),
-      this.prisma.objectif.count({ where: { status: 'DELAYED' } }),
+      this.prisma.objectif.count({ where: { status: 'ACTIVE' } }),
+      this.prisma.objectif.count({ where: { status: 'ON_HOLD' } }),
       this.prisma.objectif.count({ where: { status: 'CANCELLED' } }),
     ])
 
     const avgProgress = await this.prisma.objectif.aggregate({
       _avg: { progress: true },
-      where: { status: { in: ['IN_PROGRESS', 'DELAYED'] } },
+      where: { status: { in: ['ACTIVE'] } },
     })
 
     return {
       total,
       achieved,
-      inProgress,
-      delayed,
+      active,
+      onHold,
       cancelled,
       avgProgress: avgProgress._avg.progress || 0,
       achievementRate: total > 0 ? Math.round((achieved / total) * 100) : 0,

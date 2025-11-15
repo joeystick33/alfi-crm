@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { ModernPieChart } from '@/components/charts/ModernPieChart';
 import { ModernBarChart } from '@/components/charts/ModernBarChart';
+import { DualChartsTemplate } from '@/components/ui/bento/DualChartsTemplate';
 import { 
   Calculator, 
   TrendingUp, 
@@ -389,9 +390,8 @@ export function BudgetAnalyzer() {
             )}
 
             {result && (
-              <div className="space-y-6 mt-8">
-                {/* Budget Health Indicator */}
-                <div className={`p-6 bg-gradient-to-br from-${getHealthColor(result.budgetHealth)}-50 to-${getHealthColor(result.budgetHealth)}-100 rounded-lg border-2 border-${getHealthColor(result.budgetHealth)}-300`}>
+              <DualChartsTemplate
+                healthIndicator={
                   <div className="flex items-center gap-4">
                     <div className={`text-${getHealthColor(result.budgetHealth)}-600`}>
                       {getHealthIcon(result.budgetHealth)}
@@ -403,112 +403,70 @@ export function BudgetAnalyzer() {
                       </div>
                     </div>
                   </div>
-                </div>
+                }
+                chart1={
+                  <ModernBarChart
+                    data={comparisonChartData}
+                    dataKeys={['Revenus', 'Dépenses', 'Dettes']}
+                    formatValue={formatCurrency}
+                  />
+                }
+                chart1Title="Revenus vs Dépenses"
+                chart1Description="Comparaison des revenus, dépenses et dettes mensuelles"
+                chart2={
+                  <ModernPieChart
+                    data={expenseChartData}
+                    formatValue={formatCurrency}
+                  />
+                }
+                chart2Title="Répartition des dépenses"
+                chart2Description="Distribution des dépenses par catégorie"
+                kpis={[
+                  {
+                    title: 'Revenus totaux',
+                    value: formatCurrency(result.income.total),
+                    icon: <DollarSign className="h-4 w-4" />,
+                    variant: 'default' as const
+                  },
+                  {
+                    title: 'Dépenses totales',
+                    value: formatCurrency(result.expenses.total),
+                    icon: <TrendingUp className="h-4 w-4" />,
+                    variant: 'default' as const
+                  },
+                  {
+                    title: 'Charges de dettes',
+                    value: formatCurrency(result.debts.total),
+                    icon: <AlertTriangle className="h-4 w-4" />,
+                    variant: 'default' as const
+                  },
+                  {
+                    title: 'Revenu disponible',
+                    value: formatCurrency(result.metrics.disposableIncome),
+                    change: result.metrics.disposableIncome >= 0 ? { value: 0, trend: 'up' as const } : { value: 0, trend: 'down' as const },
+                    icon: <CheckCircle className="h-4 w-4" />,
+                    variant: 'default' as const
+                  },
+                  {
+                    title: 'Taux d\'épargne',
+                    value: formatPercent(result.metrics.savingsRate),
+                    change: result.metrics.savingsRate >= 0.10 ? { value: 0, trend: 'up' as const } : { value: 0, trend: 'down' as const },
+                    variant: 'default' as const
+                  },
+                  {
+                    title: 'Taux d\'endettement',
+                    value: formatPercent(result.metrics.debtRatio),
+                    change: result.metrics.debtRatio <= 0.33 ? { value: 0, trend: 'up' as const } : { value: 0, trend: 'down' as const },
+                    variant: 'default' as const
+                  }
+                ]}
+                loading={loading}
+              />
+            )}
 
-                {/* Key Metrics */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
-                    <div className="text-sm text-blue-600 font-medium mb-1">Revenus totaux</div>
-                    <div className="text-2xl font-bold text-blue-900">
-                      {formatCurrency(result.income.total)}
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
-                    <div className="text-sm text-purple-600 font-medium mb-1">Dépenses totales</div>
-                    <div className="text-2xl font-bold text-purple-900">
-                      {formatCurrency(result.expenses.total)}
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg border border-orange-200">
-                    <div className="text-sm text-orange-600 font-medium mb-1">Charges de dettes</div>
-                    <div className="text-2xl font-bold text-orange-900">
-                      {formatCurrency(result.debts.total)}
-                    </div>
-                  </div>
-
-                  <div className={`p-4 bg-gradient-to-br from-${result.metrics.disposableIncome >= 0 ? 'green' : 'red'}-50 to-${result.metrics.disposableIncome >= 0 ? 'green' : 'red'}-100 rounded-lg border border-${result.metrics.disposableIncome >= 0 ? 'green' : 'red'}-200`}>
-                    <div className={`text-sm text-${result.metrics.disposableIncome >= 0 ? 'green' : 'red'}-600 font-medium mb-1`}>Revenu disponible</div>
-                    <div className={`text-2xl font-bold text-${result.metrics.disposableIncome >= 0 ? 'green' : 'red'}-900`}>
-                      {formatCurrency(result.metrics.disposableIncome)}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Financial Ratios */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 bg-muted rounded-lg border">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-muted-foreground">Taux d'épargne</span>
-                      <span className={`text-lg font-bold ${result.metrics.savingsRate >= 0.10 ? 'text-green-600' : 'text-orange-600'}`}>
-                        {formatPercent(result.metrics.savingsRate)}
-                      </span>
-                    </div>
-                    <div className="w-full bg-muted-foreground/20 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full ${result.metrics.savingsRate >= 0.10 ? 'bg-green-600' : 'bg-orange-600'}`}
-                        style={{ width: `${Math.min(result.metrics.savingsRate * 100, 100)}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-muted rounded-lg border">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-muted-foreground">Taux d'endettement</span>
-                      <span className={`text-lg font-bold ${result.metrics.debtRatio <= 0.33 ? 'text-green-600' : 'text-red-600'}`}>
-                        {formatPercent(result.metrics.debtRatio)}
-                      </span>
-                    </div>
-                    <div className="w-full bg-muted-foreground/20 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full ${result.metrics.debtRatio <= 0.33 ? 'bg-green-600' : 'bg-red-600'}`}
-                        style={{ width: `${Math.min(result.metrics.debtRatio * 100, 100)}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-muted rounded-lg border">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Capacité restante</span>
-                      <span className="text-lg font-bold">
-                        {formatCurrency(result.metrics.remainingCapacity)}
-                      </span>
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Pour nouveaux crédits
-                    </div>
-                  </div>
-                </div>
-
-                {/* Charts */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Income vs Expenses */}
-                  <div>
-                    <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-primary" />
-                      Revenus vs Dépenses
-                    </h4>
-                    <ModernBarChart
-                      data={comparisonChartData}
-                      dataKeys={['Revenus', 'Dépenses', 'Dettes']}
-                      formatValue={formatCurrency}
-                    />
-                  </div>
-
-                  {/* Expense Breakdown */}
-                  <div>
-                    <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <PieChart className="h-5 w-5 text-primary" />
-                      Répartition des dépenses
-                    </h4>
-                    <ModernPieChart
-                      data={expenseChartData}
-                      formatValue={formatCurrency}
-                    />
-                  </div>
-                </div>
-
+            {/* Additional Details Below Bento Grid */}
+            {result && (
+              <div className="space-y-6 mt-6">
                 {/* Alerts */}
                 {result.alerts && result.alerts.length > 0 && (
                   <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">

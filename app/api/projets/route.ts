@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       context.isSuperAdmin
     )
 
-    const projets = await service.listProjets(filters)
+    const projets = await service.getProjets(filters)
 
     return createSuccessResponse(projets)
   } catch (error) {

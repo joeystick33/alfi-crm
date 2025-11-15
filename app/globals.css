@@ -1,5 +1,121 @@
 @import "tailwindcss";
 @import "./ui-fixes.css";
+@import "../styles/accessibility.css";
+@import "../styles/colors-wcag.css";
+@import "../styles/mobile.css";
+@import "../styles/premium-theme.css";
+
+/* Bento Grid Dynamic Classes */
+@layer utilities {
+  /* Focus indicators for accessibility */
+  .focus-visible\:ring-2:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+  
+  .focus-visible\:ring-offset-2:focus-visible {
+    outline-offset: 4px;
+  }
+  /* Grid columns */
+  .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+  .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .grid-cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .grid-cols-7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .grid-cols-8 { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+
+  /* Column spans */
+  .col-span-1 { grid-column: span 1 / span 1; }
+  .col-span-2 { grid-column: span 2 / span 2; }
+  .col-span-3 { grid-column: span 3 / span 3; }
+  .col-span-4 { grid-column: span 4 / span 4; }
+  .col-span-5 { grid-column: span 5 / span 5; }
+  .col-span-6 { grid-column: span 6 / span 6; }
+  .col-span-7 { grid-column: span 7 / span 7; }
+  .col-span-8 { grid-column: span 8 / span 8; }
+
+  /* Row spans */
+  .row-span-1 { grid-row: span 1 / span 1; }
+  .row-span-2 { grid-row: span 2 / span 2; }
+  .row-span-3 { grid-row: span 3 / span 3; }
+  .row-span-4 { grid-row: span 4 / span 4; }
+  .row-span-5 { grid-row: span 5 / span 5; }
+  .row-span-6 { grid-row: span 6 / span 6; }
+
+  /* Grid rows */
+  .grid-rows-1 { grid-template-rows: repeat(1, minmax(0, 1fr)); }
+  .grid-rows-2 { grid-template-rows: repeat(2, minmax(0, 1fr)); }
+  .grid-rows-3 { grid-template-rows: repeat(3, minmax(0, 1fr)); }
+  .grid-rows-4 { grid-template-rows: repeat(4, minmax(0, 1fr)); }
+  .grid-rows-5 { grid-template-rows: repeat(5, minmax(0, 1fr)); }
+  .grid-rows-6 { grid-template-rows: repeat(6, minmax(0, 1fr)); }
+
+  /* Gaps */
+  .gap-1 { gap: 0.25rem; }
+  .gap-2 { gap: 0.5rem; }
+  .gap-3 { gap: 0.75rem; }
+  .gap-4 { gap: 1rem; }
+  .gap-5 { gap: 1.25rem; }
+  .gap-6 { gap: 1.5rem; }
+  .gap-8 { gap: 2rem; }
+
+  /* Responsive grid columns */
+  @media (min-width: 768px) {
+    .md\:grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+    .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .md\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .md\:grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .md\:grid-cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .md\:grid-cols-7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .md\:grid-cols-8 { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+
+    .md\:col-span-1 { grid-column: span 1 / span 1; }
+    .md\:col-span-2 { grid-column: span 2 / span 2; }
+    .md\:col-span-3 { grid-column: span 3 / span 3; }
+    .md\:col-span-4 { grid-column: span 4 / span 4; }
+    .md\:col-span-5 { grid-column: span 5 / span 5; }
+    .md\:col-span-6 { grid-column: span 6 / span 6; }
+    .md\:col-span-7 { grid-column: span 7 / span 7; }
+    .md\:col-span-8 { grid-column: span 8 / span 8; }
+
+    .md\:row-span-1 { grid-row: span 1 / span 1; }
+    .md\:row-span-2 { grid-row: span 2 / span 2; }
+    .md\:row-span-3 { grid-row: span 3 / span 3; }
+    .md\:row-span-4 { grid-row: span 4 / span 4; }
+    .md\:row-span-5 { grid-row: span 5 / span 5; }
+    .md\:row-span-6 { grid-row: span 6 / span 6; }
+  }
+
+  @media (min-width: 1024px) {
+    .lg\:grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+    .lg\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .lg\:grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .lg\:grid-cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .lg\:grid-cols-7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .lg\:grid-cols-8 { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+
+    .lg\:col-span-1 { grid-column: span 1 / span 1; }
+    .lg\:col-span-2 { grid-column: span 2 / span 2; }
+    .lg\:col-span-3 { grid-column: span 3 / span 3; }
+    .lg\:col-span-4 { grid-column: span 4 / span 4; }
+    .lg\:col-span-5 { grid-column: span 5 / span 5; }
+    .lg\:col-span-6 { grid-column: span 6 / span 6; }
+    .lg\:col-span-7 { grid-column: span 7 / span 7; }
+    .lg\:col-span-8 { grid-column: span 8 / span 8; }
+
+    .lg\:row-span-1 { grid-row: span 1 / span 1; }
+    .lg\:row-span-2 { grid-row: span 2 / span 2; }
+    .lg\:row-span-3 { grid-row: span 3 / span 3; }
+    .lg\:row-span-4 { grid-row: span 4 / span 4; }
+    .lg\:row-span-5 { grid-row: span 5 / span 5; }
+    .lg\:row-span-6 { grid-row: span 6 / span 6; }
+  }
+}
 
 /* ═══════════════════════════════════════════════════════════════
    🎨 FIN3 CRM – PREMIUM DESIGN SYSTEM

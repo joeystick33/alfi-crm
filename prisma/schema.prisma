@@ -80,24 +80,25 @@ model Cabinet {
   updatedAt         DateTime         @updatedAt
   createdBy         String?
 
-  users          User[]
-  clients        Client[]
-  actifs         Actif[]
-  passifs        Passif[]
-  contrats       Contrat[]
-  documents      Document[]
-  taches         Tache[]
-  rendezvous     RendezVous[]
-  objectifs      Objectif[]
-  projets        Projet[]
-  opportunites   Opportunite[]
-  campagnes      Campagne[]
-  emails         Email[]
-  notifications  Notification[]
-  templates      Template[]
-  apporteurs     ApporteurAffaires[]
-  simulations    Simulation[]
-  auditLogs      AuditLog[]
+  users             User[]
+  clients           Client[]
+  actifs            Actif[]
+  passifs           Passif[]
+  contrats          Contrat[]
+  documents         Document[]
+  taches            Tache[]
+  rendezvous        RendezVous[]
+  objectifs         Objectif[]
+  projets           Projet[]
+  opportunites      Opportunite[]
+  campagnes         Campagne[]
+  emails            Email[]
+  notifications     Notification[]
+  templates         Template[]
+  apporteurs        ApporteurAffaires[]
+  simulations       Simulation[]
+  commercialActions CommercialAction[]
+  auditLogs         AuditLog[]
   syncedEmails   SyncedEmail[]
   emailTemplates EmailTemplate[]
 
@@ -1549,6 +1550,42 @@ enum AuditAction {
   SIGN
   APPROVE
   REJECT
+}
+
+// ============================================
+// MODULE: Commercial Actions
+// ============================================
+
+enum CommercialActionStatus {
+  DRAFT
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
+model CommercialAction {
+  id                 String                  @id @default(cuid())
+  cabinetId          String
+  cabinet            Cabinet                 @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  title              String
+  objective          String?
+  segmentKey         String?
+  segmentLabel       String?
+  channels           String[]
+  status             CommercialActionStatus  @default(DRAFT)
+  scheduledAt        DateTime?
+  audienceCount      Int?
+  estimatedPotential Float?
+  notes              String?
+  createdBy          String
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+
+  @@index([cabinetId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("commercial_actions")
 }
 
 model AuditLog {

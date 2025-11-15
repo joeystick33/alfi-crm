@@ -216,7 +216,7 @@ export default function ClientPage({ params }: ClientPageProps) {
         </TabsContent>
 
         <TabsContent value="opportunities">
-          <TabOpportunities clientId={id} client={client} />
+          <TabOpportunities clientId={id} />
         </TabsContent>
 
         <TabsContent value="timeline">

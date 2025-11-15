@@ -2,10 +2,11 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth-helpers'
 import { ObjectifService } from '@/lib/services/objectif-service'
 import { isRegularUser } from '@/lib/auth-types'
+import { ObjectifStatus, ObjectifPriority } from '@prisma/client'
 
 /**
  * GET /api/objectifs/[id]
- * Récupérer un objectif par ID
+ * Récupère un objectif par ID
  */
 export async function GET(
   request: NextRequest,
@@ -18,13 +19,13 @@ export async function GET(
       return createErrorResponse('Invalid user type', 400)
     }
 
-    const service = new ObjectifService(
+    const objectifService = new ObjectifService(
       context.cabinetId,
       context.user.id,
       context.isSuperAdmin
     )
 
-    const objectif = await service.getObjectifById(params.id)
+    const objectif = await objectifService.getObjectifById(params.id)
 
     if (!objectif) {
       return createErrorResponse('Objectif not found', 404)
@@ -32,7 +33,7 @@ export async function GET(
 
     return createSuccessResponse(objectif)
   } catch (error) {
-    console.error('Error in GET /api/objectifs/[id]:', error)
+    console.error('Get objectif error:', error)
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -44,7 +45,7 @@ export async function GET(
 
 /**
  * PATCH /api/objectifs/[id]
- * Modifier un objectif
+ * Met à jour un objectif
  */
 export async function PATCH(
   request: NextRequest,
@@ -59,27 +60,34 @@ export async function PATCH(
 
     const body = await request.json()
 
-    const service = new ObjectifService(
+    const objectifService = new ObjectifService(
       context.cabinetId,
       context.user.id,
       context.isSuperAdmin
     )
 
-    const objectif = await service.updateObjectif(params.id, body)
+    // Préparer les données de mise à jour
+    const updateData: any = {}
+    
+    if (body.name !== undefined) updateData.name = body.name
+    if (body.description !== undefined) updateData.description = body.description
+    if (body.targetAmount !== undefined) updateData.targetAmount = parseFloat(body.targetAmount)
+    if (body.currentAmount !== undefined) updateData.currentAmount = parseFloat(body.currentAmount)
+    if (body.targetDate !== undefined) updateData.targetDate = new Date(body.targetDate)
+    if (body.priority !== undefined) updateData.priority = body.priority as ObjectifPriority
+    if (body.monthlyContribution !== undefined) updateData.monthlyContribution = parseFloat(body.monthlyContribution)
+    if (body.status !== undefined) updateData.status = body.status as ObjectifStatus
+
+    const objectif = await objectifService.updateObjectif(params.id, updateData)
 
     return createSuccessResponse(objectif)
   } catch (error) {
-    console.error('Error in PATCH /api/objectifs/[id]:', error)
-    
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return createErrorResponse('Unauthorized', 401)
-    }
-    
-    if (error instanceof Error && error.message.includes('not found')) {
-      return createErrorResponse('Objectif not found', 404)
-    }
+    console.error('Update objectif error:', error)
     
     if (error instanceof Error) {
+      if (error.message === 'Unauthorized') {
+        return createErrorResponse('Unauthorized', 401)
+      }
       return createErrorResponse(error.message, 400)
     }
     
@@ -89,7 +97,7 @@ export async function PATCH(
 
 /**
  * DELETE /api/objectifs/[id]
- * Supprimer un objectif
+ * Supprime un objectif
  */
 export async function DELETE(
   request: NextRequest,
@@ -102,24 +110,20 @@ export async function DELETE(
       return createErrorResponse('Invalid user type', 400)
     }
 
-    const service = new ObjectifService(
+    const objectifService = new ObjectifService(
       context.cabinetId,
       context.user.id,
       context.isSuperAdmin
     )
 
-    await service.deleteObjectif(params.id)
+    await objectifService.deleteObjectif(params.id)
 
     return createSuccessResponse({ message: 'Objectif deleted successfully' })
   } catch (error) {
-    console.error('Error in DELETE /api/objectifs/[id]:', error)
+    console.error('Delete objectif error:', error)
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
-    }
-    
-    if (error instanceof Error && error.message.includes('not found')) {
-      return createErrorResponse('Objectif not found', 404)
     }
     
     return createErrorResponse('Internal server error', 500)

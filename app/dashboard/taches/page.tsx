@@ -1,308 +1,202 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
-import { Input } from '@/components/ui/Input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/Select'
-import { DataTable, type Column } from '@/components/ui/DataTable'
-import { LoadingState } from '@/components/ui/LoadingState'
-import { ErrorState, getErrorVariant } from '@/components/ui/ErrorState'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { formatDate } from '@/lib/utils'
-import {
-  Plus,
-  Search,
-  CheckSquare,
-  Clock,
-  AlertCircle,
-  ListTodo,
-} from 'lucide-react'
+import { useState, useEffect } from 'react';
+import { ListChecks, Plus } from 'lucide-react';
+import { api } from '@/lib/api-client';
+import { Button } from '@/components/ui/Button';
+import { DataTable } from '@/components/ui/DataTable';
+import { Badge } from '@/components/ui/Badge';
+import { Alert } from '@/components/ui/Alert';
+
+interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  type: string;
+  priority: string;
+  status: string;
+  dueDate?: string;
+  completedAt?: string;
+  client?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email?: string;
+    phone?: string;
+  };
+  clientName?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export default function TachesPage() {
-  const router = useRouter()
-  const [filters, setFilters] = useState({
-    status: 'all',
-    priority: 'all',
-    search: '',
-  })
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // TODO: Replace with real API call
-  const isLoading = false
-  const isError = false
-  const error = null
-  const taches: any[] = []
-  const refetch = () => {}
+  useEffect(() => {
+    loadTasks();
+  }, []);
 
-  const statusConfig = {
-    TODO: { label: 'À faire', variant: 'outline' as const, icon: Clock },
-    IN_PROGRESS: { label: 'En cours', variant: 'info' as const, icon: Clock },
-    COMPLETED: { label: 'Terminée', variant: 'success' as const, icon: CheckSquare },
-    CANCELLED: { label: 'Annulée', variant: 'destructive' as const, icon: AlertCircle },
-  }
+  const loadTasks = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await api.get<{ tasks: Task[] }>('/advisor/tasks');
+      setTasks(response.tasks || []);
+    } catch (err) {
+      console.error('Erreur chargement tâches:', err);
+      setError((err as Error).message || 'Erreur lors du chargement des tâches');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const priorityConfig = {
-    LOW: { label: 'Basse', variant: 'outline' as const },
-    MEDIUM: { label: 'Moyenne', variant: 'secondary' as const },
-    HIGH: { label: 'Haute', variant: 'warning' as const },
-    URGENT: { label: 'Urgente', variant: 'destructive' as const },
-  }
+  const handleToggleTask = async (taskId: string, completed: boolean) => {
+    try {
+      await api.patch(`/advisor/tasks/${taskId}`, { status: completed ? 'COMPLETED' : 'TODO' });
+      loadTasks();
+    } catch (err) {
+      console.error('Erreur mise à jour tâche:', err);
+      setError('Erreur lors de la mise à jour');
+    }
+  };
 
-  const columns: Column<any>[] = [
+  const columns = [
+    {
+      key: 'completed',
+      label: '',
+      sortable: false,
+      render: (row: Task) => (
+        <input
+          type="checkbox"
+          checked={row.status === 'COMPLETED'}
+          onChange={(e) => handleToggleTask(row.id, e.target.checked)}
+          className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+          aria-label={`Marquer la tâche "${row.title}" comme ${row.status === 'COMPLETED' ? 'non terminée' : 'terminée'}`}
+        />
+      ),
+    },
     {
       key: 'title',
-      label: 'Titre',
-      sortable: true,
-      render: (tache) => (
+      label: 'Tâche',
+      render: (row: Task) => (
         <div>
-          <p className="font-medium">{tache.title}</p>
-          {tache.description && (
-            <p className="text-sm text-muted-foreground line-clamp-1">
-              {tache.description}
-            </p>
+          <div className={`font-medium ${row.status === 'COMPLETED' ? 'line-through text-gray-400' : 'text-gray-900 dark:text-white'}`}>
+            {row.title}
+          </div>
+          {row.description && (
+            <div className="text-sm text-gray-500 mt-1">{row.description}</div>
           )}
         </div>
       ),
     },
     {
-      key: 'type',
-      label: 'Type',
-      sortable: true,
-      render: (tache) => <Badge variant="outline">{tache.type}</Badge>,
-    },
-    {
       key: 'priority',
       label: 'Priorité',
-      sortable: true,
-      render: (tache) => {
-        const config = priorityConfig[tache.priority as keyof typeof priorityConfig]
-        return <Badge variant={config.variant}>{config.label}</Badge>
-      },
-    },
-    {
-      key: 'status',
-      label: 'Statut',
-      sortable: true,
-      render: (tache) => {
-        const config = statusConfig[tache.status as keyof typeof statusConfig]
-        const Icon = config.icon
+      render: (row: Task) => {
+        const variants: Record<string, 'destructive' | 'warning' | 'default'> = {
+          URGENT: 'destructive',
+          HIGH: 'destructive',
+          MEDIUM: 'warning',
+          LOW: 'default',
+        };
+        const labels: Record<string, string> = {
+          URGENT: 'Urgente',
+          HIGH: 'Haute',
+          MEDIUM: 'Moyenne',
+          LOW: 'Basse',
+        };
         return (
-          <Badge variant={config.variant}>
-            <Icon className="h-3 w-3 mr-1" />
-            {config.label}
+          <Badge variant={variants[row.priority] || 'default'}>
+            {labels[row.priority] || row.priority}
           </Badge>
-        )
+        );
       },
     },
     {
       key: 'dueDate',
       label: 'Échéance',
-      sortable: true,
-      render: (tache) => {
-        if (!tache.dueDate) return '-'
-        const isOverdue = new Date(tache.dueDate) < new Date() && tache.status !== 'COMPLETED'
+      render: (row: Task) => {
+        if (!row.dueDate) return '-';
+        const date = new Date(row.dueDate);
+        const isOverdue = date < new Date();
         return (
-          <span className={isOverdue ? 'text-destructive font-medium' : ''}>
-            {formatDate(tache.dueDate)}
+          <span className={isOverdue ? 'text-red-600 font-medium' : ''}>
+            {date.toLocaleDateString('fr-FR')}
           </span>
-        )
+        );
       },
     },
     {
-      key: 'client',
-      label: 'Client',
-      render: (tache) =>
-        tache.client ? `${tache.client.firstName} ${tache.client.lastName}` : '-',
+      key: 'status',
+      label: 'Statut',
+      render: (row: Task) => {
+        const variants: Record<string, 'default' | 'info' | 'success' | 'destructive'> = {
+          TODO: 'default',
+          IN_PROGRESS: 'info',
+          COMPLETED: 'success',
+          CANCELLED: 'destructive',
+        };
+        const labels: Record<string, string> = {
+          TODO: 'À faire',
+          IN_PROGRESS: 'En cours',
+          COMPLETED: 'Terminée',
+          CANCELLED: 'Annulée',
+        };
+        return (
+          <Badge variant={variants[row.status] || 'default'}>
+            {labels[row.status] || row.status}
+          </Badge>
+        );
+      },
     },
-  ]
+  ];
 
-  const filteredTaches = taches.filter((tache) => {
-    const matchesStatus = filters.status === 'all' || tache.status === filters.status
-    const matchesPriority = filters.priority === 'all' || tache.priority === filters.priority
-    const matchesSearch =
-      !filters.search ||
-      tache.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-      tache.description?.toLowerCase().includes(filters.search.toLowerCase())
-    return matchesStatus && matchesPriority && matchesSearch
-  })
-
-  // Calculate stats
-  const stats = {
-    total: taches.length,
-    todo: taches.filter((t) => t.status === 'TODO').length,
-    inProgress: taches.filter((t) => t.status === 'IN_PROGRESS').length,
-    overdue: taches.filter(
-      (t) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'COMPLETED'
-    ).length,
-  }
+  const activeTasks = tasks.filter(t => t.status !== 'COMPLETED' && t.status !== 'CANCELLED');
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Tâches</h1>
-          <p className="text-muted-foreground mt-1">
-            Gérez vos tâches et suivez votre activité
-          </p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary-50 dark:bg-primary-900/20">
+            <ListChecks className="h-5 w-5 text-primary-600 dark:text-primary-400" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Mes Tâches
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {activeTasks.length} tâche{activeTasks.length > 1 ? 's' : ''} en cours
+            </p>
+          </div>
         </div>
-        <Button>
+
+        <Button
+          onClick={() => {/* TODO: Open modal */}}
+        >
           <Plus className="h-4 w-4 mr-2" />
-          Nouvelle tâche
+          Nouvelle Tâche
         </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-          </CardContent>
-        </Card>
+      {/* Error State */}
+      {error && (
+        <Alert variant="destructive" title="Erreur" onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              À faire
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-info">{stats.todo}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              En cours
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">{stats.inProgress}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              En retard
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-destructive">{stats.overdue}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex gap-4">
-            <div className="flex-1 max-w-md">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Rechercher une tâche..."
-                  className="pl-9"
-                  value={filters.search}
-                  onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <Select
-              value={filters.status}
-              onValueChange={(value) => setFilters({ ...filters, status: value })}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="TODO">À faire</SelectItem>
-                <SelectItem value="IN_PROGRESS">En cours</SelectItem>
-                <SelectItem value="COMPLETED">Terminée</SelectItem>
-                <SelectItem value="CANCELLED">Annulée</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={filters.priority}
-              onValueChange={(value) => setFilters({ ...filters, priority: value })}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Priorité" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes priorités</SelectItem>
-                <SelectItem value="LOW">Basse</SelectItem>
-                <SelectItem value="MEDIUM">Moyenne</SelectItem>
-                <SelectItem value="HIGH">Haute</SelectItem>
-                <SelectItem value="URGENT">Urgente</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Tasks Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Liste des tâches</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <LoadingState variant="table" count={5} />
-          ) : isError ? (
-            <ErrorState
-              error={error as Error}
-              variant={getErrorVariant(error as Error)}
-              onRetry={refetch}
-            />
-          ) : filteredTaches.length === 0 ? (
-            <EmptyState
-              icon={ListTodo}
-              title="Aucune tâche trouvée"
-              description={
-                filters.search || filters.status !== 'all' || filters.priority !== 'all'
-                  ? 'Aucune tâche ne correspond à vos critères. Essayez de modifier vos filtres.'
-                  : 'Commencez par créer votre première tâche pour organiser votre travail.'
-              }
-              action={{
-                label: 'Créer une tâche',
-                onClick: () => {
-                  // TODO: Open create task modal
-                  console.log('Create task')
-                },
-                icon: Plus,
-              }}
-            />
-          ) : (
-            <DataTable
-              data={filteredTaches}
-              columns={columns}
-              emptyMessage="Aucune tâche trouvée"
-              onRowClick={(tache) => {
-                // Navigate to task detail or open modal
-                console.log('Task clicked:', tache)
-              }}
-            />
-          )}
-        </CardContent>
-      </Card>
+      {/* Table */}
+      <DataTable
+        data={tasks}
+        columns={columns}
+        loading={loading}
+        sortable
+        filterable
+        emptyMessage="Aucune tâche trouvée"
+      />
     </div>
-  )
+  );
 }

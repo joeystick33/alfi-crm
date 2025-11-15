@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { ModernBarChart } from '@/components/charts/ModernBarChart';
+import { DualChartsTemplate } from '@/components/ui/bento/DualChartsTemplate';
 import { 
   Calculator, 
   TrendingUp, 
@@ -218,9 +219,8 @@ export function DebtCapacityCalculator() {
             )}
 
             {result && (
-              <div className="space-y-6 mt-8">
-                {/* Affordability Indicator */}
-                <div className={`p-6 bg-gradient-to-br from-${getAffordabilityColor(result.affordability)}-50 to-${getAffordabilityColor(result.affordability)}-100 rounded-lg border-2 border-${getAffordabilityColor(result.affordability)}-300`}>
+              <DualChartsTemplate
+                healthIndicator={
                   <div className="flex items-center gap-4">
                     <div className={`text-${getAffordabilityColor(result.affordability)}-600`}>
                       {getAffordabilityIcon(result.affordability)}
@@ -232,41 +232,55 @@ export function DebtCapacityCalculator() {
                       </div>
                     </div>
                   </div>
-                </div>
+                }
+                chart1={
+                  <ModernBarChart
+                    data={debtChartData}
+                    dataKeys={['Dettes actuelles', 'Capacité restante', 'Maximum autorisé']}
+                    formatValue={formatCurrency}
+                  />
+                }
+                chart1Title="Répartition de l'endettement"
+                chart1Description="Analyse de votre capacité d'endettement actuelle"
+                chart2={
+                  <ModernBarChart
+                    data={loanBreakdownData}
+                    dataKeys={['Capital emprunté', 'Intérêts totaux']}
+                    formatValue={formatCurrency}
+                  />
+                }
+                chart2Title="Composition du prêt"
+                chart2Description="Répartition entre capital et intérêts"
+                kpis={[
+                  {
+                    title: 'Paiement mensuel max',
+                    value: formatCurrency(result.maxMonthlyPayment),
+                    description: `${formatPercent(result.maxDebtRatio)} du revenu`,
+                    icon: <DollarSign className="h-4 w-4" />,
+                    variant: 'default' as const
+                  },
+                  {
+                    title: 'Capacité restante',
+                    value: formatCurrency(result.remainingCapacity),
+                    description: 'Disponible pour nouveau crédit',
+                    icon: <CheckCircle className="h-4 w-4" />,
+                    variant: 'default' as const
+                  },
+                  {
+                    title: 'Montant empruntable',
+                    value: formatCurrency(result.loanDetails.maxLoanAmount),
+                    description: `Sur ${result.loanDetails.loanTerm} ans`,
+                    icon: <TrendingUp className="h-4 w-4" />,
+                    variant: 'default' as const
+                  }
+                ]}
+                loading={loading}
+              />
+            )}
 
-                {/* Key Metrics */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
-                    <div className="text-sm text-blue-600 font-medium mb-1">Paiement mensuel max</div>
-                    <div className="text-2xl font-bold text-blue-900">
-                      {formatCurrency(result.maxMonthlyPayment)}
-                    </div>
-                    <div className="text-xs text-blue-600 mt-1">
-                      {formatPercent(result.maxDebtRatio)} du revenu
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
-                    <div className="text-sm text-green-600 font-medium mb-1">Capacité restante</div>
-                    <div className="text-2xl font-bold text-green-900">
-                      {formatCurrency(result.remainingCapacity)}
-                    </div>
-                    <div className="text-xs text-green-600 mt-1">
-                      Disponible pour nouveau crédit
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
-                    <div className="text-sm text-purple-600 font-medium mb-1">Montant empruntable</div>
-                    <div className="text-2xl font-bold text-purple-900">
-                      {formatCurrency(result.loanDetails.maxLoanAmount)}
-                    </div>
-                    <div className="text-xs text-purple-600 mt-1">
-                      Sur {result.loanDetails.loanTerm} ans à {formatPercent(result.loanDetails.interestRate)}
-                    </div>
-                  </div>
-                </div>
-
+            {/* Additional Details Below Bento Grid */}
+            {result && (
+              <div className="space-y-6 mt-6">
                 {/* Loan Details */}
                 <div className="p-6 bg-muted rounded-lg border">
                   <h4 className="text-lg font-semibold mb-4">Détails du prêt</h4>
@@ -312,33 +326,6 @@ export function DebtCapacityCalculator() {
                         {formatCurrency(result.loanDetails.totalCost)}
                       </span>
                     </div>
-                  </div>
-                </div>
-
-                {/* Charts */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-primary" />
-                      Répartition de l'endettement
-                    </h4>
-                    <ModernBarChart
-                      data={debtChartData}
-                      dataKeys={['Dettes actuelles', 'Capacité restante', 'Maximum autorisé']}
-                      formatValue={formatCurrency}
-                    />
-                  </div>
-
-                  <div>
-                    <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <DollarSign className="h-5 w-5 text-primary" />
-                      Composition du prêt
-                    </h4>
-                    <ModernBarChart
-                      data={loanBreakdownData}
-                      dataKeys={['Capital emprunté', 'Intérêts totaux']}
-                      formatValue={formatCurrency}
-                    />
                   </div>
                 </div>
 

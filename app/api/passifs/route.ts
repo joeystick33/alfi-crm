@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       context.isSuperAdmin
     )
 
-    const passifs = await service.listPassifs(filters)
+    const passifs = await service.listPassifsWithClients(filters)
 
     return createSuccessResponse(passifs)
   } catch (error) {
