@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     const templateService = new EmailTemplateService(
       context.cabinetId,
-      context.userId,
+      context.user.id,
       context.isSuperAdmin
     )
 
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     const templateService = new EmailTemplateService(
       context.cabinetId,
-      context.userId,
+      context.user.id,
       context.isSuperAdmin
     )
 

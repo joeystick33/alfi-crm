@@ -15,7 +15,7 @@ export async function PATCH(
 
     const notificationService = new NotificationService(
       context.cabinetId,
-      context.userId,
+      context.user.id,
       context.isSuperAdmin
     )
 
@@ -41,7 +41,7 @@ export async function DELETE(
 
     const notificationService = new NotificationService(
       context.cabinetId,
-      context.userId,
+      context.user.id,
       context.isSuperAdmin
     )
 

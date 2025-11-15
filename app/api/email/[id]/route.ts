@@ -16,7 +16,7 @@ export async function PATCH(
 
     const emailSyncService = new EmailSyncService(
       context.cabinetId,
-      context.userId,
+      context.user.id,
       context.isSuperAdmin
     )
 

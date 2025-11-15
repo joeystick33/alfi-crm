@@ -15,7 +15,7 @@ export async function GET(
 
     const emailAdvancedService = new EmailAdvancedService(
       context.cabinetId,
-      context.userId,
+      context.user.id,
       context.isSuperAdmin
     )
 

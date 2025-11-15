@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     const notificationService = new NotificationService(
       context.cabinetId,
-      context.userId,
+      context.user.id,
       context.isSuperAdmin
     )
 

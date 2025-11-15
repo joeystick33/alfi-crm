@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     // Generate state with userId for callback
     const state = Buffer.from(
       JSON.stringify({
-        userId: context.userId,
+        userId: context.user.id,
         cabinetId: context.cabinetId,
       })
     ).toString('base64')

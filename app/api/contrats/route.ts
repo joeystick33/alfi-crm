@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth-helpers'
 import { ContratService } from '@/lib/services/contrat-service'
 import { isRegularUser } from '@/lib/auth-types'
+import { ContratType, ContratStatus } from '@prisma/client'
 
 /**
  * GET /api/contrats
@@ -17,9 +18,12 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     
+    const typeParam = searchParams.get('type');
+    const statusParam = searchParams.get('status');
+    
     const filters = {
-      type: searchParams.get('type') || undefined,
-      status: searchParams.get('status') || undefined,
+      type: typeParam ? (typeParam as ContratType) : undefined,
+      status: statusParam ? (statusParam as ContratStatus) : undefined,
       clientId: searchParams.get('clientId') || undefined,
       search: searchParams.get('search') || undefined,
     }

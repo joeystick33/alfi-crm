@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     const emailAdvancedService = new EmailAdvancedService(
       context.cabinetId,
-      context.userId,
+      context.user.id,
       context.isSuperAdmin
     )
 

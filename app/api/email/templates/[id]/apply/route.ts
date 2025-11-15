@@ -22,7 +22,7 @@ export async function POST(
 
     const templateService = new EmailTemplateService(
       context.cabinetId,
-      context.userId,
+      context.user.id,
       context.isSuperAdmin
     )
 

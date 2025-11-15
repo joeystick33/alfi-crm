@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 
     const emailSyncService = new EmailSyncService(
       context.cabinetId,
-      context.userId,
+      context.user.id,
       context.isSuperAdmin
     )
 
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
 
     const emailSyncService = new EmailSyncService(
       context.cabinetId,
-      context.userId,
+      context.user.id,
       context.isSuperAdmin
     )
 

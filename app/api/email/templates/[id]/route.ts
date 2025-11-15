@@ -15,7 +15,7 @@ export async function GET(
 
     const templateService = new EmailTemplateService(
       context.cabinetId,
-      context.userId,
+      context.user.id,
       context.isSuperAdmin
     )
 
@@ -46,7 +46,7 @@ export async function PATCH(
 
     const templateService = new EmailTemplateService(
       context.cabinetId,
-      context.userId,
+      context.user.id,
       context.isSuperAdmin
     )
 
@@ -72,7 +72,7 @@ export async function DELETE(
 
     const templateService = new EmailTemplateService(
       context.cabinetId,
-      context.userId,
+      context.user.id,
       context.isSuperAdmin
     )
 

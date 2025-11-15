@@ -61,6 +61,13 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    if (!client) {
+      return NextResponse.json(
+        { error: 'Client not found' },
+        { status: 404 }
+      );
+    }
+
     // Get emails between client and advisor
     const emails = await prisma.email.findMany({
       where: {
