@@ -50,16 +50,40 @@ export function debounce<T extends (...args: any[]) => any>(func: T, wait: numbe
 /**
  * Générer des initiales à partir d'un nom
  */
-export function getInitials(firstName: string, lastName?: string): string {
-  if (lastName) {
+export function getInitials(firstName?: string | null, lastName?: string | null): string {
+  // Valeur par défaut si aucun nom n'est fourni
+  if (!firstName && !lastName) {
+    return '??';
+  }
+  
+  // Si on a les deux noms
+  if (firstName && lastName) {
     return `${firstName[0]}${lastName[0]}`.toUpperCase();
   }
-  return firstName
-    .split(' ')
-    .map(word => word[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+  
+  // Si on a seulement le prénom
+  if (firstName) {
+    return firstName
+      .split(' ')
+      .map(word => word[0])
+      .filter(Boolean)
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  }
+  
+  // Si on a seulement le nom de famille
+  if (lastName) {
+    return lastName
+      .split(' ')
+      .map(word => word[0])
+      .filter(Boolean)
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  }
+  
+  return '??';
 }
 
 /**
@@ -73,7 +97,10 @@ export function truncate(text: string, length = 50): string {
 /**
  * Formater un pourcentage
  */
-export function formatPercentage(value: number, decimals = 1): string {
+export function formatPercentage(value?: number | null, decimals = 1): string {
+  if (value === null || value === undefined || isNaN(value)) {
+    return '0%';
+  }
   return `${value.toFixed(decimals)}%`;
 }
 

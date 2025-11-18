@@ -80,7 +80,7 @@ export default function SuperAdminDashboard() {
         const orgsData = await orgsRes.json();
         setOrganizations(orgsData.organizations || []);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur chargement données:', error);
     } finally {
       setLoading(false);
@@ -243,7 +243,7 @@ export default function SuperAdminDashboard() {
             </div>
           ) : (
             <div className="space-y-4">
-              {organizations.map((org) => (
+              {organizations.map((org: any) => (
                 <div
                   key={org.id}
                   className="p-6 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow"
@@ -335,7 +335,7 @@ export default function SuperAdminDashboard() {
               Répartition des Plans
             </h3>
             <div className="space-y-3">
-              {['TRIAL', 'STARTER', 'BUSINESS', 'PREMIUM', 'ENTERPRISE'].map((plan) => (
+              {['TRIAL', 'STARTER', 'BUSINESS', 'PREMIUM', 'ENTERPRISE'].map((plan: any) => (
                 <div key={plan} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   <span className="text-gray-900 dark:text-white">{plan}</span>
                   <span className="font-semibold text-blue-600">

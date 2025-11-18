@@ -69,7 +69,7 @@ export async function GET(
         updatedAt: appointment.updatedAt,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching appointment:', error);
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401);
@@ -90,7 +90,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const data = updateAppointmentSchema.parse(body);
+    const data: any = updateAppointmentSchema.parse(body);
 
     const existingAppointment = await prisma.rendezVous.findFirst({
       where: {
@@ -172,7 +172,7 @@ export async function PUT(
       },
       message: 'Rendez-vous mis à jour avec succès',
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating appointment:', error);
     
     if (error instanceof z.ZodError) {
@@ -220,7 +220,7 @@ export async function DELETE(
     return createSuccessResponse({
       message: 'Rendez-vous annulé avec succès',
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting appointment:', error);
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401);

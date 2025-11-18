@@ -1,5 +1,21 @@
-import { getPrismaClient, setRLSContext } from '@/lib/prisma'
+import { getPrismaClient } from '@/lib/prisma'
 import { TacheType, TacheStatus, TachePriority } from '@prisma/client'
+
+export interface CreateTacheInput {
+  type: TacheType
+  title: string
+  description?: string
+  assignedToId: string
+  clientId?: string
+  projetId?: string
+  dueDate?: Date
+  priority: TachePriority
+  reminderDate?: Date
+}
+
+export interface UpdateTacheInput extends Partial<CreateTacheInput> {
+  status?: TacheStatus
+}
 
 export class TacheService {
   private prisma
@@ -12,25 +28,29 @@ export class TacheService {
     this.prisma = getPrismaClient(cabinetId, isSuperAdmin)
   }
 
+  private formatTache(tache: any) {
+    if (!tache) {
+      return null
+    }
+
+    return {
+      ...tache,
+      dueDate: tache.dueDate ?? null,
+      reminderDate: tache.reminderDate ?? null,
+      completedAt: tache.completedAt ?? null,
+    }
+  }
+
   /**
    * Créer une tâche
    */
-  async createTache(data: {
-    type: TacheType
-    title: string
-    description?: string
-    assignedToId: string
-    clientId?: string
-    projetId?: string
-    dueDate?: Date
-    priority: TachePriority
-    reminderDate?: Date
-  }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
+  async createTache(data: CreateTacheInput) {
     // Vérifier que l'utilisateur assigné existe
-    const user = await this.prisma.user.findUnique({
-      where: { id: data.assignedToId },
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id: data.assignedToId,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!user) {
@@ -39,8 +59,11 @@ export class TacheService {
 
     // Vérifier que le client existe si fourni
     if (data.clientId) {
-      const client = await this.prisma.client.findUnique({
-        where: { id: data.clientId },
+      const client = await this.prisma.client.findFirst({
+        where: {
+          id: data.clientId,
+          cabinetId: this.cabinetId,
+        },
       })
 
       if (!client) {
@@ -70,6 +93,7 @@ export class TacheService {
     if (data.clientId) {
       await this.prisma.timelineEvent.create({
         data: {
+          cabinetId: this.cabinetId,
           clientId: data.clientId,
           type: 'OTHER',
           title: 'Tâche créée',
@@ -81,7 +105,7 @@ export class TacheService {
       })
     }
 
-    return tache
+    return this.getTacheById(tache.id)
   }
 
   /**
@@ -97,9 +121,9 @@ export class TacheService {
     dueBefore?: Date
     search?: string
   }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const where: any = {}
+    const where: any = {
+      cabinetId: this.cabinetId,
+    }
 
     if (filters?.assignedToId) {
       where.assignedToId = filters.assignedToId
@@ -136,7 +160,7 @@ export class TacheService {
       ]
     }
 
-    return this.prisma.tache.findMany({
+    const taches = await this.prisma.tache.findMany({
       where,
       include: {
         assignedTo: {
@@ -169,16 +193,19 @@ export class TacheService {
       },
       orderBy: [{ priority: 'asc' }, { dueDate: 'asc' }],
     })
+
+    return taches.map(tache => this.formatTache(tache))
   }
 
   /**
    * Récupérer une tâche par ID
    */
   async getTacheById(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    return this.prisma.tache.findUnique({
-      where: { id },
+    const tache = await this.prisma.tache.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       include: {
         assignedTo: true,
         client: true,
@@ -191,57 +218,90 @@ export class TacheService {
         },
       },
     })
+
+    return this.formatTache(tache)
   }
 
   /**
    * Mettre à jour une tâche
    */
-  async updateTache(
-    id: string,
-    data: {
-      title?: string
-      description?: string
-      assignedToId?: string
-      dueDate?: Date
-      priority?: TachePriority
-      status?: TacheStatus
-      reminderDate?: Date
-    }
-  ) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
+  async updateTache(id: string, data: UpdateTacheInput) {
+    if (data.assignedToId) {
+      const user = await this.prisma.user.findFirst({
+        where: {
+          id: data.assignedToId,
+          cabinetId: this.cabinetId,
+        },
+      })
 
-    return this.prisma.tache.update({
-      where: { id },
+      if (!user) {
+        throw new Error('Assigned user not found')
+      }
+    }
+
+    if (data.clientId) {
+      const client = await this.prisma.client.findFirst({
+        where: {
+          id: data.clientId,
+          cabinetId: this.cabinetId,
+        },
+      })
+
+      if (!client) {
+        throw new Error('Client not found')
+      }
+    }
+
+    const { count } = await this.prisma.tache.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data,
     })
+
+    if (count === 0) {
+      throw new Error('Tache not found or access denied')
+    }
+
+    return this.getTacheById(id)
   }
 
   /**
    * Marquer une tâche comme terminée
    */
   async completeTache(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const tache = await this.prisma.tache.findUnique({
-      where: { id },
+    const tache = await this.prisma.tache.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!tache) {
       throw new Error('Tache not found')
     }
 
-    const updated = await this.prisma.tache.update({
-      where: { id },
+    const { count } = await this.prisma.tache.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data: {
         status: 'COMPLETED',
         completedAt: new Date(),
       },
     })
 
+    if (count === 0) {
+      throw new Error('Tache not found or access denied')
+    }
+
     // Créer un événement timeline si lié à un client
     if (tache.clientId) {
       await this.prisma.timelineEvent.create({
         data: {
+          cabinetId: this.cabinetId,
           clientId: tache.clientId,
           type: 'OTHER',
           title: 'Tâche terminée',
@@ -253,58 +313,74 @@ export class TacheService {
       })
     }
 
-    return updated
+    return this.getTacheById(id)
   }
 
   /**
    * Réassigner une tâche
    */
   async reassignTache(id: string, newAssignedToId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Vérifier que le nouvel utilisateur existe
-    const user = await this.prisma.user.findUnique({
-      where: { id: newAssignedToId },
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id: newAssignedToId,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!user) {
       throw new Error('New assigned user not found')
     }
 
-    return this.prisma.tache.update({
-      where: { id },
+    const { count } = await this.prisma.tache.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data: {
         assignedToId: newAssignedToId,
       },
     })
+
+    if (count === 0) {
+      throw new Error('Tache not found or access denied')
+    }
+
+    return this.getTacheById(id)
   }
 
   /**
    * Supprimer une tâche
    */
   async deleteTache(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    return this.prisma.tache.delete({
-      where: { id },
+    const { count } = await this.prisma.tache.deleteMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
     })
+
+    if (count === 0) {
+      throw new Error('Tache not found or access denied')
+    }
+
+    return { success: true }
   }
 
   /**
    * Récupérer mes tâches (pour l'utilisateur connecté)
    */
   async getMyTaches(status?: TacheStatus) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const where: any = {
       assignedToId: this.userId,
+      cabinetId: this.cabinetId,
     }
 
     if (status) {
       where.status = status
     }
 
-    return this.prisma.tache.findMany({
+    const taches = await this.prisma.tache.findMany({
       where,
       include: {
         client: {
@@ -323,18 +399,19 @@ export class TacheService {
       },
       orderBy: [{ priority: 'asc' }, { dueDate: 'asc' }],
     })
+
+    return taches.map(tache => this.formatTache(tache))
   }
 
   /**
    * Récupérer les tâches en retard
    */
   async getOverdueTaches() {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const today = new Date()
 
-    return this.prisma.tache.findMany({
+    const taches = await this.prisma.tache.findMany({
       where: {
+        cabinetId: this.cabinetId,
         dueDate: { lt: today },
         status: { in: ['TODO', 'IN_PROGRESS'] },
       },
@@ -357,21 +434,22 @@ export class TacheService {
       },
       orderBy: { dueDate: 'asc' },
     })
+
+    return taches.map(tache => this.formatTache(tache))
   }
 
   /**
    * Récupérer les tâches avec rappel aujourd'hui
    */
   async getTachesWithReminderToday() {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
 
-    return this.prisma.tache.findMany({
+    const taches = await this.prisma.tache.findMany({
       where: {
+        cabinetId: this.cabinetId,
         reminderDate: {
           gte: today,
           lt: tomorrow,
@@ -396,26 +474,27 @@ export class TacheService {
         },
       },
     })
+
+    return taches.map(tache => this.formatTache(tache))
   }
 
   /**
    * Statistiques des tâches par utilisateur
    */
   async getUserStatistics(userId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const [total, todo, inProgress, completed, cancelled] = await Promise.all([
-      this.prisma.tache.count({ where: { assignedToId: userId } }),
-      this.prisma.tache.count({ where: { assignedToId: userId, status: 'TODO' } }),
-      this.prisma.tache.count({ where: { assignedToId: userId, status: 'IN_PROGRESS' } }),
-      this.prisma.tache.count({ where: { assignedToId: userId, status: 'COMPLETED' } }),
-      this.prisma.tache.count({ where: { assignedToId: userId, status: 'CANCELLED' } }),
+      this.prisma.tache.count({ where: { assignedToId: userId, cabinetId: this.cabinetId } }),
+      this.prisma.tache.count({ where: { assignedToId: userId, cabinetId: this.cabinetId, status: 'TODO' } }),
+      this.prisma.tache.count({ where: { assignedToId: userId, cabinetId: this.cabinetId, status: 'IN_PROGRESS' } }),
+      this.prisma.tache.count({ where: { assignedToId: userId, cabinetId: this.cabinetId, status: 'COMPLETED' } }),
+      this.prisma.tache.count({ where: { assignedToId: userId, cabinetId: this.cabinetId, status: 'CANCELLED' } }),
     ])
 
     const today = new Date()
     const overdue = await this.prisma.tache.count({
       where: {
         assignedToId: userId,
+        cabinetId: this.cabinetId,
         dueDate: { lt: today },
         status: { in: ['TODO', 'IN_PROGRESS'] },
       },
@@ -436,19 +515,18 @@ export class TacheService {
    * Statistiques globales des tâches
    */
   async getStatistics() {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const [total, todo, inProgress, completed, cancelled] = await Promise.all([
-      this.prisma.tache.count(),
-      this.prisma.tache.count({ where: { status: 'TODO' } }),
-      this.prisma.tache.count({ where: { status: 'IN_PROGRESS' } }),
-      this.prisma.tache.count({ where: { status: 'COMPLETED' } }),
-      this.prisma.tache.count({ where: { status: 'CANCELLED' } }),
+      this.prisma.tache.count({ where: { cabinetId: this.cabinetId } }),
+      this.prisma.tache.count({ where: { cabinetId: this.cabinetId, status: 'TODO' } }),
+      this.prisma.tache.count({ where: { cabinetId: this.cabinetId, status: 'IN_PROGRESS' } }),
+      this.prisma.tache.count({ where: { cabinetId: this.cabinetId, status: 'COMPLETED' } }),
+      this.prisma.tache.count({ where: { cabinetId: this.cabinetId, status: 'CANCELLED' } }),
     ])
 
     const today = new Date()
     const overdue = await this.prisma.tache.count({
       where: {
+        cabinetId: this.cabinetId,
         dueDate: { lt: today },
         status: { in: ['TODO', 'IN_PROGRESS'] },
       },

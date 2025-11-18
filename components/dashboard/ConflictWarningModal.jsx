@@ -3,7 +3,7 @@
 import { AlertTriangle, Calendar, Clock } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import Button from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 
 export default function ConflictWarningModal({
   isOpen,

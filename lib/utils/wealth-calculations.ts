@@ -45,9 +45,9 @@ export function calculateLiquidityRatio(assets: Asset[]): LiquidityMetrics {
   
   const liquidAssets = assets
     .filter(asset => liquidTypes.includes(asset.type))
-    .reduce((sum, asset) => sum + (asset.value || 0), 0)
+    .reduce((sum: any, asset: any) => sum + (asset.value || 0), 0)
   
-  const totalAssets = assets.reduce((sum, asset) => sum + (asset.value || 0), 0)
+  const totalAssets = assets.reduce((sum: any, asset: any) => sum + (asset.value || 0), 0)
   
   const liquidityRatio = totalAssets > 0 ? Math.round((liquidAssets / totalAssets) * 100) : 0
   
@@ -104,7 +104,7 @@ export function sortAssets(
 ): Asset[] {
   const assetsWithLeverage = calculateLeverageEffect(assets, liabilities)
   
-  const sorted = [...assetsWithLeverage].sort((a, b) => {
+  const sorted = [...assetsWithLeverage].sort((a: any, b: any) => {
     switch (sortBy) {
       case 'value':
         return (b.value || 0) - (a.value || 0)

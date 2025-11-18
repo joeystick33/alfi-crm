@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
-import { apiCall } from '@/lib/api';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { apiCall } from '@/lib/api-client';
 import { 
   Shield, 
   AlertTriangle, 
@@ -31,8 +31,8 @@ export default function KYCWidget({ presentationMode = false }) {
     try {
       setLoading(true);
       const [statsData, expiringData] = await Promise.all([
-        apiCall('/advisor/kyc?stats=true'),
-        apiCall('/advisor/kyc?expiring=true')
+        apiCall('/api/advisor/kyc?stats=true'),
+        apiCall('/api/advisor/kyc?expiring=true')
       ]);
       setStats(statsData);
       setExpiring(expiringData.kyc || []);

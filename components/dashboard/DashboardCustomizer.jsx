@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { WIDGET_REGISTRY, getAllWidgets, getDefaultSettings } from '@/lib/dashboard/widget-registry';
 import { LAYOUT_PRESETS, getPresetById } from '@/lib/dashboard/layout-presets';
-import { apiCall } from '@/lib/api';
+import { apiCall } from '@/lib/api-client';
 
 export default function DashboardCustomizer({ 
   currentLayout, 
@@ -108,7 +108,7 @@ export default function DashboardCustomizer({
         }))
       };
 
-      await apiCall('/advisor/dashboard/layout', {
+      await apiCall('/api/advisor/dashboard/layout', {
         method: 'PUT',
         body: JSON.stringify(layoutData)
       });

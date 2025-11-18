@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { 
   Lightbulb, 
   ArrowRight, 
@@ -14,7 +14,7 @@ import {
   Target,
   CheckCircle
 } from 'lucide-react';
-import { apiCall } from '@/lib/api';
+import { apiCall } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
 
 export default function OpportunitiesWidget({ maxItems = 5 }) {
@@ -34,7 +34,7 @@ export default function OpportunitiesWidget({ maxItems = 5 }) {
 
   const loadOpportunities = async () => {
     try {
-      const data = await apiCall(`/advisor/opportunities?status=active&limit=${maxItems}`);
+      const data = await apiCall(`/api/advisor/opportunities?status=active&limit=${maxItems}`);
       setOpportunities(data.opportunities || []);
       setTotalPipelineValue(data.totalPipelineValue || 0);
       setStats({
@@ -51,6 +51,7 @@ export default function OpportunitiesWidget({ maxItems = 5 }) {
   };
 
   const getStatusConfig = (status) => {
+    const statusLower = status?.toLowerCase() || 'detected';
     const configs = {
       'detected': {
         label: 'Détectée',
@@ -78,10 +79,11 @@ export default function OpportunitiesWidget({ maxItems = 5 }) {
         icon: CheckCircle
       }
     };
-    return configs[status] || configs.detected;
+    return configs[statusLower] || configs.detected;
   };
 
   const getPriorityConfig = (priority) => {
+    const priorityLower = priority?.toLowerCase() || 'medium';
     const configs = {
       'urgent': {
         color: 'border-red-300 bg-red-50',
@@ -104,20 +106,19 @@ export default function OpportunitiesWidget({ maxItems = 5 }) {
         label: 'Basse'
       }
     };
-    return configs[priority] || configs.medium;
+    return configs[priorityLower] || configs.medium;
   };
 
   const getTypeLabel = (type) => {
     const labels = {
-      'PER': 'PER',
       'ASSURANCE_VIE': 'Assurance Vie',
       'IMMOBILIER': 'Immobilier',
-      'ARBITRAGE_UC_EURO': 'Arbitrage',
-      'OPTIMISATION_FISCALE': 'Optimisation Fiscale',
-      'TRANSMISSION': 'Transmission',
+      'PLACEMENT': 'Placement',
+      'CREDIT': 'Crédit',
+      'RETRAITE': 'Retraite',
+      'SUCCESSION': 'Succession',
+      'FISCALITE': 'Fiscalité',
       'PREVOYANCE': 'Prévoyance',
-      'DIVERSIFICATION': 'Diversification',
-      'REBALANCING': 'Rééquilibrage',
       'OTHER': 'Autre'
     };
     return labels[type] || type;
@@ -149,6 +150,7 @@ export default function OpportunitiesWidget({ maxItems = 5 }) {
   };
 
   const getProgressPercentage = (status) => {
+    const statusLower = status?.toLowerCase() || 'detected';
     const statusProgress = {
       'detected': 20,
       'qualified': 40,
@@ -156,7 +158,7 @@ export default function OpportunitiesWidget({ maxItems = 5 }) {
       'presented': 80,
       'accepted': 100
     };
-    return statusProgress[status] || 0;
+    return statusProgress[statusLower] || 0;
   };
 
   return (

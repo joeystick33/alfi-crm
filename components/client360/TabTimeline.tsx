@@ -49,7 +49,7 @@ export function TabTimeline({ clientId, client }: TabTimelineProps) {
   const { data: events, isLoading, isError, error, refetch } = useClientTimeline(clientId)
 
   const filteredEvents = selectedType
-    ? events?.filter((event) => event.type === selectedType)
+    ? events?.filter((event: any) => event.type === selectedType)
     : events
 
   if (isLoading) {
@@ -106,7 +106,7 @@ export function TabTimeline({ clientId, client }: TabTimelineProps) {
               )}
             </Button>
             {Object.entries(eventTypeConfig).map(([type, config]) => {
-              const count = events?.filter((e) => e.type === type).length || 0
+              const count = events?.filter((e: any) => e.type === type).length || 0
               
               if (count === 0) return null
 
@@ -144,7 +144,7 @@ export function TabTimeline({ clientId, client }: TabTimelineProps) {
 
               {/* Events */}
               <div className="space-y-6">
-                {filteredEvents.map((event) => {
+                {filteredEvents.map((event: any) => {
                   const config = eventTypeConfig[event.type as keyof typeof eventTypeConfig] || eventTypeConfig.OTHER
                   const Icon = config.icon
 

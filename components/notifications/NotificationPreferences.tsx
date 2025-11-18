@@ -129,8 +129,8 @@ export function NotificationPreferences() {
   )
 
   const handleToggle = (id: string, channel: 'inApp' | 'email' | 'push') => {
-    setPreferences((prev) =>
-      prev.map((pref) =>
+    setPreferences((prev: any) =>
+      prev.map((pref: any) =>
         pref.id === id ? { ...pref, [channel]: !pref[channel] } : pref
       )
     )
@@ -231,7 +231,7 @@ export function NotificationPreferences() {
             <Separator />
 
             {/* Preferences */}
-            {preferences.map((pref) => (
+            {preferences.map((pref: any) => (
               <div key={pref.id}>
                 <div className="grid grid-cols-[1fr,auto,auto,auto] gap-4 items-center">
                   <div>

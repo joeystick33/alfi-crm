@@ -84,7 +84,7 @@ export function TabDocuments({ clientId, client }: TabDocumentsProps) {
       const data = await api.get(`/clients/${clientId}/documents`)
       setDocuments(data.documents || [])
       setCompleteness(data.completeness || null)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading documents:', error)
       toast({
         title: 'Erreur de chargement',
@@ -131,7 +131,7 @@ export function TabDocuments({ clientId, client }: TabDocumentsProps) {
       resetUploadState()
       setShowUploadModal(false)
       await loadDocuments()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading document:', error)
       toast({
         title: 'Échec de l\'import',
@@ -154,7 +154,7 @@ export function TabDocuments({ clientId, client }: TabDocumentsProps) {
         description: `${doc.name || doc.type} a été supprimé du dossier.`,
       })
       await loadDocuments()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting document:', error)
       toast({
         title: 'Suppression impossible',
@@ -197,7 +197,7 @@ export function TabDocuments({ clientId, client }: TabDocumentsProps) {
   }
 
   const openUploadModal = (typeId = '') => {
-    setUploadForm((prev) => ({ ...prev, type: typeId }))
+    setUploadForm((prev: any) => ({ ...prev, type: typeId }))
     setShowUploadModal(true)
   }
 
@@ -223,7 +223,7 @@ export function TabDocuments({ clientId, client }: TabDocumentsProps) {
     const file = event.dataTransfer?.files?.[0]
     if (!file) return
     setSelectedFile(file)
-    setUploadForm((prev) => ({ ...prev, name: prev.name || file.name }))
+    setUploadForm((prev: any) => ({ ...prev, name: prev.name || file.name }))
     setShowUploadModal(true)
   }, [])
 
@@ -494,7 +494,7 @@ export function TabDocuments({ clientId, client }: TabDocumentsProps) {
       {/* Upload Modal */}
       <Dialog
         open={showUploadModal}
-        onOpenChange={(open) => {
+        onOpenChange={(open: any) => {
           setShowUploadModal(open)
           if (!open) resetUploadState()
         }}
@@ -511,14 +511,14 @@ export function TabDocuments({ clientId, client }: TabDocumentsProps) {
               <Label>Type de document *</Label>
               <Select
                 value={uploadForm.type}
-                onValueChange={(value) => setUploadForm((prev) => ({ ...prev, type: value }))}
+                onValueChange={(value: any) => setUploadForm((prev: any) => ({ ...prev, type: value }))}
                 required
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner" />
                 </SelectTrigger>
                 <SelectContent className="max-h-80">
-                  {allDocumentTypes.map((type) => (
+                  {allDocumentTypes.map((type: any) => (
                     <SelectItem key={type.value} value={type.value}>
                       {type.label} {type.required ? '⭐' : ''}
                     </SelectItem>
@@ -531,7 +531,7 @@ export function TabDocuments({ clientId, client }: TabDocumentsProps) {
               <Label>Catégorie</Label>
               <Select
                 value={uploadForm.category}
-                onValueChange={(value) => setUploadForm((prev) => ({ ...prev, category: value }))}
+                onValueChange={(value: any) => setUploadForm((prev: any) => ({ ...prev, category: value }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner une catégorie" />
@@ -571,11 +571,11 @@ export function TabDocuments({ clientId, client }: TabDocumentsProps) {
                   ref={fileInputRef}
                   type="file"
                   className="hidden"
-                  onChange={(event) => {
+                  onChange={(event: any) => {
                     const file = event.target.files?.[0]
                     if (!file) return
                     setSelectedFile(file)
-                    setUploadForm((prev) => ({ ...prev, name: prev.name || file.name }))
+                    setUploadForm((prev: any) => ({ ...prev, name: prev.name || file.name }))
                   }}
                   required={!selectedFile}
                 />
@@ -586,8 +586,8 @@ export function TabDocuments({ clientId, client }: TabDocumentsProps) {
               <Label>Nom du document</Label>
               <Input
                 value={uploadForm.name}
-                onChange={(event) =>
-                  setUploadForm((prev) => ({ ...prev, name: event.target.value }))
+                onChange={(event: any) =>
+                  setUploadForm((prev: any) => ({ ...prev, name: event.target.value }))
                 }
                 placeholder="Nom interne ou titre du document"
               />
@@ -597,8 +597,8 @@ export function TabDocuments({ clientId, client }: TabDocumentsProps) {
               <Label>Description</Label>
               <Input
                 value={uploadForm.description}
-                onChange={(event) =>
-                  setUploadForm((prev) => ({ ...prev, description: event.target.value }))
+                onChange={(event: any) =>
+                  setUploadForm((prev: any) => ({ ...prev, description: event.target.value }))
                 }
                 placeholder="Notes ou contexte sur ce document"
               />
@@ -676,7 +676,7 @@ function DocumentRow({
   isRequired: boolean
 }) {
   const docsArray = Array.isArray(documents) ? [...documents] : []
-  docsArray.sort((a, b) => {
+  docsArray.sort((a: any, b: any) => {
     const dateA = new Date(a?.uploadedAt || a?.createdAt || 0).getTime()
     const dateB = new Date(b?.uploadedAt || b?.createdAt || 0).getTime()
     return dateB - dateA
@@ -726,7 +726,7 @@ function DocumentRow({
 
       {hasDocs ? (
         <ul className="space-y-3">
-          {docsArray.map((doc) => {
+          {docsArray.map((doc: any) => {
             const docKey = doc?.id || `${docType.id}-${doc?.uploadedAt || doc?.createdAt}`
             const docName = doc?.name || docType.label
 

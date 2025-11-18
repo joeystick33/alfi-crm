@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
-import Input from '@/components/ui/Input';
-import Button from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 import { TimelineTemplate } from '@/components/ui/bento/TimelineTemplate';
 import { ModernBarChart } from '@/components/charts/ModernBarChart';
 import { 
@@ -64,11 +64,11 @@ export function SuccessionComparison() {
   const [error, setError] = useState('');
 
   const addHeir = () => {
-    const newId = Math.max(...heirs.map(h => h.id), 0) + 1;
+    const newId = Math.max(...heirs.map((h: any) => h.id), 0) + 1;
     // Redistribute shares equally
     const newShare = (100 / (heirs.length + 1)).toFixed(2);
     setHeirs([
-      ...heirs.map(h => ({ ...h, share: newShare })),
+      ...heirs.map((h: any) => ({ ...h, share: newShare })),
       {
         id: newId,
         name: `Héritier ${newId}`,
@@ -81,15 +81,15 @@ export function SuccessionComparison() {
 
   const removeHeir = (id: number) => {
     if (heirs.length > 1) {
-      const remainingHeirs = heirs.filter(h => h.id !== id);
+      const remainingHeirs = heirs.filter((h: any) => h.id !== id);
       // Redistribute shares equally among remaining heirs
       const newShare = (100 / remainingHeirs.length).toFixed(2);
-      setHeirs(remainingHeirs.map(h => ({ ...h, share: newShare })));
+      setHeirs(remainingHeirs.map((h: any) => ({ ...h, share: newShare })));
     }
   };
 
   const updateHeir = (id: number, field: keyof Heir, value: string) => {
-    setHeirs(heirs.map(h => 
+    setHeirs(heirs.map((h: any) => 
       h.id === id ? { ...h, [field]: value } : h
     ));
   };
@@ -103,7 +103,7 @@ export function SuccessionComparison() {
     }
 
     // Validate heirs
-    const validHeirs = heirs.filter(h => {
+    const validHeirs = heirs.filter((h: any) => {
       const share = parseFloat(h.share) || 0;
       return share > 0;
     });
@@ -114,7 +114,7 @@ export function SuccessionComparison() {
     }
 
     // Check total shares
-    const totalShares = validHeirs.reduce((sum, h) => sum + (parseFloat(h.share) || 0), 0);
+    const totalShares = validHeirs.reduce((sum: any, h: any) => sum + (parseFloat(h.share) || 0), 0);
     if (Math.abs(totalShares - 100) > 0.1) {
       setError(`Les parts doivent totaliser 100% (actuellement ${totalShares.toFixed(1)}%)`);
       return;
@@ -129,7 +129,7 @@ export function SuccessionComparison() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           estateValue: estate,
-          heirs: validHeirs.map(h => ({
+          heirs: validHeirs.map((h: any) => ({
             id: h.id.toString(),
             name: h.name,
             relationship: h.relationship,
@@ -258,11 +258,8 @@ export function SuccessionComparison() {
                 label="Valeur totale du patrimoine (€)"
                 type="number"
                 value={estateValue}
-                onChange={(e) => setEstateValue(e.target.value)}
+                onChange={(e: any) => setEstateValue(e.target.value)}
                 placeholder="1000000"
-                min="0"
-                icon={<DollarSign className="h-4 w-4" />}
-                helperText="Valeur nette après déduction des dettes"
               />
             </div>
 
@@ -280,7 +277,7 @@ export function SuccessionComparison() {
               </div>
 
               <div className="space-y-3">
-                {heirs.map((heir) => {
+                {heirs.map((heir: any) => {
                   const relationshipInfo = getRelationshipInfo(heir.relationship);
                   const RelationIcon = relationshipInfo.icon;
                   return (
@@ -294,9 +291,8 @@ export function SuccessionComparison() {
                             label="Nom de l'héritier"
                             type="text"
                             value={heir.name}
-                            onChange={(e) => updateHeir(heir.id, 'name', e.target.value)}
+                            onChange={(e: any) => updateHeir(heir.id, 'name', e.target.value)}
                             placeholder="Ex: Marie Dupont"
-                            icon={<RelationIcon className="h-4 w-4" />}
                           />
 
                           <div>
@@ -305,7 +301,7 @@ export function SuccessionComparison() {
                             </label>
                             <select
                               value={heir.relationship}
-                              onChange={(e) => updateHeir(heir.id, 'relationship', e.target.value)}
+                              onChange={(e: any) => updateHeir(heir.id, 'relationship', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500"
                             >
                               {RELATIONSHIP_OPTIONS.map(rel => (
@@ -320,22 +316,16 @@ export function SuccessionComparison() {
                             label="Part (%)"
                             type="number"
                             value={heir.share}
-                            onChange={(e) => updateHeir(heir.id, 'share', e.target.value)}
+                            onChange={(e: any) => updateHeir(heir.id, 'share', e.target.value)}
                             placeholder="50"
-                            min="0"
-                            max="100"
-                            step="0.1"
-                            helperText="Part de l'héritage"
                           />
 
                           <Input
                             label="Donations antérieures (€)"
                             type="number"
                             value={heir.previousDonations}
-                            onChange={(e) => updateHeir(heir.id, 'previousDonations', e.target.value)}
+                            onChange={(e: any) => updateHeir(heir.id, 'previousDonations', e.target.value)}
                             placeholder="0"
-                            min="0"
-                            helperText="Derniers 15 ans"
                           />
                         </div>
 
@@ -356,7 +346,7 @@ export function SuccessionComparison() {
               {/* Total Shares Indicator */}
               <div className="mt-4">
                 {(() => {
-                  const totalShares = heirs.reduce((sum, h) => sum + (parseFloat(h.share) || 0), 0);
+                  const totalShares = heirs.reduce((sum: any, h: any) => sum + (parseFloat(h.share) || 0), 0);
                   const isValid = Math.abs(totalShares - 100) < 0.1;
                   return (
                     <div className={`p-3 rounded-lg border ${isValid ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>

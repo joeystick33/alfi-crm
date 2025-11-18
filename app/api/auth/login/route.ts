@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       user,
       message: 'Login successful',
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error)
     
     if (error instanceof Error) {

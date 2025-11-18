@@ -259,7 +259,7 @@ export class ObjectiveCalculator {
     });
 
     // Sort by priority (1 = highest priority)
-    const sortedObjectives = [...objectivesWithRequirements].sort((a, b) => 
+    const sortedObjectives = [...objectivesWithRequirements].sort((a: any, b: any) => 
       a.priority - b.priority
     );
 
@@ -294,7 +294,7 @@ export class ObjectiveCalculator {
     }
 
     const totalRequired = objectivesWithRequirements.reduce(
-      (sum, obj) => sum + obj.requiredMonthly, 0
+      (sum: any, obj: any) => sum + obj.requiredMonthly, 0
     );
     const budgetSufficient = totalMonthlyBudget >= totalRequired;
     
@@ -628,14 +628,14 @@ export class ObjectiveCalculator {
       recommendations.push('Augmenter les revenus ou réduire les dépenses non essentielles');
     }
     
-    const partiallyFunded = allocations.filter(a => a.status === 'partially_funded');
+    const partiallyFunded = allocations.filter((a: any) => a.status === 'partially_funded');
     if (partiallyFunded.length > 0) {
       recommendations.push(
         `${partiallyFunded.length} objectif(s) partiellement financé(s) : considérer l'ajustement des priorités`
       );
     }
     
-    const unfunded = allocations.filter(a => a.status === 'unfunded');
+    const unfunded = allocations.filter((a: any) => a.status === 'unfunded');
     if (unfunded.length > 0) {
       recommendations.push(
         `${unfunded.length} objectif(s) non financé(s) : reporter ou réduire le montant cible`

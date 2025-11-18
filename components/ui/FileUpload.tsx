@@ -42,7 +42,7 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
       const newFiles = Array.from(fileList);
       const errors: string[] = [];
 
-      newFiles.forEach((file) => {
+      newFiles.forEach((file: any) => {
         const error = validateFile(file);
         if (error) errors.push(error);
       });
@@ -126,7 +126,7 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
             accept={accept}
             multiple={multiple}
             disabled={disabled}
-            onChange={(e) => handleFiles(e.target.files)}
+            onChange={(e: any) => handleFiles(e.target.files)}
             className="hidden"
           />
         </div>
@@ -135,7 +135,7 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
 
         {files.length > 0 && (
           <div className="space-y-2">
-            {files.map((file, index) => (
+            {files.map((file: any, index: any) => (
               <div
                 key={index}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
@@ -164,7 +164,7 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
                   </div>
                 </div>
                 <button
-                  onClick={(e) => {
+                  onClick={(e: any) => {
                     e.stopPropagation();
                     removeFile(index);
                   }}

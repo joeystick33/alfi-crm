@@ -100,7 +100,7 @@ export default function SimpleFormExample() {
     setIsSubmitting(true);
 
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve: any) => setTimeout(resolve, 1000));
 
     console.log('Form submitted:', formData);
     alert('Formulaire soumis avec succès !');
@@ -134,7 +134,7 @@ export default function SimpleFormExample() {
             label="Prénom"
             placeholder="Jean"
             value={formData.firstName}
-            onChange={(e) =>
+            onChange={(e: any) =>
               setFormData({ ...formData, firstName: e.target.value })
             }
             error={errors.firstName}
@@ -145,7 +145,7 @@ export default function SimpleFormExample() {
             label="Nom"
             placeholder="Dupont"
             value={formData.lastName}
-            onChange={(e) =>
+            onChange={(e: any) =>
               setFormData({ ...formData, lastName: e.target.value })
             }
             error={errors.lastName}
@@ -160,7 +160,7 @@ export default function SimpleFormExample() {
             type="email"
             placeholder="jean.dupont@example.com"
             value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            onChange={(e: any) => setFormData({ ...formData, email: e.target.value })}
             error={errors.email}
             required
           />
@@ -170,7 +170,7 @@ export default function SimpleFormExample() {
             type="tel"
             placeholder="0612345678"
             value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            onChange={(e: any) => setFormData({ ...formData, phone: e.target.value })}
             error={errors.phone}
             required
           />
@@ -180,7 +180,7 @@ export default function SimpleFormExample() {
         <DatePicker
           label="Date de naissance"
           value={formData.birthDate}
-          onChange={(e) =>
+          onChange={(e: any) =>
             setFormData({ ...formData, birthDate: e.target.value })
           }
           error={errors.birthDate}
@@ -213,7 +213,7 @@ export default function SimpleFormExample() {
               description="Pour un usage personnel"
               value="personal"
               checked={formData.accountType === 'personal'}
-              onChange={(value) =>
+              onChange={(value: any) =>
                 setFormData({ ...formData, accountType: value as 'personal' | 'business' })
               }
             />
@@ -222,7 +222,7 @@ export default function SimpleFormExample() {
               description="Pour un usage professionnel"
               value="business"
               checked={formData.accountType === 'business'}
-              onChange={(value) =>
+              onChange={(value: any) =>
                 setFormData({ ...formData, accountType: value as 'personal' | 'business' })
               }
             />
@@ -234,7 +234,7 @@ export default function SimpleFormExample() {
           <Checkbox
             label="J'accepte les conditions d'utilisation"
             checked={formData.acceptTerms}
-            onChange={(checked) =>
+            onChange={(checked: any) =>
               setFormData({ ...formData, acceptTerms: checked })
             }
             error={errors.acceptTerms}
@@ -244,7 +244,7 @@ export default function SimpleFormExample() {
             label="Je souhaite recevoir la newsletter"
             description="Recevez nos dernières actualités par email"
             checked={formData.newsletter}
-            onChange={(checked) =>
+            onChange={(checked: any) =>
               setFormData({ ...formData, newsletter: checked })
             }
           />
@@ -259,7 +259,7 @@ export default function SimpleFormExample() {
             accept=".pdf,.doc,.docx"
             multiple
             maxSize={10 * 1024 * 1024}
-            onUpload={(files) => console.log('Files uploaded:', files)}
+            onUpload={(files: any) => console.log('Files uploaded:', files)}
           />
         </div>
 

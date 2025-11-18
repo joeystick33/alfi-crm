@@ -1,11 +1,31 @@
-import { getPrismaClient, setRLSContext } from '@/lib/prisma'
-import { NotificationType } from '@prisma/client'
+import { getPrismaClient } from '@/lib/prisma'
+import type { NotificationFilters, CreateNotificationPayload } from '@/app/api/notifications/utils'
+
+// Email template data types
+type PlanChangedData = {
+  oldPlan: string
+  newPlan: string
+  reason?: string
+}
+
+type QuotaWarningData = {
+  quotaName: string
+  current: number
+  max: number
+  percentage: number
+}
+
+type QuotaExceededData = {
+  quotaName: string
+  current: number
+  max: number
+}
 
 // Email templates for notifications
 const EMAIL_TEMPLATES = {
   PLAN_CHANGED: {
-    subject: (data: any) => `Votre plan a été modifié - ${data.newPlan}`,
-    body: (data: any) => `
+    subject: (data: PlanChangedData) => `Votre plan a été modifié - ${data.newPlan}`,
+    body: (data: PlanChangedData) => `
       <h2>Changement de Plan</h2>
       <p>Bonjour,</p>
       <p>Votre plan d'abonnement a été modifié par un administrateur.</p>
@@ -19,8 +39,8 @@ const EMAIL_TEMPLATES = {
     `,
   },
   QUOTA_WARNING: {
-    subject: (data: any) => `Attention: Quota ${data.quotaName} bientôt atteint`,
-    body: (data: any) => `
+    subject: (data: QuotaWarningData) => `Attention: Quota ${data.quotaName} bientôt atteint`,
+    body: (data: QuotaWarningData) => `
       <h2>Alerte Quota</h2>
       <p>Bonjour,</p>
       <p>Vous approchez de la limite de votre quota <strong>${data.quotaName}</strong>.</p>
@@ -32,8 +52,8 @@ const EMAIL_TEMPLATES = {
     `,
   },
   QUOTA_EXCEEDED: {
-    subject: (data: any) => `Quota ${data.quotaName} dépassé`,
-    body: (data: any) => `
+    subject: (data: QuotaExceededData) => `Quota ${data.quotaName} dépassé`,
+    body: (data: QuotaExceededData) => `
       <h2>Quota Dépassé</h2>
       <p>Bonjour,</p>
       <p>Vous avez atteint la limite de votre quota <strong>${data.quotaName}</strong>.</p>
@@ -48,7 +68,13 @@ const EMAIL_TEMPLATES = {
 
 /**
  * Notification Service
- * Handles in-app and email notifications
+ * 
+ * Manages notification entities with tenant isolation.
+ * Provides CRUD operations and domain-specific business logic.
+ * 
+ * @example
+ * const service = new NotificationService(cabinetId, userId, userRole, isSuperAdmin)
+ * const notification = await service.createNotification(data)
  */
 export class NotificationService {
   private prisma
@@ -56,25 +82,51 @@ export class NotificationService {
   constructor(
     private cabinetId: string,
     private userId?: string,
+    private userRole?: string,
     private isSuperAdmin: boolean = false
   ) {
     this.prisma = getPrismaClient(cabinetId, isSuperAdmin)
   }
 
   /**
+   * Format notification entity with nested relations
+   */
+  private formatNotification(notification: unknown): unknown {
+    if (!notification || typeof notification !== 'object') {
+      return null
+    }
+
+    const notif = notification as Record<string, unknown>
+
+    return {
+      ...notif,
+      client: notif.client && typeof notif.client === 'object' ? {
+        id: (notif.client as Record<string, unknown>).id,
+        firstName: (notif.client as Record<string, unknown>).firstName,
+        lastName: (notif.client as Record<string, unknown>).lastName,
+      } : null,
+    }
+  }
+
+  /**
    * Create in-app notification
    */
-  async createNotification(data: {
-    userId?: string
-    clientId?: string
-    type: NotificationType
-    title: string
-    message: string
-    actionUrl?: string
-  }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
+  async createNotification(data: CreateNotificationPayload) {
+    // Validate client exists if clientId provided
+    if (data.clientId) {
+      const client = await this.prisma.client.findFirst({
+        where: {
+          id: data.clientId,
+          cabinetId: this.cabinetId,
+        },
+      })
 
-    return this.prisma.notification.create({
+      if (!client) {
+        throw new Error('Client not found')
+      }
+    }
+
+    const notification = await this.prisma.notification.create({
       data: {
         cabinetId: this.cabinetId,
         userId: data.userId,
@@ -85,113 +137,227 @@ export class NotificationService {
         actionUrl: data.actionUrl,
         isRead: false,
       },
+      include: {
+        client: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
     })
+
+    return this.formatNotification(notification)
   }
 
   /**
-   * Get notifications for current user
+   * Get notification by ID
    */
-  async getNotifications(filters?: {
-    unreadOnly?: boolean
-    type?: NotificationType
-    limit?: number
-    offset?: number
-  }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
+  async getNotificationById(id: string) {
+    const notification = await this.prisma.notification.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
+      include: {
+        client: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    })
 
-    const where: any = {}
+    return this.formatNotification(notification)
+  }
 
-    if (this.userId) {
+  /**
+   * List notifications with filters
+   */
+  async listNotifications(filters?: NotificationFilters) {
+    const where: Record<string, unknown> = {
+      cabinetId: this.cabinetId,
+    }
+
+    // Filter by userId if provided or use current user
+    if (filters?.userId) {
+      where.userId = filters.userId
+    } else if (this.userId) {
       where.userId = this.userId
     }
 
-    if (filters?.unreadOnly) {
-      where.isRead = false
+    if (filters?.isRead !== undefined) {
+      where.isRead = filters.isRead
     }
 
     if (filters?.type) {
       where.type = filters.type
     }
 
-    const [notifications, total, unreadCount] = await Promise.all([
-      this.prisma.notification.findMany({
-        where,
-        include: {
-          client: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
+    if (filters?.clientId) {
+      where.clientId = filters.clientId
+    }
+
+    if (filters?.createdAfter || filters?.createdBefore) {
+      const createdAt: Record<string, Date> = {}
+      if (filters.createdAfter) {
+        createdAt.gte = filters.createdAfter
+      }
+      if (filters.createdBefore) {
+        createdAt.lte = filters.createdBefore
+      }
+      where.createdAt = createdAt
+    }
+
+    const notifications = await this.prisma.notification.findMany({
+      where,
+      include: {
+        client: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
           },
         },
-        orderBy: { createdAt: 'desc' },
-        take: filters?.limit || 50,
-        skip: filters?.offset || 0,
-      }),
-      this.prisma.notification.count({ where }),
-      this.prisma.notification.count({
-        where: { ...where, isRead: false },
-      }),
-    ])
+      },
+      orderBy: { createdAt: 'desc' },
+      take: filters?.limit || 50,
+      skip: filters?.offset || 0,
+    })
 
-    return { notifications, total, unreadCount }
+    return notifications.map(n => this.formatNotification(n))
+  }
+
+  /**
+   * Update notification
+   */
+  async updateNotification(id: string, updateData: { isRead?: boolean; readAt?: Date }) {
+    const { count } = await this.prisma.notification.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
+      data: updateData,
+    })
+
+    if (count === 0) {
+      throw new Error('Notification not found or access denied')
+    }
+
+    return this.getNotificationById(id)
   }
 
   /**
    * Mark notification as read
    */
   async markAsRead(notificationId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    return this.prisma.notification.update({
-      where: { id: notificationId },
-      data: {
-        isRead: true,
-        readAt: new Date(),
-      },
+    return this.updateNotification(notificationId, {
+      isRead: true,
+      readAt: new Date(),
     })
+  }
+
+  /**
+   * Mark multiple notifications as read/unread
+   */
+  async bulkUpdateNotifications(notificationIds: string[], isRead: boolean) {
+    const where: Record<string, unknown> = {
+      id: { in: notificationIds },
+      cabinetId: this.cabinetId,
+    }
+
+    // Optionally filter by userId for additional security
+    if (this.userId) {
+      where.userId = this.userId
+    }
+
+    const updateData: Record<string, unknown> = { isRead }
+    if (isRead) {
+      updateData.readAt = new Date()
+    }
+
+    const { count } = await this.prisma.notification.updateMany({
+      where,
+      data: updateData,
+    })
+
+    return { success: true, updated: count }
   }
 
   /**
    * Mark all notifications as read
    */
   async markAllAsRead() {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const where: any = { isRead: false }
+    const where: Record<string, unknown> = {
+      cabinetId: this.cabinetId,
+      isRead: false,
+    }
 
     if (this.userId) {
       where.userId = this.userId
     }
 
-    return this.prisma.notification.updateMany({
+    const { count } = await this.prisma.notification.updateMany({
       where,
       data: {
         isRead: true,
         readAt: new Date(),
       },
     })
+
+    return { success: true, updated: count }
   }
 
   /**
    * Delete notification
    */
   async deleteNotification(notificationId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    return this.prisma.notification.delete({
-      where: { id: notificationId },
+    const { count } = await this.prisma.notification.deleteMany({
+      where: {
+        id: notificationId,
+        cabinetId: this.cabinetId,
+      },
     })
+
+    if (count === 0) {
+      throw new Error('Notification not found or access denied')
+    }
+
+    return { success: true }
+  }
+
+  /**
+   * Delete multiple notifications
+   */
+  async bulkDeleteNotifications(notificationIds: string[]) {
+    const where: Record<string, unknown> = {
+      id: { in: notificationIds },
+      cabinetId: this.cabinetId,
+    }
+
+    // Optionally filter by userId for additional security
+    if (this.userId) {
+      where.userId = this.userId
+    }
+
+    const { count } = await this.prisma.notification.deleteMany({
+      where,
+    })
+
+    return { success: true, deleted: count }
   }
 
   /**
    * Get unread count
    */
   async getUnreadCount() {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const where: any = { isRead: false }
+    const where: Record<string, unknown> = {
+      cabinetId: this.cabinetId,
+      isRead: false,
+    }
 
     if (this.userId) {
       where.userId = this.userId
@@ -201,10 +367,54 @@ export class NotificationService {
   }
 
   /**
+   * Get total count with filters
+   */
+  async getCount(filters?: NotificationFilters) {
+    const where: Record<string, unknown> = {
+      cabinetId: this.cabinetId,
+    }
+
+    if (filters?.userId) {
+      where.userId = filters.userId
+    } else if (this.userId) {
+      where.userId = this.userId
+    }
+
+    if (filters?.isRead !== undefined) {
+      where.isRead = filters.isRead
+    }
+
+    if (filters?.type) {
+      where.type = filters.type
+    }
+
+    if (filters?.clientId) {
+      where.clientId = filters.clientId
+    }
+
+    if (filters?.createdAfter || filters?.createdBefore) {
+      const createdAt: Record<string, Date> = {}
+      if (filters.createdAfter) {
+        createdAt.gte = filters.createdAfter
+      }
+      if (filters.createdBefore) {
+        createdAt.lte = filters.createdBefore
+      }
+      where.createdAt = createdAt
+    }
+
+    return this.prisma.notification.count({ where })
+  }
+
+  /**
    * Send email notification (placeholder - requires email service)
    */
-  async sendEmailNotification(type: string, data: any, recipients: string[]) {
-    const template = EMAIL_TEMPLATES[type as keyof typeof EMAIL_TEMPLATES]
+  async sendEmailNotification(
+    type: keyof typeof EMAIL_TEMPLATES,
+    data: PlanChangedData | QuotaWarningData | QuotaExceededData,
+    recipients: string[]
+  ) {
+    const template = EMAIL_TEMPLATES[type]
 
     if (!template) {
       throw new Error(`Email template not found for type: ${type}`)
@@ -212,8 +422,8 @@ export class NotificationService {
 
     const emailData = {
       to: recipients,
-      subject: template.subject(data),
-      html: template.body(data),
+      subject: template.subject(data as never),
+      html: template.body(data as never),
     }
 
     // TODO: Integrate with email sending service

@@ -99,8 +99,8 @@ export function IncomeTaxCalculator() {
 
   // Prepare chart data
   const chartData = result?.breakdown
-    .filter(b => b.taxAmount > 0)
-    .map(b => ({
+    .filter((b: any) => b.taxAmount > 0)
+    .map((b: any) => ({
       name: `Tranche ${b.bracket} (${formatPercent(b.rate)})`,
       'Montant imposable': b.taxableAmount,
       'Impôt': b.taxAmount
@@ -129,7 +129,7 @@ export function IncomeTaxCalculator() {
               label="Revenu brut annuel"
               type="number"
               value={grossIncome}
-              onChange={(e) => setGrossIncome(e.target.value)}
+              onChange={(e: any) => setGrossIncome(e.target.value)}
               placeholder="50000"
               required
             />
@@ -138,7 +138,7 @@ export function IncomeTaxCalculator() {
               label="Déductions"
               type="number"
               value={deductions}
-              onChange={(e) => setDeductions(e.target.value)}
+              onChange={(e: any) => setDeductions(e.target.value)}
               placeholder="5000"
             />
 
@@ -147,7 +147,7 @@ export function IncomeTaxCalculator() {
                 label="Nombre de parts"
                 type="number"
                 value={familyQuotient}
-                onChange={(e) => setFamilyQuotient(e.target.value)}
+                onChange={(e: any) => setFamilyQuotient(e.target.value)}
                 placeholder="1"
                 min="1"
                 step="0.5"
@@ -234,7 +234,7 @@ export function IncomeTaxCalculator() {
                           </tr>
                         </thead>
                         <tbody className="divide-y">
-                          {result.breakdown.map((bracket, index) => (
+                          {result.breakdown.map((bracket: any, index: any) => (
                             <tr key={index} className="hover:bg-muted/50">
                               <td className="px-4 py-3">
                                 {formatCurrency(bracket.min)} - {bracket.max ? formatCurrency(bracket.max) : '∞'}

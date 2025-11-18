@@ -82,7 +82,7 @@ export function NotificationList({
   }
 
   const notifications = data?.data || []
-  const unreadCount = notifications.filter((n) => !n.isRead).length
+  const unreadCount = notifications.filter((n: any) => !n.isRead).length
 
   return (
     <div className="space-y-4">
@@ -121,7 +121,7 @@ export function NotificationList({
           className="space-y-2 overflow-y-auto"
           style={{ maxHeight: `${maxHeight}px` }}
         >
-          {notifications.map((notification) => (
+          {notifications.map((notification: any) => (
             <NotificationItem
               key={notification.id}
               notification={notification}

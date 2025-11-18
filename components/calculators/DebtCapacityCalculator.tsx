@@ -182,7 +182,7 @@ export function DebtCapacityCalculator() {
                 label="Revenu mensuel net"
                 type="number"
                 value={monthlyIncome}
-                onChange={(e) => setMonthlyIncome(e.target.value)}
+                onChange={(e: any) => setMonthlyIncome(e.target.value)}
                 placeholder="4000"
               />
 
@@ -190,7 +190,7 @@ export function DebtCapacityCalculator() {
                 label="Charges de dettes actuelles"
                 type="number"
                 value={currentDebts}
-                onChange={(e) => setCurrentDebts(e.target.value)}
+                onChange={(e: any) => setCurrentDebts(e.target.value)}
                 placeholder="800"
               />
 
@@ -198,7 +198,7 @@ export function DebtCapacityCalculator() {
                 label="Taux d'intérêt annuel (%)"
                 type="number"
                 value={interestRate}
-                onChange={(e) => setInterestRate(e.target.value)}
+                onChange={(e: any) => setInterestRate(e.target.value)}
                 placeholder="3.5"
                 step="0.1"
               />
@@ -207,7 +207,7 @@ export function DebtCapacityCalculator() {
                 label="Durée du prêt (années)"
                 type="number"
                 value={loanTerm}
-                onChange={(e) => setLoanTerm(e.target.value)}
+                onChange={(e: any) => setLoanTerm(e.target.value)}
                 placeholder="20"
               />
             </div>

@@ -152,8 +152,8 @@ export function useExport({
     const headers = Object.keys(data[0])
     const csvRows = [
       headers.join(';'),
-      ...data.map((row) =>
-        headers.map((header) => {
+      ...data.map((row: any) =>
+        headers.map((header: any) => {
           const value = row[header]
           const escaped = String(value ?? '').replace(/"/g, '""')
           return `"${escaped}"`

@@ -1,251 +1,242 @@
-import { getPrismaClient, setRLSContext } from '../prisma'
-import {
-  ClientType,
-  ClientStatus,
-  MaritalStatus,
-  RiskProfile,
-  InvestmentHorizon,
-  KYCStatus,
-} from '@prisma/client'
+import { getPrismaClient } from '@/lib/prisma'
+import { UserRole } from '@prisma/client'
+import { Decimal } from '@prisma/client/runtime/library'
 
-export interface CreateClientInput {
-  clientType: ClientType
-  conseillerId: string
-  conseillerRemplacantId?: string
-  apporteurId?: string
-  
-  // Informations personnelles
-  email?: string
-  firstName: string
-  lastName: string
-  birthDate?: Date
-  birthPlace?: string
-  nationality?: string
-  phone?: string
-  mobile?: string
-  address?: any
-  
-  // Situation familiale
-  maritalStatus?: MaritalStatus
-  marriageRegime?: string
-  numberOfChildren?: number
-  
-  // Professionnel
-  profession?: string
-  employerName?: string
-  professionalStatus?: string
-  
-  // Pour clients PROFESSIONNELS
-  companyName?: string
-  siret?: string
-  legalForm?: string
-  activitySector?: string
-  companyCreationDate?: Date
-  numberOfEmployees?: number
-  annualRevenue?: number
-  
-  // Financier
-  annualIncome?: number
-  taxBracket?: string
-  fiscalResidence?: string
-  
-  // Profil investisseur
-  riskProfile?: RiskProfile
-  investmentHorizon?: InvestmentHorizon
-  investmentGoals?: any
-  investmentKnowledge?: string
-  investmentExperience?: string
-}
-
-export interface UpdateClientInput extends Partial<CreateClientInput> {
-  status?: ClientStatus
-  kycStatus?: KYCStatus
-  portalAccess?: boolean
-}
-
-/**
- * Service de gestion des clients
- * Gère les opérations CRUD et la logique métier des clients
- */
 export class ClientService {
-  private prisma
-  
+  private prisma: any
+
   constructor(
     private cabinetId: string,
     private userId: string,
-    private userRole: string,
+    private userRole: UserRole,
     private isSuperAdmin: boolean = false
   ) {
     this.prisma = getPrismaClient(cabinetId, isSuperAdmin)
   }
 
   /**
-   * Crée un nouveau client
+   * Converts Decimal fields to numbers
    */
-  async createClient(data: CreateClientInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    // Vérifier que le conseiller existe
-    const conseiller = await this.prisma.user.findUnique({
-      where: { id: data.conseillerId },
-    })
-
-    if (!conseiller || conseiller.role !== 'ADVISOR') {
-      throw new Error('Invalid conseiller')
+  private toNumber(value: any): number | null {
+    if (value === null || value === undefined) {
+      return null
     }
 
-    // Si conseiller remplaçant, vérifier qu'il existe
-    if (data.conseillerRemplacantId) {
-      const remplacant = await this.prisma.user.findUnique({
-        where: { id: data.conseillerRemplacantId },
-      })
-
-      if (!remplacant || remplacant.role !== 'ADVISOR') {
-        throw new Error('Invalid conseiller remplaçant')
-      }
+    if (typeof value === 'object' && typeof value?.toNumber === 'function') {
+      return value.toNumber()
     }
 
-    // Si apporteur, vérifier qu'il existe
-    if (data.apporteurId) {
-      const apporteur = await this.prisma.apporteurAffaires.findUnique({
-        where: { id: data.apporteurId },
-      })
-
-      if (!apporteur) {
-        throw new Error('Invalid apporteur')
-      }
-    }
-
-    const client = await this.prisma.client.create({
-      data: {
-        cabinetId: this.cabinetId,
-        ...data,
-        status: 'PROSPECT',
-        kycStatus: 'PENDING',
-      },
-      include: {
-        conseiller: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
-        conseillerRemplacant: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-        apporteur: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            company: true,
-          },
-        },
-      },
-    })
-
-    // Créer un événement timeline
-    await this.prisma.timelineEvent.create({
-      data: {
-        clientId: client.id,
-        type: 'CLIENT_CREATED',
-        title: 'Client créé',
-        description: `Client créé par ${conseiller.firstName} ${conseiller.lastName}`,
-        createdBy: this.userId,
-      },
-    })
-
-    return client
+    return value
   }
 
   /**
-   * Récupère un client par ID
+   * Formats a client entity with proper type conversions
    */
-  async getClientById(id: string, includeRelations: boolean = false) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
+  private formatClient(client: any): any {
+    if (!client) {
+      return null
+    }
 
-    const client = await this.prisma.client.findUnique({
-      where: { id },
+    return {
+      ...client,
+      // Convert Decimal fields to numbers
+      annualRevenue: this.toNumber(client.annualRevenue),
+      annualIncome: this.toNumber(client.annualIncome),
+      irTaxRate: this.toNumber(client.irTaxRate),
+      ifiAmount: this.toNumber(client.ifiAmount),
+      managementFees: this.toNumber(client.managementFees),
+      // Format nested relations if present
+      conseiller: client.conseiller ? {
+        ...client.conseiller,
+      } : undefined,
+      conseillerRemplacant: client.conseillerRemplacant ? {
+        ...client.conseillerRemplacant,
+      } : undefined,
+      apporteur: client.apporteur ? {
+        ...client.apporteur,
+        commissionRate: this.toNumber(client.apporteur.commissionRate),
+      } : undefined,
+    }
+  }
+
+  async getClientById(id: string, includeRelations: boolean = false) {
+    const client = await this.prisma.client.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       include: includeRelations ? {
         conseiller: {
           select: {
             id: true,
             firstName: true,
             lastName: true,
-            email: true,
-            phone: true,
-          },
+            email: true
+          }
         },
         conseillerRemplacant: {
           select: {
             id: true,
             firstName: true,
             lastName: true,
-          },
+            email: true
+          }
         },
-        apporteur: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            company: true,
-          },
-        },
+        apporteur: true,
         familyMembers: true,
-        actifs: {
-          include: {
-            actif: true,
-          },
-        },
+        actifs: true,
         passifs: true,
         contrats: true,
         objectifs: true,
-        opportunites: {
+        projets: true,
+        opportunites: true,
+        taches: {
           where: {
-            status: { in: ['DETECTED', 'QUALIFIED', 'CONTACTED', 'PRESENTED'] },
+            status: {
+              not: 'COMPLETED'
+            }
           },
-        },
-        _count: {
-          select: {
-            documents: true,
-            taches: true,
-            rendezvous: true,
-            simulations: true,
+          orderBy: {
+            dueDate: 'asc'
           },
+          take: 10
         },
-      } : undefined,
+        rendezvous: {
+          where: {
+            startDate: {
+              gte: new Date()
+            }
+          },
+          orderBy: {
+            startDate: 'asc'
+          },
+          take: 10
+        },
+        documents: {
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: 10,
+          include: {
+            document: true
+          }
+        },
+        timelineEvents: {
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: 20
+        }
+      } : undefined
     })
 
-    return client
+    return this.formatClient(client)
   }
 
-  /**
-   * Liste les clients avec filtres
-   */
-  async listClients(filters?: {
-    status?: ClientStatus
-    clientType?: ClientType
-    conseillerId?: string
-    search?: string
-    kycStatus?: KYCStatus
-    limit?: number
-    offset?: number
-  }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
+  async updateClient(id: string, data: any) {
+    // Prepare update data with Decimal conversions
+    const updateData: any = { ...data }
 
-    const where: any = {}
+    if (data.annualRevenue !== undefined) {
+      updateData.annualRevenue = new Decimal(data.annualRevenue)
+    }
+    if (data.annualIncome !== undefined) {
+      updateData.annualIncome = new Decimal(data.annualIncome)
+    }
+    if (data.irTaxRate !== undefined) {
+      updateData.irTaxRate = new Decimal(data.irTaxRate)
+    }
+    if (data.ifiAmount !== undefined) {
+      updateData.ifiAmount = new Decimal(data.ifiAmount)
+    }
+    if (data.managementFees !== undefined) {
+      updateData.managementFees = new Decimal(data.managementFees)
+    }
 
-    // Si ADVISOR, filtrer par ses propres clients
-    if (this.userRole === 'ADVISOR' && !this.isSuperAdmin) {
+    const { count } = await this.prisma.client.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
+      data: updateData,
+    })
+
+    if (count === 0) {
+      throw new Error('Client not found or access denied')
+    }
+
+    return this.getClientById(id)
+  }
+
+  async archiveClient(id: string) {
+    const { count } = await this.prisma.client.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
+      data: {
+        status: 'ARCHIVED',
+      },
+    })
+
+    if (count === 0) {
+      throw new Error('Client not found or access denied')
+    }
+  }
+
+  async createClient(data: any) {
+    // Prepare data with Decimal conversions
+    const createData: any = {
+      ...data,
+      cabinetId: this.cabinetId,
+      conseillerId: data.conseillerId || this.userId,
+      status: data.status || 'PROSPECT'
+    }
+
+    // Convert numeric fields to Decimal
+    if (data.annualRevenue !== undefined) {
+      createData.annualRevenue = new Decimal(data.annualRevenue)
+    }
+    if (data.annualIncome !== undefined) {
+      createData.annualIncome = new Decimal(data.annualIncome)
+    }
+    if (data.irTaxRate !== undefined) {
+      createData.irTaxRate = new Decimal(data.irTaxRate)
+    }
+    if (data.ifiAmount !== undefined) {
+      createData.ifiAmount = new Decimal(data.ifiAmount)
+    }
+    if (data.managementFees !== undefined) {
+      createData.managementFees = new Decimal(data.managementFees)
+    }
+
+    const client = await this.prisma.client.create({
+      data: createData,
+      include: {
+        conseiller: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true
+          }
+        }
+      }
+    })
+
+    return this.formatClient(client)
+  }
+
+  async listClients(filters?: any) {
+    const where: any = {
+      cabinetId: this.cabinetId,
+    }
+
+    // Filtres de recherche
+    if (filters?.search) {
       where.OR = [
-        { conseillerId: this.userId },
-        { conseillerRemplacantId: this.userId },
+        { firstName: { contains: filters.search, mode: 'insensitive' } },
+        { lastName: { contains: filters.search, mode: 'insensitive' } },
+        { email: { contains: filters.search, mode: 'insensitive' } }
       ]
     }
 
@@ -258,23 +249,19 @@ export class ClientService {
     }
 
     if (filters?.conseillerId) {
-      where.OR = [
-        { conseillerId: filters.conseillerId },
-        { conseillerRemplacantId: filters.conseillerId },
-      ]
+      where.conseillerId = filters.conseillerId
     }
 
     if (filters?.kycStatus) {
       where.kycStatus = filters.kycStatus
     }
 
-    if (filters?.search) {
-      where.OR = [
-        { firstName: { contains: filters.search, mode: 'insensitive' } },
-        { lastName: { contains: filters.search, mode: 'insensitive' } },
-        { email: { contains: filters.search, mode: 'insensitive' } },
-        { companyName: { contains: filters.search, mode: 'insensitive' } },
-      ]
+    if (filters?.riskProfile) {
+      where.riskProfile = filters.riskProfile
+    }
+
+    if (filters?.maritalStatus) {
+      where.maritalStatus = filters.maritalStatus
     }
 
     const clients = await this.prisma.client.findMany({
@@ -282,213 +269,27 @@ export class ClientService {
       include: {
         conseiller: {
           select: {
+            id: true,
             firstName: true,
-            lastName: true,
-          },
-        },
-        _count: {
-          select: {
-            actifs: true,
-            passifs: true,
-            contrats: true,
-            opportunites: true,
-          },
-        },
+            lastName: true
+          }
+        }
       },
       orderBy: {
-        lastName: 'asc',
+        lastName: 'asc'
       },
-      take: filters?.limit,
-      skip: filters?.offset,
+      take: filters?.limit || 50,
+      skip: filters?.offset || 0
     })
 
-    return clients
+    return clients.map((client: any) => this.formatClient(client))
   }
 
-  /**
-   * Met à jour un client
-   */
-  async updateClient(id: string, data: UpdateClientInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const client = await this.prisma.client.update({
-      where: { id },
-      data,
-    })
-
-    return client
-  }
-
-  /**
-   * Change le statut d'un client
-   */
-  async updateClientStatus(id: string, status: ClientStatus) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const client = await this.prisma.client.update({
-      where: { id },
-      data: { status },
-    })
-
-    // Créer un événement timeline
-    await this.prisma.timelineEvent.create({
-      data: {
-        clientId: id,
-        type: 'OTHER',
-        title: `Statut changé: ${status}`,
-        description: `Le statut du client a été changé à ${status}`,
-        createdBy: this.userId,
-      },
-    })
-
-    return client
-  }
-
-  /**
-   * Archive un client (soft delete)
-   */
-  async archiveClient(id: string) {
-    return this.updateClientStatus(id, 'ARCHIVED')
-  }
-
-  /**
-   * Change le conseiller principal d'un client
-   */
-  async changeConseiller(id: string, newConseillerId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    // Vérifier que le nouveau conseiller existe
-    const conseiller = await this.prisma.user.findUnique({
-      where: { id: newConseillerId },
-    })
-
-    if (!conseiller || conseiller.role !== 'ADVISOR') {
-      throw new Error('Invalid conseiller')
-    }
-
-    const client = await this.prisma.client.update({
-      where: { id },
-      data: { conseillerId: newConseillerId },
-    })
-
-    // Créer un événement timeline
-    await this.prisma.timelineEvent.create({
-      data: {
-        clientId: id,
-        type: 'OTHER',
-        title: 'Conseiller changé',
-        description: `Nouveau conseiller: ${conseiller.firstName} ${conseiller.lastName}`,
-        createdBy: this.userId,
-      },
-    })
-
-    return client
-  }
-
-  /**
-   * Active/désactive l'accès portail client
-   */
-  async togglePortalAccess(id: string, enabled: boolean, password?: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const data: any = { portalAccess: enabled }
-
-    if (enabled && password) {
-      // TODO: Hasher le mot de passe
-      data.portalPassword = password
-    }
-
-    const client = await this.prisma.client.update({
-      where: { id },
-      data,
-    })
-
-    return client
-  }
-
-  /**
-   * Récupère la timeline d'un client
-   */
-  async getClientTimeline(id: string, limit: number = 50) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const events = await this.prisma.timelineEvent.findMany({
-      where: { clientId: id },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-    })
-
-    return events
-  }
-
-  /**
-   * Recherche de clients (full-text search)
-   */
-  async searchClients(query: string, limit: number = 20) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const where: any = {
-      OR: [
-        { firstName: { contains: query, mode: 'insensitive' } },
-        { lastName: { contains: query, mode: 'insensitive' } },
-        { email: { contains: query, mode: 'insensitive' } },
-        { phone: { contains: query, mode: 'insensitive' } },
-        { mobile: { contains: query, mode: 'insensitive' } },
-        { companyName: { contains: query, mode: 'insensitive' } },
-      ],
-    }
-
-    // Si ADVISOR, filtrer par ses propres clients
-    if (this.userRole === 'ADVISOR' && !this.isSuperAdmin) {
-      where.AND = {
-        OR: [
-          { conseillerId: this.userId },
-          { conseillerRemplacantId: this.userId },
-        ],
-      }
-    }
-
-    const clients = await this.prisma.client.findMany({
-      where,
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        phone: true,
-        status: true,
-        clientType: true,
-        companyName: true,
-      },
-      take: limit,
-    })
-
-    return clients
-  }
-
-  /**
-   * Récupère les statistiques d'un client
-   */
   async getClientStats(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const client = await this.prisma.client.findUnique({
-      where: { id },
-      include: {
-        _count: {
-          select: {
-            actifs: true,
-            passifs: true,
-            contrats: true,
-            objectifs: true,
-            projets: true,
-            opportunites: true,
-            taches: true,
-            rendezvous: true,
-            documents: true,
-            simulations: true,
-          },
-        },
+    const client = await this.prisma.client.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
       },
     })
 
@@ -496,18 +297,67 @@ export class ClientService {
       throw new Error('Client not found')
     }
 
+    // Récupérer les statistiques
+    const [
+      clientActifsCount,
+      passifsCount,
+      contratsCount,
+      objectifsCount,
+      projetsCount,
+      opportunitesCount,
+      tachesCount,
+      rendezvousCount,
+      documentsCount,
+      timelineEventsCount
+    ] = await Promise.all([
+      this.prisma.clientActif.count({ where: { clientId: id } }),
+      this.prisma.passif.count({ where: { clientId: id, cabinetId: this.cabinetId } }),
+      this.prisma.contrat.count({ where: { clientId: id, cabinetId: this.cabinetId } }),
+      this.prisma.objectif.count({ where: { clientId: id, cabinetId: this.cabinetId } }),
+      this.prisma.projet.count({ where: { clientId: id, cabinetId: this.cabinetId } }),
+      this.prisma.opportunite.count({ where: { clientId: id, cabinetId: this.cabinetId } }),
+      this.prisma.tache.count({ where: { clientId: id, cabinetId: this.cabinetId, status: { not: 'COMPLETED' } } }),
+      this.prisma.rendezVous.count({ where: { clientId: id, cabinetId: this.cabinetId, startDate: { gte: new Date() } } }),
+      this.prisma.clientDocument.count({ where: { clientId: id } }),
+      this.prisma.timelineEvent.count({ where: { clientId: id, cabinetId: this.cabinetId } }),
+    ])
+
     return {
-      totalActifs: client._count.actifs,
-      totalPassifs: client._count.passifs,
-      totalContrats: client._count.contrats,
-      totalObjectifs: client._count.objectifs,
-      totalProjets: client._count.projets,
-      totalOpportunites: client._count.opportunites,
-      totalTaches: client._count.taches,
-      totalRendezVous: client._count.rendezvous,
-      totalDocuments: client._count.documents,
-      totalSimulations: client._count.simulations,
-      wealth: client.wealth,
+      actifs: clientActifsCount,
+      passifs: passifsCount,
+      contrats: contratsCount,
+      objectifs: objectifsCount,
+      projets: projetsCount,
+      opportunites: opportunitesCount,
+      taches: tachesCount,
+      rendezvous: rendezvousCount,
+      documents: documentsCount,
+      timelineEvents: timelineEventsCount
     }
+  }
+
+  async getClientTimeline(id: string, limit: number = 50) {
+    const client = await this.prisma.client.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
+    })
+
+    if (!client) {
+      throw new Error('Client not found')
+    }
+
+    const events = await this.prisma.timelineEvent.findMany({
+      where: {
+        clientId: id
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      take: limit
+    })
+
+    return events
   }
 }

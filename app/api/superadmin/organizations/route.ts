@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
@@ -28,19 +27,19 @@ const createOrganizationSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const context = await requireAuth(request);
 
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
+    if (!context.isSuperAdmin) {
+      return createErrorResponse('Non autorisé', 403);
     }
 
     // Vérifier que l'utilisateur est SuperAdmin
     const superAdmin = await prisma.superAdmin.findUnique({
-      where: { email: session.user.email! },
+      where: { email: context.user.email! },
     });
 
     if (!superAdmin || !superAdmin.isActive) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+      return createErrorResponse('Accès refusé', 403);
     }
 
     // Récupérer toutes les organisations avec leurs statistiques
@@ -59,7 +58,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Formater les données
-    const formattedOrganizations = organizations.map((org) => ({
+    const formattedOrganizations = organizations.map((org: any) => ({
       id: org.id,
       name: org.name,
       slug: org.slug,
@@ -84,7 +83,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       organizations: formattedOrganizations,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erreur lors du chargement des organisations:', error);
     return NextResponse.json(
       { error: 'Erreur serveur' },
@@ -95,15 +94,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const context = await requireAuth(request);
 
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
+    if (!context.isSuperAdmin) {
+      return createErrorResponse('Non autorisé', 403);
     }
 
     // Vérifier que l'utilisateur est SuperAdmin
     const superAdmin = await prisma.superAdmin.findUnique({
-      where: { email: session.user.email! },
+      where: { email: context.user.email! },
     });
 
     if (!superAdmin || !superAdmin.isActive) {
@@ -185,7 +184,7 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await bcrypt.hash(validatedData.adminUser.password, 10);
 
     // Créer le cabinet et l'utilisateur admin en transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // Créer le cabinet
       const cabinet = await tx.cabinet.create({
         data: {
@@ -255,7 +254,7 @@ export async function POST(request: NextRequest) {
         lastName: result.adminUser.lastName,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Données invalides', details: error.issues },

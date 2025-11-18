@@ -150,18 +150,18 @@ export function QuickActions({ open, onOpenChange }: QuickActionsProps) {
     },
   ]
 
-  const filteredActions = quickActions.filter((action) => {
+  const filteredActions = quickActions.filter((action: any) => {
     if (!searchQuery) return true
     const query = searchQuery.toLowerCase()
     return (
       action.title.toLowerCase().includes(query) ||
       action.description.toLowerCase().includes(query) ||
       action.category.toLowerCase().includes(query) ||
-      action.keywords.some((k) => k.includes(query))
+      action.keywords.some((k: any) => k.includes(query))
     )
   })
 
-  const groupedActions = filteredActions.reduce((acc, action) => {
+  const groupedActions = filteredActions.reduce((acc: any, action: any) => {
     if (!acc[action.category]) {
       acc[action.category] = []
     }
@@ -224,7 +224,7 @@ export function QuickActions({ open, onOpenChange }: QuickActionsProps) {
   ]
 
   const recentActionItems = recentActions
-    .map((recent) => quickActions.find((a) => a.id === recent.id))
+    .map((recent: any) => quickActions.find((a: any) => a.id === recent.id))
     .filter(Boolean)
     .slice(0, 3) as QuickAction[]
 
@@ -245,7 +245,7 @@ export function QuickActions({ open, onOpenChange }: QuickActionsProps) {
               type="text"
               placeholder="Rechercher une action... (client, dossier, tâche...)"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e: any) => setSearchQuery(e.target.value)}
               className="pl-10 pr-4 h-11"
               autoFocus
             />
@@ -262,7 +262,7 @@ export function QuickActions({ open, onOpenChange }: QuickActionsProps) {
                 </h3>
               </div>
               <div className="grid gap-2">
-                {recentActionItems.map((action) => {
+                {recentActionItems.map((action: any) => {
                   const Icon = action.icon
                   const colors = colorClasses[action.color as keyof typeof colorClasses]
 
@@ -291,13 +291,13 @@ export function QuickActions({ open, onOpenChange }: QuickActionsProps) {
           )}
 
           <div className="px-6 py-4 space-y-6">
-            {Object.entries(groupedActions).map(([category, actions]) => (
+            {Object.entries(groupedActions).map(([category, actions]: [string, any]) => (
               <div key={category}>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
                   {category}
                 </h3>
                 <div className="grid gap-2">
-                  {actions.map((action) => {
+                  {actions.map((action: any) => {
                     const Icon = action.icon
                     const colors = colorClasses[action.color as keyof typeof colorClasses]
 

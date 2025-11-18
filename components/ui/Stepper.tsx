@@ -15,7 +15,7 @@ export function Stepper({ steps = [], currentStep = 0, onStepClick }: StepperPro
   return (
     <div className="w-full">
       <div className="flex items-center justify-between">
-        {steps.map((step, index) => {
+        {steps.map((step: any, index: any) => {
           const isCompleted = index < currentStep;
           const isCurrent = index === currentStep;
           const isClickable = onStepClick && index <= currentStep;

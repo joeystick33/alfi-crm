@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
-import Input from '@/components/ui/Input';
-import Button from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 import { TimelineTemplate } from '@/components/ui/bento/TimelineTemplate';
 import { ModernBarChart } from '@/components/charts/ModernBarChart';
 import { 
@@ -93,7 +93,7 @@ export function SuccessionSimulator() {
   }, [assets, heirs]);
 
   const addAsset = () => {
-    const newId = Math.max(...assets.map(a => a.id), 0) + 1;
+    const newId = Math.max(...assets.map((a: any) => a.id), 0) + 1;
     setAssets([
       ...assets,
       {
@@ -108,22 +108,22 @@ export function SuccessionSimulator() {
 
   const removeAsset = (id: number) => {
     if (assets.length > 1) {
-      setAssets(assets.filter(a => a.id !== id));
+      setAssets(assets.filter((a: any) => a.id !== id));
     }
   };
 
   const updateAsset = (id: number, field: keyof Asset, value: string) => {
-    setAssets(assets.map(a => 
+    setAssets(assets.map((a: any) => 
       a.id === id ? { ...a, [field]: value } : a
     ));
   };
 
   const addHeir = () => {
-    const newId = Math.max(...heirs.map(h => h.id), 0) + 1;
+    const newId = Math.max(...heirs.map((h: any) => h.id), 0) + 1;
     // Redistribute shares equally
     const newShare = (100 / (heirs.length + 1)).toFixed(2);
     setHeirs([
-      ...heirs.map(h => ({ ...h, share: newShare })),
+      ...heirs.map((h: any) => ({ ...h, share: newShare })),
       {
         id: newId,
         name: `Héritier ${newId}`,
@@ -137,22 +137,22 @@ export function SuccessionSimulator() {
 
   const removeHeir = (id: number) => {
     if (heirs.length > 1) {
-      const remainingHeirs = heirs.filter(h => h.id !== id);
+      const remainingHeirs = heirs.filter((h: any) => h.id !== id);
       // Redistribute shares equally among remaining heirs
       const newShare = (100 / remainingHeirs.length).toFixed(2);
-      setHeirs(remainingHeirs.map(h => ({ ...h, share: newShare })));
+      setHeirs(remainingHeirs.map((h: any) => ({ ...h, share: newShare })));
     }
   };
 
   const updateHeir = (id: number, field: keyof Heir, value: string | boolean) => {
-    setHeirs(heirs.map(h => 
+    setHeirs(heirs.map((h: any) => 
       h.id === id ? { ...h, [field]: value } : h
     ));
   };
 
   const simulateSuccession = async () => {
     // Validate assets
-    const validAssets = assets.filter(a => {
+    const validAssets = assets.filter((a: any) => {
       const value = parseFloat(a.value) || 0;
       return value > 0;
     });
@@ -164,7 +164,7 @@ export function SuccessionSimulator() {
     }
 
     // Validate heirs
-    const validHeirs = heirs.filter(h => {
+    const validHeirs = heirs.filter((h: any) => {
       const share = parseFloat(h.share) || 0;
       return share > 0;
     });
@@ -176,7 +176,7 @@ export function SuccessionSimulator() {
     }
 
     // Check total shares
-    const totalShares = validHeirs.reduce((sum, h) => sum + (parseFloat(h.share) || 0), 0);
+    const totalShares = validHeirs.reduce((sum: any, h: any) => sum + (parseFloat(h.share) || 0), 0);
     if (Math.abs(totalShares - 100) > 0.1) {
       setError(`Les parts doivent totaliser 100% (actuellement ${totalShares.toFixed(1)}%)`);
       setResult(null);
@@ -191,14 +191,14 @@ export function SuccessionSimulator() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          assets: validAssets.map(a => ({
+          assets: validAssets.map((a: any) => ({
             id: a.id.toString(),
             name: a.name,
             type: a.type,
             value: parseFloat(a.value) || 0,
             debt: parseFloat(a.debt) || 0
           })),
-          heirs: validHeirs.map(h => ({
+          heirs: validHeirs.map((h: any) => ({
             id: h.id.toString(),
             name: h.name,
             relationship: h.relationship,
@@ -254,7 +254,7 @@ export function SuccessionSimulator() {
   })) : [];
 
   // Calculate total estate value
-  const totalEstateValue = assets.reduce((sum, a) => {
+  const totalEstateValue = assets.reduce((sum: any, a: any) => {
     const value = parseFloat(a.value) || 0;
     const debt = parseFloat(a.debt) || 0;
     return sum + (value - debt);
@@ -334,7 +334,7 @@ export function SuccessionSimulator() {
               </div>
 
               <div className="space-y-3">
-                {assets.map((asset) => {
+                {assets.map((asset: any) => {
                   const AssetIcon = getAssetTypeInfo(asset.type).icon;
                   return (
                     <div
@@ -347,9 +347,8 @@ export function SuccessionSimulator() {
                             label="Nom de l'actif"
                             type="text"
                             value={asset.name}
-                            onChange={(e) => updateAsset(asset.id, 'name', e.target.value)}
+                            onChange={(e: any) => updateAsset(asset.id, 'name', e.target.value)}
                             placeholder="Ex: Résidence principale"
-                            icon={<AssetIcon className="h-4 w-4" />}
                           />
 
                           <div>
@@ -358,7 +357,7 @@ export function SuccessionSimulator() {
                             </label>
                             <select
                               value={asset.type}
-                              onChange={(e) => updateAsset(asset.id, 'type', e.target.value)}
+                              onChange={(e: any) => updateAsset(asset.id, 'type', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500"
                             >
                               {ASSET_TYPES.map(type => (
@@ -373,21 +372,16 @@ export function SuccessionSimulator() {
                             label="Valeur (€)"
                             type="number"
                             value={asset.value}
-                            onChange={(e) => updateAsset(asset.id, 'value', e.target.value)}
+                            onChange={(e: any) => updateAsset(asset.id, 'value', e.target.value)}
                             placeholder="500000"
-                            min="0"
-                            icon={<DollarSign className="h-4 w-4" />}
                           />
 
                           <Input
                             label="Dettes associées (€)"
                             type="number"
                             value={asset.debt}
-                            onChange={(e) => updateAsset(asset.id, 'debt', e.target.value)}
+                            onChange={(e: any) => updateAsset(asset.id, 'debt', e.target.value)}
                             placeholder="0"
-                            min="0"
-                            icon={<TrendingDown className="h-4 w-4" />}
-                            helperText="Prêts, hypothèques"
                           />
                         </div>
 
@@ -430,7 +424,7 @@ export function SuccessionSimulator() {
               </div>
 
               <div className="space-y-3">
-                {heirs.map((heir) => {
+                {heirs.map((heir: any) => {
                   const relationshipInfo = getRelationshipInfo(heir.relationship);
                   const RelationIcon = relationshipInfo.icon;
                   return (
@@ -444,9 +438,8 @@ export function SuccessionSimulator() {
                             label="Nom de l'héritier"
                             type="text"
                             value={heir.name}
-                            onChange={(e) => updateHeir(heir.id, 'name', e.target.value)}
+                            onChange={(e: any) => updateHeir(heir.id, 'name', e.target.value)}
                             placeholder="Ex: Marie Dupont"
-                            icon={<RelationIcon className="h-4 w-4" />}
                           />
 
                           <div>
@@ -455,7 +448,7 @@ export function SuccessionSimulator() {
                             </label>
                             <select
                               value={heir.relationship}
-                              onChange={(e) => updateHeir(heir.id, 'relationship', e.target.value)}
+                              onChange={(e: any) => updateHeir(heir.id, 'relationship', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500"
                             >
                               {RELATIONSHIP_OPTIONS.map(rel => (
@@ -470,22 +463,16 @@ export function SuccessionSimulator() {
                             label="Part (%)"
                             type="number"
                             value={heir.share}
-                            onChange={(e) => updateHeir(heir.id, 'share', e.target.value)}
+                            onChange={(e: any) => updateHeir(heir.id, 'share', e.target.value)}
                             placeholder="50"
-                            min="0"
-                            max="100"
-                            step="0.1"
-                            helperText="Part de l'héritage"
                           />
 
                           <Input
                             label="Donations antérieures (€)"
                             type="number"
                             value={heir.previousDonations}
-                            onChange={(e) => updateHeir(heir.id, 'previousDonations', e.target.value)}
+                            onChange={(e: any) => updateHeir(heir.id, 'previousDonations', e.target.value)}
                             placeholder="0"
-                            min="0"
-                            helperText="Derniers 15 ans"
                           />
                         </div>
 
@@ -506,7 +493,7 @@ export function SuccessionSimulator() {
               {/* Total Shares Indicator */}
               <div className="mt-4">
                 {(() => {
-                  const totalShares = heirs.reduce((sum, h) => sum + (parseFloat(h.share) || 0), 0);
+                  const totalShares = heirs.reduce((sum: any, h: any) => sum + (parseFloat(h.share) || 0), 0);
                   const isValid = Math.abs(totalShares - 100) < 0.1;
                   return (
                     <div className={`p-3 rounded-lg border ${isValid ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>

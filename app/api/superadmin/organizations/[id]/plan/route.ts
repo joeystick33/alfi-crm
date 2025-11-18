@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireAuth, createErrorResponse, createSuccessResponse } from '@/lib/auth-helpers';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
@@ -16,19 +15,19 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const context = await requireAuth(request);
 
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
+    if (!context.isSuperAdmin) {
+      return createErrorResponse('Non autorisé', 403);
     }
 
     // Vérifier que l'utilisateur est SuperAdmin
     const superAdmin = await prisma.superAdmin.findUnique({
-      where: { email: session.user.email! },
+      where: { email: context.user.email! },
     });
 
     if (!superAdmin || !superAdmin.isActive) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+      return createErrorResponse('Accès refusé', 403);
     }
 
     const body = await request.json();
@@ -142,7 +141,7 @@ export async function POST(
         subscriptionEnd: updatedCabinet.subscriptionEnd,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Données invalides', details: error.issues },

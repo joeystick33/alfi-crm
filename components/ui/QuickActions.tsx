@@ -1,84 +1,83 @@
-/**
- * QuickActions Component
- * Contextual quick action buttons for tabs
- */
+'use client'
 
-import { Button } from '@/components/ui/Button';
-import { Plus, RefreshCw, LucideIcon } from 'lucide-react';
-import { ReactNode } from 'react';
+import { type ReactNode } from 'react'
+import { Plus, RefreshCw, type LucideIcon } from 'lucide-react'
 
-interface QuickActionsProps {
-  onAdd?: () => void;
-  onRefresh?: () => void;
-  addLabel?: string;
-  addIcon?: LucideIcon;
-  showRefresh?: boolean;
-  children?: ReactNode;
-  className?: string;
+import { cn } from '@/lib/utils'
+
+import { Button, type ButtonProps } from './Button'
+
+type QuickActionsProps = {
+  onAdd?: () => void
+  onRefresh?: () => void
+  addLabel?: string
+  addIcon?: LucideIcon
+  showRefresh?: boolean
+  children?: ReactNode
+  className?: string
 }
 
-export function QuickActions({ 
-  onAdd, 
-  onRefresh, 
+type QuickActionButtonProps = {
+  icon?: LucideIcon
+  label: ReactNode
+  onClick?: () => void
+  variant?: ButtonProps['variant']
+  className?: string
+}
+
+export function QuickActions({
+  onAdd,
+  onRefresh,
   addLabel = 'Ajouter',
-  addIcon: AddIcon = Plus,
+  addIcon = Plus,
   showRefresh = true,
   children,
-  className = '',
+  className,
 }: QuickActionsProps) {
+  const AddIcon = addIcon
+
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div className={cn('flex items-center gap-2', className)}>
       {children}
-      
+
       {onAdd && (
-        <Button 
-          onClick={onAdd}
-          className="bg-blue-600 hover:bg-blue-700 transition-all duration-300"
-        >
+        <Button onClick={onAdd} className="bg-blue-600 hover:bg-blue-700 transition-smooth">
           <AddIcon className="w-4 h-4 mr-2" />
           {addLabel}
         </Button>
       )}
-      
+
       {showRefresh && onRefresh && (
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={onRefresh}
-          className="transition-all duration-300 hover:shadow-md"
+          className="transition-smooth hover-lift"
         >
           <RefreshCw className="w-4 h-4 mr-2" />
           Actualiser
         </Button>
       )}
     </div>
-  );
+  )
 }
 
-interface QuickActionButtonProps {
-  icon?: LucideIcon;
-  label: string;
-  onClick: () => void;
-  variant?: 'default' | 'outline' | 'ghost' | 'destructive';
-  className?: string;
-}
-
-export function QuickActionButton({ 
-  icon: Icon, 
-  label, 
-  onClick, 
+export function QuickActionButton({
+  icon: Icon,
+  label,
+  onClick,
   variant = 'outline',
-  className = '',
+  className,
 }: QuickActionButtonProps) {
   return (
-    <Button 
-      variant={variant} 
+    <Button
+      variant={variant}
       onClick={onClick}
-      className={`transition-all duration-300 hover:shadow-md ${className}`}
+      className={cn('transition-smooth hover-lift', className)}
     >
       {Icon && <Icon className="w-4 h-4 mr-2" />}
       {label}
     </Button>
-  );
+  )
 }
 
-export default QuickActions;
+export default QuickActions

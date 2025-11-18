@@ -63,7 +63,7 @@ export function ModernBarChart({ data, dataKeys, title, formatValue, stacked = f
             margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
           >
             <defs>
-              {GRADIENT_COLORS.map((color, index) => (
+              {GRADIENT_COLORS.map((color: any, index: any) => (
                 <linearGradient key={index} id={`barGradient-${index}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={color.start} />
                   <stop offset="100%" stopColor={color.end} />
@@ -83,14 +83,14 @@ export function ModernBarChart({ data, dataKeys, title, formatValue, stacked = f
               style={{ fontSize: '12px' }}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(value) => {
+              tickFormatter={(value: any) => {
                 if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
                 if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
                 return value;
               }}
             />
             <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))' }} />
-            {dataKeys.map((key, index) => (
+            {dataKeys.map((key: any, index: any) => (
               <Bar
                 key={key}
                 dataKey={key}
@@ -100,7 +100,7 @@ export function ModernBarChart({ data, dataKeys, title, formatValue, stacked = f
                 animationEasing="ease-out"
                 stackId={stacked ? 'stack' : undefined}
               >
-                {data.map((entry, idx) => (
+                {data.map((entry: any, idx: any) => (
                   <Cell
                     key={`cell-${idx}`}
                     className="hover:opacity-80 transition-opacity"

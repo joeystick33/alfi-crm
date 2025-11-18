@@ -12,7 +12,7 @@ const defaultOptions: DefaultOptions = {
     // Retry failed requests 3 times
     retry: 3,
     // Retry delay with exponential backoff
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retryDelay: (attemptIndex: any) => Math.min(1000 * 2 ** attemptIndex, 30000),
     // Refetch on window focus
     refetchOnWindowFocus: true,
     // Refetch on reconnect

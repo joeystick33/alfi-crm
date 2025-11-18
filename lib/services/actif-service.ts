@@ -1,9 +1,10 @@
-import { getPrismaClient, setRLSContext } from '../prisma'
+import { getPrismaClient } from '../prisma'
 import { ActifType, ActifCategory } from '@prisma/client'
+import { Decimal } from '@prisma/client/runtime/library'
 
 export interface CreateActifInput {
   type: ActifType
-  category: ActifCategory
+  category?: ActifCategory
   name: string
   description?: string
   value: number
@@ -43,15 +44,59 @@ export class ActifService {
   }
 
   /**
+   * Détermine la catégorie par défaut basée sur le type d'actif
+   */
+  private getDefaultCategory(type: ActifType): ActifCategory {
+    const categoryMap: Record<ActifType, ActifCategory> = {
+      REAL_ESTATE_MAIN: 'IMMOBILIER',
+      REAL_ESTATE_RENTAL: 'IMMOBILIER',
+      REAL_ESTATE_SECONDARY: 'IMMOBILIER',
+      SCPI: 'IMMOBILIER',
+      SCI: 'IMMOBILIER',
+      LIFE_INSURANCE: 'FINANCIER',
+      SECURITIES_ACCOUNT: 'FINANCIER',
+      PEA: 'FINANCIER',
+      PEA_PME: 'FINANCIER',
+      BANK_ACCOUNT: 'FINANCIER',
+      SAVINGS_ACCOUNT: 'FINANCIER',
+      PEL: 'FINANCIER',
+      CEL: 'FINANCIER',
+      PER: 'FINANCIER',
+      PERP: 'FINANCIER',
+      MADELIN: 'FINANCIER',
+      ARTICLE_83: 'FINANCIER',
+      COMPANY_SHARES: 'PROFESSIONNEL',
+      PROFESSIONAL_REAL_ESTATE: 'PROFESSIONNEL',
+      PRECIOUS_METALS: 'AUTRE',
+      ART_COLLECTION: 'AUTRE',
+      CRYPTO: 'FINANCIER',
+      OTHER: 'AUTRE',
+    }
+    return categoryMap[type] || 'AUTRE'
+  }
+
+  /**
    * Crée un nouvel actif
    */
   async createActif(data: CreateActifInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const actif = await this.prisma.actif.create({
       data: {
         cabinetId: this.cabinetId,
-        ...data,
+        type: data.type,
+        category: data.category || this.getDefaultCategory(data.type),
+        name: data.name,
+        description: data.description,
+        value: new Decimal(data.value),
+        acquisitionDate: data.acquisitionDate,
+        acquisitionValue:
+          data.acquisitionValue !== undefined ? new Decimal(data.acquisitionValue) : null,
+        details: data.details,
+        annualIncome:
+          data.annualIncome !== undefined ? new Decimal(data.annualIncome) : null,
+        taxDetails: data.taxDetails,
+        managedByFirm: data.managedByFirm,
+        managementFees:
+          data.managementFees !== undefined ? new Decimal(data.managementFees) : null,
         isActive: true,
       },
     })
@@ -68,11 +113,12 @@ export class ActifService {
     ownershipPercentage: number = 100,
     ownershipType?: string
   ) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Vérifier que le client existe
-    const client = await this.prisma.client.findUnique({
-      where: { id: clientId },
+    const client = await this.prisma.client.findFirst({
+      where: {
+        id: clientId,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!client) {
@@ -83,11 +129,11 @@ export class ActifService {
     const actif = await this.createActif(actifData)
 
     // Associer au client
-    await this.prisma.clientActif.create({
+    const clientActif = await this.prisma.clientActif.create({
       data: {
         clientId,
         actifId: actif.id,
-        ownershipPercentage,
+        ownershipPercentage: new Decimal(ownershipPercentage),
         ownershipType,
       },
     })
@@ -112,10 +158,11 @@ export class ActifService {
    * Récupère un actif par ID
    */
   async getActifById(id: string, includeClients: boolean = false) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const actif = await this.prisma.actif.findUnique({
-      where: { id },
+    const actif = await this.prisma.actif.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       include: includeClients ? {
         clients: {
           include: {
@@ -159,8 +206,6 @@ export class ActifService {
     minValue?: number
     maxValue?: number
   }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const where: any = {}
 
     if (filters?.type) {
@@ -189,15 +234,18 @@ export class ActifService {
     if (filters?.minValue !== undefined || filters?.maxValue !== undefined) {
       where.value = {}
       if (filters.minValue !== undefined) {
-        where.value.gte = filters.minValue
+        where.value.gte = new Decimal(filters.minValue)
       }
       if (filters.maxValue !== undefined) {
-        where.value.lte = filters.maxValue
+        where.value.lte = new Decimal(filters.maxValue)
       }
     }
 
     const actifs = await this.prisma.actif.findMany({
-      where,
+      where: {
+        ...where,
+        cabinetId: this.cabinetId,
+      },
       include: {
         _count: {
           select: {
@@ -226,8 +274,6 @@ export class ActifService {
     minValue?: number
     maxValue?: number
   }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const where: any = {}
 
     if (filters?.type) {
@@ -264,7 +310,10 @@ export class ActifService {
     }
 
     const actifs = await this.prisma.actif.findMany({
-      where,
+      where: {
+        ...where,
+        cabinetId: this.cabinetId,
+      },
       include: {
         clients: {
           include: {
@@ -308,8 +357,6 @@ export class ActifService {
    * Liste les actifs d'un client
    */
   async getClientActifs(clientId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const clientActifs = await this.prisma.clientActif.findMany({
       where: { clientId },
       include: {
@@ -334,26 +381,53 @@ export class ActifService {
    * Met à jour un actif
    */
   async updateActif(id: string, data: UpdateActifInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
+    const updateData: any = { ...data }
 
-    const actif = await this.prisma.actif.update({
-      where: { id },
-      data,
+    if (data.value !== undefined) {
+      updateData.value = new Decimal(data.value)
+    }
+    if (data.acquisitionValue !== undefined) {
+      updateData.acquisitionValue = new Decimal(data.acquisitionValue)
+    }
+    if (data.annualIncome !== undefined) {
+      updateData.annualIncome = new Decimal(data.annualIncome)
+    }
+    if (data.managementFees !== undefined) {
+      updateData.managementFees = new Decimal(data.managementFees)
+    }
+
+    const { count } = await this.prisma.actif.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
+      data: updateData,
     })
 
-    return actif
+    if (count === 0) {
+      throw new Error('Actif not found or access denied')
+    }
+
+    return this.getActifById(id)
   }
 
   /**
    * Met à jour la valeur d'un actif
    */
   async updateActifValue(id: string, newValue: number) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const actif = await this.prisma.actif.update({
-      where: { id },
-      data: { value: newValue },
+    const { count } = await this.prisma.actif.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
+      data: { value: new Decimal(newValue) },
     })
+
+    if (count === 0) {
+      throw new Error('Actif not found or access denied')
+    }
+
+    const actif = await this.getActifById(id)
 
     // Récupérer tous les clients propriétaires pour mettre à jour leur patrimoine
     const clientActifs = await this.prisma.clientActif.findMany({
@@ -371,39 +445,50 @@ export class ActifService {
    * Désactive un actif (soft delete)
    */
   async deactivateActif(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const actif = await this.prisma.actif.update({
-      where: { id },
+    const { count } = await this.prisma.actif.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data: { isActive: false },
     })
 
-    return actif
+    if (count === 0) {
+      throw new Error('Actif not found or access denied')
+    }
+
+    return this.getActifById(id)
   }
 
   /**
    * Réactive un actif
    */
   async reactivateActif(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const actif = await this.prisma.actif.update({
-      where: { id },
+    const { count } = await this.prisma.actif.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data: { isActive: true },
     })
 
-    return actif
+    if (count === 0) {
+      throw new Error('Actif not found or access denied')
+    }
+
+    return this.getActifById(id)
   }
 
   /**
    * Partage un actif avec un autre client (indivision)
    */
   async shareActif(data: ShareActifInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Vérifier que l'actif existe
-    const actif = await this.prisma.actif.findUnique({
-      where: { id: data.actifId },
+    const actif = await this.prisma.actif.findFirst({
+      where: {
+        id: data.actifId,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!actif) {
@@ -411,8 +496,11 @@ export class ActifService {
     }
 
     // Vérifier que le client existe
-    const client = await this.prisma.client.findUnique({
-      where: { id: data.clientId },
+    const client = await this.prisma.client.findFirst({
+      where: {
+        id: data.clientId,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!client) {
@@ -425,7 +513,7 @@ export class ActifService {
     })
 
     const totalPercentage = existingShares.reduce(
-      (sum, ca) => sum + ca.ownershipPercentage.toNumber(),
+      (sum: any, ca: any) => sum + ca.ownershipPercentage.toNumber(),
       0
     )
 
@@ -440,7 +528,7 @@ export class ActifService {
       data: {
         clientId: data.clientId,
         actifId: data.actifId,
-        ownershipPercentage: data.ownershipPercentage,
+        ownershipPercentage: new Decimal(data.ownershipPercentage),
         ownershipType: data.ownershipType,
       },
     })
@@ -448,6 +536,7 @@ export class ActifService {
     // Créer un événement timeline
     await this.prisma.timelineEvent.create({
       data: {
+        cabinetId: this.cabinetId,
         clientId: data.clientId,
         type: 'ASSET_ADDED',
         title: 'Actif partagé ajouté',
@@ -469,8 +558,6 @@ export class ActifService {
     clientId: string,
     newPercentage: number
   ) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Récupérer le partage actuel
     const currentShare = await this.prisma.clientActif.findUnique({
       where: {
@@ -494,7 +581,7 @@ export class ActifService {
     })
 
     const otherTotal = otherShares.reduce(
-      (sum, ca) => sum + ca.ownershipPercentage.toNumber(),
+      (sum: any, ca: any) => sum + ca.ownershipPercentage.toNumber(),
       0
     )
 
@@ -513,7 +600,7 @@ export class ActifService {
         },
       },
       data: {
-        ownershipPercentage: newPercentage,
+        ownershipPercentage: new Decimal(newPercentage),
       },
     })
 
@@ -524,16 +611,19 @@ export class ActifService {
    * Retire un client d'un actif partagé
    */
   async removeClientFromActif(actifId: string, clientId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    await this.prisma.clientActif.delete({
+    const { count } = await this.prisma.clientActif.deleteMany({
       where: {
-        clientId_actifId: {
-          clientId,
-          actifId,
+        clientId,
+        actifId,
+        actif: {
+          cabinetId: this.cabinetId,
         },
       },
     })
+
+    if (count === 0) {
+      throw new Error('Client does not own this actif')
+    }
 
     return { success: true }
   }
@@ -542,8 +632,6 @@ export class ActifService {
    * Récupère les propriétaires d'un actif
    */
   async getActifOwners(actifId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const owners = await this.prisma.clientActif.findMany({
       where: { actifId },
       include: {
@@ -558,7 +646,7 @@ export class ActifService {
       },
     })
 
-    return owners.map(o => ({
+    return owners.map((o: any) => ({
       client: o.client,
       ownershipPercentage: o.ownershipPercentage.toNumber(),
       ownershipType: o.ownershipType,
@@ -569,10 +657,11 @@ export class ActifService {
    * Calcule le rendement d'un actif
    */
   async calculateActifReturn(id: string): Promise<number> {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const actif = await this.prisma.actif.findUnique({
-      where: { id },
+    const actif = await this.prisma.actif.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!actif) {
@@ -593,10 +682,8 @@ export class ActifService {
    * Récupère les actifs par catégorie
    */
   async getActifsByCategory() {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const actifs = await this.prisma.actif.findMany({
-      where: { isActive: true },
+      where: { isActive: true, cabinetId: this.cabinetId },
     })
 
     const byCategory = {
@@ -610,7 +697,7 @@ export class ActifService {
       byCategory[actif.category] += actif.value.toNumber()
     }
 
-    const total = Object.values(byCategory).reduce((sum, val) => sum + val, 0)
+    const total = Object.values(byCategory).reduce((sum: any, val: any) => sum + val, 0)
 
     return {
       values: byCategory,
@@ -628,11 +715,10 @@ export class ActifService {
    * Récupère les actifs gérés par le cabinet
    */
   async getManagedActifs() {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const actifs = await this.prisma.actif.findMany({
       where: {
         isActive: true,
+        cabinetId: this.cabinetId,
       },
       include: {
         clients: {
@@ -655,7 +741,7 @@ export class ActifService {
     // Filtrer les actifs gérés et calculer les totaux
     const managedActifs = actifs.filter((a: any) => a.managedByFirm === true)
     
-    const totalValue = managedActifs.reduce((sum, a) => sum + a.value.toNumber(), 0)
+    const totalValue = managedActifs.reduce((sum: any, a: any) => sum + a.value.toNumber(), 0)
     const totalFees = managedActifs.reduce((sum, a: any) => {
       const value = a.value.toNumber()
       const feeRate = a.managementFees?.toNumber() || 0

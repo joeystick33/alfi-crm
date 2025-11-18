@@ -1,55 +1,32 @@
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { apiClient } from '@/lib/api-client'
-import { TimelineEventType } from '@prisma/client'
 
-export interface TimelineEvent {
-  id: string
-  clientId: string
-  type: TimelineEventType
-  title: string
-  description?: string
-  relatedEntityType?: string
-  relatedEntityId?: string
-  createdAt: string
-  createdBy?: string
-}
-
-export interface CreateTimelineEventInput {
-  type: TimelineEventType
-  title: string
-  description?: string
-  relatedEntityType?: string
-  relatedEntityId?: string
-}
-
-/**
- * Hook pour récupérer la timeline d'un client
- */
-export function useClientTimeline(clientId: string, limit: number = 50) {
-  return useQuery<TimelineEvent[]>({
-    queryKey: ['clients', clientId, 'timeline', limit],
+export function useClientTimeline(clientId: string) {
+  return useQuery({
+    queryKey: ['timeline', clientId],
     queryFn: async () => {
-      const response = await apiClient.get(`/clients/${clientId}/timeline?limit=${limit}`)
-      return response.data
+      const response = await fetch(`/api/clients/${clientId}/timeline`)
+      if (!response.ok) throw new Error('Failed to fetch timeline')
+      return response.json()
     },
-    enabled: !!clientId,
   })
 }
 
-/**
- * Hook pour créer un événement dans la timeline
- */
-export function useCreateTimelineEvent(clientId: string) {
+export function useCreateTimelineEvent() {
   const queryClient = useQueryClient()
-
+  
   return useMutation({
-    mutationFn: async (data: CreateTimelineEventInput) => {
-      const response = await apiClient.post(`/clients/${clientId}/timeline`, data)
-      return response.data
+    mutationFn: async (data: any) => {
+      const response = await fetch('/api/timeline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      if (!response.ok) throw new Error('Failed to create timeline event')
+      return response.json()
     },
     onSuccess: () => {
-      // Invalider le cache de la timeline
-      queryClient.invalidateQueries({ queryKey: ['clients', clientId, 'timeline'] })
+      queryClient.invalidateQueries({ queryKey: ['timeline'] })
     },
   })
 }

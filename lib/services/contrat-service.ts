@@ -1,5 +1,6 @@
-import { getPrismaClient, setRLSContext } from '../prisma'
+import { getPrismaClient } from '../prisma'
 import { ContratType, ContratStatus } from '@prisma/client'
+import { Decimal } from '@prisma/client/runtime/library'
 
 export interface CreateContratInput {
   clientId: string
@@ -37,15 +38,32 @@ export class ContratService {
     this.prisma = getPrismaClient(cabinetId, isSuperAdmin)
   }
 
+  private formatContrat(contrat: any) {
+    if (!contrat) {
+      return null
+    }
+
+    const toNumber = (value: any) => (value?.toNumber ? value.toNumber() : value ?? null)
+
+    return {
+      ...contrat,
+      premium: contrat.premium !== undefined ? toNumber(contrat.premium) : undefined,
+      coverage: contrat.coverage !== undefined ? toNumber(contrat.coverage) : undefined,
+      value: contrat.value !== undefined ? toNumber(contrat.value) : undefined,
+      commission: contrat.commission !== undefined ? toNumber(contrat.commission) : undefined,
+    }
+  }
+
   /**
    * Crée un nouveau contrat
    */
   async createContrat(data: CreateContratInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Vérifier que le client existe
-    const client = await this.prisma.client.findUnique({
-      where: { id: data.clientId },
+    const client = await this.prisma.client.findFirst({
+      where: {
+        id: data.clientId,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!client) {
@@ -56,6 +74,10 @@ export class ContratService {
       data: {
         cabinetId: this.cabinetId,
         ...data,
+        premium: data.premium !== undefined ? new Decimal(data.premium) : undefined,
+        coverage: data.coverage !== undefined ? new Decimal(data.coverage) : undefined,
+        value: data.value !== undefined ? new Decimal(data.value) : undefined,
+        commission: data.commission !== undefined ? new Decimal(data.commission) : undefined,
         status: 'ACTIVE',
       },
     })
@@ -63,6 +85,7 @@ export class ContratService {
     // Créer un événement timeline
     await this.prisma.timelineEvent.create({
       data: {
+        cabinetId: this.cabinetId,
         clientId: data.clientId,
         type: 'CONTRACT_SIGNED',
         title: 'Contrat signé',
@@ -73,17 +96,18 @@ export class ContratService {
       },
     })
 
-    return contrat
+    return this.getContratById(contrat.id)
   }
 
   /**
    * Récupère un contrat par ID
    */
   async getContratById(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const contrat = await this.prisma.contrat.findUnique({
-      where: { id },
+    const contrat = await this.prisma.contrat.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       include: {
         client: {
           select: {
@@ -108,7 +132,7 @@ export class ContratService {
       },
     })
 
-    return contrat
+    return this.formatContrat(contrat)
   }
 
   /**
@@ -121,9 +145,9 @@ export class ContratService {
     provider?: string
     search?: string
   }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const where: any = {}
+    const where: any = {
+      cabinetId: this.cabinetId,
+    }
 
     if (filters?.clientId) {
       where.clientId = filters.clientId
@@ -164,7 +188,7 @@ export class ContratService {
       },
     })
 
-    return contrats
+    return contrats.map(contrat => this.formatContrat(contrat))
   }
 
   /**
@@ -178,26 +202,30 @@ export class ContratService {
     search?: string
   }) {
     const contrats = await this.listContrats(filters)
-    
+
     // Transform to match expected format
-    return contrats.map(contrat => ({
-      ...contrat,
-      numeroContrat: contrat.contractNumber,
-      compagnie: contrat.provider,
-      valeur: Number(contrat.value),
-      primeAnnuelle: Number(contrat.annualPremium || 0),
-      dateEcheance: contrat.endDate,
-      statut: contrat.status,
-      nom: contrat.name
-    }))
+    return contrats.map((contrat: any) => {
+      const formatted = this.formatContrat(contrat)
+      const premium = formatted?.premium ?? null
+      const value = formatted?.value ?? null
+
+      return {
+        ...formatted,
+        numeroContrat: formatted?.contractNumber,
+        compagnie: formatted?.provider,
+        valeur: value ?? 0,
+        primeAnnuelle: premium ? premium * 12 : 0,
+        dateEcheance: formatted?.endDate,
+        statut: formatted?.status,
+        nom: formatted?.name,
+      }
+    })
   }
 
   /**
    * Liste les contrats d'un client
    */
   async getClientContrats(clientId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const contrats = await this.prisma.contrat.findMany({
       where: { clientId },
       orderBy: {
@@ -205,35 +233,59 @@ export class ContratService {
       },
     })
 
-    return contrats
+    return contrats.map(contrat => this.formatContrat(contrat))
   }
 
   /**
    * Met à jour un contrat
    */
   async updateContrat(id: string, data: UpdateContratInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
+    const updateData: any = { ...data }
+    if (data.premium !== undefined) {
+      updateData.premium = new Decimal(data.premium)
+    }
+    if (data.coverage !== undefined) {
+      updateData.coverage = new Decimal(data.coverage)
+    }
+    if (data.value !== undefined) {
+      updateData.value = new Decimal(data.value)
+    }
+    if (data.commission !== undefined) {
+      updateData.commission = new Decimal(data.commission)
+    }
 
-    const contrat = await this.prisma.contrat.update({
-      where: { id },
-      data,
+    const { count } = await this.prisma.contrat.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
+      data: updateData,
     })
 
-    return contrat
+    if (count === 0) {
+      throw new Error('Contrat not found or access denied')
+    }
+
+    return this.getContratById(id)
   }
 
   /**
    * Change le statut d'un contrat
    */
   async updateContratStatus(id: string, status: ContratStatus) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const contrat = await this.prisma.contrat.update({
-      where: { id },
+    const { count } = await this.prisma.contrat.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data: { status },
     })
 
-    return contrat
+    if (count === 0) {
+      throw new Error('Contrat not found or access denied')
+    }
+
+    return this.getContratById(id)
   }
 
   /**
@@ -261,8 +313,6 @@ export class ContratService {
    * Renouvelle un contrat
    */
   async renewContrat(id: string, newEndDate?: Date, newPremium?: number) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const data: any = {
       status: 'ACTIVE',
     }
@@ -276,17 +326,31 @@ export class ContratService {
     }
 
     if (newPremium !== undefined) {
-      data.premium = newPremium
+      data.premium = new Decimal(newPremium)
     }
 
-    const contrat = await this.prisma.contrat.update({
-      where: { id },
+    const { count } = await this.prisma.contrat.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data,
     })
+
+    if (count === 0) {
+      throw new Error('Contrat not found or access denied')
+    }
+
+    const contrat = await this.getContratById(id)
+
+    if (!contrat) {
+      throw new Error('Contrat not found after renewal')
+    }
 
     // Créer un événement timeline
     await this.prisma.timelineEvent.create({
       data: {
+        cabinetId: this.cabinetId,
         clientId: contrat.clientId,
         type: 'CONTRACT_SIGNED',
         title: 'Contrat renouvelé',
@@ -304,8 +368,6 @@ export class ContratService {
    * Récupère les contrats à renouveler
    */
   async getContratsToRenew(days: number = 30) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const futureDate = new Date()
     futureDate.setDate(futureDate.getDate() + days)
 
@@ -347,8 +409,6 @@ export class ContratService {
    * Récupère les contrats expirant bientôt
    */
   async getContratsExpiringSoon(days: number = 30) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const futureDate = new Date()
     futureDate.setDate(futureDate.getDate() + days)
 
@@ -388,8 +448,6 @@ export class ContratService {
    * Calcule le total des primes d'un client
    */
   async calculateClientPremiums(clientId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const contrats = await this.prisma.contrat.findMany({
       where: {
         clientId,
@@ -397,14 +455,14 @@ export class ContratService {
       },
     })
 
-    const totalMonthly = contrats.reduce((sum, c) => {
+    const totalMonthly = contrats.reduce((sum: number, c: any) => {
       if (!c.premium) return sum
       return sum + c.premium.toNumber()
     }, 0)
 
     const totalAnnual = totalMonthly * 12
 
-    const byType = contrats.reduce((acc, c) => {
+    const byType = contrats.reduce((acc: any, c: any) => {
       const type = c.type
       if (!acc[type]) {
         acc[type] = 0
@@ -427,8 +485,6 @@ export class ContratService {
    * Calcule le total des couvertures d'un client
    */
   async calculateClientCoverage(clientId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const contrats = await this.prisma.contrat.findMany({
       where: {
         clientId,
@@ -436,12 +492,12 @@ export class ContratService {
       },
     })
 
-    const totalCoverage = contrats.reduce((sum, c) => {
+    const totalCoverage = contrats.reduce((sum: number, c: any) => {
       if (!c.coverage) return sum
       return sum + c.coverage.toNumber()
     }, 0)
 
-    const byType = contrats.reduce((acc, c) => {
+    const byType = contrats.reduce((acc: any, c: any) => {
       const type = c.type
       if (!acc[type]) {
         acc[type] = 0
@@ -466,8 +522,6 @@ export class ContratService {
     startDate?: Date
     endDate?: Date
   }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const where: any = {
       status: 'ACTIVE',
     }
@@ -505,12 +559,12 @@ export class ContratService {
       },
     })
 
-    const totalCommissions = contrats.reduce((sum, c) => {
+    const totalCommissions = contrats.reduce((sum: number, c: any) => {
       if (!c.commission) return sum
       return sum + c.commission.toNumber()
     }, 0)
 
-    const byAdvisor = contrats.reduce((acc, c) => {
+    const byAdvisor = contrats.reduce((acc: any, c: any) => {
       const advisorId = c.client.conseiller.id
       const advisorName = `${c.client.conseiller.firstName} ${c.client.conseiller.lastName}`
       
@@ -541,11 +595,9 @@ export class ContratService {
    * Récupère les statistiques des contrats du cabinet
    */
   async getCabinetContratsStats() {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const contrats = await this.prisma.contrat.findMany()
 
-    const byStatus = contrats.reduce((acc, c) => {
+    const byStatus = contrats.reduce((acc: any, c: any) => {
       const status = c.status
       if (!acc[status]) {
         acc[status] = 0
@@ -554,7 +606,7 @@ export class ContratService {
       return acc
     }, {} as Record<string, number>)
 
-    const byType = contrats.reduce((acc, c) => {
+    const byType = contrats.reduce((acc: any, c: any) => {
       const type = c.type
       if (!acc[type]) {
         acc[type] = 0
@@ -563,19 +615,19 @@ export class ContratService {
       return acc
     }, {} as Record<string, number>)
 
-    const activeContrats = contrats.filter(c => c.status === 'ACTIVE')
+    const activeContrats = contrats.filter((c: any) => c.status === 'ACTIVE')
     
-    const totalPremiums = activeContrats.reduce((sum, c) => {
+    const totalPremiums = activeContrats.reduce((sum: number, c: any) => {
       if (!c.premium) return sum
       return sum + c.premium.toNumber()
     }, 0)
 
-    const totalCoverage = activeContrats.reduce((sum, c) => {
+    const totalCoverage = activeContrats.reduce((sum: number, c: any) => {
       if (!c.coverage) return sum
       return sum + c.coverage.toNumber()
     }, 0)
 
-    const totalCommissions = activeContrats.reduce((sum, c) => {
+    const totalCommissions = activeContrats.reduce((sum: number, c: any) => {
       if (!c.commission) return sum
       return sum + c.commission.toNumber()
     }, 0)
@@ -594,8 +646,6 @@ export class ContratService {
    * Vérifie les contrats expirés et met à jour leur statut
    */
   async checkExpiredContrats() {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const now = new Date()
 
     const expiredContrats = await this.prisma.contrat.findMany({
@@ -609,8 +659,11 @@ export class ContratService {
 
     // Mettre à jour le statut
     for (const contrat of expiredContrats) {
-      await this.prisma.contrat.update({
-        where: { id: contrat.id },
+      await this.prisma.contrat.updateMany({
+        where: {
+          id: contrat.id,
+          cabinetId: this.cabinetId,
+        },
         data: { status: 'EXPIRED' },
       })
     }
@@ -619,5 +672,27 @@ export class ContratService {
       count: expiredContrats.length,
       contrats: expiredContrats,
     }
+  }
+
+  /**
+   * Supprime (désactive) un contrat
+   */
+  async deleteContrat(id: string) {
+    const { count } = await this.prisma.contrat.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
+      data: {
+        isActive: false,
+        updatedAt: new Date(),
+      },
+    })
+
+    if (count === 0) {
+      throw new Error('Contrat not found or access denied')
+    }
+
+    return this.getContratById(id)
   }
 }

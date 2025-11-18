@@ -63,7 +63,7 @@ export function useRealtimeNotifications(options?: {
  */
 export function useNotificationToasts() {
   useRealtimeNotifications({
-    onNewNotification: (notification) => {
+    onNewNotification: (notification: any) => {
       // You can integrate with your toast system here
       console.log('New notification:', notification)
       

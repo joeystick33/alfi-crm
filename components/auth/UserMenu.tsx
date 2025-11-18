@@ -1,86 +1,142 @@
 'use client'
 
-import { signOut } from 'next-auth/react'
-import { useAuth } from '@/hooks/use-auth'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/Dropdown-menu'
-import { Avatar, AvatarFallback } from '@/components/ui/Avatar'
-import { LogOut, Settings, User, Shield } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+import { User, Settings, LogOut, ChevronDown } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
+import { LogoutButton } from './LogoutButton'
 
-export function UserMenu() {
-  const { user, isSuperAdmin } = useAuth()
+interface UserMenuProps {
+  variant?: 'outline' | 'ghost' | 'primary' | 'secondary'
+  size?: 'sm' | 'md' | 'lg'
+  showName?: boolean
+  className?: string
+}
 
-  if (!user) return null
+export function UserMenu({
+  variant = 'outline',
+  size = 'sm',
+  showName = true,
+  className = '',
+}: UserMenuProps) {
+  const router = useRouter()
+  const { data: session } = useSession()
+  const [showMenu, setShowMenu] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
 
-  const initials = `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase()
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false)
+      }
+    }
 
-  const handleSignOut = async () => {
-    await signOut({ callbackUrl: '/login' })
-  }
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showMenu])
+
+  // Close menu on escape key
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowMenu(false)
+      }
+    }
+
+    if (showMenu) {
+      document.addEventListener('keydown', handleEscape)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [showMenu])
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger className="focus:outline-none">
-        <Avatar className="h-9 w-9 cursor-pointer ring-2 ring-slate-200 hover:ring-slate-300 transition-all">
-          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-semibold">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">
-              {user.firstName} {user.lastName}
-            </p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {user.email}
-            </p>
-            {user.cabinetName && (
-              <p className="text-xs leading-none text-muted-foreground mt-1">
-                {user.cabinetName}
-              </p>
-            )}
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        
-        <DropdownMenuItem className="cursor-pointer">
-          <User className="mr-2 h-4 w-4" />
-          <span>Profil</span>
-        </DropdownMenuItem>
-        
-        <DropdownMenuItem className="cursor-pointer">
-          <Settings className="mr-2 h-4 w-4" />
-          <span>Paramètres</span>
-        </DropdownMenuItem>
-        
-        {isSuperAdmin && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer">
-              <Shield className="mr-2 h-4 w-4" />
-              <span>Administration</span>
-            </DropdownMenuItem>
-          </>
+    <div className={`relative ${className}`} ref={menuRef}>
+      <Button
+        variant={variant}
+        size={size}
+        onClick={() => setShowMenu(!showMenu)}
+        className="gap-2"
+      >
+        <User className="h-4 w-4" />
+        {showName && (
+          <span className="hidden sm:inline">
+            {session?.user?.firstName || 'Utilisateur'}
+          </span>
         )}
-        
-        <DropdownMenuSeparator />
-        
-        <DropdownMenuItem
-          className="cursor-pointer text-red-600 focus:text-red-600"
-          onClick={handleSignOut}
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Déconnexion</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        <ChevronDown className={`h-3 w-3 transition-transform ${showMenu ? 'rotate-180' : ''}`} />
+      </Button>
+
+      {showMenu && (
+        <div className="absolute right-0 mt-2 w-64 rounded-lg shadow-lg bg-card border z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="py-1">
+            {/* User Info */}
+            <div className="px-4 py-3 border-b">
+              <p className="text-sm font-semibold">
+                {session?.user?.firstName} {session?.user?.lastName}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {session?.user?.email}
+              </p>
+              {session?.user?.role && (
+                <Badge variant="secondary" className="mt-2 text-[10px]">
+                  {session.user.role}
+                </Badge>
+              )}
+              {session?.user?.cabinetName && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {session.user.cabinetName}
+                </p>
+              )}
+            </div>
+
+            {/* Menu Items */}
+            <div className="py-1">
+              <button
+                onClick={() => {
+                  router.push('/dashboard/profil')
+                  setShowMenu(false)
+                }}
+                className="w-full px-4 py-2 text-left text-sm hover:bg-accent flex items-center gap-2 transition-colors"
+              >
+                <User className="h-4 w-4" />
+                Mon profil
+              </button>
+              <button
+                onClick={() => {
+                  router.push('/dashboard/parametres')
+                  setShowMenu(false)
+                }}
+                className="w-full px-4 py-2 text-left text-sm hover:bg-accent flex items-center gap-2 transition-colors"
+              >
+                <Settings className="h-4 w-4" />
+                Paramètres
+              </button>
+            </div>
+
+            {/* Logout */}
+            <div className="border-t py-1 px-2">
+              <LogoutButton
+                variant="ghost"
+                size="sm"
+                showIcon={true}
+                showText={true}
+                className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

@@ -73,7 +73,7 @@ export function sanitizeHtml(dirty: string, config = DEFAULT_CONFIG): string {
   
   try {
     return DOMPurify.sanitize(dirty, config);
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Sanitize] Erreur sanitisation HTML:', error);
     return '';
   }
@@ -110,7 +110,7 @@ export function escapeHtml(text: string): string {
     '/': '&#x2F;'
   };
 
-  return text.replace(/[&<>"'/]/g, (char) => map[char]);
+  return text.replace(/[&<>"'/]/g, (char: any) => map[char]);
 }
 
 /**
@@ -147,7 +147,7 @@ export function sanitizeUrl(url: string): string {
     }
     
     return parsed.href;
-  } catch (error) {
+  } catch (error: any) {
     return '';
   }
 }

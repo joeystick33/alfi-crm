@@ -182,7 +182,7 @@ export function useCreateSimulation() {
       )
       return response.data
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       // Invalidate all simulation lists
       queryClient.invalidateQueries({ queryKey: simulationKeys.lists() })
       // Invalidate client history
@@ -209,7 +209,7 @@ export function useUpdateSimulation() {
       )
       return response.data
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data: any, variables: any) => {
       // Update the specific simulation in cache
       queryClient.setQueryData(simulationKeys.detail(variables.id), data)
       // Invalidate lists to reflect changes
@@ -261,7 +261,7 @@ export function useArchiveSimulation() {
       )
       return response.data
     },
-    onSuccess: (data, id) => {
+    onSuccess: (data: any, id: any) => {
       // Update the specific simulation in cache
       queryClient.setQueryData(simulationKeys.detail(id), data)
       // Invalidate lists
@@ -287,7 +287,7 @@ export function useShareSimulation() {
       )
       return response.data
     },
-    onSuccess: (data, id) => {
+    onSuccess: (data: any, id: any) => {
       // Update the specific simulation in cache
       queryClient.setQueryData(simulationKeys.detail(id), data)
       // Invalidate lists

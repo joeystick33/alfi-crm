@@ -88,7 +88,7 @@ export function Combobox({
               <input
                 type="text"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e: any) => setSearch(e.target.value)}
                 placeholder={searchPlaceholder}
                 className="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                 aria-label="Rechercher dans les options"
@@ -96,7 +96,7 @@ export function Combobox({
             </div>
           </div>
           <div className="max-h-60 overflow-y-auto">
-            {filteredOptions.map((option) => (
+            {filteredOptions.map((option: any) => (
               <button
                 key={option.value}
                 type="button"

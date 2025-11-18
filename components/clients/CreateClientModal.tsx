@@ -147,14 +147,14 @@ export function CreateClientModal({ open, onOpenChange }: CreateClientModalProps
               <Input
                 label="Prénom"
                 value={formData.firstName || ''}
-                onChange={(e) => updateFormData('firstName', e.target.value)}
+                onChange={(e: any) => updateFormData('firstName', e.target.value)}
                 error={errors.firstName}
                 required
               />
               <Input
                 label="Nom"
                 value={formData.lastName || ''}
-                onChange={(e) => updateFormData('lastName', e.target.value)}
+                onChange={(e: any) => updateFormData('lastName', e.target.value)}
                 error={errors.lastName}
                 required
               />
@@ -165,14 +165,14 @@ export function CreateClientModal({ open, onOpenChange }: CreateClientModalProps
                 <Input
                   label="Raison sociale"
                   value={formData.companyName || ''}
-                  onChange={(e) => updateFormData('companyName', e.target.value)}
+                  onChange={(e: any) => updateFormData('companyName', e.target.value)}
                   error={errors.companyName}
                   required
                 />
                 <Input
                   label="SIRET"
                   value={formData.siret || ''}
-                  onChange={(e) => updateFormData('siret', e.target.value)}
+                  onChange={(e: any) => updateFormData('siret', e.target.value)}
                   error={errors.siret}
                   required
                 />
@@ -184,14 +184,14 @@ export function CreateClientModal({ open, onOpenChange }: CreateClientModalProps
                 label="Email"
                 type="email"
                 value={formData.email || ''}
-                onChange={(e) => updateFormData('email', e.target.value)}
+                onChange={(e: any) => updateFormData('email', e.target.value)}
                 error={errors.email}
               />
               <Input
                 label="Téléphone"
                 type="tel"
                 value={formData.phone || ''}
-                onChange={(e) => updateFormData('phone', e.target.value)}
+                onChange={(e: any) => updateFormData('phone', e.target.value)}
               />
             </div>
 
@@ -202,19 +202,19 @@ export function CreateClientModal({ open, onOpenChange }: CreateClientModalProps
                     label="Date de naissance"
                     type="date"
                     value={formData.birthDate || ''}
-                    onChange={(e) => updateFormData('birthDate', e.target.value)}
+                    onChange={(e: any) => updateFormData('birthDate', e.target.value)}
                   />
                   <Input
                     label="Lieu de naissance"
                     value={formData.birthPlace || ''}
-                    onChange={(e) => updateFormData('birthPlace', e.target.value)}
+                    onChange={(e: any) => updateFormData('birthPlace', e.target.value)}
                   />
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <Select
                     value={formData.maritalStatus || ''}
-                    onValueChange={(value) => updateFormData('maritalStatus', value)}
+                    onValueChange={(value: any) => updateFormData('maritalStatus', value)}
                   >
                     <SelectTrigger label="Situation familiale">
                       <SelectValue placeholder="Sélectionner" />
@@ -232,7 +232,7 @@ export function CreateClientModal({ open, onOpenChange }: CreateClientModalProps
                   <Input
                     label="Profession"
                     value={formData.profession || ''}
-                    onChange={(e) => updateFormData('profession', e.target.value)}
+                    onChange={(e: any) => updateFormData('profession', e.target.value)}
                   />
                 </div>
               </>
@@ -243,13 +243,13 @@ export function CreateClientModal({ open, onOpenChange }: CreateClientModalProps
                 <Input
                   label="Forme juridique"
                   value={formData.legalForm || ''}
-                  onChange={(e) => updateFormData('legalForm', e.target.value)}
+                  onChange={(e: any) => updateFormData('legalForm', e.target.value)}
                   placeholder="SARL, SAS, SA..."
                 />
                 <Input
                   label="Secteur d'activité"
                   value={formData.activitySector || ''}
-                  onChange={(e) => updateFormData('activitySector', e.target.value)}
+                  onChange={(e: any) => updateFormData('activitySector', e.target.value)}
                 />
               </div>
             )}

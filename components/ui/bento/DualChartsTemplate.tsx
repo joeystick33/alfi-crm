@@ -79,7 +79,7 @@ export function DualChartsTemplate({
         />
 
         {/* KPIs - Small Cards Below Charts */}
-        {kpis.map((kpi, index) => (
+        {kpis.map((kpi: any, index: any) => (
           <BentoKPI
             key={index}
             span={{ cols: 2, rows: 1 }}

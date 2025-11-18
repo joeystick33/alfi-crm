@@ -169,7 +169,7 @@ Mot de passe: ${generatedPassword}
         {/* Progress */}
         <div className="px-6 pt-4">
           <div className="flex items-center gap-2">
-            {[1, 2, 3].map((s) => (
+            {[1, 2, 3].map((s: any) => (
               <div key={s} className="flex-1">
                 <div className={`h-2 rounded-full transition-all ${
                   s <= step ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
@@ -198,7 +198,7 @@ Mot de passe: ${generatedPassword}
                 <input
                   type="text"
                   value={orgData.name}
-                  onChange={(e) => handleOrgNameChange(e.target.value)}
+                  onChange={(e: any) => handleOrgNameChange(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   placeholder="Cabinet Dupont & Associés"
                   required
@@ -212,7 +212,7 @@ Mot de passe: ${generatedPassword}
                 <input
                   type="text"
                   value={orgData.slug}
-                  onChange={(e) => setOrgData(prev => ({ ...prev, slug: e.target.value }))}
+                  onChange={(e: any) => setOrgData(prev => ({ ...prev, slug: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   placeholder="cabinet-dupont"
                   required
@@ -229,7 +229,7 @@ Mot de passe: ${generatedPassword}
                 <input
                   type="email"
                   value={orgData.email}
-                  onChange={(e) => setOrgData(prev => ({ ...prev, email: e.target.value }))}
+                  onChange={(e: any) => setOrgData(prev => ({ ...prev, email: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   placeholder="contact@cabinet.fr"
                   required
@@ -243,7 +243,7 @@ Mot de passe: ${generatedPassword}
                 <input
                   type="tel"
                   value={orgData.phone}
-                  onChange={(e) => setOrgData(prev => ({ ...prev, phone: e.target.value }))}
+                  onChange={(e: any) => setOrgData(prev => ({ ...prev, phone: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   placeholder="+33 1 23 45 67 89"
                 />
@@ -256,7 +256,7 @@ Mot de passe: ${generatedPassword}
                   </label>
                   <select
                     value={orgData.plan}
-                    onChange={(e) => setOrgData(prev => ({ ...prev, plan: e.target.value as any }))}
+                    onChange={(e: any) => setOrgData(prev => ({ ...prev, plan: e.target.value as any }))}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="TRIAL">Trial (Gratuit)</option>
@@ -275,7 +275,7 @@ Mot de passe: ${generatedPassword}
                   <input
                     type="number"
                     value={orgData.trialDays}
-                    onChange={(e) => setOrgData(prev => ({ ...prev, trialDays: parseInt(e.target.value) }))}
+                    onChange={(e: any) => setOrgData(prev => ({ ...prev, trialDays: parseInt(e.target.value) }))}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                     min="0"
                     max="90"
@@ -302,7 +302,7 @@ Mot de passe: ${generatedPassword}
                   <input
                     type="text"
                     value={adminData.firstName}
-                    onChange={(e) => setAdminData(prev => ({ ...prev, firstName: e.target.value }))}
+                    onChange={(e: any) => setAdminData(prev => ({ ...prev, firstName: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                     placeholder="Jean"
                     required
@@ -316,7 +316,7 @@ Mot de passe: ${generatedPassword}
                   <input
                     type="text"
                     value={adminData.lastName}
-                    onChange={(e) => setAdminData(prev => ({ ...prev, lastName: e.target.value }))}
+                    onChange={(e: any) => setAdminData(prev => ({ ...prev, lastName: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                     placeholder="Dupont"
                     required
@@ -331,7 +331,7 @@ Mot de passe: ${generatedPassword}
                 <input
                   type="email"
                   value={adminData.email}
-                  onChange={(e) => setAdminData(prev => ({ ...prev, email: e.target.value }))}
+                  onChange={(e: any) => setAdminData(prev => ({ ...prev, email: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   placeholder="jean.dupont@cabinet.fr"
                   required
@@ -345,7 +345,7 @@ Mot de passe: ${generatedPassword}
                 <input
                   type="password"
                   value={adminData.password}
-                  onChange={(e) => setAdminData(prev => ({ ...prev, password: e.target.value }))}
+                  onChange={(e: any) => setAdminData(prev => ({ ...prev, password: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   placeholder="Laisser vide pour générer automatiquement"
                   minLength={8}

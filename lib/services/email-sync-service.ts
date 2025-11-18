@@ -1,4 +1,4 @@
-import { getPrismaClient, setRLSContext } from '@/lib/prisma'
+import { getPrismaClient } from '@/lib/prisma'
 import { GmailService, GmailMessage } from './email-sync/gmail-service'
 import { OutlookService, OutlookMessage } from './email-sync/outlook-service'
 import { EmailProvider, EmailDirection } from '@prisma/client'
@@ -46,8 +46,6 @@ export class EmailSyncService {
    * Connect Gmail account
    */
   async connectGmail(code: string): Promise<void> {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Exchange code for tokens
     const tokens = await GmailService.getTokens(code)
 
@@ -84,8 +82,6 @@ export class EmailSyncService {
    * Connect Outlook account
    */
   async connectOutlook(code: string): Promise<void> {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Exchange code for tokens
     const tokens = await OutlookService.getTokens(code)
 
@@ -122,8 +118,6 @@ export class EmailSyncService {
    * Disconnect email integration
    */
   async disconnect(): Promise<void> {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     await this.prisma.emailIntegration.update({
       where: { userId: this.userId },
       data: {
@@ -136,8 +130,6 @@ export class EmailSyncService {
    * Get email integration status
    */
   async getIntegrationStatus() {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     return this.prisma.emailIntegration.findUnique({
       where: { userId: this.userId },
       select: {
@@ -155,8 +147,6 @@ export class EmailSyncService {
    * Sync emails for current user
    */
   async syncEmails(): Promise<{ synced: number; errors: number }> {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const integration = await this.prisma.emailIntegration.findUnique({
       where: { userId: this.userId },
     })
@@ -228,7 +218,7 @@ export class EmailSyncService {
       try {
         await this.saveEmail(message, EmailProvider.GMAIL, integration)
         synced++
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error saving email:', error)
         errors++
       }
@@ -255,7 +245,7 @@ export class EmailSyncService {
       try {
         await this.saveEmail(message, EmailProvider.OUTLOOK, integration)
         synced++
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error saving email:', error)
         errors++
       }
@@ -333,7 +323,7 @@ export class EmailSyncService {
     const labels: string[] = []
 
     for (const [label, keywords] of Object.entries(CLASSIFICATION_RULES)) {
-      if (keywords.some((keyword) => text.includes(keyword.toLowerCase()))) {
+      if (keywords.some((keyword: any) => text.includes(keyword.toLowerCase()))) {
         labels.push(label)
       }
     }
@@ -412,8 +402,6 @@ export class EmailSyncService {
     limit?: number
     offset?: number
   }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const where: any = {
       userId: this.userId,
     }
@@ -461,9 +449,7 @@ export class EmailSyncService {
    * Mark email as read
    */
   async markAsRead(emailId: string): Promise<void> {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    await this.prisma.syncedEmail.update({
+    await this.prisma.syncedEmail.updateMany({
       where: { id: emailId },
       data: {
         isRead: true,
@@ -476,9 +462,7 @@ export class EmailSyncService {
    * Link email to client
    */
   async linkToClient(emailId: string, clientId: string): Promise<void> {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    await this.prisma.syncedEmail.update({
+    await this.prisma.syncedEmail.updateMany({
       where: { id: emailId },
       data: { clientId },
     })

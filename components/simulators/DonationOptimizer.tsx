@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
-import Input from '@/components/ui/Input';
-import Button from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 import { TimelineTemplate } from '@/components/ui/bento/TimelineTemplate';
 import { ModernLineChart } from '@/components/charts/ModernLineChart';
 import { ModernBarChart } from '@/components/charts/ModernBarChart';
@@ -68,11 +68,11 @@ export function DonationOptimizer() {
   const [error, setError] = useState('');
 
   const addBeneficiary = () => {
-    const newId = Math.max(...beneficiaries.map(b => b.id), 0) + 1;
+    const newId = Math.max(...beneficiaries.map((b: any) => b.id), 0) + 1;
     // Redistribute shares equally
     const newShare = (100 / (beneficiaries.length + 1)).toFixed(2);
     setBeneficiaries([
-      ...beneficiaries.map(b => ({ ...b, share: newShare })),
+      ...beneficiaries.map((b: any) => ({ ...b, share: newShare })),
       {
         id: newId,
         name: `Bénéficiaire ${newId}`,
@@ -85,15 +85,15 @@ export function DonationOptimizer() {
 
   const removeBeneficiary = (id: number) => {
     if (beneficiaries.length > 1) {
-      const remainingBeneficiaries = beneficiaries.filter(b => b.id !== id);
+      const remainingBeneficiaries = beneficiaries.filter((b: any) => b.id !== id);
       // Redistribute shares equally among remaining beneficiaries
       const newShare = (100 / remainingBeneficiaries.length).toFixed(2);
-      setBeneficiaries(remainingBeneficiaries.map(b => ({ ...b, share: newShare })));
+      setBeneficiaries(remainingBeneficiaries.map((b: any) => ({ ...b, share: newShare })));
     }
   };
 
   const updateBeneficiary = (id: number, field: keyof Beneficiary, value: string) => {
-    setBeneficiaries(beneficiaries.map(b => 
+    setBeneficiaries(beneficiaries.map((b: any) => 
       b.id === id ? { ...b, [field]: value } : b
     ));
   };
@@ -119,7 +119,7 @@ export function DonationOptimizer() {
     }
 
     // Validate beneficiaries
-    const validBeneficiaries = beneficiaries.filter(b => {
+    const validBeneficiaries = beneficiaries.filter((b: any) => {
       const share = parseFloat(b.share) || 0;
       return share > 0;
     });
@@ -130,7 +130,7 @@ export function DonationOptimizer() {
     }
 
     // Check total shares
-    const totalShares = validBeneficiaries.reduce((sum, b) => sum + (parseFloat(b.share) || 0), 0);
+    const totalShares = validBeneficiaries.reduce((sum: any, b: any) => sum + (parseFloat(b.share) || 0), 0);
     if (Math.abs(totalShares - 100) > 0.1) {
       setError(`Les parts doivent totaliser 100% (actuellement ${totalShares.toFixed(1)}%)`);
       return;
@@ -147,7 +147,7 @@ export function DonationOptimizer() {
           donorAge: age,
           totalWealth: wealth,
           targetAge: target,
-          beneficiaries: validBeneficiaries.map(b => ({
+          beneficiaries: validBeneficiaries.map((b: any) => ({
             id: b.id.toString(),
             name: b.name,
             relationship: b.relationship,
@@ -273,34 +273,24 @@ export function DonationOptimizer() {
                   label="Âge actuel"
                   type="number"
                   value={donorAge}
-                  onChange={(e) => setDonorAge(e.target.value)}
+                  onChange={(e: any) => setDonorAge(e.target.value)}
                   placeholder="60"
-                  min="18"
-                  max="100"
-                  icon={<Calendar className="h-4 w-4" />}
                 />
 
                 <Input
                   label="Patrimoine total (€)"
                   type="number"
                   value={totalWealth}
-                  onChange={(e) => setTotalWealth(e.target.value)}
+                  onChange={(e: any) => setTotalWealth(e.target.value)}
                   placeholder="1000000"
-                  min="0"
-                  icon={<DollarSign className="h-4 w-4" />}
-                  helperText="Patrimoine à transmettre"
                 />
 
                 <Input
                   label="Âge cible de transmission"
                   type="number"
                   value={targetAge}
-                  onChange={(e) => setTargetAge(e.target.value)}
+                  onChange={(e: any) => setTargetAge(e.target.value)}
                   placeholder="80"
-                  min="18"
-                  max="100"
-                  icon={<Calendar className="h-4 w-4" />}
-                  helperText="Âge souhaité pour finaliser"
                 />
               </div>
             </div>
@@ -319,7 +309,7 @@ export function DonationOptimizer() {
               </div>
 
               <div className="space-y-3">
-                {beneficiaries.map((beneficiary) => {
+                {beneficiaries.map((beneficiary: any) => {
                   const relationshipInfo = getRelationshipInfo(beneficiary.relationship);
                   const RelationIcon = relationshipInfo.icon;
                   return (
@@ -333,9 +323,8 @@ export function DonationOptimizer() {
                             label="Nom du bénéficiaire"
                             type="text"
                             value={beneficiary.name}
-                            onChange={(e) => updateBeneficiary(beneficiary.id, 'name', e.target.value)}
+                            onChange={(e: any) => updateBeneficiary(beneficiary.id, 'name', e.target.value)}
                             placeholder="Ex: Marie Dupont"
-                            icon={<RelationIcon className="h-4 w-4" />}
                           />
 
                           <div>
@@ -344,7 +333,7 @@ export function DonationOptimizer() {
                             </label>
                             <select
                               value={beneficiary.relationship}
-                              onChange={(e) => updateBeneficiary(beneficiary.id, 'relationship', e.target.value)}
+                              onChange={(e: any) => updateBeneficiary(beneficiary.id, 'relationship', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500"
                             >
                               {RELATIONSHIP_OPTIONS.map(rel => (
@@ -359,22 +348,16 @@ export function DonationOptimizer() {
                             label="Part (%)"
                             type="number"
                             value={beneficiary.share}
-                            onChange={(e) => updateBeneficiary(beneficiary.id, 'share', e.target.value)}
+                            onChange={(e: any) => updateBeneficiary(beneficiary.id, 'share', e.target.value)}
                             placeholder="50"
-                            min="0"
-                            max="100"
-                            step="0.1"
-                            helperText="Part du patrimoine"
                           />
 
                           <Input
                             label="Donations antérieures (€)"
                             type="number"
                             value={beneficiary.previousDonations}
-                            onChange={(e) => updateBeneficiary(beneficiary.id, 'previousDonations', e.target.value)}
+                            onChange={(e: any) => updateBeneficiary(beneficiary.id, 'previousDonations', e.target.value)}
                             placeholder="0"
-                            min="0"
-                            helperText="Derniers 15 ans"
                           />
                         </div>
 
@@ -395,7 +378,7 @@ export function DonationOptimizer() {
               {/* Total Shares Indicator */}
               <div className="mt-4">
                 {(() => {
-                  const totalShares = beneficiaries.reduce((sum, b) => sum + (parseFloat(b.share) || 0), 0);
+                  const totalShares = beneficiaries.reduce((sum: any, b: any) => sum + (parseFloat(b.share) || 0), 0);
                   const isValid = Math.abs(totalShares - 100) < 0.1;
                   return (
                     <div className={`p-3 rounded-lg border ${isValid ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>

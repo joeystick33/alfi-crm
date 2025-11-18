@@ -1,6 +1,16 @@
-import { getPrismaClient, setRLSContext } from '@/lib/prisma'
+import { getPrismaClient } from '@/lib/prisma'
 import { RendezVousType, RendezVousStatus } from '@prisma/client'
 
+/**
+ * RendezVous Service
+ * 
+ * Manages rendez-vous entities with tenant isolation.
+ * Provides CRUD operations and domain-specific business logic.
+ * 
+ * @example
+ * const service = new RendezVousService(cabinetId, userId, isSuperAdmin)
+ * const rendezvous = await service.createRendezVous(data)
+ */
 export class RendezVousService {
   private prisma
 
@@ -10,6 +20,53 @@ export class RendezVousService {
     private isSuperAdmin: boolean = false
   ) {
     this.prisma = getPrismaClient(cabinetId, isSuperAdmin)
+  }
+
+  /**
+   * Format a rendez-vous entity with nested relations
+   */
+  private formatRendezVous(rendezvous: any): any {
+    if (!rendezvous) {
+      return null
+    }
+
+    return {
+      ...rendezvous,
+      conseiller: rendezvous.conseiller ? this.formatUser(rendezvous.conseiller) : null,
+      client: rendezvous.client ? this.formatClient(rendezvous.client) : null,
+    }
+  }
+
+  /**
+   * Format a user entity
+   */
+  private formatUser(user: any): any {
+    if (!user) {
+      return null
+    }
+
+    return {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+    }
+  }
+
+  /**
+   * Format a client entity
+   */
+  private formatClient(client: any): any {
+    if (!client) {
+      return null
+    }
+
+    return {
+      id: client.id,
+      firstName: client.firstName,
+      lastName: client.lastName,
+      email: client.email,
+    }
   }
 
   /**
@@ -27,11 +84,12 @@ export class RendezVousService {
     conseillerId: string
     clientId?: string
   }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Vérifier que le conseiller existe
-    const conseiller = await this.prisma.user.findUnique({
-      where: { id: data.conseillerId },
+    const conseiller = await this.prisma.user.findFirst({
+      where: {
+        id: data.conseillerId,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!conseiller) {
@@ -40,8 +98,11 @@ export class RendezVousService {
 
     // Vérifier que le client existe si fourni
     if (data.clientId) {
-      const client = await this.prisma.client.findUnique({
-        where: { id: data.clientId },
+      const client = await this.prisma.client.findFirst({
+        where: {
+          id: data.clientId,
+          cabinetId: this.cabinetId,
+        },
       })
 
       if (!client) {
@@ -100,6 +161,7 @@ export class RendezVousService {
     if (data.clientId) {
       await this.prisma.timelineEvent.create({
         data: {
+          cabinetId: this.cabinetId,
           clientId: data.clientId,
           type: 'MEETING_HELD',
           title: 'Rendez-vous planifié',
@@ -111,7 +173,8 @@ export class RendezVousService {
       })
     }
 
-    return rendezVous
+    // Return formatted rendez-vous
+    return this.getRendezVousById(rendezVous.id)
   }
 
   /**
@@ -126,9 +189,9 @@ export class RendezVousService {
     endDate?: Date
     search?: string
   }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const where: any = {}
+    const where: any = {
+      cabinetId: this.cabinetId,
+    }
 
     if (filters?.conseillerId) {
       where.conseillerId = filters.conseillerId
@@ -163,7 +226,7 @@ export class RendezVousService {
       ]
     }
 
-    return this.prisma.rendezVous.findMany({
+    const rendezvousList = await this.prisma.rendezVous.findMany({
       where,
       include: {
         conseiller: {
@@ -171,6 +234,7 @@ export class RendezVousService {
             id: true,
             firstName: true,
             lastName: true,
+            email: true,
           },
         },
         client: {
@@ -178,26 +242,46 @@ export class RendezVousService {
             id: true,
             firstName: true,
             lastName: true,
+            email: true,
           },
         },
       },
       orderBy: { startDate: 'asc' },
     })
+
+    return rendezvousList.map(rv => this.formatRendezVous(rv))
   }
 
   /**
    * Récupérer un rendez-vous par ID
    */
   async getRendezVousById(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    return this.prisma.rendezVous.findUnique({
-      where: { id },
+    const rendezvous = await this.prisma.rendezVous.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       include: {
-        conseiller: true,
-        client: true,
+        conseiller: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+        client: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
       },
     })
+
+    return this.formatRendezVous(rendezvous)
   }
 
   /**
@@ -216,12 +300,13 @@ export class RendezVousService {
       status?: RendezVousStatus
     }
   ) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Si on modifie les dates, vérifier les conflits
     if (data.startDate || data.endDate) {
-      const current = await this.prisma.rendezVous.findUnique({
-        where: { id },
+      const current = await this.prisma.rendezVous.findFirst({
+        where: {
+          id,
+          cabinetId: this.cabinetId,
+        },
       })
 
       if (!current) {
@@ -255,38 +340,56 @@ export class RendezVousService {
       }
     }
 
-    return this.prisma.rendezVous.update({
-      where: { id },
+    const { count } = await this.prisma.rendezVous.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data,
     })
+
+    if (count === 0) {
+      throw new Error('RendezVous not found or access denied')
+    }
+
+    return this.getRendezVousById(id)
   }
 
   /**
    * Annuler un rendez-vous
    */
   async cancelRendezVous(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const rendezVous = await this.prisma.rendezVous.findUnique({
-      where: { id },
+    const rendezVous = await this.prisma.rendezVous.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!rendezVous) {
       throw new Error('RendezVous not found')
     }
 
-    const updated = await this.prisma.rendezVous.update({
-      where: { id },
+    const { count } = await this.prisma.rendezVous.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data: {
         status: 'CANCELLED',
         cancelledAt: new Date(),
       },
     })
 
+    if (count === 0) {
+      throw new Error('RendezVous not found or access denied')
+    }
+
     // Créer un événement timeline si lié à un client
     if (rendezVous.clientId) {
       await this.prisma.timelineEvent.create({
         data: {
+          cabinetId: this.cabinetId,
           clientId: rendezVous.clientId,
           type: 'OTHER',
           title: 'Rendez-vous annulé',
@@ -298,35 +401,44 @@ export class RendezVousService {
       })
     }
 
-    return updated
+    return this.getRendezVousById(id)
   }
 
   /**
    * Marquer un rendez-vous comme terminé
    */
   async completeRendezVous(id: string, notes?: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const rendezVous = await this.prisma.rendezVous.findUnique({
-      where: { id },
+    const rendezVous = await this.prisma.rendezVous.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!rendezVous) {
       throw new Error('RendezVous not found')
     }
 
-    const updated = await this.prisma.rendezVous.update({
-      where: { id },
+    const { count } = await this.prisma.rendezVous.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data: {
         status: 'COMPLETED',
         notes,
       },
     })
 
+    if (count === 0) {
+      throw new Error('RendezVous not found or access denied')
+    }
+
     // Créer un événement timeline si lié à un client
     if (rendezVous.clientId) {
       await this.prisma.timelineEvent.create({
         data: {
+          cabinetId: this.cabinetId,
           clientId: rendezVous.clientId,
           type: 'MEETING_HELD',
           title: 'Rendez-vous terminé',
@@ -338,29 +450,35 @@ export class RendezVousService {
       })
     }
 
-    return updated
+    return this.getRendezVousById(id)
   }
 
   /**
    * Supprimer un rendez-vous
    */
   async deleteRendezVous(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    return this.prisma.rendezVous.delete({
-      where: { id },
+    const { count } = await this.prisma.rendezVous.deleteMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
     })
+
+    if (count === 0) {
+      throw new Error('RendezVous not found or access denied')
+    }
+
+    return { success: true }
   }
 
   /**
    * Vue calendrier pour un conseiller
    */
   async getCalendarView(conseillerId: string, startDate: Date, endDate: Date) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    return this.prisma.rendezVous.findMany({
+    const rendezvousList = await this.prisma.rendezVous.findMany({
       where: {
         conseillerId,
+        cabinetId: this.cabinetId,
         startDate: {
           gte: startDate,
           lte: endDate,
@@ -368,30 +486,40 @@ export class RendezVousService {
         status: { in: ['SCHEDULED', 'CONFIRMED', 'COMPLETED'] },
       },
       include: {
+        conseiller: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
         client: {
           select: {
             id: true,
             firstName: true,
             lastName: true,
+            email: true,
           },
         },
       },
       orderBy: { startDate: 'asc' },
     })
+
+    return rendezvousList.map(rv => this.formatRendezVous(rv))
   }
 
   /**
    * Récupérer les rendez-vous avec rappel aujourd'hui
    */
   async getRendezVousWithReminderToday() {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const now = new Date()
     const endOfDay = new Date(now)
     endOfDay.setHours(23, 59, 59, 999)
 
-    return this.prisma.rendezVous.findMany({
+    const rendezvousList = await this.prisma.rendezVous.findMany({
       where: {
+        cabinetId: this.cabinetId,
         status: { in: ['SCHEDULED', 'CONFIRMED'] },
         startDate: {
           gte: now,
@@ -418,21 +546,21 @@ export class RendezVousService {
       },
       orderBy: { startDate: 'asc' },
     })
+
+    return rendezvousList.map(rv => this.formatRendezVous(rv))
   }
 
   /**
    * Statistiques des rendez-vous par conseiller
    */
   async getConseillerStatistics(conseillerId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const [total, scheduled, confirmed, completed, cancelled, noShow] = await Promise.all([
-      this.prisma.rendezVous.count({ where: { conseillerId } }),
-      this.prisma.rendezVous.count({ where: { conseillerId, status: 'SCHEDULED' } }),
-      this.prisma.rendezVous.count({ where: { conseillerId, status: 'CONFIRMED' } }),
-      this.prisma.rendezVous.count({ where: { conseillerId, status: 'COMPLETED' } }),
-      this.prisma.rendezVous.count({ where: { conseillerId, status: 'CANCELLED' } }),
-      this.prisma.rendezVous.count({ where: { conseillerId, status: 'NO_SHOW' } }),
+      this.prisma.rendezVous.count({ where: { conseillerId, cabinetId: this.cabinetId } }),
+      this.prisma.rendezVous.count({ where: { conseillerId, cabinetId: this.cabinetId, status: 'SCHEDULED' } }),
+      this.prisma.rendezVous.count({ where: { conseillerId, cabinetId: this.cabinetId, status: 'CONFIRMED' } }),
+      this.prisma.rendezVous.count({ where: { conseillerId, cabinetId: this.cabinetId, status: 'COMPLETED' } }),
+      this.prisma.rendezVous.count({ where: { conseillerId, cabinetId: this.cabinetId, status: 'CANCELLED' } }),
+      this.prisma.rendezVous.count({ where: { conseillerId, cabinetId: this.cabinetId, status: 'NO_SHOW' } }),
     ])
 
     return {
@@ -451,15 +579,13 @@ export class RendezVousService {
    * Statistiques globales des rendez-vous
    */
   async getStatistics() {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const [total, scheduled, confirmed, completed, cancelled, noShow] = await Promise.all([
-      this.prisma.rendezVous.count(),
-      this.prisma.rendezVous.count({ where: { status: 'SCHEDULED' } }),
-      this.prisma.rendezVous.count({ where: { status: 'CONFIRMED' } }),
-      this.prisma.rendezVous.count({ where: { status: 'COMPLETED' } }),
-      this.prisma.rendezVous.count({ where: { status: 'CANCELLED' } }),
-      this.prisma.rendezVous.count({ where: { status: 'NO_SHOW' } }),
+      this.prisma.rendezVous.count({ where: { cabinetId: this.cabinetId } }),
+      this.prisma.rendezVous.count({ where: { cabinetId: this.cabinetId, status: 'SCHEDULED' } }),
+      this.prisma.rendezVous.count({ where: { cabinetId: this.cabinetId, status: 'CONFIRMED' } }),
+      this.prisma.rendezVous.count({ where: { cabinetId: this.cabinetId, status: 'COMPLETED' } }),
+      this.prisma.rendezVous.count({ where: { cabinetId: this.cabinetId, status: 'CANCELLED' } }),
+      this.prisma.rendezVous.count({ where: { cabinetId: this.cabinetId, status: 'NO_SHOW' } }),
     ])
 
     return {

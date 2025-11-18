@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     if (accessDenied) return accessDenied;
 
     // Log access for audit
-    await logClientPortalAccess(validatedClientId, 'VIEW_PATRIMOINE');
+    await logClientPortalAccess(validatedClientId, 'VIEW', 'PATRIMOINE');
 
     // Get client wealth data
     const client = await prisma.client.findUnique({
@@ -270,7 +270,7 @@ export async function GET(request: NextRequest) {
         })),
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.issues },

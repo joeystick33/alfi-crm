@@ -91,8 +91,8 @@ export function WealthTaxCalculator() {
 
   // Prepare chart data
   const chartData = result?.breakdown
-    .filter(b => b.taxAmount > 0)
-    .map(b => ({
+    .filter((b: any) => b.taxAmount > 0)
+    .map((b: any) => ({
       name: `${formatPercent(b.rate)}`,
       'Patrimoine': b.taxableAmount,
       'IFI': b.taxAmount
@@ -121,7 +121,7 @@ export function WealthTaxCalculator() {
               label="Patrimoine immobilier net taxable"
               type="number"
               value={totalWealth}
-              onChange={(e) => setTotalWealth(e.target.value)}
+              onChange={(e: any) => setTotalWealth(e.target.value)}
               placeholder="2000000"
               required
             />
@@ -222,7 +222,7 @@ export function WealthTaxCalculator() {
                           </tr>
                         </thead>
                         <tbody className="divide-y">
-                          {result.breakdown.map((bracket, index) => (
+                          {result.breakdown.map((bracket: any, index: any) => (
                             <tr key={index} className="hover:bg-muted/50">
                               <td className="px-4 py-3">
                                 {formatCurrency(bracket.min)} - {bracket.max ? formatCurrency(bracket.max) : '∞'}

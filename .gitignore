@@ -40,3 +40,6 @@ next-env.d.ts
 /backups/*.sql
 /backups/*.dump
 /backups/.env.*
+
+# session tokens for scripts
+.session-token

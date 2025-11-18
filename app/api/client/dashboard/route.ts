@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     if (accessDenied) return accessDenied;
 
     // Log access for audit
-    await logClientPortalAccess(validatedClientId, 'VIEW_DASHBOARD');
+    await logClientPortalAccess(validatedClientId, 'VIEW', 'DASHBOARD');
 
     // Get client info
     const client = await prisma.client.findUnique({
@@ -234,7 +234,7 @@ export async function GET(request: NextRequest) {
       objectifs,
       recentActivity,
     });
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.issues },

@@ -81,7 +81,6 @@ const FIELD_TRANSLATIONS: Record<string, string> = {
   purchaseValue: "Valeur d'Achat",
   purchaseDate: "Date d'Achat",
   lastValuationDate: 'Dernière Valorisation',
-  annualIncome: 'Revenus Annuels',
   netYield: 'Rendement Net',
   performance: 'Performance',
   performance1Y: 'Performance 1 An',
@@ -109,8 +108,6 @@ const FIELD_TRANSLATIONS: Record<string, string> = {
 
   // Contrats
   contractType: 'Type de Contrat',
-  contractNumber: 'Numéro de Contrat',
-  provider: 'Fournisseur',
   subscriptionDate: 'Date de Souscription',
   renewalDate: 'Date de Renouvellement',
   premium: 'Prime',
@@ -487,6 +484,7 @@ export async function exportPatrimoine(clientId: string) {
       include: {
         clients: {
           select: {
+            clientId: true,
             ownershipPercentage: true,
           },
         },
@@ -531,13 +529,11 @@ export async function exportDocuments(clientId: string) {
     select: {
       id: true,
       name: true,
-      fileName: true,
-      documentType: true,
-      documentCategory: true,
+      type: true,
+      category: true,
       fileSize: true,
       version: true,
       uploadedAt: true,
-      expiresAt: true,
       signatureStatus: true,
       uploadedBy: {
         select: {
@@ -567,13 +563,13 @@ export async function exportSimulations(clientId: string) {
     where: { clientId },
     select: {
       id: true,
-      simulationType: true,
+      type: true,
       name: true,
       description: true,
-      simulationData: true,
+      parameters: true,
       results: true,
-      savedAt: true,
       createdAt: true,
+      createdById: true,
       createdBy: {
         select: {
           firstName: true,

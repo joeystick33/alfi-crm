@@ -11,7 +11,7 @@ const loginSchema = z.object({
 })
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma) as any,
   session: {
     strategy: 'jwt',
     maxAge: 7 * 24 * 60 * 60, // 7 days
@@ -159,8 +159,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       console.log(`[Auth] User signed in: ${user.email}`)
       // TODO: Add audit log
     },
-    async signOut({ token }) {
-      console.log(`[Auth] User signed out: ${token?.email}`)
+    async signOut(params) {
+      const token = 'token' in params ? params.token : null
+      console.log(`[Auth] User signed out: ${token?.email || 'unknown'}`)
       // TODO: Add audit log
     },
   },

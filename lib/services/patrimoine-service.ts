@@ -1,4 +1,4 @@
-import { getPrismaClient, setRLSContext } from '../prisma'
+import { getPrismaClient } from '../prisma'
 import { ActifType, ActifCategory, PassifType, ContratType, ContratStatus } from '@prisma/client'
 import { Decimal } from '@prisma/client/runtime/library'
 
@@ -83,6 +83,78 @@ export class PatrimoineService {
     this.prisma = getPrismaClient(cabinetId, isSuperAdmin)
   }
 
+  private toNumber(value: any) {
+    if (value === null || value === undefined) {
+      return null
+    }
+
+    if (typeof value === 'object' && typeof value?.toNumber === 'function') {
+      return value.toNumber()
+    }
+
+    return value
+  }
+
+  private formatClientActif(clientActif: any) {
+    if (!clientActif) {
+      return null
+    }
+
+    const formatted: any = {
+      ...clientActif,
+      ownershipPercentage: this.toNumber(clientActif.ownershipPercentage),
+    }
+
+    if (clientActif.actif) {
+      formatted.actif = this.formatActif(clientActif.actif)
+    }
+
+    return formatted
+  }
+
+  private formatActif(actif: any) {
+    if (!actif) {
+      return null
+    }
+
+    return {
+      ...actif,
+      value: this.toNumber(actif.value),
+      acquisitionValue: this.toNumber(actif.acquisitionValue),
+      annualIncome: this.toNumber(actif.annualIncome),
+      managementFees: this.toNumber(actif.managementFees),
+      clients: actif.clients?.map((clientActif: any) => this.formatClientActif(clientActif)) ?? [],
+    }
+  }
+
+  private formatPassif(passif: any) {
+    if (!passif) {
+      return null
+    }
+
+    return {
+      ...passif,
+      initialAmount: this.toNumber(passif.initialAmount),
+      remainingAmount: this.toNumber(passif.remainingAmount),
+      interestRate: this.toNumber(passif.interestRate),
+      monthlyPayment: this.toNumber(passif.monthlyPayment),
+    }
+  }
+
+  private formatContrat(contrat: any) {
+    if (!contrat) {
+      return null
+    }
+
+    return {
+      ...contrat,
+      premium: this.toNumber(contrat.premium),
+      coverage: this.toNumber(contrat.coverage),
+      value: this.toNumber(contrat.value),
+      commission: this.toNumber(contrat.commission),
+    }
+  }
+
   // ============================================
   // ACTIFS
   // ============================================
@@ -91,8 +163,6 @@ export class PatrimoineService {
    * Crée un nouvel actif
    */
   async createActif(data: CreateActifInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const actif = await this.prisma.actif.create({
       data: {
         cabinetId: this.cabinetId,
@@ -104,7 +174,7 @@ export class PatrimoineService {
       },
     })
 
-    return actif
+    return this.getActifById(actif.id)
   }
 
   /**
@@ -116,12 +186,21 @@ export class PatrimoineService {
     ownershipPercentage: number = 100,
     ownershipType?: string
   ) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Vérifier que l'actif et le client existent
     const [actif, client] = await Promise.all([
-      this.prisma.actif.findUnique({ where: { id: actifId } }),
-      this.prisma.client.findUnique({ where: { id: clientId } }),
+      this.prisma.actif.findFirst({
+        where: {
+          id: actifId,
+          cabinetId: this.cabinetId,
+          isActive: true,
+        },
+      }),
+      this.prisma.client.findFirst({
+        where: {
+          id: clientId,
+          cabinetId: this.cabinetId,
+        },
+      }),
     ])
 
     if (!actif) throw new Error('Actif not found')
@@ -139,6 +218,7 @@ export class PatrimoineService {
     // Créer un événement timeline
     await this.prisma.timelineEvent.create({
       data: {
+        cabinetId: this.cabinetId,
         clientId,
         type: 'ASSET_ADDED',
         title: 'Actif ajouté',
@@ -152,17 +232,18 @@ export class PatrimoineService {
     // Recalculer le patrimoine du client
     await this.calculateAndUpdateClientWealth(clientId)
 
-    return clientActif
+    return this.formatClientActif(clientActif)
   }
 
   /**
    * Récupère un actif par ID
    */
   async getActifById(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const actif = await this.prisma.actif.findUnique({
-      where: { id },
+    const actif = await this.prisma.actif.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       include: {
         clients: {
           include: {
@@ -183,7 +264,7 @@ export class PatrimoineService {
       },
     })
 
-    return actif
+    return this.formatActif(actif)
   }
 
   /**
@@ -197,9 +278,10 @@ export class PatrimoineService {
     minValue?: number
     maxValue?: number
   }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const where: any = { isActive: true }
+    const where: any = {
+      isActive: true,
+      cabinetId: this.cabinetId,
+    }
 
     if (filters?.type) {
       where.type = filters.type
@@ -249,15 +331,13 @@ export class PatrimoineService {
       },
     })
 
-    return actifs
+    return actifs.map(actif => this.formatActif(actif))
   }
 
   /**
    * Met à jour un actif
    */
   async updateActif(id: string, data: Partial<CreateActifInput>) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const updateData: any = { ...data }
     
     if (data.value !== undefined) {
@@ -273,10 +353,19 @@ export class PatrimoineService {
       updateData.managementFees = new Decimal(data.managementFees)
     }
 
-    const actif = await this.prisma.actif.update({
-      where: { id },
+    const { count } = await this.prisma.actif.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data: updateData,
     })
+
+    if (count === 0) {
+      throw new Error('Actif not found or access denied')
+    }
+
+    const actif = await this.getActifById(id)
 
     // Recalculer le patrimoine des clients liés
     const clientActifs = await this.prisma.clientActif.findMany({
@@ -288,19 +377,24 @@ export class PatrimoineService {
       await this.calculateAndUpdateClientWealth(ca.clientId)
     }
 
-    return actif
+    return this.getActifById(id)
   }
 
   /**
    * Supprime un actif (soft delete)
    */
   async deleteActif(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const actif = await this.prisma.actif.update({
-      where: { id },
+    const { count } = await this.prisma.actif.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data: { isActive: false },
     })
+
+    if (count === 0) {
+      throw new Error('Actif not found or access denied')
+    }
 
     // Recalculer le patrimoine des clients liés
     const clientActifs = await this.prisma.clientActif.findMany({
@@ -312,7 +406,7 @@ export class PatrimoineService {
       await this.calculateAndUpdateClientWealth(ca.clientId)
     }
 
-    return actif
+    return this.getActifById(id)
   }
 
   // ============================================
@@ -323,8 +417,6 @@ export class PatrimoineService {
    * Crée un nouveau passif
    */
   async createPassif(data: CreatePassifInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const passif = await this.prisma.passif.create({
       data: {
         cabinetId: this.cabinetId,
@@ -339,6 +431,7 @@ export class PatrimoineService {
     // Créer un événement timeline
     await this.prisma.timelineEvent.create({
       data: {
+        cabinetId: this.cabinetId,
         clientId: data.clientId,
         type: 'OTHER',
         title: 'Passif ajouté',
@@ -352,17 +445,18 @@ export class PatrimoineService {
     // Recalculer le patrimoine du client
     await this.calculateAndUpdateClientWealth(data.clientId)
 
-    return passif
+    return this.getPassifById(passif.id)
   }
 
   /**
    * Récupère un passif par ID
    */
   async getPassifById(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const passif = await this.prisma.passif.findUnique({
-      where: { id },
+    const passif = await this.prisma.passif.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       include: {
         client: {
           select: {
@@ -379,7 +473,7 @@ export class PatrimoineService {
       },
     })
 
-    return passif
+    return this.formatPassif(passif)
   }
 
   /**
@@ -390,9 +484,9 @@ export class PatrimoineService {
     type?: PassifType
     isActive?: boolean
   }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const where: any = {}
+    const where: any = {
+      cabinetId: this.cabinetId,
+    }
 
     if (filters?.clientId) {
       where.clientId = filters.clientId
@@ -422,15 +516,13 @@ export class PatrimoineService {
       },
     })
 
-    return passifs
+    return passifs.map(passif => this.formatPassif(passif))
   }
 
   /**
    * Met à jour un passif
    */
   async updatePassif(id: string, data: Partial<CreatePassifInput>) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const updateData: any = { ...data }
     
     if (data.initialAmount !== undefined) {
@@ -446,10 +538,19 @@ export class PatrimoineService {
       updateData.monthlyPayment = new Decimal(data.monthlyPayment)
     }
 
-    const passif = await this.prisma.passif.update({
-      where: { id },
+    const { count } = await this.prisma.passif.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data: updateData,
     })
+
+    if (count === 0) {
+      throw new Error('Passif not found or access denied')
+    }
+
+    const passif = await this.getPassifById(id)
 
     // Recalculer le patrimoine du client
     if (passif.clientId) {
@@ -463,17 +564,25 @@ export class PatrimoineService {
    * Supprime un passif (soft delete)
    */
   async deletePassif(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const passif = await this.prisma.passif.findUnique({
-      where: { id },
+    const passif = await this.prisma.passif.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       select: { clientId: true },
     })
 
-    await this.prisma.passif.update({
-      where: { id },
+    const { count } = await this.prisma.passif.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data: { isActive: false },
     })
+
+    if (count === 0) {
+      throw new Error('Passif not found or access denied')
+    }
 
     // Recalculer le patrimoine du client
     if (passif?.clientId) {
@@ -491,8 +600,6 @@ export class PatrimoineService {
    * Crée un nouveau contrat
    */
   async createContrat(data: CreateContratInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const contrat = await this.prisma.contrat.create({
       data: {
         cabinetId: this.cabinetId,
@@ -507,6 +614,7 @@ export class PatrimoineService {
     // Créer un événement timeline
     await this.prisma.timelineEvent.create({
       data: {
+        cabinetId: this.cabinetId,
         clientId: data.clientId,
         type: 'CONTRACT_SIGNED',
         title: 'Contrat signé',
@@ -517,17 +625,18 @@ export class PatrimoineService {
       },
     })
 
-    return contrat
+    return this.getContratById(contrat.id)
   }
 
   /**
    * Récupère un contrat par ID
    */
   async getContratById(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const contrat = await this.prisma.contrat.findUnique({
-      where: { id },
+    const contrat = await this.prisma.contrat.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       include: {
         client: {
           select: {
@@ -544,7 +653,7 @@ export class PatrimoineService {
       },
     })
 
-    return contrat
+    return this.formatContrat(contrat)
   }
 
   /**
@@ -556,9 +665,9 @@ export class PatrimoineService {
     status?: ContratStatus
     renewalDueSoon?: boolean
   }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const where: any = {}
+    const where: any = {
+      cabinetId: this.cabinetId,
+    }
 
     if (filters?.clientId) {
       where.clientId = filters.clientId
@@ -598,15 +707,13 @@ export class PatrimoineService {
       },
     })
 
-    return contrats
+    return contrats.map(contrat => this.formatContrat(contrat))
   }
 
   /**
    * Met à jour un contrat
    */
   async updateContrat(id: string, data: Partial<CreateContratInput> & { status?: ContratStatus }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const updateData: any = { ...data }
     
     if (data.premium !== undefined) {
@@ -622,20 +729,25 @@ export class PatrimoineService {
       updateData.commission = new Decimal(data.commission)
     }
 
-    const contrat = await this.prisma.contrat.update({
-      where: { id },
+    const { count } = await this.prisma.contrat.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data: updateData,
     })
 
-    return contrat
+    if (count === 0) {
+      throw new Error('Contrat not found or access denied')
+    }
+
+    return this.getContratById(id)
   }
 
   /**
    * Renouvelle un contrat
    */
   async renewContrat(id: string, newEndDate: Date, newPremium?: number) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const updateData: any = {
       endDate: newEndDate,
       status: 'ACTIVE',
@@ -650,14 +762,28 @@ export class PatrimoineService {
     nextRenewal.setFullYear(nextRenewal.getFullYear() - 1)
     updateData.nextRenewalDate = nextRenewal
 
-    const contrat = await this.prisma.contrat.update({
-      where: { id },
+    const { count } = await this.prisma.contrat.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data: updateData,
     })
+
+    if (count === 0) {
+      throw new Error('Contrat not found or access denied')
+    }
+
+    const contrat = await this.getContratById(id)
+
+    if (!contrat) {
+      throw new Error('Contrat not found after renewal')
+    }
 
     // Créer un événement timeline
     await this.prisma.timelineEvent.create({
       data: {
+        cabinetId: this.cabinetId,
         clientId: contrat.clientId,
         type: 'OTHER',
         title: 'Contrat renouvelé',
@@ -679,15 +805,11 @@ export class PatrimoineService {
    * Calcule le patrimoine complet d'un client
    */
   async calculateClientWealth(clientId: string): Promise<PatrimoineCalculation> {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Récupérer tous les actifs du client
     const clientActifs = await this.prisma.clientActif.findMany({
-      where: { clientId },
+      where: { clientId, actif: { isActive: true } },
       include: {
-        actif: {
-          where: { isActive: true },
-        },
+        actif: true,
       },
     })
 
@@ -706,8 +828,8 @@ export class PatrimoineService {
     for (const ca of clientActifs) {
       if (!ca.actif) continue
 
-      const actifValue = ca.actif.value.toNumber()
-      const ownershipPercentage = ca.ownershipPercentage.toNumber()
+      const actifValue = this.toNumber(ca.actif.value) ?? 0
+      const ownershipPercentage = this.toNumber(ca.ownershipPercentage) ?? 0
       const clientShare = (actifValue * ownershipPercentage) / 100
 
       totalActifs += clientShare
@@ -733,7 +855,7 @@ export class PatrimoineService {
     const passifsByType: Record<string, number> = {}
 
     for (const passif of passifs) {
-      const passifValue = passif.remainingAmount.toNumber()
+      const passifValue = this.toNumber(passif.remainingAmount) ?? 0
       totalPassifs += passifValue
 
       const type = passif.type
@@ -771,12 +893,19 @@ export class PatrimoineService {
   async calculateAndUpdateClientWealth(clientId: string) {
     const wealth = await this.calculateClientWealth(clientId)
 
-    await this.prisma.client.update({
-      where: { id: clientId },
+    const { count } = await this.prisma.client.updateMany({
+      where: {
+        id: clientId,
+        cabinetId: this.cabinetId,
+      },
       data: {
         wealth: wealth as any,
       },
     })
+
+    if (count === 0) {
+      throw new Error('Client not found or access denied')
+    }
 
     return wealth
   }
@@ -785,52 +914,42 @@ export class PatrimoineService {
    * Récupère les actifs d'un client
    */
   async getClientActifs(clientId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const clientActifs = await this.prisma.clientActif.findMany({
-      where: { clientId },
+      where: { clientId, actif: { isActive: true } },
       include: {
-        actif: {
-          where: { isActive: true },
-        },
+        actif: true,
       },
     })
 
-    return clientActifs
+    return clientActifs.map(ca => this.formatClientActif(ca))
   }
 
   /**
    * Récupère les passifs d'un client
    */
   async getClientPassifs(clientId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const passifs = await this.prisma.passif.findMany({
       where: { clientId, isActive: true },
     })
 
-    return passifs
+    return passifs.map(passif => this.formatPassif(passif))
   }
 
   /**
    * Récupère les contrats d'un client
    */
   async getClientContrats(clientId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const contrats = await this.prisma.contrat.findMany({
       where: { clientId },
     })
 
-    return contrats
+    return contrats.map(contrat => this.formatContrat(contrat))
   }
 
   /**
    * Récupère le patrimoine complet d'un client (actifs + passifs + contrats)
    */
   async getClientPatrimoine(clientId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const [actifs, passifs, contrats, wealth] = await Promise.all([
       this.getClientActifs(clientId),
       this.getClientPassifs(clientId),
@@ -850,8 +969,6 @@ export class PatrimoineService {
    * Détecte les opportunités patrimoniales
    */
   async detectPatrimoineOpportunities(clientId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const wealth = await this.calculateClientWealth(clientId)
     const opportunities: Array<{
       type: string
@@ -890,7 +1007,7 @@ export class PatrimoineService {
 
     if (highInterestPassifs.length > 0) {
       const totalHighInterest = highInterestPassifs.reduce(
-        (sum: number, p: typeof highInterestPassifs[0]) => sum + p.remainingAmount.toNumber(),
+        (sum: number, p: typeof highInterestPassifs[0]) => sum + (this.toNumber(p.remainingAmount) ?? 0),
         0
       )
       opportunities.push({
@@ -911,5 +1028,55 @@ export class PatrimoineService {
     }
 
     return opportunities
+  }
+
+  /**
+   * Récupère les statistiques globales du patrimoine d'un cabinet
+   */
+  async getCabinetStats() {
+    const [actifs, passifs, contrats] = await Promise.all([
+      this.prisma.actif.findMany({
+        where: { cabinetId: this.cabinetId, isActive: true },
+        select: {
+          value: true,
+          managedByFirm: true,
+        },
+      }),
+      this.prisma.passif.findMany({
+        where: { cabinetId: this.cabinetId, isActive: true },
+        select: {
+          initialAmount: true,
+          remainingAmount: true,
+        },
+      }),
+      this.prisma.contrat.findMany({
+        where: { cabinetId: this.cabinetId },
+        select: {
+          status: true,
+          value: true,
+        },
+      }),
+    ])
+
+    const totalActifs = actifs.reduce((sum, actif) => sum + (this.toNumber(actif.value) ?? 0), 0)
+    const totalPassifs = passifs.reduce((sum, passif) => sum + (this.toNumber(passif.initialAmount) ?? 0), 0)
+    const totalWealth = totalActifs - totalPassifs
+
+    const actifsGeres = actifs.filter(actif => !!actif.managedByFirm).length
+    const actifsNonGeres = actifs.length - actifsGeres
+    const contratsActifs = contrats.filter(contrat => contrat.status === 'ACTIVE').length
+
+    return {
+      totalWealth,
+      totalActifs,
+      totalPassifs,
+      wealthGrowth: 0,
+      actifsCount: actifs.length,
+      passifsCount: passifs.length,
+      contratsCount: contrats.length,
+      contratsActifs,
+      actifsGeres,
+      actifsNonGeres,
+    }
   }
 }

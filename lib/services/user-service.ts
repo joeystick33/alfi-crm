@@ -1,4 +1,4 @@
-import { getPrismaClient, setRLSContext } from '../prisma'
+import { getPrismaClient } from '../prisma'
 import { AuthService } from './auth-service'
 import { UserRole } from '@prisma/client'
 
@@ -48,8 +48,6 @@ export class UserService {
    * Crée un nouvel utilisateur dans le cabinet
    */
   async createUser(data: CreateUserInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Vérifier que l'email n'existe pas déjà
     const existing = await this.prisma.user.findUnique({
       where: { email: data.email },
@@ -94,10 +92,11 @@ export class UserService {
    * Récupère un utilisateur par ID
    */
   async getUserById(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const user = await this.prisma.user.findUnique({
-      where: { id },
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       select: {
         id: true,
         email: true,
@@ -127,9 +126,9 @@ export class UserService {
     isActive?: boolean
     search?: string
   }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const where: any = {}
+    const where: any = {
+      cabinetId: this.cabinetId,
+    }
 
     if (filters?.role) {
       where.role = filters.role
@@ -173,11 +172,12 @@ export class UserService {
    * Met à jour un utilisateur
    */
   async updateUser(id: string, data: UpdateUserInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Vérifier que l'utilisateur existe
-    const existing = await this.prisma.user.findUnique({
-      where: { id },
+    const existing = await this.prisma.user.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!existing) {
@@ -195,65 +195,76 @@ export class UserService {
       }
     }
 
-    const user = await this.prisma.user.update({
-      where: { id },
-      data,
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        phone: true,
-        avatar: true,
-        role: true,
-        isActive: true,
-        updatedAt: true,
+    const { count } = await this.prisma.user.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
       },
+      data,
     })
 
-    return user
+    if (count === 0) {
+      throw new Error('User not found or access denied')
+    }
+
+    return this.getUserById(id)
   }
 
   /**
    * Désactive un utilisateur (soft delete)
    */
   async deactivateUser(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const user = await this.prisma.user.update({
-      where: { id },
+    const { count } = await this.prisma.user.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data: { isActive: false },
     })
 
-    return user
+    if (count === 0) {
+      throw new Error('User not found or access denied')
+    }
+
+    return this.getUserById(id)
   }
 
   /**
    * Réactive un utilisateur
    */
   async reactivateUser(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const user = await this.prisma.user.update({
-      where: { id },
+    const { count } = await this.prisma.user.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data: { isActive: true },
     })
 
-    return user
+    if (count === 0) {
+      throw new Error('User not found or access denied')
+    }
+
+    return this.getUserById(id)
   }
 
   /**
    * Change le mot de passe d'un utilisateur
    */
   async changePassword(id: string, newPassword: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const hashedPassword = await AuthService.hashPassword(newPassword)
 
-    await this.prisma.user.update({
-      where: { id },
+    const { count } = await this.prisma.user.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data: { password: hashedPassword },
     })
+
+    if (count === 0) {
+      throw new Error('User not found or access denied')
+    }
 
     return { success: true }
   }
@@ -262,11 +273,12 @@ export class UserService {
    * Assigne un assistant à un conseiller
    */
   async assignAssistant(data: AssignAssistantInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Vérifier que l'assistant existe et a le bon rôle
-    const assistant = await this.prisma.user.findUnique({
-      where: { id: data.assistantId },
+    const assistant = await this.prisma.user.findFirst({
+      where: {
+        id: data.assistantId,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!assistant || assistant.role !== 'ASSISTANT') {
@@ -274,8 +286,11 @@ export class UserService {
     }
 
     // Vérifier que le conseiller existe et a le bon rôle
-    const advisor = await this.prisma.user.findUnique({
-      where: { id: data.advisorId },
+    const advisor = await this.prisma.user.findFirst({
+      where: {
+        id: data.advisorId,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!advisor || advisor.role !== 'ADVISOR') {
@@ -309,16 +324,17 @@ export class UserService {
    * Retire l'assignation d'un assistant
    */
   async unassignAssistant(assistantId: string, advisorId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    await this.prisma.assistantAssignment.delete({
+    const { count } = await this.prisma.assistantAssignment.deleteMany({
       where: {
-        assistantId_advisorId: {
-          assistantId,
-          advisorId,
-        },
+        assistantId,
+        advisorId,
+        cabinetId: this.cabinetId,
       },
     })
+
+    if (count === 0) {
+      throw new Error('Assistant assignment not found or access denied')
+    }
 
     return { success: true }
   }
@@ -327,10 +343,11 @@ export class UserService {
    * Liste les assistants assignés à un conseiller
    */
   async getAdvisorAssistants(advisorId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const assignments = await this.prisma.assistantAssignment.findMany({
-      where: { advisorId },
+      where: {
+        advisorId,
+        cabinetId: this.cabinetId,
+      },
       include: {
         assistant: {
           select: {
@@ -352,10 +369,11 @@ export class UserService {
    * Liste les conseillers auxquels un assistant est assigné
    */
   async getAssistantAdvisors(assistantId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const assignments = await this.prisma.assistantAssignment.findMany({
-      where: { assistantId },
+      where: {
+        assistantId,
+        cabinetId: this.cabinetId,
+      },
       include: {
         assistant: {
           select: {
@@ -370,7 +388,7 @@ export class UserService {
       },
     })
 
-    return assignments.map(a => ({
+    return assignments.map((a: any) => ({
       ...a.assistant,
       permissions: a.permissions,
     }))
@@ -380,10 +398,11 @@ export class UserService {
    * Récupère les statistiques d'un utilisateur
    */
   async getUserStats(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const user = await this.prisma.user.findUnique({
-      where: { id },
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       include: {
         _count: {
           select: {

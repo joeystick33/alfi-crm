@@ -20,7 +20,7 @@ export function ClientFilters({ filters, onFilterChange }: ClientFiltersProps) {
       {/* Client Type Filter */}
       <Select
         value={filters.clientType || 'all'}
-        onValueChange={(value) =>
+        onValueChange={(value: any) =>
           onFilterChange({
             clientType: value === 'all' ? undefined : (value as any),
           })
@@ -39,7 +39,7 @@ export function ClientFilters({ filters, onFilterChange }: ClientFiltersProps) {
       {/* Status Filter */}
       <Select
         value={filters.status || 'all'}
-        onValueChange={(value) =>
+        onValueChange={(value: any) =>
           onFilterChange({
             status: value === 'all' ? undefined : (value as any),
           })
@@ -60,7 +60,7 @@ export function ClientFilters({ filters, onFilterChange }: ClientFiltersProps) {
       {/* KYC Status Filter */}
       <Select
         value={filters.kycStatus || 'all'}
-        onValueChange={(value) =>
+        onValueChange={(value: any) =>
           onFilterChange({
             kycStatus: value === 'all' ? undefined : (value as any),
           })

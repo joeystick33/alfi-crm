@@ -22,7 +22,7 @@ export function PageTabs({ tabs, basePath }: PageTabsProps) {
   return (
     <div className="border-b border-border">
       <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-        {tabs.map((tab) => {
+        {tabs.map((tab: any) => {
           const isActive = pathname === tab.href || pathname.startsWith(tab.href + '/')
           const Icon = tab.icon
 

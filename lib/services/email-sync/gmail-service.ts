@@ -151,7 +151,7 @@ export class GmailService {
 
         const parsed = this.parseGmailMessage(fullMessage.data)
         parsedMessages.push(parsed)
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Error fetching message ${message.id}:`, error)
       }
     }
@@ -193,7 +193,7 @@ export class GmailService {
       if (!str) return []
       return str
         .split(',')
-        .map((e) => e.trim())
+        .map((e: any) => e.trim())
         .filter(Boolean)
     }
 
@@ -228,7 +228,7 @@ export class GmailService {
         },
       })
       return true
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error marking email as read:', error)
       return false
     }

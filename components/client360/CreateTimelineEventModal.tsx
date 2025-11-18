@@ -75,7 +75,7 @@ export function CreateTimelineEventModal({
   onClose,
 }: CreateTimelineEventModalProps) {
   const { toast } = useToast()
-  const createEvent = useCreateTimelineEvent(clientId)
+  const createEvent = useCreateTimelineEvent()
   const [selectedType, setSelectedType] = useState<string>('')
 
   const {
@@ -107,7 +107,7 @@ export function CreateTimelineEventModal({
       reset()
       setSelectedType('')
       onClose()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating timeline event:', error)
       toast({
         title: 'Erreur',
@@ -139,7 +139,7 @@ export function CreateTimelineEventModal({
             <Label htmlFor="type">Type d'événement *</Label>
             <Select
               value={selectedType}
-              onValueChange={(value) => {
+              onValueChange={(value: any) => {
                 setSelectedType(value)
                 register('type').onChange({ target: { value } })
               }}
@@ -148,7 +148,7 @@ export function CreateTimelineEventModal({
                 <SelectValue placeholder="Sélectionnez un type" />
               </SelectTrigger>
               <SelectContent>
-                {eventTypeOptions.map((option) => (
+                {eventTypeOptions.map((option: any) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>

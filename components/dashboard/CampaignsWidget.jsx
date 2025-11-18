@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { 
   Megaphone,
   Mail,
@@ -19,7 +19,7 @@ import {
   Clock,
   AlertCircle
 } from 'lucide-react';
-import { apiCall } from '@/lib/api';
+import { apiCall } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
 
 export default function CampaignsWidget({ maxCampaigns = 3 }) {
@@ -35,7 +35,7 @@ export default function CampaignsWidget({ maxCampaigns = 3 }) {
 
   const loadCampaigns = async () => {
     try {
-      const data = await apiCall(`/advisor/campaigns?status=EN_COURS,PROGRAMMEE&limit=${maxCampaigns}`);
+      const data = await apiCall(`/api/advisor/campaigns?status=EN_COURS,PROGRAMMEE&limit=${maxCampaigns}`);
       setCampaigns(data.campaigns || []);
       setActiveCampaigns(data.campaigns?.filter(c => c.status === 'EN_COURS').length || 0);
     } catch (error) {
@@ -50,7 +50,7 @@ export default function CampaignsWidget({ maxCampaigns = 3 }) {
     e.stopPropagation();
     setActionLoading(campaignId);
     try {
-      await apiCall(`/advisor/campaigns/${campaignId}`, {
+      await apiCall(`/api/advisor/campaigns/${campaignId}`, {
         method: 'PUT',
         body: JSON.stringify({ status: 'PAUSE' })
       });
@@ -66,7 +66,7 @@ export default function CampaignsWidget({ maxCampaigns = 3 }) {
     e.stopPropagation();
     setActionLoading(campaignId);
     try {
-      await apiCall(`/advisor/campaigns/${campaignId}`, {
+      await apiCall(`/api/advisor/campaigns/${campaignId}`, {
         method: 'PUT',
         body: JSON.stringify({ status: 'EN_COURS' })
       });

@@ -119,6 +119,7 @@ model User {
   cabinetId   String
   cabinet     Cabinet   @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
   email       String    @unique
+  emailVerified DateTime?
   password    String
   firstName   String
   lastName    String
@@ -150,12 +151,57 @@ model User {
   calendarSyncs        CalendarSync[]
   syncedEmails         SyncedEmail[]
   emailIntegration     EmailIntegration?
+  accounts             Account[]
+  sessions             Session[]
 
   @@index([cabinetId])
   @@index([cabinetId, role])
   @@index([email])
   @@index([isActive])
   @@map("users")
+}
+
+model Account {
+  id                 String   @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.Text
+  session_state      String?
+  refresh_token_expires_in Int?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
 }
 
 model AssistantAssignment {
@@ -1628,6 +1674,8 @@ enum TimelineEventType {
 
 model TimelineEvent {
   id                String            @id @default(cuid())
+  cabinetId         String
+  cabinet           Cabinet           @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
   clientId          String
   client            Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
   type              TimelineEventType
@@ -1638,6 +1686,7 @@ model TimelineEvent {
   createdAt         DateTime          @default(now())
   createdBy         String?
 
+  @@index([cabinetId])
   @@index([clientId])
   @@index([type])
   @@index([createdAt])

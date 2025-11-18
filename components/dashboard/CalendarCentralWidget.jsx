@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
@@ -19,7 +19,7 @@ import moment from 'moment';
 import 'moment/locale/fr';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
-import { apiCall } from '@/lib/api';
+import { apiCall } from '@/lib/api-client';
 import styles from './CalendarCentralWidget.module.css';
 import { cn } from '@/lib/utils';
 import {
@@ -170,7 +170,7 @@ export default function CalendarCentralWidget() {
 
   const loadEvents = async () => {
     try {
-      const data = await apiCall('/advisor/events');
+      const data = await apiCall('/api/advisor/events');
       const formattedEvents = (data.events || []).map((event) => ({
         ...event,
         start: new Date(event.start),
@@ -272,7 +272,7 @@ export default function CalendarCentralWidget() {
       // API update
       try {
         setUpdating(true);
-        await apiCall(`/advisor/appointments/${event.id}`, {
+        await apiCall(`/api/advisor/appointments/${event.id}`, {
           method: 'PUT',
           body: {
             startTime: start.toISOString(),
@@ -316,7 +316,7 @@ export default function CalendarCentralWidget() {
       // API update
       try {
         setUpdating(true);
-        await apiCall(`/advisor/appointments/${event.id}`, {
+        await apiCall(`/api/advisor/appointments/${event.id}`, {
           method: 'PUT',
           body: {
             startTime: start.toISOString(),
@@ -352,7 +352,7 @@ export default function CalendarCentralWidget() {
 
     try {
       setUpdating(true);
-      await apiCall(`/advisor/appointments/${event.id}`, {
+      await apiCall(`/api/advisor/appointments/${event.id}`, {
         method: 'PUT',
         body: {
           startTime: newStart.toISOString(),

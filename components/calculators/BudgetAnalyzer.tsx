@@ -182,7 +182,7 @@ export function BudgetAnalyzer() {
     { name: 'Loisirs', value: result.expenses.breakdown.entertainment },
     { name: 'Épargne', value: result.expenses.breakdown.savings },
     { name: 'Autres', value: result.expenses.breakdown.utilities + result.expenses.breakdown.education + result.expenses.breakdown.otherExpenses }
-  ].filter(item => item.value > 0) : [];
+  ].filter((item: any) => item.value > 0) : [];
 
   // Prepare income vs expenses chart data
   const comparisonChartData = result ? [
@@ -224,35 +224,35 @@ export function BudgetAnalyzer() {
                   label="Salaire net"
                   type="number"
                   value={income.salary}
-                  onChange={(e) => setIncome({ ...income, salary: e.target.value })}
+                  onChange={(e: any) => setIncome({ ...income, salary: e.target.value })}
                   placeholder="4000"
                 />
                 <Input
                   label="Primes"
                   type="number"
                   value={income.bonuses}
-                  onChange={(e) => setIncome({ ...income, bonuses: e.target.value })}
+                  onChange={(e: any) => setIncome({ ...income, bonuses: e.target.value })}
                   placeholder="500"
                 />
                 <Input
                   label="Revenus locatifs"
                   type="number"
                   value={income.rentalIncome}
-                  onChange={(e) => setIncome({ ...income, rentalIncome: e.target.value })}
+                  onChange={(e: any) => setIncome({ ...income, rentalIncome: e.target.value })}
                   placeholder="0"
                 />
                 <Input
                   label="Revenus d'investissement"
                   type="number"
                   value={income.investmentIncome}
-                  onChange={(e) => setIncome({ ...income, investmentIncome: e.target.value })}
+                  onChange={(e: any) => setIncome({ ...income, investmentIncome: e.target.value })}
                   placeholder="0"
                 />
                 <Input
                   label="Autres revenus"
                   type="number"
                   value={income.otherIncome}
-                  onChange={(e) => setIncome({ ...income, otherIncome: e.target.value })}
+                  onChange={(e: any) => setIncome({ ...income, otherIncome: e.target.value })}
                   placeholder="0"
                 />
               </div>
@@ -269,70 +269,70 @@ export function BudgetAnalyzer() {
                   label="Logement"
                   type="number"
                   value={expenses.housing}
-                  onChange={(e) => setExpenses({ ...expenses, housing: e.target.value })}
+                  onChange={(e: any) => setExpenses({ ...expenses, housing: e.target.value })}
                   placeholder="1200"
                 />
                 <Input
                   label="Charges (eau, électricité)"
                   type="number"
                   value={expenses.utilities}
-                  onChange={(e) => setExpenses({ ...expenses, utilities: e.target.value })}
+                  onChange={(e: any) => setExpenses({ ...expenses, utilities: e.target.value })}
                   placeholder="150"
                 />
                 <Input
                   label="Alimentation"
                   type="number"
                   value={expenses.food}
-                  onChange={(e) => setExpenses({ ...expenses, food: e.target.value })}
+                  onChange={(e: any) => setExpenses({ ...expenses, food: e.target.value })}
                   placeholder="400"
                 />
                 <Input
                   label="Transport"
                   type="number"
                   value={expenses.transportation}
-                  onChange={(e) => setExpenses({ ...expenses, transportation: e.target.value })}
+                  onChange={(e: any) => setExpenses({ ...expenses, transportation: e.target.value })}
                   placeholder="300"
                 />
                 <Input
                   label="Assurances"
                   type="number"
                   value={expenses.insurance}
-                  onChange={(e) => setExpenses({ ...expenses, insurance: e.target.value })}
+                  onChange={(e: any) => setExpenses({ ...expenses, insurance: e.target.value })}
                   placeholder="200"
                 />
                 <Input
                   label="Santé"
                   type="number"
                   value={expenses.healthcare}
-                  onChange={(e) => setExpenses({ ...expenses, healthcare: e.target.value })}
+                  onChange={(e: any) => setExpenses({ ...expenses, healthcare: e.target.value })}
                   placeholder="100"
                 />
                 <Input
                   label="Éducation"
                   type="number"
                   value={expenses.education}
-                  onChange={(e) => setExpenses({ ...expenses, education: e.target.value })}
+                  onChange={(e: any) => setExpenses({ ...expenses, education: e.target.value })}
                   placeholder="0"
                 />
                 <Input
                   label="Loisirs"
                   type="number"
                   value={expenses.entertainment}
-                  onChange={(e) => setExpenses({ ...expenses, entertainment: e.target.value })}
+                  onChange={(e: any) => setExpenses({ ...expenses, entertainment: e.target.value })}
                   placeholder="200"
                 />
                 <Input
                   label="Épargne"
                   type="number"
                   value={expenses.savings}
-                  onChange={(e) => setExpenses({ ...expenses, savings: e.target.value })}
+                  onChange={(e: any) => setExpenses({ ...expenses, savings: e.target.value })}
                   placeholder="500"
                 />
                 <Input
                   label="Autres dépenses"
                   type="number"
                   value={expenses.otherExpenses}
-                  onChange={(e) => setExpenses({ ...expenses, otherExpenses: e.target.value })}
+                  onChange={(e: any) => setExpenses({ ...expenses, otherExpenses: e.target.value })}
                   placeholder="100"
                 />
               </div>
@@ -349,35 +349,35 @@ export function BudgetAnalyzer() {
                   label="Crédit immobilier"
                   type="number"
                   value={debts.mortgage}
-                  onChange={(e) => setDebts({ ...debts, mortgage: e.target.value })}
+                  onChange={(e: any) => setDebts({ ...debts, mortgage: e.target.value })}
                   placeholder="0"
                 />
                 <Input
                   label="Crédits à la consommation"
                   type="number"
                   value={debts.consumerLoans}
-                  onChange={(e) => setDebts({ ...debts, consumerLoans: e.target.value })}
+                  onChange={(e: any) => setDebts({ ...debts, consumerLoans: e.target.value })}
                   placeholder="0"
                 />
                 <Input
                   label="Cartes de crédit"
                   type="number"
                   value={debts.creditCards}
-                  onChange={(e) => setDebts({ ...debts, creditCards: e.target.value })}
+                  onChange={(e: any) => setDebts({ ...debts, creditCards: e.target.value })}
                   placeholder="0"
                 />
                 <Input
                   label="Prêts étudiants"
                   type="number"
                   value={debts.studentLoans}
-                  onChange={(e) => setDebts({ ...debts, studentLoans: e.target.value })}
+                  onChange={(e: any) => setDebts({ ...debts, studentLoans: e.target.value })}
                   placeholder="0"
                 />
                 <Input
                   label="Autres dettes"
                   type="number"
                   value={debts.otherDebts}
-                  onChange={(e) => setDebts({ ...debts, otherDebts: e.target.value })}
+                  onChange={(e: any) => setDebts({ ...debts, otherDebts: e.target.value })}
                   placeholder="0"
                 />
               </div>

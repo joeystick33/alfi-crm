@@ -1,4 +1,4 @@
-import { getPrismaClient, setRLSContext } from '../prisma'
+import { getPrismaClient } from '../prisma'
 import { KYCDocumentType, KYCDocStatus, KYCStatus } from '@prisma/client'
 
 export interface CreateKYCDocumentInput {
@@ -49,11 +49,12 @@ export class KYCService {
    * Ajoute un document KYC pour un client
    */
   async addKYCDocument(data: CreateKYCDocumentInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Vérifier que le client existe
-    const client = await this.prisma.client.findUnique({
-      where: { id: data.clientId },
+    const client = await this.prisma.client.findFirst({
+      where: {
+        id: data.clientId,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!client) {
@@ -62,8 +63,11 @@ export class KYCService {
 
     // Si documentId fourni, vérifier qu'il existe
     if (data.documentId) {
-      const document = await this.prisma.document.findUnique({
-        where: { id: data.documentId },
+      const document = await this.prisma.document.findFirst({
+        where: {
+          id: data.documentId,
+          cabinetId: this.cabinetId,
+        },
       })
 
       if (!document) {
@@ -91,8 +95,6 @@ export class KYCService {
    * Valide ou rejette un document KYC
    */
   async validateKYCDocument(data: ValidateKYCDocumentInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const kycDocument = await this.prisma.kYCDocument.update({
       where: { id: data.kycDocumentId },
       data: {
@@ -108,6 +110,7 @@ export class KYCService {
     // Créer un événement timeline
     await this.prisma.timelineEvent.create({
       data: {
+        cabinetId: this.cabinetId,
         clientId: kycDocument.clientId,
         type: 'KYC_UPDATED',
         title: `Document KYC ${data.status === 'VALIDATED' ? 'validé' : 'rejeté'}`,
@@ -125,8 +128,6 @@ export class KYCService {
    * Récupère les documents KYC d'un client
    */
   async getClientKYCDocuments(clientId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const kycDocuments = await this.prisma.kYCDocument.findMany({
       where: { clientId },
       orderBy: {
@@ -141,8 +142,6 @@ export class KYCService {
    * Vérifie le statut KYC d'un client
    */
   async checkClientKYC(clientId: string): Promise<KYCCheckResult> {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const kycDocuments = await this.prisma.kYCDocument.findMany({
       where: { clientId },
     })
@@ -150,7 +149,7 @@ export class KYCService {
     const now = new Date()
 
     // Grouper par type et garder le plus récent de chaque type
-    const latestByType = kycDocuments.reduce((acc, doc) => {
+    const latestByType = kycDocuments.reduce((acc: any, doc: any) => {
       if (!acc[doc.type] || doc.createdAt > acc[doc.type].createdAt) {
         acc[doc.type] = doc
       }
@@ -197,8 +196,6 @@ export class KYCService {
    * Met à jour le statut KYC global du client
    */
   async updateClientKYCStatus(clientId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const kycCheck = await this.checkClientKYC(clientId)
 
     let kycStatus: KYCStatus
@@ -220,14 +217,21 @@ export class KYCService {
       kycStatus = 'PENDING'
     }
 
-    await this.prisma.client.update({
-      where: { id: clientId },
+    const { count } = await this.prisma.client.updateMany({
+      where: {
+        id: clientId,
+        cabinetId: this.cabinetId,
+      },
       data: {
         kycStatus,
         kycCompletedAt,
         kycNextReviewDate,
       },
     })
+
+    if (count === 0) {
+      throw new Error('Client not found or access denied')
+    }
 
     return kycStatus
   }
@@ -236,13 +240,12 @@ export class KYCService {
    * Récupère les clients avec KYC incomplet
    */
   async getClientsWithIncompleteKYC() {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const clients = await this.prisma.client.findMany({
       where: {
         kycStatus: {
           in: ['PENDING', 'IN_PROGRESS'],
         },
+        cabinetId: this.cabinetId,
       },
       include: {
         conseiller: {
@@ -265,11 +268,10 @@ export class KYCService {
    * Récupère les clients avec KYC expiré
    */
   async getClientsWithExpiredKYC() {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const clients = await this.prisma.client.findMany({
       where: {
         kycStatus: 'EXPIRED',
+        cabinetId: this.cabinetId,
       },
       include: {
         conseiller: {
@@ -292,14 +294,13 @@ export class KYCService {
    * Récupère les clients dont le KYC arrive à expiration
    */
   async getClientsWithKYCExpiringSoon(days: number = 30) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const futureDate = new Date()
     futureDate.setDate(futureDate.getDate() + days)
 
     const clients = await this.prisma.client.findMany({
       where: {
         kycStatus: 'COMPLETED',
+        cabinetId: this.cabinetId,
         kycNextReviewDate: {
           lte: futureDate,
           gte: new Date(),
@@ -326,8 +327,6 @@ export class KYCService {
    * Vérifie les documents KYC expirés et met à jour leur statut
    */
   async checkExpiredKYCDocuments() {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const now = new Date()
 
     const expiredDocuments = await this.prisma.kYCDocument.findMany({
@@ -360,15 +359,16 @@ export class KYCService {
    * Récupère les statistiques KYC du cabinet
    */
   async getKYCStats() {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const clients = await this.prisma.client.findMany({
       select: {
         kycStatus: true,
       },
+      where: {
+        cabinetId: this.cabinetId,
+      },
     })
 
-    const byStatus = clients.reduce((acc, c) => {
+    const byStatus = clients.reduce((acc: any, c: any) => {
       const status = c.kycStatus
       if (!acc[status]) {
         acc[status] = 0
@@ -402,10 +402,11 @@ export class KYCService {
    * Génère un rapport KYC pour un client
    */
   async generateKYCReport(clientId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const client = await this.prisma.client.findUnique({
-      where: { id: clientId },
+    const client = await this.prisma.client.findFirst({
+      where: {
+        id: clientId,
+        cabinetId: this.cabinetId,
+      },
       include: {
         conseiller: {
           select: {
@@ -445,19 +446,25 @@ export class KYCService {
    * Demande une mise à jour KYC à un client
    */
   async requestKYCUpdate(clientId: string, reason?: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Mettre à jour le statut
-    await this.prisma.client.update({
-      where: { id: clientId },
+    const { count } = await this.prisma.client.updateMany({
+      where: {
+        id: clientId,
+        cabinetId: this.cabinetId,
+      },
       data: {
         kycStatus: 'IN_PROGRESS',
       },
     })
 
+    if (count === 0) {
+      throw new Error('Client not found or access denied')
+    }
+
     // Créer un événement timeline
     await this.prisma.timelineEvent.create({
       data: {
+        cabinetId: this.cabinetId,
         clientId,
         type: 'KYC_UPDATED',
         title: 'Mise à jour KYC demandée',

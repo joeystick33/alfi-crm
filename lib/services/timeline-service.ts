@@ -1,4 +1,4 @@
-import { getPrismaClient, setRLSContext } from '@/lib/prisma'
+import { getPrismaClient } from '@/lib/prisma'
 import { TimelineEventType } from '@prisma/client'
 
 export class TimelineService {
@@ -23,10 +23,8 @@ export class TimelineService {
     relatedEntityType?: string
     relatedEntityId?: string
   }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Vérifier que le client existe
-    const client = await this.prisma.client.findUnique({
+    const client = await this.prisma.client.findFirst({
       where: { id: data.clientId },
     })
 
@@ -60,8 +58,6 @@ export class TimelineService {
       offset?: number
     }
   ) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const where: any = { clientId }
 
     if (filters?.type) {
@@ -100,8 +96,6 @@ export class TimelineService {
    * Récupérer les événements par type
    */
   async getEventsByType(clientId: string, type: TimelineEventType) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     return this.prisma.timelineEvent.findMany({
       where: {
         clientId,
@@ -115,8 +109,6 @@ export class TimelineService {
    * Récupérer les événements liés à une entité
    */
   async getRelatedEvents(entityType: string, entityId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     return this.prisma.timelineEvent.findMany({
       where: {
         relatedEntityType: entityType,
@@ -130,19 +122,21 @@ export class TimelineService {
    * Supprimer un événement timeline
    */
   async deleteEvent(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    return this.prisma.timelineEvent.delete({
+    const { count } = await this.prisma.timelineEvent.deleteMany({
       where: { id },
     })
+
+    if (count === 0) {
+      throw new Error('TimelineEvent not found or access denied')
+    }
+
+    return { success: true }
   }
 
   /**
    * Statistiques de la timeline d'un client
    */
   async getClientStatistics(clientId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const total = await this.prisma.timelineEvent.count({
       where: { clientId },
     })
@@ -172,7 +166,7 @@ export class TimelineService {
     return {
       total,
       recentEvents,
-      byType: byType.map((item) => ({
+      byType: byType.map((item: any) => ({
         type: item.type,
         count: item._count,
       })),
@@ -183,8 +177,6 @@ export class TimelineService {
    * Exporter la timeline d'un client
    */
   async exportClientTimeline(clientId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const events = await this.prisma.timelineEvent.findMany({
       where: { clientId },
       orderBy: { createdAt: 'desc' },

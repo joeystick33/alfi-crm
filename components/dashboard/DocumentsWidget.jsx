@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { 
   FileText, 
   Upload, 
@@ -18,7 +18,7 @@ import {
   Search,
   Filter
 } from 'lucide-react';
-import { apiCall } from '@/lib/api';
+import { apiCall } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
 
 export default function DocumentsWidget({ maxDocuments = 5, showStats = true }) {
@@ -40,7 +40,7 @@ export default function DocumentsWidget({ maxDocuments = 5, showStats = true }) 
 
   const loadDocuments = async () => {
     try {
-      const data = await apiCall(`/advisor/widgets/documents?limit=${maxDocuments}`);
+      const data = await apiCall(`/api/advisor/widgets/documents?limit=${maxDocuments}`);
       setDocuments(data.documents || []);
       
       // Calculate stats from documents

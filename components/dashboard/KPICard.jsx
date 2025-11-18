@@ -2,7 +2,7 @@
 
 import { ArrowUp, ArrowDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/design-system';
 
 export default function KPICard({

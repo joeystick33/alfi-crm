@@ -1,4 +1,4 @@
-import { getPrismaClient, setRLSContext } from '@/lib/prisma'
+import { getPrismaClient } from '@/lib/prisma'
 import { GmailService } from './email-sync/gmail-service'
 import { OutlookService } from './email-sync/outlook-service'
 import { EmailProvider } from '@prisma/client'
@@ -29,7 +29,16 @@ export class EmailAdvancedService {
     bcc?: string[]
     replyToEmailId?: string
   }): Promise<{ success: boolean; externalId?: string }> {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id: this.userId,
+        cabinetId: this.cabinetId,
+      },
+    })
+
+    if (!user) {
+      throw new Error('User not found or access denied')
+    }
 
     const integration = await this.prisma.emailIntegration.findUnique({
       where: { userId: this.userId },
@@ -60,6 +69,17 @@ export class EmailAdvancedService {
 
     // Si c'est une réponse, enregistrer la réponse
     if (data.replyToEmailId) {
+      const targetEmail = await this.prisma.syncedEmail.findFirst({
+        where: {
+          id: data.replyToEmailId,
+          cabinetId: this.cabinetId,
+        },
+      })
+
+      if (!targetEmail) {
+        throw new Error('Referenced email not found or access denied')
+      }
+
       await this.prisma.emailReply.create({
         data: {
           syncedEmailId: data.replyToEmailId,
@@ -82,10 +102,13 @@ export class EmailAdvancedService {
    * Get email attachments
    */
   async getAttachments(emailId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     return this.prisma.emailAttachment.findMany({
-      where: { syncedEmailId: emailId },
+      where: {
+        syncedEmailId: emailId,
+        syncedEmail: {
+          cabinetId: this.cabinetId,
+        },
+      },
       orderBy: { createdAt: 'asc' },
     })
   }
@@ -94,10 +117,13 @@ export class EmailAdvancedService {
    * Get email replies
    */
   async getEmailReplies(emailId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     return this.prisma.emailReply.findMany({
-      where: { syncedEmailId: emailId },
+      where: {
+        syncedEmailId: emailId,
+        syncedEmail: {
+          cabinetId: this.cabinetId,
+        },
+      },
       orderBy: { sentAt: 'desc' },
     })
   }
@@ -116,10 +142,9 @@ export class EmailAdvancedService {
       offset?: number
     }
   ) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const where: any = {
       userId: this.userId,
+      cabinetId: this.cabinetId,
       OR: [
         { subject: { contains: query, mode: 'insensitive' } },
         { body: { contains: query, mode: 'insensitive' } },
@@ -183,10 +208,9 @@ export class EmailAdvancedService {
     limit?: number
     offset?: number
   }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const where: any = {
       userId: this.userId,
+      cabinetId: this.cabinetId,
     }
 
     if (filters.clientId) {
@@ -239,10 +263,10 @@ export class EmailAdvancedService {
     // Filter by classification in memory if needed
     let filteredEmails = emails
     if (filters.classification && filters.classification.length > 0) {
-      filteredEmails = emails.filter((email) => {
+      filteredEmails = emails.filter((email: any) => {
         const classified = email.classifiedAs as string[] | null
         if (!classified) return false
-        return filters.classification!.some((c) => classified.includes(c))
+        return filters.classification!.some((c: any) => classified.includes(c))
       })
     }
 
@@ -266,7 +290,7 @@ export class EmailAdvancedService {
     }
 
     await this.prisma.emailIntegration.update({
-      where: { userId: this.userId },
+      where: { id: integration.id },
       data: {
         accessToken: newTokens.accessToken,
         refreshToken: newTokens.refreshToken || integration.refreshToken,
@@ -301,8 +325,6 @@ export class EmailTemplateService {
     category?: string
     variables?: Record<string, string>
   }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     return this.prisma.emailTemplate.create({
       data: {
         cabinetId: this.cabinetId,
@@ -322,9 +344,9 @@ export class EmailTemplateService {
    * Get all templates
    */
   async getTemplates(filters?: { category?: string; isActive?: boolean }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const where: any = {}
+    const where: any = {
+      cabinetId: this.cabinetId,
+    }
 
     if (filters?.category) {
       where.category = filters.category
@@ -344,10 +366,11 @@ export class EmailTemplateService {
    * Get template by ID
    */
   async getTemplateById(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    return this.prisma.emailTemplate.findUnique({
-      where: { id },
+    return this.prisma.emailTemplate.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
     })
   }
 
@@ -366,23 +389,37 @@ export class EmailTemplateService {
       isActive?: boolean
     }
   ) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    return this.prisma.emailTemplate.update({
-      where: { id },
+    const { count } = await this.prisma.emailTemplate.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data,
     })
+
+    if (count === 0) {
+      throw new Error('Email template not found or access denied')
+    }
+
+    return this.getTemplateById(id)
   }
 
   /**
    * Delete template
    */
   async deleteTemplate(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    return this.prisma.emailTemplate.delete({
-      where: { id },
+    const { count } = await this.prisma.emailTemplate.deleteMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
     })
+
+    if (count === 0) {
+      throw new Error('Email template not found or access denied')
+    }
+
+    return { success: true }
   }
 
   /**

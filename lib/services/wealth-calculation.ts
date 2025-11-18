@@ -1,4 +1,4 @@
-import { getPrismaClient, setRLSContext } from '../prisma'
+import { getPrismaClient } from '../prisma'
 
 export interface WealthData {
   totalAssets: number
@@ -34,7 +34,9 @@ export class WealthCalculationService {
    * Calcule le patrimoine total d'un client
    */
   async calculateClientWealth(clientId: string): Promise<WealthData> {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
+    if (!clientId) {
+      throw new Error('Client ID is required')
+    }
 
     // Récupérer tous les actifs du client
     const clientActifs = await this.prisma.clientActif.findMany({
@@ -107,12 +109,16 @@ export class WealthCalculationService {
     }
 
     // Mettre à jour le client avec les nouvelles données
-    await this.prisma.client.update({
+    const { count } = await this.prisma.client.updateMany({
       where: { id: clientId },
       data: {
         wealth: wealthData as any,
       },
     })
+
+    if (count === 0) {
+      throw new Error('Client not found or access denied')
+    }
 
     return wealthData
   }
@@ -121,8 +127,6 @@ export class WealthCalculationService {
    * Calcule le patrimoine de tous les clients d'un conseiller
    */
   async calculateAdvisorClientsWealth(advisorId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const clients = await this.prisma.client.findMany({
       where: {
         OR: [
@@ -144,7 +148,7 @@ export class WealthCalculationService {
           wealth,
           success: true,
         })
-      } catch (error) {
+      } catch (error: any) {
         results.push({
           clientId: client.id,
           error: error instanceof Error ? error.message : 'Unknown error',
@@ -160,8 +164,6 @@ export class WealthCalculationService {
    * Calcule le patrimoine total géré par le cabinet
    */
   async calculateCabinetWealth() {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const clients = await this.prisma.client.findMany({
       where: {
         status: { in: ['ACTIVE', 'PROSPECT'] },
@@ -205,11 +207,9 @@ export class WealthCalculationService {
    * Récupère l'évolution du patrimoine d'un client
    */
   async getWealthEvolution(clientId: string, months: number = 12) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // TODO: Implémenter l'historisation du patrimoine
     // Pour l'instant, retourne juste le patrimoine actuel
-    const client = await this.prisma.client.findUnique({
+    const client = await this.prisma.client.findFirst({
       where: { id: clientId },
       select: {
         wealth: true,
@@ -233,8 +233,6 @@ export class WealthCalculationService {
    * Compare le patrimoine de plusieurs clients
    */
   async compareClientsWealth(clientIds: string[]) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const clients = await this.prisma.client.findMany({
       where: {
         id: { in: clientIds },
@@ -258,9 +256,7 @@ export class WealthCalculationService {
    * Calcule le ratio d'endettement d'un client
    */
   async calculateDebtRatio(clientId: string): Promise<number> {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const client = await this.prisma.client.findUnique({
+    const client = await this.prisma.client.findFirst({
       where: { id: clientId },
       select: {
         wealth: true,
@@ -286,8 +282,6 @@ export class WealthCalculationService {
    * Identifie les clients avec un patrimoine élevé
    */
   async getHighNetWorthClients(threshold: number = 1000000) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const clients = await this.prisma.client.findMany({
       where: {
         status: { in: ['ACTIVE', 'PROSPECT'] },
@@ -313,7 +307,7 @@ export class WealthCalculationService {
         const wealth = client.wealth as any
         return (wealth.netWealth || 0) >= threshold
       })
-      .sort((a, b) => {
+      .sort((a: any, b: any) => {
         const wealthA = (a.wealth as any)?.netWealth || 0
         const wealthB = (b.wealth as any)?.netWealth || 0
         return wealthB - wealthA
@@ -324,9 +318,7 @@ export class WealthCalculationService {
    * Calcule la répartition du patrimoine par catégorie
    */
   async getWealthDistribution(clientId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const client = await this.prisma.client.findUnique({
+    const client = await this.prisma.client.findFirst({
       where: { id: clientId },
       select: {
         wealth: true,

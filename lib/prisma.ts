@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import { createTenantExtension } from './prisma-middleware'
 
 const globalForPrisma = globalThis as unknown as {
@@ -9,40 +9,64 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
 })
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma
+}
 
-/**
- * Crée un client Prisma avec isolation multi-tenant
- * À utiliser dans les API routes et les server components
- * 
- * @param cabinetId - ID du cabinet pour l'isolation des données
- * @param isSuperAdmin - Si true, bypass l'isolation (accès à tous les cabinets)
- * @returns Client Prisma avec extension appliquée
- */
-export function getPrismaClient(cabinetId: string, isSuperAdmin: boolean = false) {
-  const client = new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-  })
-
-  // Appliquer l'extension d'isolation multi-tenant
-  return client.$extends(createTenantExtension(cabinetId, isSuperAdmin)) as any
+type TenantClient = PrismaClient & {
+  $extends: PrismaClient['$extends']
 }
 
 /**
- * Configure les paramètres de session PostgreSQL pour RLS
- * À appeler au début de chaque requête pour activer Row Level Security
- * 
- * @param cabinetId - ID du cabinet
- * @param isSuperAdmin - Si l'utilisateur est SuperAdmin
+ * Retourne un client Prisma étendu pour un cabinet donné.
+ */
+export function getPrismaClient(cabinetId: string, isSuperAdmin: boolean = false) {
+  if (!isSuperAdmin && !cabinetId) {
+    throw new Error('cabinetId is required for tenant-scoped Prisma client')
+  }
+
+  const baseClient: TenantClient = prisma
+
+  return baseClient.$extends(
+    createTenantExtension(cabinetId, isSuperAdmin)
+  ) as PrismaClient
+}
+
+/**
+ * Applique les variables de session nécessaires au RLS.
+ * Compatible avec l'ancienne signature (cabinetId, isSuperAdmin).
  */
 export async function setRLSContext(
-  cabinetId: string,
-  isSuperAdmin: boolean = false
+  clientOrCabinetId: PrismaClient | string,
+  cabinetIdOrIsSuperAdmin?: string | boolean,
+  maybeIsSuperAdmin?: boolean
 ) {
-  await prisma.$executeRawUnsafe(
-    `SET LOCAL app.current_cabinet_id = '${cabinetId}'`
+  let client: PrismaClient
+  let cabinetId: string
+  let isSuperAdmin: boolean
+
+  if (typeof clientOrCabinetId === 'string') {
+    client = prisma
+    cabinetId = clientOrCabinetId
+    isSuperAdmin = (cabinetIdOrIsSuperAdmin as boolean) ?? false
+  } else {
+    client = clientOrCabinetId
+    cabinetId = cabinetIdOrIsSuperAdmin as string
+    isSuperAdmin = maybeIsSuperAdmin ?? false
+  }
+
+  if (!client) {
+    throw new Error('Prisma client instance is required to set RLS context')
+  }
+
+  if (!isSuperAdmin && !cabinetId) {
+    throw new Error('cabinetId is required when applying RLS context')
+  }
+
+  await client.$executeRaw(
+    Prisma.sql`SET LOCAL app.current_cabinet_id = ${cabinetId}`
   )
-  await prisma.$executeRawUnsafe(
-    `SET LOCAL app.is_superadmin = ${isSuperAdmin}`
+  await client.$executeRaw(
+    Prisma.sql`SET LOCAL app.is_superadmin = ${isSuperAdmin}`
   )
 }

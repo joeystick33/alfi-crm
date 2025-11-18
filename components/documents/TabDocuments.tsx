@@ -103,7 +103,7 @@ export default function TabDocuments({ clientId, client }: TabDocumentsProps) {
       const data = await response.json()
       setDocuments(data?.documents || [])
       setExternalSources(data?.externalSources || null)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur chargement documents:', error)
       toast({
         title: 'Chargement impossible',
@@ -137,7 +137,7 @@ export default function TabDocuments({ clientId, client }: TabDocumentsProps) {
       
       const data = await response.json()
       setGedLibrary(data?.documents || [])
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur chargement GED:', error)
       toast({
         title: 'GED indisponible',
@@ -174,7 +174,7 @@ export default function TabDocuments({ clientId, client }: TabDocumentsProps) {
         })
         await loadDocuments()
         await loadGedLibrary()
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erreur association GED:', error)
         toast({
           title: 'Association impossible',
@@ -208,7 +208,7 @@ export default function TabDocuments({ clientId, client }: TabDocumentsProps) {
         })
         await loadDocuments()
         await loadGedLibrary()
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erreur dissociation GED:', error)
         toast({
           title: 'Dissociation impossible',
@@ -229,7 +229,7 @@ export default function TabDocuments({ clientId, client }: TabDocumentsProps) {
 
   const filteredGedDocs = useMemo(() => {
     if (!gedFilterType || gedFilterType === 'ALL') return gedLibrary
-    return gedLibrary.filter((doc) => doc.type === gedFilterType)
+    return gedLibrary.filter((doc: any) => doc.type === gedFilterType)
   }, [gedLibrary, gedFilterType])
 
   const documentsByType = useMemo(() => {
@@ -255,7 +255,7 @@ export default function TabDocuments({ clientId, client }: TabDocumentsProps) {
   }, [documentsByType, clientPatrimoine])
 
   const openUploadModal = (typeId: string = '') => {
-    setUploadForm((prev) => ({ ...prev, type: typeId }))
+    setUploadForm((prev: any) => ({ ...prev, type: typeId }))
     setShowUploadModal(true)
   }
 
@@ -299,7 +299,7 @@ export default function TabDocuments({ clientId, client }: TabDocumentsProps) {
       resetUploadState()
       setShowUploadModal(false)
       await loadDocuments()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur upload', error)
       toast({
         title: 'Échec de l\'import',
@@ -324,7 +324,7 @@ export default function TabDocuments({ clientId, client }: TabDocumentsProps) {
         description: `${doc.name || doc.type} a été supprimé du dossier.`,
       })
       await loadDocuments()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur suppression:', error)
       toast({
         title: 'Suppression impossible',
@@ -382,7 +382,7 @@ export default function TabDocuments({ clientId, client }: TabDocumentsProps) {
       const file = event.dataTransfer?.files?.[0]
       if (!file) return
       setSelectedFile(file)
-      setUploadForm((prev) => ({ ...prev, name: prev.name || file.name }))
+      setUploadForm((prev: any) => ({ ...prev, name: prev.name || file.name }))
       setShowUploadModal(true)
     },
     []
@@ -542,7 +542,7 @@ export default function TabDocuments({ clientId, client }: TabDocumentsProps) {
       {/* Upload Modal */}
       <Dialog
         open={showUploadModal}
-        onOpenChange={(open) => {
+        onOpenChange={(open: any) => {
           setShowUploadModal(open)
           if (!open) resetUploadState()
         }}
@@ -559,7 +559,7 @@ export default function TabDocuments({ clientId, client }: TabDocumentsProps) {
               <Label>Type de document *</Label>
               <Select
                 value={uploadForm.type}
-                onValueChange={(value) => setUploadForm((prev) => ({ ...prev, type: value }))}
+                onValueChange={(value: any) => setUploadForm((prev: any) => ({ ...prev, type: value }))}
                 required
               >
                 <SelectTrigger>
@@ -598,11 +598,11 @@ export default function TabDocuments({ clientId, client }: TabDocumentsProps) {
                   ref={fileInputRef}
                   type="file"
                   className="hidden"
-                  onChange={(event) => {
+                  onChange={(event: any) => {
                     const file = event.target.files?.[0]
                     if (!file) return
                     setSelectedFile(file)
-                    setUploadForm((prev) => ({ ...prev, name: prev.name || file.name }))
+                    setUploadForm((prev: any) => ({ ...prev, name: prev.name || file.name }))
                   }}
                   required={!selectedFile}
                 />
@@ -613,7 +613,7 @@ export default function TabDocuments({ clientId, client }: TabDocumentsProps) {
               <Label>Nom du document</Label>
               <Input
                 value={uploadForm.name}
-                onChange={(event) => setUploadForm((prev) => ({ ...prev, name: event.target.value }))}
+                onChange={(event: any) => setUploadForm((prev: any) => ({ ...prev, name: event.target.value }))}
                 placeholder="Nom interne ou titre du document"
               />
             </div>
@@ -622,7 +622,7 @@ export default function TabDocuments({ clientId, client }: TabDocumentsProps) {
               <Label>Description</Label>
               <Input
                 value={uploadForm.description}
-                onChange={(event) => setUploadForm((prev) => ({ ...prev, description: event.target.value }))}
+                onChange={(event: any) => setUploadForm((prev: any) => ({ ...prev, description: event.target.value }))}
                 placeholder="Notes ou contexte sur ce document"
               />
             </div>

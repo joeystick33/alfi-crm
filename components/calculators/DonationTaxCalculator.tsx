@@ -104,8 +104,8 @@ export function DonationTaxCalculator() {
 
   // Prepare chart data
   const chartData = result?.breakdown
-    .filter(b => b.taxAmount > 0)
-    .map(b => ({
+    .filter((b: any) => b.taxAmount > 0)
+    .map((b: any) => ({
       name: `Tranche ${formatPercent(b.rate)}`,
       'Montant taxable': b.taxableAmount,
       'Droits': b.taxAmount
@@ -134,7 +134,7 @@ export function DonationTaxCalculator() {
               label="Montant de la donation"
               type="number"
               value={donationAmount}
-              onChange={(e) => setDonationAmount(e.target.value)}
+              onChange={(e: any) => setDonationAmount(e.target.value)}
               placeholder="150000"
               required
             />
@@ -144,7 +144,7 @@ export function DonationTaxCalculator() {
                 <SelectValue placeholder="Sélectionner un lien" />
               </SelectTrigger>
               <SelectContent>
-                {relationshipOptions.map((option) => (
+                {relationshipOptions.map((option: any) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>
@@ -157,7 +157,7 @@ export function DonationTaxCalculator() {
                 label="Donations antérieures (15 ans)"
                 type="number"
                 value={previousDonations}
-                onChange={(e) => setPreviousDonations(e.target.value)}
+                onChange={(e: any) => setPreviousDonations(e.target.value)}
                 placeholder="0"
               />
               <p className="text-xs text-muted-foreground mt-1">
@@ -253,7 +253,7 @@ export function DonationTaxCalculator() {
                             </tr>
                           </thead>
                           <tbody className="divide-y">
-                            {result.breakdown.map((bracket, index) => (
+                            {result.breakdown.map((bracket: any, index: any) => (
                               <tr key={index} className="hover:bg-muted/50">
                                 <td className="px-4 py-3">
                                   {formatCurrency(bracket.min)} - {bracket.max ? formatCurrency(bracket.max) : '∞'}

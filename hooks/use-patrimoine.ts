@@ -434,7 +434,7 @@ export function useUpdateActif() {
       )
       return response.data
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data: any, variables: any) => {
       queryClient.setQueryData(patrimoineKeys.actif(variables.id), data)
       queryClient.invalidateQueries({ queryKey: patrimoineKeys.actifs() })
       // Invalidate wealth for all linked clients
@@ -481,7 +481,7 @@ export function useCreatePassif() {
       )
       return response.data
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: patrimoineKeys.passifs() })
       queryClient.invalidateQueries({ queryKey: patrimoineKeys.clientPassifs(data.clientId) })
       queryClient.invalidateQueries({ queryKey: patrimoineKeys.wealth(data.clientId) })
@@ -504,7 +504,7 @@ export function useUpdatePassif() {
       )
       return response.data
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data: any, variables: any) => {
       queryClient.setQueryData(patrimoineKeys.passif(variables.id), data)
       queryClient.invalidateQueries({ queryKey: patrimoineKeys.passifs() })
       if (data.clientId) {
@@ -554,7 +554,7 @@ export function useCreateContrat() {
       )
       return response.data
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: patrimoineKeys.contrats() })
       queryClient.invalidateQueries({ queryKey: patrimoineKeys.clientContrats(data.clientId) })
       queryClient.invalidateQueries({ queryKey: patrimoineKeys.clientPatrimoine(data.clientId) })
@@ -582,7 +582,7 @@ export function useUpdateContrat() {
       )
       return response.data
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data: any, variables: any) => {
       queryClient.setQueryData(patrimoineKeys.contrat(variables.id), data)
       queryClient.invalidateQueries({ queryKey: patrimoineKeys.contrats() })
       queryClient.invalidateQueries({ queryKey: patrimoineKeys.clientContrats(data.clientId) })
@@ -613,7 +613,7 @@ export function useRenewContrat() {
       )
       return response.data
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data: any, variables: any) => {
       queryClient.setQueryData(patrimoineKeys.contrat(variables.id), data)
       queryClient.invalidateQueries({ queryKey: patrimoineKeys.contrats() })
       queryClient.invalidateQueries({ queryKey: patrimoineKeys.clientContrats(data.clientId) })

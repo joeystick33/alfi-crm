@@ -219,7 +219,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching appointments:', error);
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401);
@@ -241,7 +241,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const data = createAppointmentSchema.parse(body);
+    const data: any = createAppointmentSchema.parse(body);
 
     // Validate dates
     if (data.endDate <= data.startDate) {
@@ -330,7 +330,7 @@ export async function POST(request: NextRequest) {
       message: 'Rendez-vous créé avec succès',
     }, 201);
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating appointment:', error);
     
     if (error instanceof z.ZodError) {

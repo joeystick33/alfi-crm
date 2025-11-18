@@ -14,33 +14,33 @@ import {
   Flag
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { apiCall } from '@/lib/api';
-import Button from '@/components/ui/Button';
-import Badge from '@/components/ui/Badge';
-import { SkeletonCard } from '@/components/ui/Skeleton';
+import { apiCall } from '@/lib/api-client';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 const PRIORITY_CONFIG = {
-  URGENTE: {
+  URGENT: {
     label: 'Urgent',
     color: 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-300',
     icon: '🔥',
     order: 4
   },
-  HAUTE: {
+  HIGH: {
     label: 'Haute',
     color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300',
     icon: '⚡',
     order: 3
   },
-  NORMALE: {
+  MEDIUM: {
     label: 'Normale',
     color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300',
     icon: '📋',
     order: 2
   },
-  BASSE: {
+  LOW: {
     label: 'Basse',
     color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
     icon: '📝',
@@ -49,11 +49,10 @@ const PRIORITY_CONFIG = {
 };
 
 const STATUS_CONFIG = {
-  A_FAIRE: { label: 'À faire', color: 'text-gray-600 dark:text-gray-400' },
-  EN_COURS: { label: 'En cours', color: 'text-blue-600 dark:text-blue-400' },
-  EN_ATTENTE: { label: 'En attente', color: 'text-yellow-600 dark:text-yellow-400' },
-  TERMINEE: { label: 'Terminée', color: 'text-green-600 dark:text-green-400' },
-  ANNULEE: { label: 'Annulée', color: 'text-red-600 dark:text-red-400' }
+  TODO: { label: 'À faire', color: 'text-gray-600 dark:text-gray-400' },
+  IN_PROGRESS: { label: 'En cours', color: 'text-blue-600 dark:text-blue-400' },
+  COMPLETED: { label: 'Terminée', color: 'text-green-600 dark:text-green-400' },
+  CANCELLED: { label: 'Annulée', color: 'text-red-600 dark:text-red-400' }
 };
 
 export default function TasksWidget({ 
@@ -74,7 +73,7 @@ export default function TasksWidget({
       setError(null);
 
       const response = await apiCall(
-        `/advisor/tasks?limit=${maxTasks}&status=A_FAIRE,EN_COURS&sort=priority,dueDate`
+        `/api/advisor/tasks?limit=${maxTasks}&status=TODO,IN_PROGRESS&sort=priority,dueDate`
       );
 
       if (response.success) {
@@ -97,9 +96,9 @@ export default function TasksWidget({
     try {
       setUpdating(taskId);
 
-      const newStatus = currentStatus === 'TERMINEE' ? 'A_FAIRE' : 'TERMINEE';
+      const newStatus = currentStatus === 'COMPLETED' ? 'TODO' : 'COMPLETED';
 
-      const response = await apiCall(`/advisor/tasks/${taskId}`, {
+      const response = await apiCall(`/api/advisor/tasks/${taskId}`, {
         method: 'PUT',
         body: { status: newStatus }
       });
@@ -201,7 +200,7 @@ export default function TasksWidget({
             <h3 className="font-semibold text-gray-900 dark:text-white">Mes tâches</h3>
           </div>
         </div>
-        <SkeletonCard className="h-64" />
+        <Skeleton className="h-64" />
       </div>
     );
   }

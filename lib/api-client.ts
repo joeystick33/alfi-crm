@@ -60,6 +60,7 @@ export async function apiCall<T = any>(
       const response = await fetch(url, {
         ...fetchOptions,
         headers,
+        credentials: 'include', // Important: include cookies for session
       })
 
       // Handle different status codes
@@ -157,7 +158,7 @@ export async function apiCall<T = any>(
             errorData
           )
       }
-    } catch (error) {
+    } catch (error: any) {
       // Network errors or other fetch errors
       if (error instanceof ApiError) {
         throw error

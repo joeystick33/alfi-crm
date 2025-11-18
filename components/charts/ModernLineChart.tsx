@@ -75,7 +75,7 @@ export function ModernLineChart({
             margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
           >
             <defs>
-              {GRADIENT_COLORS.map((color, index) => (
+              {GRADIENT_COLORS.map((color: any, index: any) => (
                 <linearGradient key={index} id={`lineGradient-${index}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={color.start} stopOpacity={0.8} />
                   <stop offset="100%" stopColor={color.end} stopOpacity={0.2} />
@@ -97,7 +97,7 @@ export function ModernLineChart({
               tickLine={false}
               axisLine={false}
               label={yAxisLabel ? { value: yAxisLabel, angle: -90, position: 'insideLeft' } : undefined}
-              tickFormatter={(value) => {
+              tickFormatter={(value: any) => {
                 if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
                 if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
                 return value;
@@ -108,7 +108,7 @@ export function ModernLineChart({
               wrapperStyle={{ paddingTop: '20px' }}
               iconType="circle"
             />
-            {dataKeys.map((key, index) => (
+            {dataKeys.map((key: any, index: any) => (
               <Line
                 key={key}
                 type="monotone"

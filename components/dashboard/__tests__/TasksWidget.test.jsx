@@ -11,7 +11,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import TasksWidget from '../TasksWidget';
-import { apiCall } from '@/lib/api';
+import { apiCall } from '@/lib/api-client';
 
 // Mock API
 vi.mock('@/lib/api', () => ({

@@ -88,6 +88,15 @@ export async function GET(request: NextRequest) {
       where.status = { notIn: ['COMPLETED', 'CANCELLED'] };
     }
 
+    // Build orderBy clause
+    let orderBy: any = [];
+    if (params.sort) {
+      const sortFields = params.sort.split(',').map(s => s.trim());
+      orderBy = sortFields.map(field => ({ [field]: params.order || 'asc' }));
+    } else {
+      orderBy = [{ dueDate: 'asc' }];
+    }
+
     // Execute query
     const tasks = await prisma.tache.findMany({
       where,
@@ -117,7 +126,7 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: { [params.sort]: params.order },
+      orderBy,
       take: params.limit,
     });
 
@@ -181,7 +190,7 @@ export async function GET(request: NextRequest) {
       count: formattedTasks.length,
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching tasks:', error);
     
     if (error instanceof Error && error.message === 'Unauthorized') {
@@ -205,7 +214,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const data = createTaskSchema.parse(body);
+    const data: any = createTaskSchema.parse(body);
 
     const userId = context.user.id;
     const cabinetId = context.cabinetId;
@@ -261,7 +270,7 @@ export async function POST(request: NextRequest) {
       message: 'Tâche créée avec succès',
     }, 201);
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating task:', error);
     
     if (error instanceof z.ZodError) {

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { 
   Calendar,
   Clock,
@@ -15,7 +15,7 @@ import {
   ArrowRight,
   AlertCircle
 } from 'lucide-react';
-import { apiCall } from '@/lib/api';
+import { apiCall } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
 
 export default function TodayWidget({ date = new Date() }) {
@@ -24,16 +24,16 @@ export default function TodayWidget({ date = new Date() }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    loadAppointments();
-  }, [date]);
-
-  const loadAppointments = async () => {
+  const loadAppointments = useCallback(async () => {
     try {
       setError(null);
       const dateStr = date.toISOString().split('T')[0];
-      const data = await apiCall(`/advisor/appointments?date=${dateStr}`);
-      setAppointments(data.appointments || data.data || []);
+      const data = await apiCall(`/api/advisor/appointments?date=${dateStr}`);
+      // Ensure we always set an array
+      const appointmentsList = Array.isArray(data?.appointments) ? data.appointments : 
+                               Array.isArray(data?.data) ? data.data : 
+                               Array.isArray(data) ? data : [];
+      setAppointments(appointmentsList);
     } catch (error) {
       console.error('Erreur chargement rendez-vous:', error);
       setError('Impossible de charger les rendez-vous');
@@ -41,7 +41,11 @@ export default function TodayWidget({ date = new Date() }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [date]);
+
+  useEffect(() => {
+    loadAppointments();
+  }, [loadAppointments]);
 
   const getTypeConfig = (type) => {
     const configs = {

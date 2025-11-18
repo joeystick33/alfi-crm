@@ -29,7 +29,7 @@ export class OutlookService {
 
   constructor(private accessToken: string) {
     this.client = Client.init({
-      authProvider: (done) => {
+      authProvider: (done: any) => {
         done(null, this.accessToken)
       },
     })
@@ -198,7 +198,7 @@ export class OutlookService {
         isRead: true,
       })
       return true
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error marking email as read:', error)
       return false
     }
@@ -222,15 +222,15 @@ export class OutlookService {
         contentType: 'Text',
         content: body,
       },
-      toRecipients: to.map((email) => ({
+      toRecipients: to.map((email: any) => ({
         emailAddress: { address: email },
       })),
       ccRecipients:
-        cc?.map((email) => ({
+        cc?.map((email: any) => ({
           emailAddress: { address: email },
         })) || [],
       bccRecipients:
-        bcc?.map((email) => ({
+        bcc?.map((email: any) => ({
           emailAddress: { address: email },
         })) || [],
     }

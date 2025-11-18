@@ -1,14 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Bell, Plus, Eye, EyeOff, Search, Calendar, ListChecks, FolderKanban, AlertTriangle } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { Bell, Plus, Eye, EyeOff, Search, Calendar, ListChecks, FolderKanban, AlertTriangle, User, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { GlobalSearch } from './GlobalSearch'
-import { QuickActions } from './QuickActions'
-import { CommandPalette } from './CommandPalette'
-import { NotificationCenter } from './NotificationCenter'
+import { LogoutButton } from '@/components/auth/LogoutButton'
 import { useDashboardCounters } from '@/hooks/use-api'
 
 interface DashboardHeaderProps {
@@ -27,7 +26,27 @@ export function DashboardHeader({
   onOpenNotifications,
 }: DashboardHeaderProps) {
   const router = useRouter()
+  const { data: session } = useSession()
   const { data: counters } = useDashboardCounters()
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false)
+      }
+    }
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showUserMenu])
 
   return (
     <header className="sticky top-0 z-30 h-16 border-b bg-card/90 backdrop-blur-xl shadow-sm">
@@ -140,6 +159,83 @@ export function DashboardHeader({
                 </Badge>
               )}
             </Button>
+          </div>
+
+          {/* User Menu */}
+          <div className="relative ml-3" ref={menuRef}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="gap-2"
+            >
+              <User className="h-4 w-4" />
+              <span className="hidden sm:inline">
+                {session?.user?.firstName || 'Utilisateur'}
+              </span>
+            </Button>
+
+            {showUserMenu && (
+              <div className="absolute right-0 mt-2 w-64 rounded-lg shadow-lg bg-card border z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="py-1">
+                  {/* User Info */}
+                  <div className="px-4 py-3 border-b">
+                    <p className="text-sm font-semibold">
+                      {session?.user?.firstName} {session?.user?.lastName}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {session?.user?.email}
+                    </p>
+                    {session?.user?.role && (
+                      <Badge variant="secondary" className="mt-2 text-[10px]">
+                        {session.user.role}
+                      </Badge>
+                    )}
+                    {session?.user?.cabinetName && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {session.user.cabinetName}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Menu Items */}
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
+                        router.push('/dashboard/profil')
+                        setShowUserMenu(false)
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm hover:bg-accent flex items-center gap-2 transition-colors"
+                    >
+                      <User className="h-4 w-4" />
+                      Mon profil
+                    </button>
+                    <button
+                      onClick={() => {
+                        router.push('/dashboard/parametres')
+                        setShowUserMenu(false)
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm hover:bg-accent flex items-center gap-2 transition-colors"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Paramètres
+                    </button>
+                  </div>
+
+                  {/* Logout */}
+                  <div className="border-t py-1 px-2">
+                    <LogoutButton
+                      variant="ghost"
+                      size="sm"
+                      showIcon={true}
+                      showText={true}
+                      className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive font-medium"
+                      callbackUrl="/login"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -117,7 +117,7 @@ export function GlobalSearch() {
         setResults(data.results)
         setSelectedIndex(0)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Search error:', error)
     } finally {
       setLoading(false)
@@ -159,12 +159,12 @@ export function GlobalSearch() {
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault()
-        setSelectedIndex((prev) => (prev < allResults.length - 1 ? prev + 1 : prev))
+        setSelectedIndex((prev: any) => (prev < allResults.length - 1 ? prev + 1 : prev))
         break
 
       case 'ArrowUp':
         e.preventDefault()
-        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : 0))
+        setSelectedIndex((prev: any) => (prev > 0 ? prev - 1 : 0))
         break
 
       case 'Enter':
@@ -181,7 +181,7 @@ export function GlobalSearch() {
     // Save to recent searches
     const newRecent = [
       { query, result },
-      ...recentSearches.filter((r) => r.result.id !== result.id),
+      ...recentSearches.filter((r: any) => r.result.id !== result.id),
     ].slice(0, 5)
 
     setRecentSearches(newRecent)
@@ -234,7 +234,7 @@ export function GlobalSearch() {
               ref={inputRef}
               type="text"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e: any) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Rechercher des clients, tâches, rendez-vous..."
               className="flex-1 text-sm outline-none bg-transparent placeholder-muted-foreground"
@@ -258,7 +258,7 @@ export function GlobalSearch() {
                   Recherches récentes
                 </h3>
                 <div className="space-y-1">
-                  {recentSearches.map((recent, index) => (
+                  {recentSearches.map((recent: any, index: any) => (
                     <button
                       key={index}
                       onClick={() => handleResultClick(recent.result)}
@@ -302,7 +302,7 @@ export function GlobalSearch() {
                       </h3>
                       <div className="space-y-1">
                         {items.map((item: SearchResult) => {
-                          const globalIndex = allResults.findIndex((r) => r.id === item.id)
+                          const globalIndex = allResults.findIndex((r: any) => r.id === item.id)
                           const isSelected = globalIndex === selectedIndex
 
                           return (

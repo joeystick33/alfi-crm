@@ -30,6 +30,82 @@ import { LoginForm } from '@/components/auth'
 <LoginForm />
 ```
 
+### LogoutButton
+A reusable logout button component with loading states.
+
+**Features:**
+- Customizable variant and size
+- Loading state with spinner
+- Optional icon and text display
+- Custom callback URL
+
+**Usage:**
+```tsx
+import { LogoutButton } from '@/components/auth/LogoutButton'
+
+// Simple usage
+<LogoutButton />
+
+// Customized
+<LogoutButton 
+  variant="destructive"
+  size="lg"
+  showIcon={true}
+  showText={true}
+  callbackUrl="/login"
+/>
+
+// Icon only
+<LogoutButton showText={false} />
+```
+
+### UserMenu
+A dropdown menu component displaying user information and actions.
+
+**Features:**
+- User profile information display
+- Role and cabinet information
+- Navigation to profile and settings
+- Integrated logout button
+- Click outside to close
+- Keyboard navigation (Escape to close)
+
+**Usage:**
+```tsx
+import { UserMenu } from '@/components/auth/UserMenu'
+
+// In header or navigation
+<UserMenu />
+
+// Customized
+<UserMenu 
+  variant="ghost"
+  size="md"
+  showName={true}
+  className="ml-auto"
+/>
+```
+
+### SessionProvider
+Wraps the application to provide NextAuth session context.
+
+**Usage:**
+```tsx
+import { SessionProvider } from '@/components/auth/SessionProvider'
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <SessionProvider>
+          {children}
+        </SessionProvider>
+      </body>
+    </html>
+  )
+}
+```
+
 ## Authentication Flow
 
 1. User enters email and password

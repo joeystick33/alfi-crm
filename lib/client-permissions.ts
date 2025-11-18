@@ -79,7 +79,7 @@ export async function verifyClientPortalAccess(
         conseillerId: client.conseillerId,
       },
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Client Permission Check Error]:', error);
     return {
       clientId,
@@ -217,7 +217,7 @@ export async function verifyResourceOwnership(
       default:
         return false;
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Resource Ownership Check Error]:', error);
     return false;
   }
@@ -343,7 +343,7 @@ export function createResourceNotFoundResponse(
  */
 export async function logClientPortalAccess(
   clientId: string,
-  action: string,
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW' | 'EXPORT' | 'SHARE' | 'SIGN' | 'APPROVE' | 'REJECT',
   resourceType?: string,
   resourceId?: string,
   metadata?: Record<string, any>
@@ -361,14 +361,14 @@ export async function logClientPortalAccess(
         cabinetId: client.cabinetId,
         userId: clientId, // Using clientId as userId for portal access
         action,
-        resourceType: resourceType || 'CLIENT_PORTAL',
-        resourceId: resourceId || clientId,
-        metadata: metadata || {},
+        entityType: resourceType || 'CLIENT_PORTAL',
+        entityId: resourceId || clientId,
+        changes: metadata || {},
         ipAddress: null, // Can be extracted from request headers if needed
         userAgent: null, // Can be extracted from request headers if needed
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Client Portal Access Log Error]:', error);
     // Don't throw - logging should not break the request
   }

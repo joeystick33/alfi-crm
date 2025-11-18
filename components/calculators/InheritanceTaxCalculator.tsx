@@ -130,7 +130,7 @@ export function InheritanceTaxCalculator() {
               label="Montant de l'héritage"
               type="number"
               value={inheritanceAmount}
-              onChange={(e) => setInheritanceAmount(e.target.value)}
+              onChange={(e: any) => setInheritanceAmount(e.target.value)}
               placeholder="300000"
               required
             />
@@ -140,7 +140,7 @@ export function InheritanceTaxCalculator() {
                 <SelectValue placeholder="Sélectionner un lien" />
               </SelectTrigger>
               <SelectContent>
-                {relationshipOptions.map((option) => (
+                {relationshipOptions.map((option: any) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>
@@ -263,7 +263,7 @@ export function InheritanceTaxCalculator() {
                             </tr>
                           </thead>
                           <tbody className="divide-y">
-                            {result.breakdown.map((bracket, index) => (
+                            {result.breakdown.map((bracket: any, index: any) => (
                               <tr key={index} className="hover:bg-muted/50">
                                 <td className="px-4 py-3">
                                   {formatCurrency(bracket.min)} - {bracket.max ? formatCurrency(bracket.max) : '∞'}

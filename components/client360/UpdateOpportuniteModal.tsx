@@ -107,7 +107,7 @@ export function UpdateOpportuniteModal({
 
       onSuccess()
       onClose()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating opportunity:', error)
       toast({
         title: 'Erreur',
@@ -134,14 +134,14 @@ export function UpdateOpportuniteModal({
               <Label htmlFor="type">Type</Label>
               <Select
                 value={formData.type}
-                onValueChange={(value) => setFormData({ ...formData, type: value })}
+                onValueChange={(value: any) => setFormData({ ...formData, type: value })}
                 disabled
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {opportuniteTypes.map((type) => (
+                  {opportuniteTypes.map((type: any) => (
                     <SelectItem key={type.value} value={type.value}>
                       {type.label}
                     </SelectItem>
@@ -155,13 +155,13 @@ export function UpdateOpportuniteModal({
               <Label htmlFor="status">Statut *</Label>
               <Select
                 value={formData.status}
-                onValueChange={(value) => setFormData({ ...formData, status: value })}
+                onValueChange={(value: any) => setFormData({ ...formData, status: value })}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {statuses.map((status) => (
+                  {statuses.map((status: any) => (
                     <SelectItem key={status.value} value={status.value}>
                       {status.label}
                     </SelectItem>
@@ -176,7 +176,7 @@ export function UpdateOpportuniteModal({
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e: any) => setFormData({ ...formData, name: e.target.value })}
               required
             />
           </div>
@@ -186,7 +186,7 @@ export function UpdateOpportuniteModal({
             <Textarea
               id="description"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e: any) => setFormData({ ...formData, description: e.target.value })}
               rows={3}
             />
           </div>
@@ -211,7 +211,7 @@ export function UpdateOpportuniteModal({
                 min="0"
                 max="100"
                 value={formData.confidence}
-                onChange={(e) => setFormData({ ...formData, confidence: e.target.value })}
+                onChange={(e: any) => setFormData({ ...formData, confidence: e.target.value })}
               />
             </div>
 
@@ -219,13 +219,13 @@ export function UpdateOpportuniteModal({
               <Label htmlFor="priority">Priorité *</Label>
               <Select
                 value={formData.priority}
-                onValueChange={(value) => setFormData({ ...formData, priority: value })}
+                onValueChange={(value: any) => setFormData({ ...formData, priority: value })}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {priorities.map((priority) => (
+                  {priorities.map((priority: any) => (
                     <SelectItem key={priority.value} value={priority.value}>
                       {priority.label}
                     </SelectItem>

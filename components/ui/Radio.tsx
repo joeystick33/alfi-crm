@@ -44,7 +44,7 @@ const Radio = React.forwardRef<HTMLInputElement, RadioProps>(
             name={name}
             value={value}
             checked={checked}
-            onChange={(e) => onChange?.(e.target.value)}
+            onChange={(e: any) => onChange?.(e.target.value)}
             disabled={disabled}
             aria-invalid={error ? 'true' : 'false'}
             aria-describedby={description ? `${radioId}-description` : undefined}

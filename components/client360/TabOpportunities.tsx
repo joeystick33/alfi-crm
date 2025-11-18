@@ -66,7 +66,7 @@ export function TabOpportunities({ clientId }: TabOpportunitiesProps) {
       if (!response.ok) throw new Error('Failed to fetch opportunities')
       const data = await response.json()
       setOpportunites(data.data || [])
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching opportunities:', error)
       toast({
         title: 'Erreur',
@@ -98,7 +98,7 @@ export function TabOpportunities({ clientId }: TabOpportunitiesProps) {
       })
 
       fetchOpportunites()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error converting opportunity:', error)
       toast({
         title: 'Erreur',
@@ -126,7 +126,7 @@ export function TabOpportunities({ clientId }: TabOpportunitiesProps) {
       })
 
       fetchOpportunites()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting opportunity:', error)
       toast({
         title: 'Erreur',
@@ -138,7 +138,7 @@ export function TabOpportunities({ clientId }: TabOpportunitiesProps) {
 
   // Calculate total opportunity value
   const totalValue = opportunites.reduce(
-    (sum, opp) => sum + (opp.estimatedValue ? parseFloat(opp.estimatedValue) : 0),
+    (sum: any, opp: any) => sum + (opp.estimatedValue ? parseFloat(opp.estimatedValue) : 0),
     0
   )
 
@@ -197,7 +197,7 @@ export function TabOpportunities({ clientId }: TabOpportunitiesProps) {
             <div className="text-2xl font-bold">
               {opportunites.length > 0
                 ? formatPercentage(
-                    (opportunites.filter((o) => o.status === 'CONVERTED').length /
+                    (opportunites.filter((o: any) => o.status === 'CONVERTED').length /
                       opportunites.length) *
                       100
                   )

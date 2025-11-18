@@ -71,7 +71,7 @@ export function CreateProjetModal({ open, onClose, clientId, onSuccess }: Create
         startDate: '',
         targetDate: '',
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Create projet error:', error)
       toast({
         title: 'Erreur',
@@ -95,7 +95,7 @@ export function CreateProjetModal({ open, onClose, clientId, onSuccess }: Create
             <Label htmlFor="type">Type de projet *</Label>
             <Select
               value={formData.type}
-              onValueChange={(value) => setFormData({ ...formData, type: value as ProjetType })}
+              onValueChange={(value: any) => setFormData({ ...formData, type: value as ProjetType })}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -115,7 +115,7 @@ export function CreateProjetModal({ open, onClose, clientId, onSuccess }: Create
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e: any) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Ex: Achat résidence principale"
               required
             />
@@ -139,7 +139,7 @@ export function CreateProjetModal({ open, onClose, clientId, onSuccess }: Create
               type="number"
               step="0.01"
               value={formData.estimatedBudget}
-              onChange={(e) => setFormData({ ...formData, estimatedBudget: e.target.value })}
+              onChange={(e: any) => setFormData({ ...formData, estimatedBudget: e.target.value })}
               placeholder="300000"
             />
           </div>
@@ -151,7 +151,7 @@ export function CreateProjetModal({ open, onClose, clientId, onSuccess }: Create
                 id="startDate"
                 type="date"
                 value={formData.startDate}
-                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                onChange={(e: any) => setFormData({ ...formData, startDate: e.target.value })}
               />
             </div>
 
@@ -161,7 +161,7 @@ export function CreateProjetModal({ open, onClose, clientId, onSuccess }: Create
                 id="targetDate"
                 type="date"
                 value={formData.targetDate}
-                onChange={(e) => setFormData({ ...formData, targetDate: e.target.value })}
+                onChange={(e: any) => setFormData({ ...formData, targetDate: e.target.value })}
               />
             </div>
           </div>

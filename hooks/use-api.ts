@@ -106,7 +106,7 @@ export function useCreateClient(
   
   return useMutation({
     mutationFn: (data: CreateClientRequest) => api.post<ClientDetail>('/clients', data),
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       // Invalidate clients list
       queryClient.invalidateQueries({ queryKey: queryKeys.clients })
       // Invalidate dashboard counters
@@ -118,7 +118,7 @@ export function useCreateClient(
         variant: 'success',
       })
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: 'Erreur',
         description: error.message || 'Impossible de créer le client.',
@@ -158,7 +158,7 @@ export function useUpdateClient(
       // Return context with snapshot
       return { previousClient }
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data: any, variables: any) => {
       // Update with server data
       queryClient.setQueryData(queryKeys.client(variables.id), data)
       // Invalidate clients list
@@ -170,7 +170,7 @@ export function useUpdateClient(
         variant: 'success',
       })
     },
-    onError: (error, variables, context) => {
+    onError: (error: any, variables: any, context: any) => {
       // Rollback on error
       if (context?.previousClient) {
         queryClient.setQueryData(queryKeys.client(variables.id), context.previousClient)
@@ -210,7 +210,7 @@ export function useDeleteClient(
         variant: 'success',
       })
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: 'Erreur',
         description: error.message || 'Impossible d\'archiver le client.',
@@ -234,8 +234,12 @@ export function useDashboardCounters(
   return useQuery({
     queryKey: queryKeys.dashboardCounters,
     queryFn: () => api.get<DashboardCounters>('/dashboard/counters'),
-    // Refetch every 30 seconds
-    refetchInterval: 30000,
+    // Désactiver le refetch automatique pour éviter les boucles
+    refetchInterval: false,
+    // Garder les données en cache 5 minutes
+    staleTime: 5 * 60 * 1000,
+    // Ne pas refetch automatiquement au focus
+    refetchOnWindowFocus: false,
     ...options,
   })
 }
@@ -296,11 +300,11 @@ export function useMarkNotificationRead(
       // Optimistically update notification lists
       queryClient.setQueriesData<PaginatedResponse<NotificationListItem>>(
         { queryKey: queryKeys.notifications },
-        (old) => {
+        (old: any) => {
           if (!old) return old
           return {
             ...old,
-            data: old.data.map((notif) =>
+            data: old.data.map((notif: any) =>
               notif.id === id ? { ...notif, isRead: true } : notif
             ),
           }
@@ -316,7 +320,7 @@ export function useMarkNotificationRead(
       
       return { previousNotifications, previousCount }
     },
-    onError: (error, id, context) => {
+    onError: (error: any, id: any, context: any) => {
       // Rollback on error
       if (context?.previousNotifications) {
         context.previousNotifications.forEach(([queryKey, data]) => {
@@ -407,7 +411,7 @@ export function useUpdateTask(
       
       return { previousTasks }
     },
-    onError: (error, variables, context) => {
+    onError: (error: any, variables: any, context: any) => {
       // Rollback on error
       if (context?.previousTasks) {
         context.previousTasks.forEach(([queryKey, data]) => {
@@ -451,7 +455,7 @@ export function useCreateTask(
         variant: 'success',
       })
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: 'Erreur',
         description: error.message || 'Impossible de créer la tâche.',
@@ -476,7 +480,7 @@ export function useRecalculateWealth(
   
   return useMutation({
     mutationFn: (clientId: string) => api.post<WealthSummary>(`/clients/${clientId}/wealth/recalculate`),
-    onSuccess: (data, clientId) => {
+    onSuccess: (data: any, clientId: any) => {
       // Update wealth cache
       queryClient.setQueryData(queryKeys.clientWealth(clientId), data)
       // Invalidate client data
@@ -488,7 +492,7 @@ export function useRecalculateWealth(
         variant: 'success',
       })
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: 'Erreur',
         description: error.message || 'Impossible de recalculer le patrimoine.',

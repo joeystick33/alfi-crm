@@ -160,7 +160,7 @@ export function TaxProjector() {
                   label="Revenu annuel actuel (€)"
                   type="number"
                   value={currentIncome}
-                  onChange={(e) => setCurrentIncome(e.target.value)}
+                  onChange={(e: any) => setCurrentIncome(e.target.value)}
                   placeholder="60000"
                   min={0}
                   required
@@ -170,7 +170,7 @@ export function TaxProjector() {
                   label="Croissance annuelle (%)"
                   type="number"
                   value={incomeGrowthRate}
-                  onChange={(e) => setIncomeGrowthRate(e.target.value)}
+                  onChange={(e: any) => setIncomeGrowthRate(e.target.value)}
                   placeholder="2"
                   step={0.1}
                   min={-10}
@@ -181,7 +181,7 @@ export function TaxProjector() {
                   label="Déductions actuelles (€)"
                   type="number"
                   value={currentDeductions}
-                  onChange={(e) => setCurrentDeductions(e.target.value)}
+                  onChange={(e: any) => setCurrentDeductions(e.target.value)}
                   placeholder="0"
                   min={0}
                 />
@@ -192,7 +192,7 @@ export function TaxProjector() {
                   label="Nombre d'années"
                   type="number"
                   value={yearsToProject}
-                  onChange={(e) => setYearsToProject(e.target.value)}
+                  onChange={(e: any) => setYearsToProject(e.target.value)}
                   placeholder="10"
                   min={1}
                   max={50}
@@ -203,7 +203,7 @@ export function TaxProjector() {
                   label="Quotient familial"
                   type="number"
                   value={familyQuotient}
-                  onChange={(e) => setFamilyQuotient(e.target.value)}
+                  onChange={(e: any) => setFamilyQuotient(e.target.value)}
                   placeholder="1"
                   step={0.5}
                   min={1}
@@ -214,7 +214,7 @@ export function TaxProjector() {
                   label="Âge actuel (optionnel)"
                   type="number"
                   value={currentAge}
-                  onChange={(e) => setCurrentAge(e.target.value)}
+                  onChange={(e: any) => setCurrentAge(e.target.value)}
                   placeholder="35"
                   min={18}
                   max={100}
@@ -320,7 +320,7 @@ export function TaxProjector() {
                       data={effectiveRateData}
                       dataKeys={['Taux effectif']}
                       xAxisKey="year"
-                      formatValue={(value) => `${value.toFixed(1)}%`}
+                      formatValue={(value: any) => `${value.toFixed(1)}%`}
                       xAxisLabel="Année"
                     />
                   </div>

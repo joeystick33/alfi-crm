@@ -58,7 +58,7 @@ export function DataTable<T extends Record<string, any>>({
   const sortedData = React.useMemo(() => {
     if (!sortKey) return data
 
-    return [...data].sort((a, b) => {
+    return [...data].sort((a: any, b: any) => {
       const aValue = a[sortKey]
       const bValue = b[sortKey]
 
@@ -104,7 +104,7 @@ export function DataTable<T extends Record<string, any>>({
           <table className="w-full">
             <thead>
               <tr className="border-b bg-muted/50">
-                {columns.map((column) => (
+                {columns.map((column: any) => (
                   <th
                     key={column.key}
                     className={cn(
@@ -135,7 +135,7 @@ export function DataTable<T extends Record<string, any>>({
               </tr>
             </thead>
             <tbody>
-              {sortedData.map((item, index) => (
+              {sortedData.map((item: any, index: any) => (
                 <tr
                   key={index}
                   className={cn(
@@ -144,7 +144,7 @@ export function DataTable<T extends Record<string, any>>({
                   )}
                   onClick={() => onRowClick?.(item)}
                 >
-                  {columns.map((column) => (
+                  {columns.map((column: any) => (
                     <td
                       key={column.key}
                       className={cn(

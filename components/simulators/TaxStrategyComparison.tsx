@@ -156,7 +156,7 @@ export function TaxStrategyComparison() {
                   label="Revenu annuel imposable (€)"
                   type="number"
                   value={income}
-                  onChange={(e) => setIncome(e.target.value)}
+                  onChange={(e: any) => setIncome(e.target.value)}
                   placeholder="80000"
                   min={0}
                   required
@@ -166,7 +166,7 @@ export function TaxStrategyComparison() {
                   label="Déductions actuelles (€)"
                   type="number"
                   value={currentDeductions}
-                  onChange={(e) => setCurrentDeductions(e.target.value)}
+                  onChange={(e: any) => setCurrentDeductions(e.target.value)}
                   placeholder="0"
                   min={0}
                 />
@@ -175,7 +175,7 @@ export function TaxStrategyComparison() {
                   label="Quotient familial"
                   type="number"
                   value={familyQuotient}
-                  onChange={(e) => setFamilyQuotient(e.target.value)}
+                  onChange={(e: any) => setFamilyQuotient(e.target.value)}
                   placeholder="1"
                   step={0.5}
                   min={1}
@@ -186,7 +186,7 @@ export function TaxStrategyComparison() {
                   label="Budget disponible (€)"
                   type="number"
                   value={availableBudget}
-                  onChange={(e) => setAvailableBudget(e.target.value)}
+                  onChange={(e: any) => setAvailableBudget(e.target.value)}
                   placeholder="10000"
                   min={0}
                   required
@@ -392,7 +392,7 @@ export function TaxStrategyComparison() {
                         data={roiChartData}
                         dataKeys={['ROI']}
                         title=""
-                        formatValue={(value) => `${value.toFixed(0)}%`}
+                        formatValue={(value: any) => `${value.toFixed(0)}%`}
                         stacked={false}
                       />
                     </div>

@@ -87,7 +87,7 @@ export function ExportModal({
     }
   }
 
-  const selectedOption = FORMAT_OPTIONS.find((opt) => opt.value === selectedFormat)
+  const selectedOption = FORMAT_OPTIONS.find((opt: any) => opt.value === selectedFormat)
 
   return (
     <Modal open={open} onOpenChange={onOpenChange}>
@@ -104,7 +104,7 @@ export function ExportModal({
               Format d'export
             </label>
             <div className="grid grid-cols-3 gap-3">
-              {FORMAT_OPTIONS.map((option) => {
+              {FORMAT_OPTIONS.map((option: any) => {
                 const Icon = option.icon
                 const isSelected = selectedFormat === option.value
                 return (

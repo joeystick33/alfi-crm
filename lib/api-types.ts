@@ -41,14 +41,23 @@ import type {
   RendezVousType,
   RendezVousStatus,
   NotificationType,
-  NotificationPriority,
 } from '@prisma/client'
 
 // ============================================================================
 // Client Types
 // ============================================================================
 
-export interface ClientListItem extends Client {
+export interface ClientListItem {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  phone: string
+  clientType: ClientType
+  status: ClientStatus
+  lastContactDate: Date | null
+  createdAt: Date
+  updatedAt: Date
   _count?: {
     actifs: number
     passifs: number
@@ -334,7 +343,6 @@ export interface NotificationListItem extends Notification {
 
 export interface NotificationFilters {
   type?: NotificationType
-  priority?: NotificationPriority
   isRead?: boolean
   startDate?: string
   endDate?: string

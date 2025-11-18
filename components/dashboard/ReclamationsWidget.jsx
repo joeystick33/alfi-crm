@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { apiCall } from '@/lib/api';
+import { apiCall } from '@/lib/api-client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { AlertTriangle, Clock, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
@@ -24,7 +24,7 @@ export default function ReclamationsWidget() {
   const loadReclamations = async () => {
     try {
       setLoading(true);
-      const data = await apiCall('/advisor/reclamations?filter=urgentes');
+      const data = await apiCall('/api/advisor/reclamations?filter=urgentes');
       setReclamations(data.reclamations || []);
     } catch (error) {
       console.error('Erreur chargement réclamations widget:', error);

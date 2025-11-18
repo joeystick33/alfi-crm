@@ -48,7 +48,7 @@ export default function DocumentsWidget({ maxDocuments = 5, showStats = true }: 
       const data = await response.json()
       setDocuments(data.documents || [])
       setStats(data.stats || stats)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur chargement documents:', error)
       setDocuments([])
     } finally {
@@ -248,7 +248,7 @@ export default function DocumentsWidget({ maxDocuments = 5, showStats = true }: 
 
         {loading ? (
           <div className="space-y-3">
-            {[1, 2, 3].map(i => (
+            {[1, 2, 3].map((i: any) => (
               <div key={i} className="h-20 bg-gray-200 rounded animate-pulse"></div>
             ))}
           </div>
@@ -264,7 +264,7 @@ export default function DocumentsWidget({ maxDocuments = 5, showStats = true }: 
           </div>
         ) : (
           <div className="space-y-2">
-            {documents.map((doc) => {
+            {documents.map((doc: any) => {
               const statusConfig = getStatusConfig(doc.status)
               const priorityConfig = getPriorityConfig(doc.priority)
               const StatusIcon = statusConfig.icon
@@ -294,7 +294,7 @@ export default function DocumentsWidget({ maxDocuments = 5, showStats = true }: 
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <button
                         className="p-1 hover:bg-slate-200 rounded transition-colors"
-                        onClick={(e) => {
+                        onClick={(e: any) => {
                           e.stopPropagation()
                           // TODO: Preview
                         }}
@@ -303,7 +303,7 @@ export default function DocumentsWidget({ maxDocuments = 5, showStats = true }: 
                       </button>
                       <button
                         className="p-1 hover:bg-slate-200 rounded transition-colors"
-                        onClick={(e) => {
+                        onClick={(e: any) => {
                           e.stopPropagation()
                           // TODO: Download
                         }}

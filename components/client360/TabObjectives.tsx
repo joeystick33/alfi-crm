@@ -83,7 +83,7 @@ export function TabObjectives({ clientId }: TabObjectivesProps) {
         const projetsData = await projetsRes.json()
         setProjets(projetsData.data || [])
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching objectives and projects:', error)
     } finally {
       setLoading(false)
@@ -130,7 +130,7 @@ export function TabObjectives({ clientId }: TabObjectivesProps) {
         <CardContent>
           {objectifs.length > 0 ? (
             <div className="space-y-4">
-              {objectifs.map((objectif) => {
+              {objectifs.map((objectif: any) => {
                 const statusConfig = objectifStatusConfig[objectif.status as keyof typeof objectifStatusConfig]
                 const StatusIcon = statusConfig.icon
                 const progress = objectif.progress || 0
@@ -248,7 +248,7 @@ export function TabObjectives({ clientId }: TabObjectivesProps) {
         <CardContent>
           {projets.length > 0 ? (
             <div className="space-y-4">
-              {projets.map((projet) => {
+              {projets.map((projet: any) => {
                 const statusConfig = projetStatusConfig[projet.status as keyof typeof projetStatusConfig]
                 const progress = projet.progress || 0
 

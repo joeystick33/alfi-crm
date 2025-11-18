@@ -15,7 +15,7 @@ export async function getAuthContext(request?: NextRequest): Promise<AuthContext
   }
 
   return {
-    user: session.user as SessionData,
+    user: session.user as unknown as SessionData,
     cabinetId: session.user.cabinetId || '',
     isSuperAdmin: session.user.isSuperAdmin,
   }

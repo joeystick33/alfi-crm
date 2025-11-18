@@ -12,7 +12,7 @@ import {
   Calendar,
   Award
 } from 'lucide-react';
-import { apiCall } from '@/lib/api';
+import { apiCall } from '@/lib/api-client';
 
 export default function TeamKPICards() {
   const [data, setData] = useState(null);
@@ -24,7 +24,7 @@ export default function TeamKPICards() {
 
   const loadTeamKPIs = async () => {
     try {
-      const response = await apiCall('/management/team/kpi');
+      const response = await apiCall('/api/management/team/kpi');
       setData(response.data || response);
     } catch (error) {
       console.error('Erreur chargement KPIs équipe:', error);

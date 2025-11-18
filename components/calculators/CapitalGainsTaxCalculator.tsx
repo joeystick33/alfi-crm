@@ -125,7 +125,7 @@ export function CapitalGainsTaxCalculator() {
               label="Montant de la plus-value"
               type="number"
               value={grossGain}
-              onChange={(e) => setGrossGain(e.target.value)}
+              onChange={(e: any) => setGrossGain(e.target.value)}
               placeholder="100000"
               required
             />
@@ -135,7 +135,7 @@ export function CapitalGainsTaxCalculator() {
                 label="Durée de détention (années)"
                 type="number"
                 value={holdingPeriod}
-                onChange={(e) => setHoldingPeriod(e.target.value)}
+                onChange={(e: any) => setHoldingPeriod(e.target.value)}
                 placeholder="5"
                 min="0"
                 step="0.5"
@@ -148,7 +148,7 @@ export function CapitalGainsTaxCalculator() {
                 <SelectValue placeholder="Sélectionner un type" />
               </SelectTrigger>
               <SelectContent>
-                {assetTypeOptions.map((option) => (
+                {assetTypeOptions.map((option: any) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>

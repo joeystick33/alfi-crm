@@ -99,7 +99,7 @@ export function TimelineTemplate({
 
         {/* KPI Sidebar - Vertical Stack (2x2 each) */}
         <div className="col-span-1 md:col-span-2 space-y-4">
-          {kpis.map((kpi, index) => (
+          {kpis.map((kpi: any, index: any) => (
             <BentoKPI
               key={index}
               span={{ cols: 2, rows: 2 }}

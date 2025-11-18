@@ -3,7 +3,6 @@
  * Ces modèles nécessitent une isolation par cabinet
  */
 const MODELS_WITH_CABINET_ID = [
-  'Cabinet',
   'User',
   'AssistantAssignment',
   'ApporteurAffaires',
@@ -18,13 +17,17 @@ const MODELS_WITH_CABINET_ID = [
   'Tache',
   'RendezVous',
   'Email',
+  'SyncedEmail',
+  'EmailTemplate',
   'Notification',
   'Campagne',
   'Template',
+  'TimelineEvent',
   'Simulation',
   'Reclamation',
   'AuditLog',
   'ExportJob',
+  'CommercialAction',
 ]
 
 /**
@@ -60,13 +63,13 @@ export function createTenantExtension(
             return query(args)
           }
 
-          // Actions de lecture: ajouter le filtre cabinetId
           if (
-            operation === 'findUnique' ||
             operation === 'findFirst' ||
             operation === 'findMany' ||
             operation === 'count' ||
-            operation === 'aggregate'
+            operation === 'aggregate' ||
+            operation === 'deleteMany' ||
+            operation === 'updateMany'
           ) {
             args = args || {}
             args.where = {
@@ -75,7 +78,6 @@ export function createTenantExtension(
             }
           }
 
-          // Actions de création: injecter automatiquement le cabinetId
           if (operation === 'create') {
             args = args || {}
             args.data = {
@@ -84,7 +86,6 @@ export function createTenantExtension(
             }
           }
 
-          // Actions de création multiple: injecter le cabinetId dans chaque élément
           if (operation === 'createMany') {
             args = args || {}
             if (Array.isArray(args.data)) {
@@ -97,28 +98,6 @@ export function createTenantExtension(
                 ...args.data,
                 cabinetId,
               }
-            }
-          }
-
-          // Actions de mise à jour: ajouter le filtre cabinetId
-          if (
-            operation === 'update' ||
-            operation === 'updateMany' ||
-            operation === 'upsert'
-          ) {
-            args = args || {}
-            args.where = {
-              ...args.where,
-              cabinetId,
-            }
-          }
-
-          // Actions de suppression: ajouter le filtre cabinetId
-          if (operation === 'delete' || operation === 'deleteMany') {
-            args = args || {}
-            args.where = {
-              ...args.where,
-              cabinetId,
             }
           }
 

@@ -83,7 +83,7 @@ export function CreateObjectifModal({ open, onClose, clientId, onSuccess }: Crea
         priority: 'MEDIUM',
         monthlyContribution: '',
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Create objectif error:', error)
       toast({
         title: 'Erreur',
@@ -108,7 +108,7 @@ export function CreateObjectifModal({ open, onClose, clientId, onSuccess }: Crea
               <Label htmlFor="type">Type d'objectif *</Label>
               <Select
                 value={formData.type}
-                onValueChange={(value) => setFormData({ ...formData, type: value as ObjectifType })}
+                onValueChange={(value: any) => setFormData({ ...formData, type: value as ObjectifType })}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -127,7 +127,7 @@ export function CreateObjectifModal({ open, onClose, clientId, onSuccess }: Crea
               <Label htmlFor="priority">Priorité *</Label>
               <Select
                 value={formData.priority}
-                onValueChange={(value) => setFormData({ ...formData, priority: value as ObjectifPriority })}
+                onValueChange={(value: any) => setFormData({ ...formData, priority: value as ObjectifPriority })}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -148,7 +148,7 @@ export function CreateObjectifModal({ open, onClose, clientId, onSuccess }: Crea
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e: any) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Ex: Préparer ma retraite"
               required
             />
@@ -173,7 +173,7 @@ export function CreateObjectifModal({ open, onClose, clientId, onSuccess }: Crea
                 type="number"
                 step="0.01"
                 value={formData.targetAmount}
-                onChange={(e) => setFormData({ ...formData, targetAmount: e.target.value })}
+                onChange={(e: any) => setFormData({ ...formData, targetAmount: e.target.value })}
                 placeholder="500000"
                 required
               />
@@ -186,7 +186,7 @@ export function CreateObjectifModal({ open, onClose, clientId, onSuccess }: Crea
                 type="number"
                 step="0.01"
                 value={formData.currentAmount}
-                onChange={(e) => setFormData({ ...formData, currentAmount: e.target.value })}
+                onChange={(e: any) => setFormData({ ...formData, currentAmount: e.target.value })}
                 placeholder="150000"
               />
             </div>
@@ -199,7 +199,7 @@ export function CreateObjectifModal({ open, onClose, clientId, onSuccess }: Crea
                 id="targetDate"
                 type="date"
                 value={formData.targetDate}
-                onChange={(e) => setFormData({ ...formData, targetDate: e.target.value })}
+                onChange={(e: any) => setFormData({ ...formData, targetDate: e.target.value })}
                 required
               />
             </div>
@@ -211,7 +211,7 @@ export function CreateObjectifModal({ open, onClose, clientId, onSuccess }: Crea
                 type="number"
                 step="0.01"
                 value={formData.monthlyContribution}
-                onChange={(e) => setFormData({ ...formData, monthlyContribution: e.target.value })}
+                onChange={(e: any) => setFormData({ ...formData, monthlyContribution: e.target.value })}
                 placeholder="2000"
               />
             </div>

@@ -47,7 +47,7 @@ const formSchema = z.object({
     message: 'La biographie ne peut pas dépasser 500 caractères.',
   }).optional(),
   accountType: z.enum(['personal', 'business']),
-  acceptTerms: z.boolean().refine((val) => val === true, {
+  acceptTerms: z.boolean().refine((val: any) => val === true, {
     message: 'Vous devez accepter les conditions d\'utilisation.',
   }),
   newsletter: z.boolean().optional(),
@@ -283,7 +283,7 @@ export default function FormExample() {
               accept=".pdf,.doc,.docx"
               multiple
               maxSize={10 * 1024 * 1024}
-              onUpload={(files) => console.log('Files uploaded:', files)}
+              onUpload={(files: any) => console.log('Files uploaded:', files)}
             />
           </div>
 

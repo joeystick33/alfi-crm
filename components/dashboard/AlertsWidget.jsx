@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/Badge';
 import { AlertTriangle, Clock, FileText } from 'lucide-react';
-import { apiCall } from '@/lib/api';
+import { apiCall } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
 
 export default function AlertsWidget() {
@@ -18,7 +18,7 @@ export default function AlertsWidget() {
 
   const loadAlerts = async () => {
     try {
-      const data = await apiCall('/advisor/alerts?urgent=true&limit=3');
+      const data = await apiCall('/api/advisor/alerts?urgent=true&limit=3');
       setAlerts(data.alerts || []);
     } catch (error) {
       console.error('Erreur chargement alertes:', error);

@@ -107,12 +107,12 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     },
   ]
 
-  const filteredCommands = commands.filter((command) => {
+  const filteredCommands = commands.filter((command: any) => {
     const searchLower = search.toLowerCase()
     return (
       command.label.toLowerCase().includes(searchLower) ||
       command.description?.toLowerCase().includes(searchLower) ||
-      command.keywords.some((keyword) => keyword.includes(searchLower))
+      command.keywords.some((keyword: any) => keyword.includes(searchLower))
     )
   })
 
@@ -131,12 +131,12 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
       if (e.key === 'ArrowDown') {
         e.preventDefault()
-        setSelectedIndex((prev) =>
+        setSelectedIndex((prev: any) =>
           prev < filteredCommands.length - 1 ? prev + 1 : prev
         )
       } else if (e.key === 'ArrowUp') {
         e.preventDefault()
-        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : prev))
+        setSelectedIndex((prev: any) => (prev > 0 ? prev - 1 : prev))
       } else if (e.key === 'Enter') {
         e.preventDefault()
         if (filteredCommands[selectedIndex]) {
@@ -160,7 +160,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             <Input
               placeholder="Rechercher une commande..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e: any) => setSearch(e.target.value)}
               className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
               autoFocus
             />
@@ -177,7 +177,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             </div>
           ) : (
             <div className="space-y-1">
-              {filteredCommands.map((command, index) => {
+              {filteredCommands.map((command: any, index: any) => {
                 const Icon = command.icon
                 const isSelected = index === selectedIndex
 

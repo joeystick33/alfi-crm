@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
         storageLimit: 1000, // 1GB default
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get documents widget error:', error)
     
     if (error instanceof Error && error.message === 'Unauthorized') {

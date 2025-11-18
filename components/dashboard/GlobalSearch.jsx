@@ -13,7 +13,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { apiCall } from '@/lib/api';
+import { apiCall } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -97,7 +97,7 @@ export default function GlobalSearch() {
 
     setLoading(true);
     try {
-      const data = await apiCall(`/advisor/search?q=${encodeURIComponent(searchQuery)}&limit=5`);
+      const data = await apiCall(`/api/advisor/search?q=${encodeURIComponent(searchQuery)}&limit=5`);
       setResults(data.results);
       setSelectedIndex(0);
     } catch (error) {
@@ -173,7 +173,7 @@ export default function GlobalSearch() {
     localStorage.setItem('recentSearches', JSON.stringify(newRecent));
 
     // Save to backend
-    apiCall('/advisor/search', {
+    apiCall('/api/advisor/search', {
       method: 'POST',
       body: JSON.stringify({
         query,

@@ -91,7 +91,7 @@ export function CreateOpportuniteModal({
         confidence: '50',
         priority: 'MEDIUM',
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating opportunity:', error)
       toast({
         title: 'Erreur',
@@ -116,13 +116,13 @@ export function CreateOpportuniteModal({
               <Label htmlFor="type">Type *</Label>
               <Select
                 value={formData.type}
-                onValueChange={(value) => setFormData({ ...formData, type: value })}
+                onValueChange={(value: any) => setFormData({ ...formData, type: value })}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {opportuniteTypes.map((type) => (
+                  {opportuniteTypes.map((type: any) => (
                     <SelectItem key={type.value} value={type.value}>
                       {type.label}
                     </SelectItem>
@@ -135,13 +135,13 @@ export function CreateOpportuniteModal({
               <Label htmlFor="priority">Priorité *</Label>
               <Select
                 value={formData.priority}
-                onValueChange={(value) => setFormData({ ...formData, priority: value })}
+                onValueChange={(value: any) => setFormData({ ...formData, priority: value })}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {priorities.map((priority) => (
+                  {priorities.map((priority: any) => (
                     <SelectItem key={priority.value} value={priority.value}>
                       {priority.label}
                     </SelectItem>
@@ -156,7 +156,7 @@ export function CreateOpportuniteModal({
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e: any) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Ex: Optimisation fiscale 2024"
               required
             />
@@ -167,7 +167,7 @@ export function CreateOpportuniteModal({
             <Textarea
               id="description"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e: any) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Décrivez l'opportunité..."
               rows={3}
             />
@@ -194,7 +194,7 @@ export function CreateOpportuniteModal({
                 min="0"
                 max="100"
                 value={formData.confidence}
-                onChange={(e) => setFormData({ ...formData, confidence: e.target.value })}
+                onChange={(e: any) => setFormData({ ...formData, confidence: e.target.value })}
               />
             </div>
           </div>

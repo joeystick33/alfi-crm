@@ -71,14 +71,14 @@ export function TabOverview({ clientId, client, wealth }: TabOverviewProps) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Allocation by Type */}
-        {wealth && wealth.allocationByType.length > 0 && (
+        {wealth && wealth.allocationByType && wealth.allocationByType.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle>Répartition par type</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {wealth.allocationByType.map((item) => (
+                {wealth.allocationByType.map((item: any) => (
                   <div key={item.type} className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
                       <span className="font-medium">{item.type}</span>
@@ -103,14 +103,14 @@ export function TabOverview({ clientId, client, wealth }: TabOverviewProps) {
         )}
 
         {/* Allocation by Category */}
-        {wealth && wealth.allocationByCategory.length > 0 && (
+        {wealth && wealth.allocationByCategory && wealth.allocationByCategory.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle>Répartition par catégorie</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {wealth.allocationByCategory.map((item) => (
+                {wealth.allocationByCategory.map((item: any) => (
                   <div key={item.category} className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
                       <span className="font-medium">{item.category}</span>

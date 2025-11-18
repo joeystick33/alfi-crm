@@ -153,7 +153,7 @@ export function InvestmentVehicleComparison() {
                   label="Montant à investir (€)"
                   type="number"
                   value={investmentAmount}
-                  onChange={(e) => setInvestmentAmount(e.target.value)}
+                  onChange={(e: any) => setInvestmentAmount(e.target.value)}
                   placeholder="50000"
                   min={1}
                   required
@@ -163,7 +163,7 @@ export function InvestmentVehicleComparison() {
                   label="Durée de détention (années)"
                   type="number"
                   value={holdingPeriod}
-                  onChange={(e) => setHoldingPeriod(e.target.value)}
+                  onChange={(e: any) => setHoldingPeriod(e.target.value)}
                   placeholder="10"
                   min={1}
                   max={50}
@@ -174,7 +174,7 @@ export function InvestmentVehicleComparison() {
                   label="Rendement attendu (%/an)"
                   type="number"
                   value={expectedReturn}
-                  onChange={(e) => setExpectedReturn(e.target.value)}
+                  onChange={(e: any) => setExpectedReturn(e.target.value)}
                   placeholder="5"
                   step={0.1}
                   min={-50}
@@ -354,7 +354,7 @@ export function InvestmentVehicleComparison() {
                         data={taxRateChartData}
                         dataKeys={['Taux d\'imposition']}
                         title=""
-                        formatValue={(value) => `${value.toFixed(1)}%`}
+                        formatValue={(value: any) => `${value.toFixed(1)}%`}
                         stacked={false}
                       />
                     </div>

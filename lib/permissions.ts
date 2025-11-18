@@ -40,9 +40,15 @@ export type Permission =
   | 'canManageCalendar'
   | 'canViewCalendar'
   
+  // Projects
+  | 'canManageProjets'
+  | 'canViewProjets'
+  | 'canDeleteProjets'
+  
   // Opportunities
   | 'canManageOpportunities'
   | 'canViewOpportunities'
+  | 'canConvertOpportunities'
   
   // Communications
   | 'canSendEmails'
@@ -100,8 +106,12 @@ export const SUPERADMIN_PERMISSIONS: Record<string, Permission[]> = {
     'canManageTasks',
     'canManageCalendar',
     'canViewCalendar',
+    'canManageProjets',
+    'canViewProjets',
+    'canDeleteProjets',
     'canManageOpportunities',
     'canViewOpportunities',
+    'canConvertOpportunities',
     'canSendEmails',
     'canManageCampagnes',
     'canViewCommunications',
@@ -171,8 +181,12 @@ export const USER_PERMISSIONS: Record<string, Permission[]> = {
     'canManageTasks',
     'canManageCalendar',
     'canViewCalendar',
+    'canManageProjets',
+    'canViewProjets',
+    'canDeleteProjets',
     'canManageOpportunities',
     'canViewOpportunities',
+    'canConvertOpportunities',
     'canSendEmails',
     'canManageCampagnes',
     'canViewCommunications',
@@ -203,8 +217,11 @@ export const USER_PERMISSIONS: Record<string, Permission[]> = {
     'canManageOwnTasks',
     'canManageCalendar',
     'canViewCalendar',
+    'canManageProjets',
+    'canViewProjets',
     'canManageOpportunities',
     'canViewOpportunities',
+    'canConvertOpportunities',
     'canSendEmails',
     'canViewCommunications',
     'canUseTemplates',
@@ -226,6 +243,7 @@ export const USER_PERMISSIONS: Record<string, Permission[]> = {
     'canViewFinancialData',
     'canManageOwnTasks',
     'canViewCalendar',
+    'canViewProjets',
     'canViewOpportunities',
     'canViewCommunications',
     'canUseTemplates',

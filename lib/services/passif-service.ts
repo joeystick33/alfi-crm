@@ -1,5 +1,6 @@
-import { getPrismaClient, setRLSContext } from '../prisma'
+import { getPrismaClient } from '../prisma'
 import { PassifType } from '@prisma/client'
+import { Decimal } from '@prisma/client/runtime/library'
 
 export interface CreatePassifInput {
   clientId: string
@@ -44,15 +45,32 @@ export class PassifService {
     this.prisma = getPrismaClient(cabinetId, isSuperAdmin)
   }
 
+  private formatPassif(passif: any) {
+    if (!passif) {
+      return null
+    }
+
+    const toNumber = (value: any) => (value?.toNumber ? value.toNumber() : value ?? null)
+
+    return {
+      ...passif,
+      initialAmount: toNumber(passif.initialAmount),
+      remainingAmount: toNumber(passif.remainingAmount),
+      interestRate: toNumber(passif.interestRate),
+      monthlyPayment: toNumber(passif.monthlyPayment),
+    }
+  }
+
   /**
    * Crée un nouveau passif
    */
   async createPassif(data: CreatePassifInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Vérifier que le client existe
-    const client = await this.prisma.client.findUnique({
-      where: { id: data.clientId },
+    const client = await this.prisma.client.findFirst({
+      where: {
+        id: data.clientId,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!client) {
@@ -65,6 +83,9 @@ export class PassifService {
         where: {
           clientId: data.clientId,
           actifId: data.linkedActifId,
+          actif: {
+            cabinetId: this.cabinetId,
+          },
         },
       })
 
@@ -76,22 +97,34 @@ export class PassifService {
     const passif = await this.prisma.passif.create({
       data: {
         cabinetId: this.cabinetId,
-        ...data,
+        clientId: data.clientId,
+        type: data.type,
+        name: data.name,
+        description: data.description,
+        initialAmount: new Decimal(data.initialAmount),
+        remainingAmount: new Decimal(data.remainingAmount),
+        interestRate: new Decimal(data.interestRate),
+        monthlyPayment: new Decimal(data.monthlyPayment),
+        startDate: data.startDate,
+        endDate: data.endDate,
+        linkedActifId: data.linkedActifId,
+        insurance: data.insurance,
         isActive: true,
       },
     })
 
-    return passif
+    return this.getPassifById(passif.id)
   }
 
   /**
    * Récupère un passif par ID
    */
   async getPassifById(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const passif = await this.prisma.passif.findUnique({
-      where: { id },
+    const passif = await this.prisma.passif.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       include: {
         client: {
           select: {
@@ -116,7 +149,7 @@ export class PassifService {
       },
     })
 
-    return passif
+    return this.formatPassif(passif)
   }
 
   /**
@@ -128,9 +161,9 @@ export class PassifService {
     isActive?: boolean
     search?: string
   }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const where: any = {}
+    const where: any = {
+      cabinetId: this.cabinetId,
+    }
 
     if (filters?.clientId) {
       where.clientId = filters.clientId
@@ -151,7 +184,7 @@ export class PassifService {
       ]
     }
 
-    const passifs = await this.prisma.passif.findMany({
+    return this.prisma.passif.findMany({
       where,
       include: {
         client: {
@@ -165,8 +198,6 @@ export class PassifService {
         remainingAmount: 'desc',
       },
     })
-
-    return passifs
   }
 
   /**
@@ -182,13 +213,14 @@ export class PassifService {
     
     // Transform to match expected format
     return passifs.map(passif => ({
-      ...passif,
-      montantRestant: Number(passif.remainingAmount),
-      tauxInteret: Number(passif.interestRate),
-      mensualite: Number(passif.monthlyPayment),
+      ...this.formatPassif(passif),
+      montantRestant: passif.remainingAmount.toNumber(),
+      tauxInteret: passif.interestRate.toNumber(),
+      mensualite: passif.monthlyPayment.toNumber(),
+      montantInitial: passif.initialAmount.toNumber(),
       dateFin: passif.endDate,
       organisme: passif.lender,
-      nom: passif.name
+      nom: passif.name,
     }))
   }
 
@@ -196,8 +228,6 @@ export class PassifService {
    * Liste les passifs d'un client
    */
   async getClientPassifs(clientId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const passifs = await this.prisma.passif.findMany({
       where: {
         clientId,
@@ -208,54 +238,84 @@ export class PassifService {
       },
     })
 
-    return passifs
+    return passifs.map(passif => this.formatPassif(passif))
   }
 
   /**
    * Met à jour un passif
    */
   async updatePassif(id: string, data: UpdatePassifInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
+    const updateData: any = { ...data }
 
-    const passif = await this.prisma.passif.update({
-      where: { id },
-      data,
+    if (data.initialAmount !== undefined) {
+      updateData.initialAmount = new Decimal(data.initialAmount)
+    }
+    if (data.remainingAmount !== undefined) {
+      updateData.remainingAmount = new Decimal(data.remainingAmount)
+    }
+    if (data.interestRate !== undefined) {
+      updateData.interestRate = new Decimal(data.interestRate)
+    }
+    if (data.monthlyPayment !== undefined) {
+      updateData.monthlyPayment = new Decimal(data.monthlyPayment)
+    }
+
+    const { count } = await this.prisma.passif.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
+      data: updateData,
     })
 
-    return passif
+    if (count === 0) {
+      throw new Error('Passif not found or access denied')
+    }
+
+    return this.getPassifById(id)
   }
 
   /**
    * Met à jour le montant restant dû
    */
   async updateRemainingAmount(id: string, newAmount: number) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const passif = await this.prisma.passif.update({
-      where: { id },
-      data: { remainingAmount: newAmount },
+    const { count } = await this.prisma.passif.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
+      data: { remainingAmount: new Decimal(newAmount) },
     })
+
+    if (count === 0) {
+      throw new Error('Passif not found or access denied')
+    }
 
     // TODO: Déclencher le recalcul du patrimoine du client
 
-    return passif
+    return this.getPassifById(id)
   }
 
   /**
    * Désactive un passif (remboursé ou clôturé)
    */
   async deactivatePassif(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const passif = await this.prisma.passif.update({
-      where: { id },
+    const { count } = await this.prisma.passif.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data: {
         isActive: false,
-        remainingAmount: 0,
+        remainingAmount: new Decimal(0),
       },
     })
 
-    return passif
+    if (count === 0) {
+      throw new Error('Passif not found or access denied')
+    }
+
+    return this.getPassifById(id)
   }
 
   /**
@@ -300,10 +360,11 @@ export class PassifService {
    * Récupère le tableau d'amortissement d'un passif
    */
   async getAmortizationSchedule(id: string): Promise<AmortizationSchedule[]> {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const passif = await this.prisma.passif.findUnique({
-      where: { id },
+    const passif = await this.prisma.passif.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!passif) {
@@ -322,10 +383,11 @@ export class PassifService {
    * Calcule le coût total d'un emprunt
    */
   async calculateTotalCost(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const passif = await this.prisma.passif.findUnique({
-      where: { id },
+    const passif = await this.prisma.passif.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!passif) {
@@ -339,9 +401,9 @@ export class PassifService {
       passif.startDate
     )
 
-    const totalPaid = schedule.reduce((sum, s) => sum + s.payment, 0)
-    const totalInterest = schedule.reduce((sum, s) => sum + s.interest, 0)
-    const totalPrincipal = schedule.reduce((sum, s) => sum + s.principal, 0)
+    const totalPaid = schedule.reduce((sum: number, s: AmortizationSchedule) => sum + s.payment, 0)
+    const totalInterest = schedule.reduce((sum: number, s: AmortizationSchedule) => sum + s.interest, 0)
+    const totalPrincipal = schedule.reduce((sum: number, s: AmortizationSchedule) => sum + s.principal, 0)
 
     return {
       initialAmount: passif.initialAmount.toNumber(),
@@ -357,10 +419,11 @@ export class PassifService {
    * Calcule les échéances à venir
    */
   async getUpcomingPayments(id: string, months: number = 12) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const passif = await this.prisma.passif.findUnique({
-      where: { id },
+    const passif = await this.prisma.passif.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!passif) {
@@ -378,17 +441,18 @@ export class PassifService {
     const futureDate = new Date()
     futureDate.setMonth(futureDate.getMonth() + months)
 
-    return schedule.filter(s => s.date >= now && s.date <= futureDate)
+    return schedule.filter((s: any) => s.date >= now && s.date <= futureDate)
   }
 
   /**
    * Simule un remboursement anticipé
    */
   async simulateEarlyRepayment(id: string, repaymentAmount: number) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const passif = await this.prisma.passif.findUnique({
-      where: { id },
+    const passif = await this.prisma.passif.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!passif) {
@@ -413,8 +477,8 @@ export class PassifService {
       new Date()
     )
 
-    const currentTotalInterest = currentSchedule.reduce((sum, s) => sum + s.interest, 0)
-    const newTotalInterest = newSchedule.reduce((sum, s) => sum + s.interest, 0)
+    const currentTotalInterest = currentSchedule.reduce((sum: any, s: any) => sum + s.interest, 0)
+    const newTotalInterest = newSchedule.reduce((sum: any, s: any) => sum + s.interest, 0)
     const interestSaved = currentTotalInterest - newTotalInterest
 
     const monthsSaved = currentSchedule.length - newSchedule.length
@@ -433,10 +497,11 @@ export class PassifService {
    * Calcule le taux d'endettement d'un client
    */
   async calculateClientDebtRatio(clientId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const client = await this.prisma.client.findUnique({
-      where: { id: clientId },
+    const client = await this.prisma.client.findFirst({
+      where: {
+        id: clientId,
+        cabinetId: this.cabinetId,
+      },
       select: {
         annualIncome: true,
       },
@@ -454,7 +519,7 @@ export class PassifService {
     })
 
     const totalMonthlyPayments = passifs.reduce(
-      (sum, p) => sum + p.monthlyPayment.toNumber(),
+      (sum: number, p) => sum + p.monthlyPayment.toNumber(),
       0
     )
 
@@ -473,14 +538,13 @@ export class PassifService {
    * Récupère les passifs arrivant à échéance
    */
   async getPassifsEndingSoon(months: number = 12) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const futureDate = new Date()
     futureDate.setMonth(futureDate.getMonth() + months)
 
     const passifs = await this.prisma.passif.findMany({
       where: {
         isActive: true,
+        cabinetId: this.cabinetId,
         endDate: {
           lte: futureDate,
           gte: new Date(),
@@ -514,23 +578,21 @@ export class PassifService {
    * Récupère les statistiques des passifs du cabinet
    */
   async getCabinetPassifsStats() {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const passifs = await this.prisma.passif.findMany({
-      where: { isActive: true },
+      where: { isActive: true, cabinetId: this.cabinetId },
     })
 
     const totalRemaining = passifs.reduce(
-      (sum, p) => sum + p.remainingAmount.toNumber(),
+      (sum: number, p) => sum + p.remainingAmount.toNumber(),
       0
     )
 
     const totalMonthlyPayments = passifs.reduce(
-      (sum, p) => sum + p.monthlyPayment.toNumber(),
+      (sum: number, p) => sum + p.monthlyPayment.toNumber(),
       0
     )
 
-    const byType = passifs.reduce((acc, p) => {
+    const byType = passifs.reduce((acc: Record<string, { count: number; totalRemaining: number }>, p) => {
       const type = p.type
       if (!acc[type]) {
         acc[type] = {
@@ -549,7 +611,29 @@ export class PassifService {
       totalMonthlyPayments,
       byType,
       averageInterestRate:
-        passifs.reduce((sum, p) => sum + p.interestRate.toNumber(), 0) / passifs.length || 0,
+        passifs.reduce((sum: number, p) => sum + p.interestRate.toNumber(), 0) / passifs.length || 0,
     }
+  }
+
+  /**
+   * Supprime (désactive) un passif
+   */
+  async deletePassif(id: string) {
+    const { count } = await this.prisma.passif.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
+      data: {
+        isActive: false,
+        updatedAt: new Date(),
+      },
+    })
+
+    if (count === 0) {
+      throw new Error('Passif not found or access denied')
+    }
+
+    return this.getPassifById(id)
   }
 }

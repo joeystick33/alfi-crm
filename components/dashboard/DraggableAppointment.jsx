@@ -11,7 +11,7 @@ import {
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import Badge from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/Badge';
 
 const STATUS_COLORS = {
   PLANIFIE: 'bg-blue-100 text-blue-700 border-blue-200',

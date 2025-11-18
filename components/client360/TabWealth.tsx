@@ -57,7 +57,7 @@ export function TabWealth({ clientId, client, wealth }: TabWealthProps) {
   // Calculate advanced metrics
   const liquidityMetrics = useMemo(() => {
     if (!client.actifs) return { liquidAssets: 0, totalAssets: 0, liquidityRatio: 0, liquidityStatus: 'good' as const }
-    return calculateLiquidityRatio(client.actifs.map(a => ({
+    return calculateLiquidityRatio(client.actifs.map((a: any) => ({
       id: a.id,
       name: a.name || '',
       type: a.type || '',
@@ -69,14 +69,14 @@ export function TabWealth({ clientId, client, wealth }: TabWealthProps) {
   const assetsWithLeverage = useMemo(() => {
     if (!client.actifs || !client.passifs) return []
     return calculateLeverageEffect(
-      client.actifs.map(a => ({
+      client.actifs.map((a: any) => ({
         id: a.id,
         name: a.name || '',
         type: a.type || '',
         value: Number(a.value) || 0,
         linkedLiabilityId: null // Will be determined by passifs
       })),
-      client.passifs.map(p => ({
+      client.passifs.map((p: any) => ({
         id: p.id,
         name: p.name || '',
         type: p.type || '',
@@ -89,7 +89,7 @@ export function TabWealth({ clientId, client, wealth }: TabWealthProps) {
   const sortedAssets = useMemo(() => {
     if (!client.actifs) return []
     return sortAssets(
-      client.actifs.map(a => ({
+      client.actifs.map((a: any) => ({
         id: a.id,
         name: a.name || '',
         type: a.type || '',
@@ -99,7 +99,7 @@ export function TabWealth({ clientId, client, wealth }: TabWealthProps) {
         isManaged: a.managedByFirm || false
       })),
       sortBy,
-      client.passifs?.map(p => ({
+      client.passifs?.map((p: any) => ({
         id: p.id,
         name: p.name || '',
         type: p.type || '',
@@ -110,11 +110,11 @@ export function TabWealth({ clientId, client, wealth }: TabWealthProps) {
   }, [client.actifs, client.passifs, sortBy])
 
   const managedAssets = useMemo(() => {
-    return client.actifs?.filter(a => a.managedByFirm) || []
+    return client.actifs?.filter((a: any) => a.managedByFirm) || []
   }, [client.actifs])
 
   const totalManagedValue = useMemo(() => {
-    return managedAssets.reduce((sum, a) => sum + Number(a.value || 0), 0)
+    return managedAssets.reduce((sum: any, a: any) => sum + Number(a.value || 0), 0)
   }, [managedAssets])
 
   const totalUnmanagedValue = useMemo(() => {
@@ -136,7 +136,7 @@ export function TabWealth({ clientId, client, wealth }: TabWealthProps) {
       key: 'type',
       label: 'Type',
       sortable: true,
-      render: (actif) => <Badge variant="outline">{actif.type}</Badge>,
+      render: (actif: any) => <Badge variant="outline">{actif.type}</Badge>,
     },
     {
       key: 'category',
@@ -147,7 +147,7 @@ export function TabWealth({ clientId, client, wealth }: TabWealthProps) {
       key: 'value',
       label: 'Valeur',
       sortable: true,
-      render: (actif) => (
+      render: (actif: any) => (
         <span className="font-medium text-success">
           {formatCurrency(actif.value)}
         </span>
@@ -157,7 +157,7 @@ export function TabWealth({ clientId, client, wealth }: TabWealthProps) {
       key: 'acquisitionDate',
       label: 'Date d\'acquisition',
       sortable: true,
-      render: (actif) =>
+      render: (actif: any) =>
         actif.acquisitionDate ? formatDate(actif.acquisitionDate) : '-',
     },
   ]
@@ -173,13 +173,13 @@ export function TabWealth({ clientId, client, wealth }: TabWealthProps) {
       key: 'type',
       label: 'Type',
       sortable: true,
-      render: (passif) => <Badge variant="outline">{passif.type}</Badge>,
+      render: (passif: any) => <Badge variant="outline">{passif.type}</Badge>,
     },
     {
       key: 'remainingAmount',
       label: 'Capital restant',
       sortable: true,
-      render: (passif) => (
+      render: (passif: any) => (
         <span className="font-medium text-destructive">
           {formatCurrency(passif.remainingAmount)}
         </span>
@@ -189,19 +189,19 @@ export function TabWealth({ clientId, client, wealth }: TabWealthProps) {
       key: 'interestRate',
       label: 'Taux',
       sortable: true,
-      render: (passif) => formatPercentage(passif.interestRate),
+      render: (passif: any) => formatPercentage(passif.interestRate),
     },
     {
       key: 'monthlyPayment',
       label: 'Mensualité',
       sortable: true,
-      render: (passif) => formatCurrency(passif.monthlyPayment),
+      render: (passif: any) => formatCurrency(passif.monthlyPayment),
     },
     {
       key: 'endDate',
       label: 'Échéance',
       sortable: true,
-      render: (passif) => formatDate(passif.endDate),
+      render: (passif: any) => formatDate(passif.endDate),
     },
   ]
 
@@ -216,7 +216,7 @@ export function TabWealth({ clientId, client, wealth }: TabWealthProps) {
       key: 'type',
       label: 'Type',
       sortable: true,
-      render: (contrat) => <Badge variant="outline">{contrat.type}</Badge>,
+      render: (contrat: any) => <Badge variant="outline">{contrat.type}</Badge>,
     },
     {
       key: 'provider',
@@ -227,21 +227,21 @@ export function TabWealth({ clientId, client, wealth }: TabWealthProps) {
       key: 'value',
       label: 'Valeur',
       sortable: true,
-      render: (contrat) =>
+      render: (contrat: any) =>
         contrat.value ? formatCurrency(contrat.value) : '-',
     },
     {
       key: 'premium',
       label: 'Prime',
       sortable: true,
-      render: (contrat) =>
+      render: (contrat: any) =>
         contrat.premium ? formatCurrency(contrat.premium) : '-',
     },
     {
       key: 'status',
       label: 'Statut',
       sortable: true,
-      render: (contrat) => (
+      render: (contrat: any) => (
         <Badge
           variant={contrat.status === 'ACTIVE' ? 'success' : 'outline'}
         >
@@ -385,7 +385,7 @@ export function TabWealth({ clientId, client, wealth }: TabWealthProps) {
               <span className="text-sm text-gray-700">Actifs avec levier</span>
             </div>
             <div className="text-3xl font-bold text-purple-700">
-              {assetsWithLeverage.filter(a => a.hasLeverage).length}
+              {assetsWithLeverage.filter((a: any) => a.hasLeverage).length}
             </div>
             <div className="text-xs text-gray-600 mt-1">
               Financés par crédit
@@ -436,7 +436,7 @@ export function TabWealth({ clientId, client, wealth }: TabWealthProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {wealth.allocationByType.map((item) => (
+                    {wealth.allocationByType.map((item: any) => (
                       <div key={item.type} className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <span className="font-medium">{item.type}</span>
@@ -465,7 +465,7 @@ export function TabWealth({ clientId, client, wealth }: TabWealthProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {wealth.allocationByCategory.map((item) => (
+                    {wealth.allocationByCategory.map((item: any) => (
                       <div key={item.category} className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <span className="font-medium">{item.category}</span>
@@ -548,7 +548,7 @@ export function TabWealth({ clientId, client, wealth }: TabWealthProps) {
                 <span className="text-sm text-muted-foreground">Trier par :</span>
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
+                  onChange={(e: any) => setSortBy(e.target.value as any)}
                   className="text-sm border rounded px-2 py-1"
                 >
                   <option value="value">Valeur (décroissant)</option>
@@ -580,7 +580,7 @@ export function TabWealth({ clientId, client, wealth }: TabWealthProps) {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {sortedAssets.map((asset) => {
+                  {sortedAssets.map((asset: any) => {
                     const assetWithLeverage = assetsWithLeverage.find(a => a.id === asset.id)
                     const linkedLiability = null // TODO: Add linkedAssetId to Prisma schema
                     
@@ -688,7 +688,7 @@ export function TabWealth({ clientId, client, wealth }: TabWealthProps) {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {client.passifs.map((liability) => {
+                  {client.passifs.map((liability: any) => {
                     const linkedAsset = null // TODO: Add linkedAssetId to Prisma schema
                     
                     return (

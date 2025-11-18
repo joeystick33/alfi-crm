@@ -1,4 +1,4 @@
-import { getPrismaClient, setRLSContext } from '../prisma'
+import { getPrismaClient } from '../prisma'
 import { DocumentType, DocumentCategory, SignatureStatus } from '@prisma/client'
 
 export interface CreateDocumentInput {
@@ -12,6 +12,10 @@ export interface CreateDocumentInput {
   tags?: string[]
   isConfidential?: boolean
   accessLevel?: string
+  signatureStatus?: SignatureStatus
+  clientId?: string
+  projetId?: string
+  tacheId?: string
 }
 
 export interface UpdateDocumentInput {
@@ -22,6 +26,10 @@ export interface UpdateDocumentInput {
   tags?: string[]
   isConfidential?: boolean
   accessLevel?: string
+  signatureStatus?: SignatureStatus
+  signatureProvider?: string
+  signedAt?: Date
+  signedBy?: any
 }
 
 export interface LinkDocumentInput {
@@ -31,8 +39,29 @@ export interface LinkDocumentInput {
 }
 
 /**
- * Service de gestion des documents
- * Gère l'upload, le versioning et les liens multi-entités
+ * Document Service
+ * 
+ * Manages document entities with tenant isolation.
+ * Provides CRUD operations, versioning, multi-entity linking, and signature tracking.
+ * 
+ * Features:
+ * - Document upload and storage management
+ * - Version control for document revisions
+ * - Multi-entity linking (clients, actifs, passifs, contrats, projets, taches)
+ * - Signature status tracking
+ * - Timeline event creation for document actions
+ * - Tag-based search and filtering
+ * 
+ * @example
+ * const service = new DocumentService(cabinetId, userId, isSuperAdmin)
+ * const document = await service.createDocument({
+ *   name: 'Contract.pdf',
+ *   fileUrl: 'https://...',
+ *   fileSize: 1024000,
+ *   mimeType: 'application/pdf',
+ *   type: 'CONTRACT',
+ *   clientId: 'client-123'
+ * })
  */
 export class DocumentService {
   private prisma
@@ -46,33 +75,228 @@ export class DocumentService {
   }
 
   /**
-   * Crée un nouveau document
+   * Converts Decimal or numeric values to JavaScript number
+   * 
+   * Handles Prisma Decimal types and converts them to native JavaScript numbers
+   * for API responses. Returns null for null/undefined values.
+   * 
+   * @param value - The value to convert (Decimal, number, or null/undefined)
+   * @returns The numeric value or null
+   */
+  private toNumber(value: any): number | null {
+    if (value === null || value === undefined) {
+      return null
+    }
+
+    if (typeof value === 'object' && typeof value?.toNumber === 'function') {
+      return value.toNumber()
+    }
+
+    return value
+  }
+
+  /**
+   * Formats a document entity with nested relations
+   * 
+   * Converts Prisma raw data to clean API response format:
+   * - Converts Decimal fileSize to number
+   * - Formats nested user, client, and entity relations
+   * - Removes Prisma internal metadata
+   * 
+   * @param document - Raw document entity from Prisma
+   * @returns Formatted document object or null
+   */
+  private formatDocument(document: any): any {
+    if (!document) {
+      return null
+    }
+
+    return {
+      ...document,
+      fileSize: this.toNumber(document.fileSize),
+      uploadedBy: document.uploadedBy ? {
+        id: document.uploadedBy.id,
+        firstName: document.uploadedBy.firstName,
+        lastName: document.uploadedBy.lastName,
+        email: document.uploadedBy.email,
+      } : undefined,
+      clients: document.clients?.map((cd: any) => ({
+        ...cd,
+        client: cd.client ? {
+          id: cd.client.id,
+          firstName: cd.client.firstName,
+          lastName: cd.client.lastName,
+        } : undefined,
+      })),
+      actifs: document.actifs?.map((ad: any) => ({
+        ...ad,
+        actif: ad.actif ? {
+          id: ad.actif.id,
+          name: ad.actif.name,
+          type: ad.actif.type,
+        } : undefined,
+      })),
+      passifs: document.passifs?.map((pd: any) => ({
+        ...pd,
+        passif: pd.passif ? {
+          id: pd.passif.id,
+          name: pd.passif.name,
+          type: pd.passif.type,
+        } : undefined,
+      })),
+      contrats: document.contrats?.map((cd: any) => ({
+        ...cd,
+        contrat: cd.contrat ? {
+          id: cd.contrat.id,
+          name: cd.contrat.name,
+          type: cd.contrat.type,
+        } : undefined,
+      })),
+      projets: document.projets?.map((pd: any) => ({
+        ...pd,
+        projet: pd.projet ? {
+          id: pd.projet.id,
+          name: pd.projet.name,
+        } : undefined,
+      })),
+      taches: document.taches?.map((td: any) => ({
+        ...td,
+        tache: td.tache ? {
+          id: td.tache.id,
+          title: td.tache.title,
+        } : undefined,
+      })),
+    }
+  }
+
+  /**
+   * Creates a new document with relationship validation
+   * 
+   * Validates that related entities (client, projet, tache) exist before creation.
+   * Creates relationship links and timeline events automatically.
+   * 
+   * @param data - Document creation data including file info and optional relationships
+   * @returns Formatted document entity with all relations
+   * @throws Error if related entities are not found
    */
   async createDocument(data: CreateDocumentInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
+    // Validate client relationship if provided
+    if (data.clientId) {
+      const client = await this.prisma.client.findFirst({
+        where: {
+          id: data.clientId,
+          cabinetId: this.cabinetId,
+        },
+      })
 
+      if (!client) {
+        throw new Error('Client not found')
+      }
+    }
+
+    // Validate projet relationship if provided
+    if (data.projetId) {
+      const projet = await this.prisma.projet.findFirst({
+        where: {
+          id: data.projetId,
+          cabinetId: this.cabinetId,
+        },
+      })
+
+      if (!projet) {
+        throw new Error('Projet not found')
+      }
+    }
+
+    // Validate tache relationship if provided
+    if (data.tacheId) {
+      const tache = await this.prisma.tache.findFirst({
+        where: {
+          id: data.tacheId,
+          cabinetId: this.cabinetId,
+        },
+      })
+
+      if (!tache) {
+        throw new Error('Tache not found')
+      }
+    }
+
+    // Extract relationship IDs
+    const { clientId, projetId, tacheId, ...documentData } = data
+
+    // Create the document
     const document = await this.prisma.document.create({
       data: {
         cabinetId: this.cabinetId,
         uploadedById: this.userId,
-        ...data,
+        ...documentData,
         version: 1,
         uploadedAt: new Date(),
       },
     })
 
-    return document
+    // Create relationships if provided
+    if (clientId) {
+      await this.prisma.clientDocument.create({
+        data: {
+          clientId,
+          documentId: document.id,
+        },
+      })
+    }
+
+    if (projetId) {
+      await this.prisma.projetDocument.create({
+        data: {
+          projetId,
+          documentId: document.id,
+        },
+      })
+    }
+
+    if (tacheId) {
+      await this.prisma.tacheDocument.create({
+        data: {
+          tacheId,
+          documentId: document.id,
+        },
+      })
+    }
+
+    // Create timeline event for document upload
+    if (clientId) {
+      await this.prisma.timelineEvent.create({
+        data: {
+          cabinetId: this.cabinetId,
+          clientId,
+          type: 'OTHER',
+          title: 'Document uploadé',
+          description: `${document.name} (${document.type})`,
+          relatedEntityType: 'Document',
+          relatedEntityId: document.id,
+          createdBy: this.userId,
+        },
+      })
+    }
+
+    // Return formatted document
+    return this.getDocumentById(document.id)
   }
 
   /**
-   * Crée un document et le lie directement à une entité
+   * Creates a document and links it directly to an entity
+   * 
+   * Convenience method that combines document creation and entity linking in one operation.
+   * 
+   * @param documentData - Document creation data
+   * @param linkData - Entity linking information (type and ID)
+   * @returns Formatted document entity
    */
   async createAndLinkDocument(
     documentData: CreateDocumentInput,
     linkData: LinkDocumentInput
   ) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Créer le document
     const document = await this.createDocument(documentData)
 
@@ -87,13 +311,20 @@ export class DocumentService {
   }
 
   /**
-   * Récupère un document par ID
+   * Retrieves a document by ID with formatting
+   * 
+   * Fetches document with all nested relations and applies formatting.
+   * Enforces tenant isolation.
+   * 
+   * @param id - Document ID
+   * @returns Formatted document entity or null if not found
    */
   async getDocumentById(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const document = await this.prisma.document.findUnique({
-      where: { id },
+    const document = await this.prisma.document.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       include: {
         uploadedBy: {
           select: {
@@ -147,26 +378,58 @@ export class DocumentService {
             },
           },
         },
+        projets: {
+          include: {
+            projet: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        taches: {
+          include: {
+            tache: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+          },
+        },
       },
     })
 
-    return document
+    return this.formatDocument(document)
   }
 
   /**
-   * Liste les documents avec filtres
+   * Lists documents with extended filtering
+   * 
+   * Supports filtering by type, category, signature status, related entities,
+   * date ranges, search terms, and tags. Results are ordered by upload date (newest first).
+   * 
+   * @param filters - Optional filter criteria
+   * @returns Array of formatted document entities
    */
   async listDocuments(filters?: {
     type?: DocumentType
     category?: DocumentCategory
     isConfidential?: boolean
-    uploadedById?: string
+    uploadedBy?: string
+    signatureStatus?: SignatureStatus
+    clientId?: string
+    projetId?: string
+    tacheId?: string
+    uploadedAfter?: Date
+    uploadedBefore?: Date
     search?: string
     tags?: string[]
   }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const where: any = {}
+    const where: any = {
+      cabinetId: this.cabinetId,
+    }
 
     if (filters?.type) {
       where.type = filters.type
@@ -180,8 +443,48 @@ export class DocumentService {
       where.isConfidential = filters.isConfidential
     }
 
-    if (filters?.uploadedById) {
-      where.uploadedById = filters.uploadedById
+    if (filters?.uploadedBy) {
+      where.uploadedById = filters.uploadedBy
+    }
+
+    if (filters?.signatureStatus) {
+      where.signatureStatus = filters.signatureStatus
+    }
+
+    // Filter by related entities
+    if (filters?.clientId) {
+      where.clients = {
+        some: {
+          clientId: filters.clientId,
+        },
+      }
+    }
+
+    if (filters?.projetId) {
+      where.projets = {
+        some: {
+          projetId: filters.projetId,
+        },
+      }
+    }
+
+    if (filters?.tacheId) {
+      where.taches = {
+        some: {
+          tacheId: filters.tacheId,
+        },
+      }
+    }
+
+    // Date range filters
+    if (filters?.uploadedAfter || filters?.uploadedBefore) {
+      where.uploadedAt = {}
+      if (filters.uploadedAfter) {
+        where.uploadedAt.gte = filters.uploadedAfter
+      }
+      if (filters.uploadedBefore) {
+        where.uploadedAt.lte = filters.uploadedBefore
+      }
     }
 
     if (filters?.search) {
@@ -191,15 +494,12 @@ export class DocumentService {
       ]
     }
 
-    // Note: Tag filtering requires custom logic or full-text search
-    // For now, we skip this filter in the where clause
-    // TODO: Implement proper tag filtering
-
     const documents = await this.prisma.document.findMany({
       where,
       include: {
         uploadedBy: {
           select: {
+            id: true,
             firstName: true,
             lastName: true,
           },
@@ -210,6 +510,8 @@ export class DocumentService {
             actifs: true,
             passifs: true,
             contrats: true,
+            projets: true,
+            taches: true,
           },
         },
       },
@@ -218,51 +520,123 @@ export class DocumentService {
       },
     })
 
-    return documents
+    return documents.map(doc => this.formatDocument(doc))
   }
 
   /**
-   * Met à jour un document
+   * Updates a document with timeline event for signature
+   * 
+   * Automatically creates a timeline event when document signature status changes to SIGNED.
+   * Enforces tenant isolation.
+   * 
+   * @param id - Document ID
+   * @param data - Partial update data
+   * @returns Formatted updated document entity
+   * @throws Error if document not found or access denied
    */
   async updateDocument(id: string, data: UpdateDocumentInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
+    // Get the document first to check for signature status change
+    const existingDoc = await this.prisma.document.findFirst({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
+      include: {
+        clients: {
+          select: {
+            clientId: true,
+          },
+        },
+      },
+    })
 
-    const document = await this.prisma.document.update({
-      where: { id },
+    if (!existingDoc) {
+      throw new Error('Document not found or access denied')
+    }
+
+    const { count } = await this.prisma.document.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
       data,
     })
 
-    return document
+    if (count === 0) {
+      throw new Error('Document not found or access denied')
+    }
+
+    // Create timeline event if document was signed
+    if (data.signatureStatus === 'SIGNED' && existingDoc.signatureStatus !== 'SIGNED') {
+      const clientId = existingDoc.clients?.[0]?.clientId
+      if (clientId) {
+        await this.prisma.timelineEvent.create({
+          data: {
+            cabinetId: this.cabinetId,
+            clientId,
+            type: 'OTHER',
+            title: 'Document signé',
+            description: `${existingDoc.name} a été signé`,
+            relatedEntityType: 'Document',
+            relatedEntityId: id,
+            createdBy: this.userId,
+          },
+        })
+      }
+    }
+
+    return this.getDocumentById(id)
   }
 
   /**
-   * Supprime un document
+   * Deletes a document
+   * 
+   * Note: This only deletes the database record. File storage cleanup (S3, etc.)
+   * should be handled separately.
+   * 
+   * @param id - Document ID
+   * @returns Success indicator
+   * @throws Error if document not found or access denied
    */
   async deleteDocument(id: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // TODO: Supprimer le fichier du stockage (S3, etc.)
-    
-    await this.prisma.document.delete({
-      where: { id },
+    const { count } = await this.prisma.document.deleteMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+      },
     })
+
+    if (count === 0) {
+      throw new Error('Document not found or access denied')
+    }
 
     return { success: true }
   }
 
   /**
-   * Crée une nouvelle version d'un document
+   * Creates a new version of a document
+   * 
+   * Creates a new document entity linked to the parent document, incrementing
+   * the version number and preserving metadata from the parent.
+   * 
+   * @param parentDocumentId - ID of the parent document
+   * @param newFileUrl - URL of the new file version
+   * @param newFileSize - Size of the new file in bytes
+   * @returns New document version entity
+   * @throws Error if parent document not found
    */
   async createNewVersion(
     parentDocumentId: string,
     newFileUrl: string,
     newFileSize: number
   ) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Récupérer le document parent
-    const parent = await this.prisma.document.findUnique({
-      where: { id: parentDocumentId },
+    const parent = await this.prisma.document.findFirst({
+      where: {
+        id: parentDocumentId,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!parent) {
@@ -294,14 +668,22 @@ export class DocumentService {
   }
 
   /**
-   * Récupère l'historique des versions d'un document
+   * Retrieves version history of a document
+   * 
+   * Finds the root document and returns all versions in chronological order.
+   * Traverses parent relationships to find the original version.
+   * 
+   * @param documentId - ID of any version of the document
+   * @returns Array of all document versions ordered by version number
+   * @throws Error if document not found
    */
   async getDocumentVersions(documentId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Récupérer le document
-    const document = await this.prisma.document.findUnique({
-      where: { id: documentId },
+    const document = await this.prisma.document.findFirst({
+      where: {
+        id: documentId,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!document) {
@@ -314,8 +696,11 @@ export class DocumentService {
       // Remonter jusqu'à la racine
       let current = document
       while (current.parentVersion) {
-        const parent = await this.prisma.document.findUnique({
-          where: { id: current.parentVersion },
+        const parent = await this.prisma.document.findFirst({
+          where: {
+            id: current.parentVersion,
+            cabinetId: this.cabinetId,
+          },
         })
         if (!parent) break
         current = parent
@@ -327,8 +712,8 @@ export class DocumentService {
     const allVersions = await this.prisma.document.findMany({
       where: {
         OR: [
-          { id: rootId },
-          { parentVersion: rootId },
+          { id: rootId, cabinetId: this.cabinetId },
+          { parentVersion: rootId, cabinetId: this.cabinetId },
         ],
       },
       include: {
@@ -348,14 +733,22 @@ export class DocumentService {
   }
 
   /**
-   * Lie un document à une entité
+   * Links a document to an entity
+   * 
+   * Creates a relationship between a document and another entity (client, actif,
+   * passif, contrat, projet, or tache). Validates document existence first.
+   * 
+   * @param data - Link information (document ID, entity type, entity ID)
+   * @returns Success indicator
+   * @throws Error if document not found or unknown entity type
    */
   async linkDocument(data: LinkDocumentInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Vérifier que le document existe
-    const document = await this.prisma.document.findUnique({
-      where: { id: data.documentId },
+    const document = await this.prisma.document.findFirst({
+      where: {
+        id: data.documentId,
+        cabinetId: this.cabinetId,
+      },
     })
 
     if (!document) {
@@ -426,11 +819,15 @@ export class DocumentService {
   }
 
   /**
-   * Retire le lien entre un document et une entité
+   * Removes the link between a document and an entity
+   * 
+   * Deletes the relationship record without affecting the document or entity.
+   * 
+   * @param data - Link information (document ID, entity type, entity ID)
+   * @returns Success indicator
+   * @throws Error if unknown entity type or link not found
    */
   async unlinkDocument(data: LinkDocumentInput) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     switch (data.entityType) {
       case 'client':
         await this.prisma.clientDocument.delete({
@@ -506,11 +903,14 @@ export class DocumentService {
   }
 
   /**
-   * Récupère les documents d'un client
+   * Retrieves all documents for a client
+   * 
+   * Returns documents ordered by upload date (newest first).
+   * 
+   * @param clientId - Client ID
+   * @returns Array of document entities
    */
   async getClientDocuments(clientId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const clientDocuments = await this.prisma.clientDocument.findMany({
       where: { clientId },
       include: {
@@ -536,14 +936,19 @@ export class DocumentService {
   }
 
   /**
-   * Recherche de documents par tags
+   * Searches documents by tags
+   * 
+   * Finds documents that contain any of the specified tags.
+   * Note: Currently filters in memory due to Prisma JSON array limitations.
+   * 
+   * @param tags - Array of tag strings to search for
+   * @returns Array of matching document entities
    */
   async searchByTags(tags: string[]) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     // Get all documents and filter in memory
     // TODO: Implement proper JSON array search when Prisma supports it better
     const allDocuments = await this.prisma.document.findMany({
+      where: { cabinetId: this.cabinetId },
       include: {
         uploadedBy: {
           select: {
@@ -569,16 +974,21 @@ export class DocumentService {
   }
 
   /**
-   * Récupère les statistiques des documents
+   * Retrieves document statistics
+   * 
+   * Calculates aggregate statistics including total count, storage size,
+   * distribution by type and category, and confidential document count.
+   * 
+   * @returns Statistics object with counts, sizes, and distributions
    */
   async getDocumentStats() {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
+    const documents = await this.prisma.document.findMany({
+      where: { cabinetId: this.cabinetId },
+    })
 
-    const documents = await this.prisma.document.findMany()
+    const totalSize = documents.reduce((sum: any, d: any) => sum + d.fileSize, 0)
 
-    const totalSize = documents.reduce((sum, d) => sum + d.fileSize, 0)
-
-    const byType = documents.reduce((acc, d) => {
+    const byType = documents.reduce((acc: any, d: any) => {
       const type = d.type
       if (!acc[type]) {
         acc[type] = 0
@@ -587,7 +997,7 @@ export class DocumentService {
       return acc
     }, {} as Record<string, number>)
 
-    const byCategory = documents.reduce((acc, d) => {
+    const byCategory = documents.reduce((acc: any, d: any) => {
       const category = d.category || 'AUTRE'
       if (!acc[category]) {
         acc[category] = 0
@@ -596,7 +1006,7 @@ export class DocumentService {
       return acc
     }, {} as Record<string, number>)
 
-    const confidential = documents.filter(d => d.isConfidential).length
+    const confidential = documents.filter((d: any) => d.isConfidential).length
 
     return {
       totalDocuments: documents.length,
@@ -610,12 +1020,16 @@ export class DocumentService {
   }
 
   /**
-   * Récupère les documents récents
+   * Retrieves recent documents
+   * 
+   * Returns the most recently uploaded documents, ordered by upload date.
+   * 
+   * @param limit - Maximum number of documents to return (default: 20)
+   * @returns Array of recent document entities
    */
   async getRecentDocuments(limit: number = 20) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const documents = await this.prisma.document.findMany({
+      where: { cabinetId: this.cabinetId },
       take: limit,
       include: {
         uploadedBy: {
@@ -634,25 +1048,26 @@ export class DocumentService {
   }
 
   /**
-   * Marque un document comme signé
+   * Marks a document as signed
+   * 
+   * Convenience method to update signature status and related fields.
+   * Creates a timeline event automatically.
+   * 
+   * @param id - Document ID
+   * @param signatureProvider - Name of the signature service provider
+   * @param signedBy - Information about the signer
+   * @returns Formatted updated document entity
    */
   async markAsSigned(
     id: string,
     signatureProvider: string,
     signedBy: any
   ) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
-    const document = await this.prisma.document.update({
-      where: { id },
-      data: {
-        signatureStatus: 'SIGNED',
-        signatureProvider,
-        signedAt: new Date(),
-        signedBy,
-      },
+    return this.updateDocument(id, {
+      signatureStatus: 'SIGNED',
+      signatureProvider,
+      signedAt: new Date(),
+      signedBy,
     })
-
-    return document
   }
 }

@@ -15,9 +15,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
-import Button from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { apiCall } from '@/lib/api';
+import { apiCall } from '@/lib/api-client';
 
 const CREATE_ACTIONS = [
   {
@@ -287,7 +287,7 @@ function QuickAppointmentModal({ onClose, onSuccess }) {
     setLoading(true);
 
     try {
-      const response = await apiCall('/advisor/appointments', {
+      const response = await apiCall('/api/advisor/appointments', {
         method: 'POST',
         body: {
           ...formData,
@@ -381,7 +381,7 @@ function QuickTaskModal({ onClose, onSuccess }) {
     setLoading(true);
 
     try {
-      const response = await apiCall('/advisor/tasks', {
+      const response = await apiCall('/api/advisor/tasks', {
         method: 'POST',
         body: formData
       });
@@ -471,7 +471,7 @@ function QuickOpportunityModal({ onClose, onSuccess }) {
     setLoading(true);
 
     try {
-      const response = await apiCall('/advisor/opportunities', {
+      const response = await apiCall('/api/advisor/opportunities', {
         method: 'POST',
         body: {
           ...formData,
@@ -559,7 +559,7 @@ function QuickEmailModal({ onClose, onSuccess }) {
     setLoading(true);
 
     try {
-      const response = await apiCall('/advisor/emails/send', {
+      const response = await apiCall('/api/advisor/emails/send', {
         method: 'POST',
         body: formData
       });

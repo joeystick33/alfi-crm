@@ -48,7 +48,7 @@ export async function GET(
     }
 
     return createSuccessResponse({ task });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching task:', error);
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401);
@@ -69,7 +69,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const data = updateTaskSchema.parse(body);
+    const data: any = updateTaskSchema.parse(body);
 
     const existingTask = await prisma.tache.findFirst({
       where: { id: params.id, assignedToId: context.user.id },
@@ -99,7 +99,7 @@ export async function PUT(
     });
 
     return createSuccessResponse({ task: updatedTask, message: 'Tâche mise à jour avec succès' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating task:', error);
     if (error instanceof z.ZodError) {
       return createErrorResponse('Données invalides', 400);
@@ -123,7 +123,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const data = patchTaskSchema.parse(body);
+    const data: any = patchTaskSchema.parse(body);
 
     const existingTask = await prisma.tache.findFirst({
       where: { id: params.id, assignedToId: context.user.id },
@@ -162,7 +162,7 @@ export async function PATCH(
     });
 
     return createSuccessResponse({ task: updatedTask, message: 'Tâche mise à jour avec succès' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error patching task:', error);
     if (error instanceof z.ZodError) {
       return createErrorResponse('Données invalides', 400);
@@ -199,7 +199,7 @@ export async function DELETE(
     });
 
     return createSuccessResponse({ message: 'Tâche annulée avec succès' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting task:', error);
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401);

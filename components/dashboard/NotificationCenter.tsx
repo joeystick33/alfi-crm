@@ -92,7 +92,7 @@ export function NotificationCenter({ open, onOpenChange }: NotificationCenterPro
         <ModalHeader className="border-b p-4">
           <div className="flex items-center justify-between">
             <ModalTitle>Notifications</ModalTitle>
-            {data && data.data.length > 0 && (
+            {data && data.data && data.data.length > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -119,9 +119,9 @@ export function NotificationCenter({ open, onOpenChange }: NotificationCenterPro
                 </div>
               ))}
             </div>
-          ) : data && data.data.length > 0 ? (
+          ) : data?.data && data.data.length > 0 ? (
             <div className="space-y-2">
-              {data.data.map((notification) => {
+              {data.data.map((notification: any) => {
                 const Icon = notificationIcons[notification.type as keyof typeof notificationIcons] || AlertCircle
                 const variant = notificationVariants[notification.priority as keyof typeof notificationVariants] || 'outline'
 
@@ -172,7 +172,7 @@ export function NotificationCenter({ open, onOpenChange }: NotificationCenterPro
           )}
         </div>
 
-        {data && data.pagination.totalPages > 1 && (
+        {data?.pagination?.totalPages && data.pagination.totalPages > 1 && (
           <div className="border-t p-4">
             <Button
               variant="outline"

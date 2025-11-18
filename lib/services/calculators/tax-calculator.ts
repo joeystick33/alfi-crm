@@ -222,7 +222,7 @@ export class TaxCalculator {
     const incomeTax = quotientTax * familyQuotient;
     
     // Scale breakdown back to actual income
-    const breakdown = quotientBreakdown.map(b => ({
+    const breakdown = quotientBreakdown.map((b: any) => ({
       ...b,
       taxableAmount: b.taxableAmount * familyQuotient,
       taxAmount: b.taxAmount * familyQuotient

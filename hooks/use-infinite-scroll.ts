@@ -43,8 +43,8 @@ export function useInfiniteScroll<T>({
       const url = `${endpoint}${separator}page=${pageParam}&pageSize=${pageSize}`
       return api.get<PaginatedResponse<T>>(url)
     },
-    getNextPageParam: (lastPage) => {
-      if (lastPage.pagination.page < lastPage.pagination.totalPages) {
+    getNextPageParam: (lastPage: any) => {
+      if (lastPage?.pagination?.page && lastPage.pagination.page < lastPage.pagination.totalPages) {
         return lastPage.pagination.page + 1
       }
       return undefined
@@ -54,8 +54,8 @@ export function useInfiniteScroll<T>({
   })
 
   // Flatten all pages into a single array
-  const items = data?.pages.flatMap((page) => page.data) ?? []
-  const totalCount = data?.pages[0]?.pagination.total ?? 0
+  const items = data?.pages.flatMap((page: any) => page?.data ?? []) ?? []
+  const totalCount = data?.pages?.[0]?.pagination?.total ?? 0
 
   // Setup intersection observer for automatic loading
   const setupObserver = useCallback(() => {
@@ -64,7 +64,7 @@ export function useInfiniteScroll<T>({
     }
 
     observerRef.current = new IntersectionObserver(
-      (entries) => {
+      (entries: any) => {
         const [entry] = entries
         if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
           fetchNextPage()
@@ -127,7 +127,7 @@ export function useInfiniteScrollManual<T>({
       const url = `${endpoint}${separator}page=${pageParam}&pageSize=${pageSize}`
       return api.get<PaginatedResponse<T>>(url)
     },
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: (lastPage: any) => {
       if (lastPage.pagination.page < lastPage.pagination.totalPages) {
         return lastPage.pagination.page + 1
       }
@@ -137,7 +137,7 @@ export function useInfiniteScrollManual<T>({
     enabled,
   })
 
-  const items = data?.pages.flatMap((page) => page.data) ?? []
+  const items = data?.pages.flatMap((page: any) => page.data) ?? []
   const totalCount = data?.pages[0]?.pagination.total ?? 0
 
   return {

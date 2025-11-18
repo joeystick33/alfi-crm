@@ -68,7 +68,7 @@ export function RetirementComparison() {
   const [error, setError] = useState('');
 
   const addScenario = () => {
-    const newId = Math.max(...scenarios.map(s => s.id), 0) + 1;
+    const newId = Math.max(...scenarios.map((s: any) => s.id), 0) + 1;
     setScenarios([
       ...scenarios,
       {
@@ -82,12 +82,12 @@ export function RetirementComparison() {
 
   const removeScenario = (id: number) => {
     if (scenarios.length > 1) {
-      setScenarios(scenarios.filter(s => s.id !== id));
+      setScenarios(scenarios.filter((s: any) => s.id !== id));
     }
   };
 
   const updateScenario = (id: number, field: keyof Scenario, value: string) => {
-    setScenarios(scenarios.map(s => 
+    setScenarios(scenarios.map((s: any) => 
       s.id === id ? { ...s, [field]: value } : s
     ));
   };
@@ -130,7 +130,7 @@ export function RetirementComparison() {
             currentIncome: income,
             desiredReplacementRate: replacementRate / 100
           },
-          scenarios: scenarios.map(s => ({
+          scenarios: scenarios.map((s: any) => ({
             name: s.name,
             description: s.description,
             retirementAge: parseFloat(s.retirementAge),
@@ -289,7 +289,7 @@ export function RetirementComparison() {
               </div>
 
               <div className="space-y-3">
-                {scenarios.map((scenario) => (
+                {scenarios.map((scenario: any) => (
                   <div
                     key={scenario.id}
                     className="p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-gray-300 transition-all"

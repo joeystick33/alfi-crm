@@ -83,7 +83,7 @@ export function measurePerformance(name: string, startMark: string, endMark: str
       }
 
       return measure.duration
-    } catch (error) {
+    } catch (error: any) {
       console.error('Performance measurement error:', error)
     }
   }
@@ -182,7 +182,7 @@ export function getConnectionSpeed(): 'slow' | 'medium' | 'fast' | 'unknown' {
  * Preload an image
  */
 export function preloadImage(src: string): Promise<void> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve: any, reject: any) => {
     const img = new Image()
     img.onload = () => resolve()
     img.onerror = reject
@@ -214,8 +214,8 @@ export function isInViewport(element: HTMLElement): boolean {
  * Lazy load images when they enter viewport
  */
 export function lazyLoadImage(img: HTMLImageElement) {
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
+  const observer = new IntersectionObserver((entries: any) => {
+    entries.forEach((entry: any) => {
       if (entry.isIntersecting) {
         const target = entry.target as HTMLImageElement
         const src = target.dataset.src

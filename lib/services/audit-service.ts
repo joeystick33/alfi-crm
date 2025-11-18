@@ -1,4 +1,4 @@
-import { getPrismaClient, setRLSContext } from '@/lib/prisma'
+import { getPrismaClient } from '@/lib/prisma'
 import { AuditAction } from '@prisma/client'
 
 export class AuditService {
@@ -23,8 +23,6 @@ export class AuditService {
     ipAddress?: string
     userAgent?: string
   }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     return this.prisma.auditLog.create({
       data: {
         cabinetId: this.cabinetId,
@@ -52,8 +50,6 @@ export class AuditService {
     limit?: number
     offset?: number
   }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const where: any = {}
 
     if (filters?.userId) {
@@ -114,8 +110,6 @@ export class AuditService {
    * Récupérer l'historique d'une entité spécifique
    */
   async getEntityHistory(entityType: string, entityId: string) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     return this.prisma.auditLog.findMany({
       where: {
         entityType,
@@ -138,8 +132,6 @@ export class AuditService {
    * Récupérer les actions d'un utilisateur
    */
   async getUserActions(userId: string, limit: number = 50) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     return this.prisma.auditLog.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
@@ -151,8 +143,6 @@ export class AuditService {
    * Statistiques d'audit
    */
   async getStatistics(startDate?: Date, endDate?: Date) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const where: any = {}
 
     if (startDate || endDate) {
@@ -228,11 +218,11 @@ export class AuditService {
         approves,
         rejects,
       },
-      byEntityType: byEntityType.map((item) => ({
+      byEntityType: byEntityType.map((item: any) => ({
         entityType: item.entityType,
         count: item._count,
       })),
-      topUsers: topUsers.map((item) => ({
+      topUsers: topUsers.map((item: any) => ({
         userId: item.userId,
         count: item._count,
       })),
@@ -249,8 +239,6 @@ export class AuditService {
     action?: AuditAction
     entityType?: string
   }) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const where: any = {}
 
     if (filters?.userId) {
@@ -297,8 +285,6 @@ export class AuditService {
    * Nettoyer les anciens logs d'audit (pour maintenance)
    */
   async cleanOldLogs(olderThanDays: number = 365) {
-    await setRLSContext(this.cabinetId, this.isSuperAdmin)
-
     const cutoffDate = new Date()
     cutoffDate.setDate(cutoffDate.getDate() - olderThanDays)
 

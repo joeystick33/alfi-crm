@@ -33,7 +33,7 @@ export function ExportClientPDF({ clientId, clientName }: ExportPDFExampleProps)
         description: `Le rapport client pour ${clientName} a été téléchargé.`,
       })
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: 'Erreur d\'export',
         description: error.message,
@@ -81,7 +81,7 @@ export function ExportPatrimoinePDF({ clientId, clientName }: ExportPDFExamplePr
         description: `Le rapport patrimoine pour ${clientName} a été téléchargé.`,
       })
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: 'Erreur d\'export',
         description: error.message,
@@ -129,7 +129,7 @@ export function ExportDocumentsPDF({ clientId, clientName }: ExportPDFExamplePro
         description: `La liste des documents pour ${clientName} a été téléchargée.`,
       })
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: 'Erreur d\'export',
         description: error.message,
@@ -265,7 +265,7 @@ export function ExportWithLocale({ clientId, clientName }: ExportPDFExampleProps
     <div className="flex items-center gap-3">
       <select
         value={locale}
-        onChange={(e) => setLocale(e.target.value as 'fr' | 'en')}
+        onChange={(e: any) => setLocale(e.target.value as 'fr' | 'en')}
         className="px-3 py-2 border rounded-md"
       >
         <option value="fr">Français</option>

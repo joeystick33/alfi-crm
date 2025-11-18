@@ -459,7 +459,7 @@ export function getAllDocumentTypes() {
     }
   }
   
-  return types.sort((a, b) => {
+  return types.sort((a: any, b: any) => {
     if (a.required && !b.required) return -1;
     if (!a.required && b.required) return 1;
     return a.label.localeCompare(b.label);

@@ -15,10 +15,10 @@ import {
   Send
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { apiCall } from '@/lib/api';
+import { apiCall } from '@/lib/api-client';
 import { SkeletonCard } from '@/components/ui/Skeleton';
-import Button from '@/components/ui/Button';
-import Badge from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
 import { format, formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -75,7 +75,7 @@ export default function EmailsWidget({
         params.append('unreadOnly', 'true');
       }
 
-      const response = await apiCall(`/advisor/emails?${params.toString()}`);
+      const response = await apiCall(`/api/advisor/emails?${params.toString()}`);
       
       if (response.success) {
         setEmails(response.data || []);
@@ -99,7 +99,7 @@ export default function EmailsWidget({
     );
 
     try {
-      await apiCall(`/advisor/emails/${emailId}`, {
+      await apiCall(`/api/advisor/emails/${emailId}`, {
         method: 'PATCH',
         body: { isRead }
       });
@@ -123,7 +123,7 @@ export default function EmailsWidget({
     );
 
     try {
-      await apiCall(`/advisor/emails/${emailId}`, {
+      await apiCall(`/api/advisor/emails/${emailId}`, {
         method: 'PATCH',
         body: { isStarred: !isStarred }
       });

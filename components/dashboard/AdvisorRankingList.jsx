@@ -14,7 +14,7 @@ import {
   Medal,
   Award
 } from 'lucide-react';
-import { apiCall } from '@/lib/api';
+import { apiCall } from '@/lib/api-client';
 
 export default function AdvisorRankingList() {
   const router = useRouter();
@@ -30,7 +30,7 @@ export default function AdvisorRankingList() {
     try {
       setLoading(true);
       setError(null);
-      const response = await apiCall('/management/team/advisors');
+      const response = await apiCall('/api/management/team/advisors');
       setAdvisors(response.data || response || []);
     } catch (err) {
       console.error('Erreur chargement conseillers:', err);

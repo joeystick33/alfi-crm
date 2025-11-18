@@ -39,7 +39,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             type="checkbox"
             id={checkboxId}
             checked={checked}
-            onChange={(e) => onChange?.(e.target.checked)}
+            onChange={(e: any) => onChange?.(e.target.checked)}
             disabled={disabled}
             aria-invalid={error ? 'true' : 'false'}
             aria-describedby={description ? `${checkboxId}-description` : undefined}

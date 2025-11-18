@@ -75,8 +75,8 @@ export function ModernPieChart({ data, formatValue, title }: ModernPieChartProps
   };
 
   // Ajouter le total à chaque élément pour le tooltip
-  const total = data.reduce((sum, item) => sum + item.value, 0);
-  const enrichedData = data.map(item => ({ ...item, total }));
+  const total = data.reduce((sum: any, item: any) => sum + item.value, 0);
+  const enrichedData = data.map((item: any) => ({ ...item, total }));
 
   return (
     <div className="relative">
@@ -91,7 +91,7 @@ export function ModernPieChart({ data, formatValue, title }: ModernPieChartProps
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <defs>
-              {GRADIENT_COLORS.map((color, index) => (
+              {GRADIENT_COLORS.map((color: any, index: any) => (
                 <linearGradient key={index} id={`gradient-${index}`} x1="0" y1="0" x2="1" y2="1">
                   <stop offset="0%" stopColor={color.start} />
                   <stop offset="100%" stopColor={color.end} />
@@ -114,7 +114,7 @@ export function ModernPieChart({ data, formatValue, title }: ModernPieChartProps
               animationDuration={1000}
               animationEasing="ease-out"
             >
-              {enrichedData.map((entry, index) => (
+              {enrichedData.map((entry: any, index: any) => (
                 <Cell
                   key={`cell-${index}`}
                   fill={`url(#gradient-${index % GRADIENT_COLORS.length})`}
@@ -143,7 +143,7 @@ export function ModernPieChart({ data, formatValue, title }: ModernPieChartProps
 
       {/* Légende personnalisée moderne */}
       <div className="grid grid-cols-2 gap-3 mt-6">
-        {enrichedData.map((entry, index) => (
+        {enrichedData.map((entry: any, index: any) => (
           <div
             key={index}
             className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors cursor-pointer"

@@ -92,7 +92,7 @@ export function SaveSimulationButton({
               type="text"
               placeholder="ID du client"
               value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
+              onChange={(e: any) => setClientId(e.target.value)}
               disabled={saving || saved}
             />
             <p className="text-xs text-muted-foreground mt-1">
@@ -108,7 +108,7 @@ export function SaveSimulationButton({
               type="text"
               placeholder="Ex: Simulation retraite 2024"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e: any) => setName(e.target.value)}
               disabled={saving || saved}
             />
           </div>
@@ -121,7 +121,7 @@ export function SaveSimulationButton({
               className="w-full min-h-[80px] px-3 py-2 text-sm border rounded-md"
               placeholder="Ajoutez des notes ou commentaires..."
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e: any) => setDescription(e.target.value)}
               disabled={saving || saved}
             />
           </div>
@@ -131,7 +131,7 @@ export function SaveSimulationButton({
               type="checkbox"
               id="shareWithClient"
               checked={sharedWithClient}
-              onChange={(e) => setSharedWithClient(e.target.checked)}
+              onChange={(e: any) => setSharedWithClient(e.target.checked)}
               disabled={saving || saved}
               className="rounded"
             />
