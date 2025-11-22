@@ -1,0 +1,177 @@
+/* ═══════════════════════════════════════════════════════════════
+   🔧 CORRECTIONS UI - Layout Stable
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Force le layout correct */
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Container principal */
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Sidebar fixe */
+.dashboard-sidebar {
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  height: 100vh !important;
+  z-index: 40 !important;
+  transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.dashboard-sidebar.collapsed {
+  width: 5rem !important; /* 80px */
+}
+
+.dashboard-sidebar.expanded {
+  width: 18rem !important; /* 288px */
+}
+
+/* Main content area */
+.dashboard-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+  min-height: 100vh;
+}
+
+.dashboard-main.sidebar-collapsed {
+  margin-left: 5rem !important; /* 80px */
+}
+
+.dashboard-main.sidebar-expanded {
+  margin-left: 18rem !important; /* 288px */
+}
+
+/* Services sidebar */
+.services-sidebar {
+  position: fixed !important;
+  right: 0 !important;
+  top: 0 !important;
+  height: 100vh !important;
+  z-index: 30 !important;
+  transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.services-sidebar.collapsed {
+  width: 5rem !important; /* 80px */
+}
+
+.services-sidebar.expanded {
+  width: 22rem !important; /* 352px */
+}
+
+/* Ajuster le padding du main content quand services sidebar est ouvert */
+.dashboard-main.services-expanded {
+  padding-right: 22rem !important;
+}
+
+.dashboard-main.services-collapsed {
+  padding-right: 5rem !important;
+}
+
+/* Header sticky */
+.dashboard-header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 30 !important;
+  height: 4rem !important; /* 64px */
+}
+
+/* Content area */
+.dashboard-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1.5rem;
+}
+
+/* Centrage du contenu */
+.dashboard-content-inner {
+  max-width: 100rem; /* 1600px */
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+/* Scrollbar personnalisée */
+.dashboard-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dashboard-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dashboard-content::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 9999px;
+}
+
+.dashboard-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 1280px) {
+  .services-sidebar {
+    display: none !important;
+  }
+  
+  .dashboard-main.services-expanded,
+  .dashboard-main.services-collapsed {
+    padding-right: 0 !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .dashboard-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  
+  .dashboard-main {
+    margin-left: 0 !important;
+  }
+}
+
+/* Animations fluides */
+* {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Fix pour les modals */
+.modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 50 !important;
+}
+
+.modal-content {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 51 !important;
+}
+
+/* Fix pour les tooltips */
+.tooltip {
+  z-index: 60 !important;
+}
+
+/* Fix pour les dropdowns */
+.dropdown-menu {
+  z-index: 55 !important;
+}

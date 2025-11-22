@@ -1,0 +1,917 @@
+/* ═══════════════════════════════════════════════════════════════
+   🎨 PREMIUM CALENDAR DESIGN - Figma-Inspired Excellence
+   ═══════════════════════════════════════════════════════════════ */
+
+   .card {
+    position: relative;
+    border-radius: 2rem;
+    background: 
+      linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.98) 0%, 
+        rgba(248, 250, 252, 0.95) 100%
+      );
+    box-shadow: 
+      0 0 0 1px rgba(15, 23, 42, 0.04),
+      0 2px 4px -2px rgba(15, 23, 42, 0.02),
+      0 8px 16px -8px rgba(15, 23, 42, 0.08),
+      0 32px 64px -24px rgba(59, 130, 246, 0.15);
+    overflow: hidden;
+    isolation: isolate;
+  }
+  
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(
+      135deg,
+      rgba(59, 130, 246, 0.08),
+      rgba(236, 72, 153, 0.06),
+      rgba(168, 85, 247, 0.05)
+    );
+    border-radius: inherit;
+    opacity: 0.6;
+    z-index: -1;
+    filter: blur(24px);
+  }
+  
+  .card::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 600px;
+    height: 600px;
+    background: 
+      radial-gradient(
+        circle at center,
+        rgba(59, 130, 246, 0.06) 0%,
+        rgba(14, 165, 233, 0.03) 25%,
+        transparent 60%
+      );
+    pointer-events: none;
+    z-index: 0;
+    animation: floatGlow 20s ease-in-out infinite;
+  }
+  
+  @keyframes floatGlow {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(-40px, 40px); }
+  }
+  
+  /* ───────────────────────────────────────────────────────────────
+     📋 HEADER & SUMMARY SECTION
+     ─────────────────────────────────────────────────────────────── */
+  
+  .header {
+    position: relative;
+    z-index: 1;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
+  }
+  
+  .summaryChips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.625rem;
+    margin-top: 1.25rem;
+  }
+  
+  .summaryChip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    background: 
+      linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.9), 
+        rgba(248, 250, 252, 0.8)
+      );
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #334155;
+    letter-spacing: -0.01em;
+    backdrop-filter: blur(12px);
+    box-shadow: 
+      0 1px 2px rgba(15, 23, 42, 0.04),
+      0 4px 8px -4px rgba(15, 23, 42, 0.06);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .summaryChip:hover {
+    transform: translateY(-1px);
+    box-shadow: 
+      0 2px 4px rgba(15, 23, 42, 0.06),
+      0 8px 16px -6px rgba(15, 23, 42, 0.1);
+  }
+  
+  /* ───────────────────────────────────────────────────────────────
+     📅 CALENDAR SHELL & STRUCTURE
+     ─────────────────────────────────────────────────────────────── */
+  
+  .calendarShell {
+    position: relative;
+    z-index: 1;
+    margin-top: 1.5rem;
+    border-radius: 1.5rem;
+    padding: 1.5rem;
+    background: 
+      linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.95) 0%, 
+        rgba(251, 252, 253, 0.9) 100%
+      );
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.8),
+      0 2px 8px -2px rgba(15, 23, 42, 0.04),
+      0 8px 24px -8px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+  }
+  
+  .calendarShell::before {
+    content: "";
+    position: absolute;
+    bottom: -100px;
+    left: -100px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(
+      circle at center,
+      rgba(236, 72, 153, 0.04),
+      transparent 70%
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  .calendar {
+    height: 100%;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .calendar :global(.rbc-calendar) {
+    border: none;
+    background: transparent;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    position: relative;
+  }
+  
+  .calendar :global(.rbc-toolbar) {
+    display: none;
+  }
+  
+  .calendar :global(.rbc-month-view),
+  .calendar :global(.rbc-time-view) {
+    border: none;
+    background: transparent;
+  }
+  
+  /* ───────────────────────────────────────────────────────────────
+     📆 CALENDAR HEADER - Days of Week
+     ─────────────────────────────────────────────────────────────── */
+  
+  .calendar :global(.rbc-header) {
+    border: none;
+    padding: 1rem 0.75rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #475569;
+    position: relative;
+    background: linear-gradient(
+      to bottom,
+      rgba(248, 250, 252, 0.6),
+      transparent
+    );
+  }
+  
+  .calendar :global(.rbc-header)::after {
+    content: "";
+    position: absolute;
+    bottom: 0.5rem;
+    left: 50%;
+    width: 2rem;
+    height: 3px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(59, 130, 246, 0.5),
+      transparent
+    );
+    transform: translateX(-50%);
+    border-radius: 9999px;
+  }
+  
+  .calendar :global(.rbc-time-header > .rbc-row) {
+    box-shadow: 
+      inset 0 -1px 0 rgba(226, 232, 240, 0.6),
+      0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+  
+  /* ───────────────────────────────────────────────────────────────
+     🕐 TIME VIEW STYLING
+     ─────────────────────────────────────────────────────────────── */
+  
+  .calendar :global(.rbc-time-view .rbc-time-content) {
+    border-top: 1px solid rgba(226, 232, 240, 0.6);
+    background: 
+      linear-gradient(
+        180deg, 
+        rgba(248, 250, 252, 0.3) 0%, 
+        rgba(255, 255, 255, 0.1) 50%,
+        transparent 100%
+      ),
+      linear-gradient(
+        90deg,
+        rgba(59, 130, 246, 0.02) 0%,
+        transparent 10%,
+        transparent 90%,
+        rgba(236, 72, 153, 0.02) 100%
+      );
+  }
+  
+  .calendar :global(.rbc-time-slot),
+  .calendar :global(.rbc-day-slot .rbc-time-slot) {
+    border-top: 1px solid rgba(226, 232, 240, 0.4);
+    transition: background-color 0.15s ease;
+  }
+  
+  .calendar :global(.rbc-time-slot):hover {
+    background: rgba(59, 130, 246, 0.02);
+  }
+  
+  .calendar :global(.rbc-timeslot-group) {
+    min-height: 56px;
+    position: relative;
+  }
+  
+  .calendar :global(.rbc-time-header-cell) {
+    padding: 0.75rem 0;
+  }
+  
+  .calendar :global(.rbc-time-content > * + *) {
+    border-left: 1px solid rgba(226, 232, 240, 0.5);
+  }
+  
+  /* ───────────────────────────────────────────────────────────────
+     📅 DATE CELLS & DAY STYLING
+     ─────────────────────────────────────────────────────────────── */
+  
+  .calendar :global(.rbc-date-cell) {
+    padding: 0.5rem;
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: #1e293b;
+    position: relative;
+    transition: all 0.2s ease;
+  }
+  
+  .calendar :global(.rbc-month-view .rbc-day-bg) {
+    transition: all 0.2s ease;
+  }
+  
+  .calendar :global(.rbc-month-view .rbc-day-bg):hover {
+    background: rgba(59, 130, 246, 0.03);
+  }
+  
+  .calendar :global(.rbc-off-range-bg) {
+    background: linear-gradient(
+      135deg,
+      rgba(248, 250, 252, 0.7),
+      rgba(241, 245, 249, 0.5)
+    );
+  }
+  
+  .calendar :global(.rbc-off-range-bg .rbc-date-cell) {
+    color: #94a3b8;
+    font-weight: 500;
+  }
+  
+  /* ───────────────────────────────────────────────────────────────
+     🎯 TODAY HIGHLIGHT - Premium Style
+     ─────────────────────────────────────────────────────────────── */
+  
+  .calendar :global(.rbc-today) {
+    background: 
+      linear-gradient(135deg, 
+        rgba(59, 130, 246, 0.08) 0%,
+        rgba(14, 165, 233, 0.04) 100%
+      );
+    position: relative;
+    box-shadow: 
+      inset 0 0 0 1px rgba(59, 130, 246, 0.2),
+      0 4px 12px -4px rgba(59, 130, 246, 0.15);
+  }
+  
+  .calendar :global(.rbc-today)::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: 
+      linear-gradient(135deg, 
+        rgba(59, 130, 246, 0.03), 
+        transparent
+      );
+    pointer-events: none;
+  }
+  
+  .calendar :global(.rbc-today .rbc-date-cell) {
+    color: #1e40af;
+    font-weight: 800;
+  }
+  
+  .calendar :global(.rbc-today .rbc-date-cell)::after {
+    content: "";
+    position: absolute;
+    bottom: 0.5rem;
+    left: 50%;
+    width: 0.5rem;
+    height: 0.5rem;
+    background: 
+      linear-gradient(135deg, 
+        rgba(59, 130, 246, 1), 
+        rgba(14, 165, 233, 0.9)
+      );
+    border-radius: 9999px;
+    transform: translateX(-50%);
+    box-shadow: 
+      0 0 0 3px rgba(59, 130, 246, 0.15),
+      0 0 0 6px rgba(59, 130, 246, 0.08),
+      0 2px 8px rgba(59, 130, 246, 0.4);
+    animation: pulseToday 2s ease-in-out infinite;
+  }
+  
+  @keyframes pulseToday {
+    0%, 100% { 
+      transform: translateX(-50%) scale(1);
+      opacity: 1;
+    }
+    50% { 
+      transform: translateX(-50%) scale(1.1);
+      opacity: 0.8;
+    }
+  }
+  
+  /* ───────────────────────────────────────────────────────────────
+     🌅 WEEKEND STYLING
+     ─────────────────────────────────────────────────────────────── */
+  
+  .calendar :global(.fin3-weekend) {
+    background: 
+      linear-gradient(135deg, 
+        rgba(241, 245, 249, 0.5), 
+        rgba(226, 232, 240, 0.3)
+      );
+    position: relative;
+  }
+  
+  .calendar :global(.fin3-weekend)::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: 
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 20px,
+        rgba(226, 232, 240, 0.15) 20px,
+        rgba(226, 232, 240, 0.15) 22px
+      );
+    pointer-events: none;
+    opacity: 0.3;
+  }
+  
+  .calendar :global(.fin3-weekend .rbc-date-cell) {
+    color: #64748b;
+    font-weight: 600;
+  }
+  
+  /* ───────────────────────────────────────────────────────────────
+     🎫 EVENT CARDS - Premium Design
+     ─────────────────────────────────────────────────────────────── */
+  
+  .eventCard {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.625rem 0.875rem;
+    border-radius: 0.875rem;
+    background: 
+      linear-gradient(135deg, 
+        rgba(59, 130, 246, 0.96), 
+        rgba(37, 99, 235, 0.92)
+      );
+    color: #ffffff;
+    box-shadow: 
+      0 0 0 1px rgba(255, 255, 255, 0.1),
+      0 1px 2px rgba(59, 130, 246, 0.2),
+      0 4px 12px -2px rgba(59, 130, 246, 0.4),
+      0 12px 24px -8px rgba(59, 130, 246, 0.3);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .eventCard::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
+  }
+  
+  .eventCard:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 
+      0 0 0 1px rgba(255, 255, 255, 0.15),
+      0 2px 4px rgba(59, 130, 246, 0.25),
+      0 8px 20px -4px rgba(59, 130, 246, 0.5),
+      0 20px 32px -12px rgba(59, 130, 246, 0.35);
+  }
+  
+  .eventCardTask {
+    background: 
+      linear-gradient(135deg, 
+        rgba(99, 102, 241, 0.96), 
+        rgba(79, 70, 229, 0.92)
+      );
+    box-shadow: 
+      0 0 0 1px rgba(255, 255, 255, 0.1),
+      0 1px 2px rgba(99, 102, 241, 0.2),
+      0 4px 12px -2px rgba(99, 102, 241, 0.4),
+      0 12px 24px -8px rgba(99, 102, 241, 0.3);
+  }
+  
+  .eventCardTask:hover {
+    box-shadow: 
+      0 0 0 1px rgba(255, 255, 255, 0.15),
+      0 2px 4px rgba(99, 102, 241, 0.25),
+      0 8px 20px -4px rgba(99, 102, 241, 0.5),
+      0 20px 32px -12px rgba(99, 102, 241, 0.35);
+  }
+  
+  .eventCardUrgent {
+    background: 
+      linear-gradient(135deg, 
+        rgba(239, 68, 68, 0.96), 
+        rgba(220, 38, 38, 0.92)
+      );
+    box-shadow: 
+      0 0 0 1px rgba(255, 255, 255, 0.15),
+      0 1px 2px rgba(239, 68, 68, 0.3),
+      0 4px 12px -2px rgba(239, 68, 68, 0.5),
+      0 12px 24px -8px rgba(239, 68, 68, 0.4);
+    animation: urgentPulse 2s ease-in-out infinite;
+  }
+  
+  .eventCardUrgent:hover {
+    box-shadow: 
+      0 0 0 1px rgba(255, 255, 255, 0.2),
+      0 2px 4px rgba(239, 68, 68, 0.35),
+      0 8px 20px -4px rgba(239, 68, 68, 0.6),
+      0 20px 32px -12px rgba(239, 68, 68, 0.45);
+  }
+  
+  @keyframes urgentPulse {
+    0%, 100% { 
+      box-shadow: 
+        0 0 0 1px rgba(255, 255, 255, 0.15),
+        0 1px 2px rgba(239, 68, 68, 0.3),
+        0 4px 12px -2px rgba(239, 68, 68, 0.5),
+        0 12px 24px -8px rgba(239, 68, 68, 0.4);
+    }
+    50% { 
+      box-shadow: 
+        0 0 0 1px rgba(255, 255, 255, 0.2),
+        0 2px 4px rgba(239, 68, 68, 0.35),
+        0 6px 16px -4px rgba(239, 68, 68, 0.6),
+        0 16px 32px -12px rgba(239, 68, 68, 0.5);
+    }
+  }
+  
+  .eventTitle {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    text-shadow: 0 1px 2px rgba(15, 23, 42, 0.15);
+  }
+  
+  .eventMeta {
+    font-size: 0.6875rem;
+    color: rgba(255, 255, 255, 0.85);
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-weight: 500;
+  }
+  
+  .eventMeta::before {
+    content: "";
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
+  }
+  
+  /* ───────────────────────────────────────────────────────────────
+     🏷️ LEGEND - Modern Badge Style
+     ─────────────────────────────────────────────────────────────── */
+  
+  .legend {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-top: 1.5rem;
+    padding: 1rem 1.25rem;
+    border-radius: 1rem;
+    background: 
+      linear-gradient(135deg, 
+        rgba(248, 250, 252, 0.9), 
+        rgba(241, 245, 249, 0.8)
+      );
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.8),
+      0 2px 8px -2px rgba(15, 23, 42, 0.04);
+    font-size: 0.75rem;
+    color: #475569;
+  }
+  
+  .legendItem {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+  }
+  
+  .legendDot {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 9999px;
+    box-shadow: 
+      0 0 0 2px rgba(255, 255, 255, 0.8),
+      0 2px 4px rgba(15, 23, 42, 0.1);
+  }
+  
+  /* ───────────────────────────────────────────────────────────────
+     🎛️ CONTROLS & NAVIGATION
+     ─────────────────────────────────────────────────────────────── */
+  
+  .controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  
+  .controlGroup {
+    display: inline-flex;
+    background: 
+      linear-gradient(135deg, 
+        rgba(241, 245, 249, 0.9), 
+        rgba(226, 232, 240, 0.7)
+      );
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    border-radius: 12px;
+    padding: 0.25rem;
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.8),
+      0 2px 4px -2px rgba(15, 23, 42, 0.06);
+  }
+  
+  .todayButton {
+    background: 
+      linear-gradient(135deg, 
+        rgba(15, 23, 42, 0.95), 
+        rgba(30, 41, 59, 0.92)
+      );
+    color: #ffffff;
+    border-radius: 10px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    padding: 0.625rem 1.125rem;
+    letter-spacing: -0.01em;
+    box-shadow: 
+      0 0 0 1px rgba(255, 255, 255, 0.1),
+      0 2px 4px rgba(15, 23, 42, 0.2),
+      0 8px 16px -6px rgba(15, 23, 42, 0.3);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .todayButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 
+      0 0 0 1px rgba(255, 255, 255, 0.15),
+      0 4px 8px rgba(15, 23, 42, 0.25),
+      0 12px 24px -8px rgba(15, 23, 42, 0.35);
+  }
+  
+  .actionBar {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+  }
+  
+  .navGroup {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: 
+      linear-gradient(135deg, 
+        rgba(241, 245, 249, 0.9), 
+        rgba(226, 232, 240, 0.7)
+      );
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    border-radius: 12px;
+    padding: 0.25rem 0.375rem;
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.8),
+      0 2px 4px -2px rgba(15, 23, 42, 0.06);
+  }
+  
+  .navButton {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #334155;
+    transition: all 0.2s ease;
+    font-weight: 600;
+  }
+  
+  .navButton:hover {
+    background: rgba(59, 130, 246, 0.08);
+    color: #1e40af;
+    transform: scale(1.05);
+  }
+  
+  .viewButton {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    color: #475569;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: -0.01em;
+  }
+  
+  .viewButton:hover {
+    background: rgba(59, 130, 246, 0.06);
+    color: #1e40af;
+  }
+  
+  .viewButtonActive {
+    background: 
+      linear-gradient(135deg, 
+        rgba(59, 130, 246, 0.95), 
+        rgba(37, 99, 235, 0.9)
+      );
+    color: #ffffff;
+    box-shadow: 
+      0 0 0 1px rgba(255, 255, 255, 0.1),
+      0 2px 4px rgba(59, 130, 246, 0.2),
+      0 8px 16px -6px rgba(59, 130, 246, 0.4);
+  }
+  
+  .viewButtonActive:hover {
+    transform: translateY(-1px);
+    box-shadow: 
+      0 0 0 1px rgba(255, 255, 255, 0.15),
+      0 4px 8px rgba(59, 130, 246, 0.25),
+      0 12px 24px -8px rgba(59, 130, 246, 0.45);
+  }
+  
+  .rangeLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    background: 
+      linear-gradient(135deg, 
+        rgba(59, 130, 246, 0.12), 
+        rgba(37, 99, 235, 0.08)
+      );
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    color: #1e40af;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      0 2px 4px -2px rgba(59, 130, 246, 0.1);
+  }
+  
+  /* ───────────────────────────────────────────────────────────────
+     📱 RESPONSIVE DESIGN
+     ─────────────────────────────────────────────────────────────── */
+  
+  @media (max-width: 1024px) {
+    .card {
+      border-radius: 1.5rem;
+    }
+  
+    .calendarShell {
+      padding: 1rem;
+      border-radius: 1.25rem;
+    }
+  
+    .legend {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.875rem 1rem;
+    }
+  
+    .eventCard {
+      padding: 0.5rem 0.75rem;
+    }
+  
+    .eventTitle {
+      font-size: 0.75rem;
+    }
+  
+    .eventMeta {
+      font-size: 0.625rem;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .card {
+      border-radius: 1.25rem;
+    }
+  
+    .calendarShell {
+      padding: 0.75rem;
+      margin-top: 1rem;
+    }
+  
+    .calendar :global(.rbc-header) {
+      padding: 0.75rem 0.5rem;
+      font-size: 0.625rem;
+    }
+  
+    .calendar :global(.rbc-date-cell) {
+      padding: 0.375rem;
+      font-size: 0.75rem;
+    }
+  
+    .controls,
+    .actionBar {
+      gap: 0.5rem;
+    }
+  
+    .navButton {
+      width: 2rem;
+      height: 2rem;
+    }
+  }
+/*
+ ───────────────────────────────────────────────────────────────
+   🎯 DRAG & DROP STYLES
+   ─────────────────────────────────────────────────────────────── */
+
+/* Dragging state for calendar */
+.calendarDragging {
+  cursor: grabbing !important;
+}
+
+.calendarDragging :global(*) {
+  cursor: grabbing !important;
+}
+
+/* Event being dragged */
+.calendar :global(.rbc-addons-dnd-dragging) {
+  opacity: 0.6;
+  transform: scale(1.02);
+  box-shadow: 
+    0 8px 24px -4px rgba(59, 130, 246, 0.5),
+    0 16px 48px -12px rgba(59, 130, 246, 0.4) !important;
+  z-index: 1000;
+  cursor: grabbing;
+}
+
+/* Drag handle cursor */
+.calendar :global(.rbc-event) {
+  cursor: grab;
+}
+
+.calendar :global(.rbc-event):active {
+  cursor: grabbing;
+}
+
+/* Drop zone highlighting */
+.calendar :global(.rbc-addons-dnd-over) {
+  background: rgba(59, 130, 246, 0.08) !important;
+  box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.3);
+  transition: all 0.2s ease;
+}
+
+/* Resize handles */
+.calendar :global(.rbc-addons-dnd-resize-ns-anchor) {
+  width: 100%;
+  height: 8px;
+  cursor: ns-resize;
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+.calendar :global(.rbc-addons-dnd-resize-ns-anchor):first-child {
+  top: 0;
+}
+
+.calendar :global(.rbc-addons-dnd-resize-ns-anchor):last-child {
+  bottom: 0;
+}
+
+.calendar :global(.rbc-addons-dnd-resize-ns-anchor)::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.calendar :global(.rbc-event):hover :global(.rbc-addons-dnd-resize-ns-anchor)::before {
+  opacity: 1;
+}
+
+/* Resizing state */
+.calendar :global(.rbc-addons-dnd-resizing) {
+  opacity: 0.8;
+  box-shadow: 
+    0 4px 16px -2px rgba(59, 130, 246, 0.4),
+    0 8px 32px -8px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Visual feedback during drag */
+.calendar :global(.rbc-day-slot):hover {
+  background: rgba(59, 130, 246, 0.02);
+}
+
+/* Drag preview ghost */
+.calendar :global(.rbc-addons-dnd-drag-preview) {
+  opacity: 0.7;
+  background: linear-gradient(135deg, 
+    rgba(59, 130, 246, 0.9), 
+    rgba(37, 99, 235, 0.85)
+  );
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+  border-radius: 0.875rem;
+  box-shadow: 
+    0 8px 24px -4px rgba(59, 130, 246, 0.5),
+    0 16px 48px -12px rgba(59, 130, 246, 0.4);
+}
+
+/* Time indicator during drag */
+.calendar :global(.rbc-current-time-indicator) {
+  background-color: #ef4444;
+  height: 2px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.calendar :global(.rbc-current-time-indicator)::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: -5px;
+  width: 12px;
+  height: 12px;
+  background: #ef4444;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
