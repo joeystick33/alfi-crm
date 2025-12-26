@@ -27,6 +27,10 @@ La section Conformité couvre :
 - **Client_Portal** : Interface client pour upload de documents
 - **Client_360_View** : Vue complète du profil client incluant la section conformité
 - **Dossier_View** : Vue d'un dossier client avec documents associés
+- **Operations_Manager** : Gestionnaire des opérations (affaires nouvelles, arbitrages, rachats, versements)
+- **Affaire_Nouvelle** : Module de création et suivi d'une nouvelle souscription
+- **Document_Export** : Module d'export de documents en Word/PDF pour signature
+- **Association_Templates** : Templates de documents spécifiques par association CGP (CNCGP, ANACOFI, CNCEF)
 - **Client** : Personne physique ou morale suivie par le conseiller
 - **CGP** : Conseiller en Gestion de Patrimoine (utilisateur principal)
 - **SLA** : Service Level Agreement - délais réglementaires de traitement
@@ -266,3 +270,172 @@ La section Conformité couvre :
 5. THE Dossier_View SHALL allow generating documents specific to a dossier (Lettre de Mission, Rapport de Mission)
 6. THE Template_Manager SHALL allow cabinet administrators to customize document templates
 7. THE Template_Manager SHALL be accessible from cabinet settings
+
+### Requirement 16: Export Documents Personnalisables (Word/PDF)
+
+**User Story:** As a CGP, I want to export regulatory documents in Word format for customization and PDF for signature, so that I can adapt documents to specific client situations and obtain legally valid signatures.
+
+#### Acceptance Criteria
+
+1. THE Document_Export SHALL support export in the following formats: PDF (for signature), DOCX (for editing)
+2. WHEN exporting to DOCX, THE Document_Export SHALL preserve all formatting, headers, footers, and placeholders
+3. WHEN exporting to PDF, THE Document_Export SHALL generate a professional document with embedded fonts and proper pagination
+4. THE Document_Export SHALL include signature placeholders in exported documents (client signature, advisor signature, date fields)
+5. WHEN a document is exported, THE Document_Export SHALL record the export action in the compliance timeline
+6. THE Document_Export SHALL support batch export of multiple documents for a single client
+7. THE Document_Export SHALL allow the CGP to preview documents before export
+8. WHEN exporting, THE Document_Export SHALL apply the cabinet's branding (logo, colors, contact information)
+
+### Requirement 17: Templates par Association CGP (CNCGP, ANACOFI, CNCEF)
+
+**User Story:** As a CGP member of a professional association, I want to use document templates that comply with my association's standards, so that I can meet my professional obligations and benefit from association-approved formats.
+
+#### Acceptance Criteria
+
+1. THE Association_Templates SHALL provide pre-configured templates for the following associations:
+   - CNCGP (Chambre Nationale des Conseils en Gestion de Patrimoine)
+   - ANACOFI (Association Nationale des Conseils Financiers)
+   - CNCEF (Chambre Nationale des Conseils Experts Financiers)
+   - Generic (for non-affiliated CGPs)
+
+2. WHEN setting up a cabinet, THE Template_Manager SHALL allow selection of the primary association affiliation
+3. THE Association_Templates SHALL include association-specific:
+   - Document headers and footers with association logo/mention
+   - Regulatory disclaimers specific to the association
+   - Recommended document structure and sections
+   - Association-mandated clauses and warnings
+
+4. WHEN generating a DER, THE Association_Templates SHALL include association-specific sections:
+   - CNCGP: Reference to CNCGP membership, code of ethics, mediation procedure
+   - ANACOFI: ANACOFI membership number, specific regulatory mentions
+   - CNCEF: CNCEF certification reference, specific compliance statements
+
+5. THE Template_Manager SHALL allow CGPs to customize association templates while preserving mandatory sections
+6. WHEN an association updates its template requirements, THE Template_Manager SHALL notify affected CGPs
+7. THE Association_Templates SHALL be versioned to track regulatory changes over time
+
+### Requirement 18: Section "Mes Opérations" - Affaire Nouvelle
+
+**User Story:** As a CGP, I want to manage new business operations (subscriptions, switches, withdrawals, contributions) in a dedicated section, so that I can track the complete lifecycle of client operations and generate appropriate documentation.
+
+#### Acceptance Criteria
+
+1. THE Operations_Manager SHALL provide a dedicated "Mes Opérations" section accessible from the main navigation
+2. THE Operations_Manager SHALL support the following operation types:
+   - Souscription (new contract subscription)
+   - Arbitrage (fund switch within existing contract)
+   - Rachat (partial or total withdrawal)
+   - Versement (additional contribution to existing contract)
+
+3. THE Operations_Manager SHALL support the following contract/product types:
+   - Assurance Vie (life insurance)
+   - PER (Plan d'Épargne Retraite)
+   - SCPI (Société Civile de Placement Immobilier)
+   - OPCI (Organisme de Placement Collectif Immobilier)
+   - Compte-titres (securities account)
+   - PEA (Plan d'Épargne en Actions)
+   - Contrat de capitalisation
+   - Private Equity / FCPR / FCPI / FIP
+
+4. WHEN creating an "Affaire Nouvelle" (new subscription), THE Affaire_Nouvelle SHALL require:
+   - Client selection
+   - Operation type
+   - Contract/product type
+   - Provider/Insurer selection
+   - Investment amount
+   - Investment supports/funds selection (if applicable)
+   - Beneficiary clause (for life insurance)
+
+5. THE Affaire_Nouvelle SHALL track operation status through workflow:
+   - Brouillon (draft)
+   - En cours de constitution (documents being gathered)
+   - Envoyé au fournisseur (sent to provider)
+   - En traitement (being processed)
+   - Validé (validated/completed)
+   - Rejeté (rejected - with reason)
+
+6. WHEN an operation status changes, THE Operations_Manager SHALL record the change with timestamp and user
+7. THE Operations_Manager SHALL display operations in a filterable table with columns: Reference, Client, Type, Product, Provider, Amount, Status, Created date, Actions
+
+### Requirement 19: Génération Documents par Type d'Opération
+
+**User Story:** As a CGP, I want the system to automatically suggest and generate the appropriate regulatory documents based on the operation type, so that I can ensure compliance without manually determining which documents are required.
+
+#### Acceptance Criteria
+
+1. WHEN creating a Souscription (new subscription), THE Affaire_Nouvelle SHALL require/suggest the following documents:
+   - Document d'Entrée en Relation (DER) - if first operation with client
+   - Recueil d'Informations Client - if not up to date
+   - Lettre de Mission
+   - Questionnaire MiFID II / Profil investisseur - if not completed or outdated
+   - Déclaration d'Adéquation (suitability statement)
+   - Bulletin de souscription (subscription form)
+
+2. WHEN creating an Arbitrage (fund switch), THE Affaire_Nouvelle SHALL require/suggest:
+   - Fiche Conseil / Rapport de Mission
+   - Déclaration d'Adéquation
+   - Ordre d'arbitrage (switch order form)
+
+3. WHEN creating a Rachat (withdrawal), THE Affaire_Nouvelle SHALL require/suggest:
+   - Fiche Conseil (if partial withdrawal with reinvestment advice)
+   - Demande de rachat (withdrawal request form)
+
+4. WHEN creating a Versement (additional contribution), THE Affaire_Nouvelle SHALL require/suggest:
+   - Mise à jour du Recueil d'Informations (if significant change in situation)
+   - Déclaration d'Adéquation
+   - Bulletin de versement complémentaire
+
+5. THE Affaire_Nouvelle SHALL display a checklist of required documents with status (generated, pending, missing)
+6. THE Affaire_Nouvelle SHALL allow one-click generation of all required documents for an operation
+7. WHEN a required document is missing, THE Affaire_Nouvelle SHALL block operation submission with a clear warning
+8. THE Affaire_Nouvelle SHALL link generated documents to the operation for audit trail
+
+### Requirement 20: Suivi et Historique des Opérations
+
+**User Story:** As a CGP, I want to track the complete history of operations for each client, so that I can provide comprehensive reporting and demonstrate due diligence during audits.
+
+#### Acceptance Criteria
+
+1. THE Operations_Manager SHALL maintain a complete history of all operations per client
+2. THE Client_360_View SHALL display a summary of recent operations with quick access to details
+3. THE Operations_Manager SHALL calculate and display statistics:
+   - Total operations count by type
+   - Total amounts by operation type
+   - Average processing time
+   - Rejection rate
+
+4. THE Operations_Manager SHALL support filtering operations by:
+   - Date range
+   - Operation type
+   - Product type
+   - Provider
+   - Status
+   - Amount range
+
+5. THE Operations_Manager SHALL support export of operations list to Excel/CSV for reporting
+6. WHEN viewing an operation, THE Operations_Manager SHALL display:
+   - Complete operation details
+   - All associated documents
+   - Status history with timestamps
+   - Notes and comments
+
+7. THE Operations_Manager SHALL allow adding notes/comments to operations for internal tracking
+
+### Requirement 21: Intégration Fournisseurs et Assureurs
+
+**User Story:** As a CGP, I want to have a database of providers/insurers with their product offerings, so that I can quickly select the appropriate provider when creating operations.
+
+#### Acceptance Criteria
+
+1. THE Operations_Manager SHALL maintain a database of providers/insurers including:
+   - Company name and legal information
+   - Contact information
+   - Product catalog (contracts available)
+   - Commission rates (if applicable)
+   - Extranet/portal access links
+
+2. THE Template_Manager SHALL allow associating document templates with specific providers
+3. WHEN creating an operation, THE Affaire_Nouvelle SHALL filter available products based on selected provider
+4. THE Operations_Manager SHALL display provider-specific requirements for each operation type
+5. THE Operations_Manager SHALL allow CGPs to add custom providers not in the default database
+6. THE Operations_Manager SHALL track which providers are most used for reporting purposes
