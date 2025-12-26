@@ -32,7 +32,6 @@ export interface UpdateEmailTemplateInput {
 export interface EmailTemplateFilters {
   category?: string
   isActive?: boolean
-  isActive?: boolean
   isSystem?: boolean
   search?: string
   tags?: string[]
@@ -99,7 +98,6 @@ export class EmailTemplateService {
         variables: input.variables || [],
         isActive: true,
         isSystem: input.isSystem || false,
-        isActive: false,
         tags: input.tags || [],
         notes: input.notes,
       },
@@ -135,7 +133,6 @@ export class EmailTemplateService {
     }
 
     if (filters.category) where.category = filters.category
-    if (filters.isActive !== undefined) where.isActive = filters.isActive
     if (filters.isActive !== undefined) where.isActive = filters.isActive
     if (filters.isSystem !== undefined) where.isSystem = filters.isSystem
 
@@ -376,7 +373,6 @@ export class EmailTemplateService {
         variables: original.variables,
         isActive: false, // Inactif par défaut pour la copie
         isSystem: false, // Les copies ne sont jamais système
-        isActive: false,
         tags: original.tags,
         notes: original.notes,
       },
@@ -438,8 +434,7 @@ export class EmailTemplateService {
     const updated = await this.prisma.emailTemplate.update({
       where: { id },
       data: {
-        isActive: true,
-        isActive: false, // Désactiver aussi
+        isActive: false, // Désactiver
       },
       include: {
         createdByUser: true,
@@ -471,8 +466,7 @@ export class EmailTemplateService {
     const updated = await this.prisma.emailTemplate.update({
       where: { id },
       data: {
-        isActive: false,
-        isActive: true, // Réactiver par défaut
+        isActive: true, // Réactiver
       },
       include: {
         createdByUser: true,
@@ -637,9 +631,9 @@ export class EmailTemplateService {
       system,
     ] = await Promise.all([
       this.prisma.emailTemplate.count({ where }),
-      this.prisma.emailTemplate.count({ where: { ...where, isActive: true, isActive: false } }),
-      this.prisma.emailTemplate.count({ where: { ...where, isActive: false, isActive: false } }),
       this.prisma.emailTemplate.count({ where: { ...where, isActive: true } }),
+      this.prisma.emailTemplate.count({ where: { ...where, isActive: false } }),
+      this.prisma.emailTemplate.count({ where: { ...where, isActive: false } }),
       this.prisma.emailTemplate.count({ where: { ...where, isSystem: true } }),
     ])
 

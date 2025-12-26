@@ -35,7 +35,6 @@ export const emailSendWorker = new Worker<EmailSendJobData, JobResult>(
         select: {
           name: true,
           email: true,
-          settings: true,
         },
       })
 
@@ -158,7 +157,7 @@ export const emailCampaignWorker = new Worker<EmailCampaignJobData, JobResult>(
         case 'pause':
           await prisma.campaign.update({
             where: { id: campaignId },
-            data: { status: 'EN_PAUSE' },
+            data: { status: 'PAUSE' },
           })
           result = {
             success: true,
@@ -416,7 +415,8 @@ async function processCampaignSend(
           cabinetId: campaign.cabinetId,
           campaignId: campaign.id,
           clientId: recipient.client.id,
-          to: recipient.client.email,
+          toEmail: recipient.client.email,
+          fromEmail: process.env.EMAIL_FROM || 'noreply@aura-crm.com',
           subject: campaign.subject,
           htmlContent: personalizedHtml,
           status: 'EN_ATTENTE',

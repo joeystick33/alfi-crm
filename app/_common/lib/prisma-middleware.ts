@@ -72,16 +72,18 @@ export function createTenantExtension(
             operation === 'updateMany'
           ) {
             args = args || {}
+            const where = (args.where as Record<string, unknown>) || {}
             args.where = {
-              ...args.where,
+              ...where,
               cabinetId,
             }
           }
 
           if (operation === 'create') {
             args = args || {}
+            const data = (args.data as Record<string, unknown>) || {}
             args.data = {
-              ...args.data,
+              ...data,
               cabinetId,
             }
           }
@@ -94,8 +96,9 @@ export function createTenantExtension(
                 cabinetId,
               }))
             } else {
+              const data = (args.data as Record<string, unknown>) || {}
               args.data = {
-                ...args.data,
+                ...data,
                 cabinetId,
               }
             }
@@ -108,6 +111,15 @@ export function createTenantExtension(
   }
 }
 
+interface MiddlewareParams {
+  model?: string
+  action?: string
+  args?: {
+    where?: Record<string, unknown>
+    data?: Record<string, unknown> | Record<string, unknown>[]
+  }
+}
+
 /**
  * Crée un middleware Prisma pour l'isolation multi-tenant (legacy)
  * @deprecated Utilisez createTenantExtension à la place
@@ -116,7 +128,7 @@ export function createTenantMiddleware(
   cabinetId: string,
   isSuperAdmin: boolean = false
 ) {
-  return async (params: Record<string, unknown>, next: (params: Record<string, unknown>) => Promise<unknown>) => {
+  return async (params: MiddlewareParams, next: (params: MiddlewareParams) => Promise<unknown>) => {
     // SuperAdmin bypass - accès à toutes les données
     if (isSuperAdmin) {
       return next(params)
@@ -137,7 +149,7 @@ export function createTenantMiddleware(
     ) {
       params.args = params.args || {}
       params.args.where = {
-        ...params.args.where,
+        ...(params.args.where || {}),
         cabinetId,
       }
     }
@@ -146,7 +158,7 @@ export function createTenantMiddleware(
     if (params.action === 'create') {
       params.args = params.args || {}
       params.args.data = {
-        ...params.args.data,
+        ...((params.args.data as Record<string, unknown>) || {}),
         cabinetId,
       }
     }
@@ -155,13 +167,13 @@ export function createTenantMiddleware(
     if (params.action === 'createMany') {
       params.args = params.args || {}
       if (Array.isArray(params.args.data)) {
-        params.args.data = ((params.args as Record<string, unknown>).data as Record<string, unknown>[]).map((item: Record<string, unknown>) => ({
+        params.args.data = (params.args.data as Record<string, unknown>[]).map((item: Record<string, unknown>) => ({
           ...item,
           cabinetId,
         }))
       } else {
         params.args.data = {
-          ...params.args.data,
+          ...((params.args.data as Record<string, unknown>) || {}),
           cabinetId,
         }
       }
@@ -175,7 +187,7 @@ export function createTenantMiddleware(
     ) {
       params.args = params.args || {}
       params.args.where = {
-        ...params.args.where,
+        ...(params.args.where || {}),
         cabinetId,
       }
     }
@@ -184,7 +196,7 @@ export function createTenantMiddleware(
     if (params.action === 'delete' || params.action === 'deleteMany') {
       params.args = params.args || {}
       params.args.where = {
-        ...params.args.where,
+        ...(params.args.where || {}),
         cabinetId,
       }
     }

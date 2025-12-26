@@ -106,7 +106,9 @@ export function useDeleteApporteur(options?: UseMutationOptions<void, Error, str
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: string) => api.delete(`/advisor/apporteurs/${id}`),
+    mutationFn: async (id: string) => {
+      await api.delete(`/advisor/apporteurs/${id}`)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.apporteurs })
       queryClient.invalidateQueries({ queryKey: queryKeys.apporteurStats })

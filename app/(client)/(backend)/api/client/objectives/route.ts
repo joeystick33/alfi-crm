@@ -9,6 +9,8 @@ import { ObjectifService } from '@/app/_common/lib/services/objectif-service';
 import { ProjetService } from '@/app/_common/lib/services/projet-service';
 import { prisma } from '@/app/_common/lib/prisma'; // For cabinetId lookup
 
+import { ObjectifStatus } from '@prisma/client';
+
 const querySchema = z.object({
   clientId: z.string().min(1),
   status: z.string().optional(),
@@ -64,7 +66,7 @@ export async function GET(request: NextRequest) {
     // Get objectives
     const objectifs = await objectifService.getObjectifs({
       clientId: validatedClientId,
-      status: status as string | undefined,
+      status: status as ObjectifStatus | undefined,
     });
 
     // Get projects
@@ -73,16 +75,17 @@ export async function GET(request: NextRequest) {
     });
 
     // Calculate statistics
-    const activeObjectifs = objectifs.filter((o: { status: string }) => o.status === 'ACTIF');
-    const achievedObjectifs = objectifs.filter((o: { status: string }) => o.status === 'ATTEINT');
+    const objectifsArray = objectifs as Array<{ status: string; targetAmount?: number | string; currentAmount?: number | string; type: string }>;
+    const activeObjectifs = objectifsArray.filter((o) => o.status === 'ACTIF');
+    const achievedObjectifs = objectifsArray.filter((o) => o.status === 'ATTEINT');
 
     const totalTargetAmount = activeObjectifs.reduce(
-      (sum: number, o: { targetAmount?: number | string }) => sum + Number(o.targetAmount),
+      (sum: number, o) => sum + Number(o.targetAmount),
       0
     );
 
     const totalCurrentAmount = activeObjectifs.reduce(
-      (sum: number, o: { currentAmount?: number | string }) => sum + Number(o.currentAmount || 0),
+      (sum: number, o) => sum + Number(o.currentAmount || 0),
       0
     );
 
@@ -91,29 +94,30 @@ export async function GET(request: NextRequest) {
       : 0;
 
     // Group objectives by type
-    const objectifsByType = objectifs.reduce((acc: Record<string, typeof objectifs>, obj: { type: string }) => {
+    const objectifsByType = objectifsArray.reduce((acc: Record<string, typeof objectifsArray>, obj) => {
       if (!acc[obj.type]) {
         acc[obj.type] = [];
       }
       acc[obj.type].push(obj);
       return acc;
-    }, {} as Record<string, typeof objectifs>);
+    }, {} as Record<string, typeof objectifsArray>);
 
     // Group projects by status
-    const projetsByStatus = projets.reduce((acc: Record<string, typeof projets>, proj: { status: string }) => {
+    const projetsArray = projets as Array<{ status: string }>;
+    const projetsByStatus = projetsArray.reduce((acc: Record<string, typeof projetsArray>, proj) => {
       if (!acc[proj.status]) {
         acc[proj.status] = [];
       }
       acc[proj.status].push(proj);
       return acc;
-    }, {} as Record<string, typeof projets>);
+    }, {} as Record<string, typeof projetsArray>);
 
     return NextResponse.json({
       objectifs,
       projets,
       stats: {
         objectifs: {
-          total: objectifs.length,
+          total: objectifsArray.length,
           active: activeObjectifs.length,
           achieved: achievedObjectifs.length,
           totalTargetAmount,
@@ -121,7 +125,7 @@ export async function GET(request: NextRequest) {
           overallProgress,
         },
         projets: {
-          total: projets.length,
+          total: projetsArray.length,
           byStatus: Object.entries(projetsByStatus).map(([status, items]) => ({
             status,
             count: items.length,

@@ -138,7 +138,9 @@ export function useUpdateEmailTemplate(options?: UseMutationOptions<EmailTemplat
 export function useDeleteEmailTemplate(options?: UseMutationOptions<void, Error, string>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => api.delete(`/advisor/email-templates/${id}`),
+    mutationFn: async (id: string) => {
+      await api.delete(`/advisor/email-templates/${id}`)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.emailTemplates })
       queryClient.invalidateQueries({ queryKey: queryKeys.emailTemplateStats() })

@@ -1,7 +1,6 @@
  
 import { getPrismaClient } from '../prisma'
-import type { ActifType, ActifCategory, PassifType, ContratType } from '@/app/_common/lib/constants/reference-types'
-import { ContratStatus } from '@prisma/client'
+import { ActifType, ActifCategory, PassifType, ContratType, ContratStatus } from '@prisma/client'
 import type { Prisma } from '@prisma/client'
 import { Decimal } from '@prisma/client/runtime/library'
 

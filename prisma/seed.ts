@@ -1,7 +1,35 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { seedComplianceData, cleanupComplianceData } from './seeds/compliance-seed';
+import { seedOperationsData, cleanupOperationsData } from './seeds/operations-seed';
+import { seedTemplatesData, cleanupTemplatesData } from './seeds/templates-seed';
 
 const prisma = new PrismaClient();
+
+// ============================================
+// Command Line Arguments
+// ============================================
+
+interface SeedOptions {
+  skipMain: boolean;
+  compliance: boolean;
+  operations: boolean;
+  templates: boolean;
+  all: boolean;
+  cleanup: boolean;
+}
+
+function parseArgs(): SeedOptions {
+  const args = process.argv.slice(2);
+  return {
+    skipMain: args.includes('--skip-main'),
+    compliance: args.includes('--compliance'),
+    operations: args.includes('--operations'),
+    templates: args.includes('--templates'),
+    all: args.includes('--all') || args.length === 0,
+    cleanup: args.includes('--cleanup'),
+  };
+}
 
 // Helper constants
 const NOW = new Date(); // Should be Dec 2025
@@ -560,14 +588,55 @@ async function createClientAssociatedData(
 }
 
 async function main() {
+  const options = parseArgs();
+
+  // Handle cleanup mode
+  if (options.cleanup) {
+    console.log('🧹 Cleaning up demo data...');
+    console.log('═══════════════════════════════════════\n');
+    
+    const cabinets = await prisma.cabinet.findMany({ select: { id: true, name: true } });
+    
+    for (const cabinet of cabinets) {
+      console.log(`📦 Cleaning cabinet: ${cabinet.name}`);
+      
+      if (options.compliance || options.all) {
+        await cleanupComplianceData(cabinet.id);
+      }
+      if (options.operations || options.all) {
+        await cleanupOperationsData(cabinet.id);
+      }
+      if (options.templates || options.all) {
+        await cleanupTemplatesData(cabinet.id);
+      }
+    }
+    
+    console.log('\n═══════════════════════════════════════');
+    console.log('✅ Demo data cleanup completed!');
+    console.log('═══════════════════════════════════════');
+    return;
+  }
+
   console.log('🌱 Starting COMPLETE database seed...');
   console.log(`📅 Base year: ${CURRENT_YEAR}`);
+  console.log('═══════════════════════════════════════');
+  console.log('');
+  console.log('Options:');
+  console.log(`  --skip-main: ${options.skipMain}`);
+  console.log(`  --compliance: ${options.compliance}`);
+  console.log(`  --operations: ${options.operations}`);
+  console.log(`  --templates: ${options.templates}`);
+  console.log(`  --all: ${options.all}`);
   console.log('═══════════════════════════════════════\n');
 
-  console.log('🧹 Cleaning up database...');
-  await prisma.cabinet.deleteMany();
-  await prisma.superAdmin.deleteMany();
-  console.log('✅ Database cleaned\n');
+  // Skip main seed if requested (useful for adding demo data to existing database)
+  if (options.skipMain) {
+    console.log('⏭️  Skipping main seed (--skip-main flag)\n');
+  } else {
+    console.log('🧹 Cleaning up database...');
+    await prisma.cabinet.deleteMany();
+    await prisma.superAdmin.deleteMany();
+    console.log('✅ Database cleaned\n');
 
   // ============ SUPERADMIN ============
   console.log('👑 Creating SuperAdmin...');
@@ -911,33 +980,104 @@ async function main() {
     });
   }
   console.log('✅ Global tasks created\n');
+  } // End of if (!options.skipMain)
+
+  // ============ DEMO DATA SEEDING ============
+  // Seed demo data for compliance, operations, and templates
+  const shouldSeedDemo = options.compliance || options.operations || options.templates || options.all;
+  
+  if (shouldSeedDemo) {
+    console.log('\n═══════════════════════════════════════');
+    console.log('🎭 Seeding demo data...');
+    console.log('═══════════════════════════════════════\n');
+
+    // Get all cabinets for demo data seeding
+    const cabinets = await prisma.cabinet.findMany({
+      include: { 
+        users: { 
+          where: { role: 'ADVISOR' }, 
+          take: 1 
+        } 
+      }
+    });
+
+    for (const cabinet of cabinets) {
+      const userId = cabinet.users[0]?.id;
+      if (!userId) {
+        console.log(`   ⚠️ No advisor found for cabinet ${cabinet.name}, skipping demo data`);
+        continue;
+      }
+
+      console.log(`\n📦 Seeding demo data for: ${cabinet.name}`);
+      console.log('───────────────────────────────────────');
+
+      if (options.compliance || options.all) {
+        await seedComplianceData(cabinet.id, userId);
+      }
+
+      if (options.operations || options.all) {
+        await seedOperationsData(cabinet.id, userId);
+      }
+
+      if (options.templates || options.all) {
+        await seedTemplatesData(cabinet.id, userId);
+      }
+    }
+
+    console.log('\n═══════════════════════════════════════');
+    console.log('✅ Demo data seeding completed!');
+    console.log('═══════════════════════════════════════\n');
+  }
 
   // ============ SUMMARY ============
   console.log('═══════════════════════════════════════');
   console.log('🎉 Database seed completed successfully!');
   console.log('═══════════════════════════════════════');
   console.log('');
-  console.log('📦 Cabinets: 3');
-  console.log('   - Cabinet Aura Test (BUSINESS) - 10 clients');
-  console.log('   - Cabinet Wealth Partners (PREMIUM) - 4 clients');
-  console.log('   - Cabinet Patrimoine Sud (STARTER) - 3 clients');
-  console.log('');
-  console.log('👤 Total Clients: 17');
-  console.log('   Chaque client a:');
-  console.log('   ✓ 3 actifs (immobilier + assurance vie + PEA/PER)');
-  console.log('   ✓ 1-2 passifs (crédit immobilier + crédit conso)');
-  console.log('   ✓ 3 contrats (AV + mutuelle/RC Pro + prévoyance)');
-  console.log('   ✓ 5 documents (CNI, domicile, impôts, bancaire, salaire)');
-  console.log('   ✓ 1-3 objectifs (retraite, épargne, immobilier)');
-  console.log('   ✓ 1 projet avec 3 tâches');
-  console.log('   ✓ 1 rendez-vous');
-  console.log('   ✓ 1 opportunité');
-  console.log('   ✓ 4 documents KYC');
-  console.log('   ✓ 4 événements timeline');
-  console.log('   ✓ 1 simulation');
-  console.log('   ✓ 2-3 revenus');
-  console.log('   ✓ 4 dépenses');
-  console.log('');
+  if (!options.skipMain) {
+    console.log('📦 Cabinets: 3');
+    console.log('   - Cabinet Aura Test (BUSINESS) - 10 clients');
+    console.log('   - Cabinet Wealth Partners (PREMIUM) - 4 clients');
+    console.log('   - Cabinet Patrimoine Sud (STARTER) - 3 clients');
+    console.log('');
+    console.log('👤 Total Clients: 17');
+    console.log('   Chaque client a:');
+    console.log('   ✓ 3 actifs (immobilier + assurance vie + PEA/PER)');
+    console.log('   ✓ 1-2 passifs (crédit immobilier + crédit conso)');
+    console.log('   ✓ 3 contrats (AV + mutuelle/RC Pro + prévoyance)');
+    console.log('   ✓ 5 documents (CNI, domicile, impôts, bancaire, salaire)');
+    console.log('   ✓ 1-3 objectifs (retraite, épargne, immobilier)');
+    console.log('   ✓ 1 projet avec 3 tâches');
+    console.log('   ✓ 1 rendez-vous');
+    console.log('   ✓ 1 opportunité');
+    console.log('   ✓ 4 documents KYC');
+    console.log('   ✓ 4 événements timeline');
+    console.log('   ✓ 1 simulation');
+    console.log('   ✓ 2-3 revenus');
+    console.log('   ✓ 4 dépenses');
+    console.log('');
+  }
+  if (shouldSeedDemo) {
+    console.log('🎭 Demo Data (marked with [DEMO] prefix):');
+    if (options.compliance || options.all) {
+      console.log('   ✓ KYC Documents (valid, pending, expired, expiring)');
+      console.log('   ✓ Compliance Controls (ACPR mandatory)');
+      console.log('   ✓ Réclamations with SLA tracking');
+      console.log('   ✓ Compliance Alerts');
+      console.log('   ✓ Timeline Events');
+    }
+    if (options.operations || options.all) {
+      console.log('   ✓ Providers (AXA, Generali, Swiss Life, etc.)');
+      console.log('   ✓ Products (Assurance Vie, PER, SCPI, etc.)');
+      console.log('   ✓ Affaires Nouvelles at different stages');
+      console.log('   ✓ Opérations de Gestion');
+    }
+    if (options.templates || options.all) {
+      console.log('   ✓ Document Templates (DER, Recueil, Lettre Mission, etc.)');
+      console.log('   ✓ Templates by association (CNCGP, ANACOFI, CNCEF, Generic)');
+    }
+    console.log('');
+  }
   console.log('✨ Credentials:');
   console.log('   SuperAdmin: superadmin@aura.fr / Password123!');
   console.log('   Aura Admin: admin@aura.fr / Password123!');
@@ -949,6 +1089,15 @@ async function main() {
   console.log('   Client 1: jean.dupont@email.fr / Password123!');
   console.log('   Client 2: marie.martin@email.fr / Password123!');
   console.log('   Client 3: pierre.durand@email.fr / Password123!');
+  console.log('');
+  console.log('📖 Usage:');
+  console.log('   npx prisma db seed                    # Full seed (main + all demo data)');
+  console.log('   npx prisma db seed -- --skip-main     # Only demo data (existing DB)');
+  console.log('   npx prisma db seed -- --compliance    # Main + compliance demo only');
+  console.log('   npx prisma db seed -- --operations    # Main + operations demo only');
+  console.log('   npx prisma db seed -- --templates     # Main + templates demo only');
+  console.log('   npx prisma db seed -- --cleanup       # Remove all demo data');
+  console.log('   npx prisma db seed -- --cleanup --compliance  # Remove compliance demo only');
   console.log('═══════════════════════════════════════');
 }
 

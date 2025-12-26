@@ -112,7 +112,9 @@ export function useUpdateCampaign(options?: UseMutationOptions<CampaignDetail, E
 export function useDeleteCampaign(options?: UseMutationOptions<void, Error, string>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => api.delete(`/advisor/campaigns/${id}`),
+    mutationFn: async (id: string) => {
+      await api.delete(`/advisor/campaigns/${id}`)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.campaigns })
       queryClient.invalidateQueries({ queryKey: queryKeys.campaignStats() })
@@ -334,7 +336,9 @@ export function useUpdateScenario(options?: UseMutationOptions<ScenarioDetail, E
 export function useDeleteScenario(options?: UseMutationOptions<void, Error, string>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => api.delete(`/advisor/scenarios/${id}`),
+    mutationFn: async (id: string) => {
+      await api.delete(`/advisor/scenarios/${id}`)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.scenarios })
       queryClient.invalidateQueries({ queryKey: queryKeys.scenarioStats() })

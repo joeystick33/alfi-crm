@@ -49,7 +49,7 @@ export function useCreateConseiller(
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) => api.post('/advisor/conseillers', data),
+    mutationFn: (data: Record<string, unknown>) => api.post<Record<string, unknown>>('/advisor/conseillers', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conseillers'] })
       toast({
@@ -102,7 +102,7 @@ export function useDeleteConseiller(
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: string) => api.delete(`/advisor/conseillers/${id}`),
+    mutationFn: (id: string) => api.delete<Record<string, unknown>>(`/advisor/conseillers/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conseillers'] })
       toast({

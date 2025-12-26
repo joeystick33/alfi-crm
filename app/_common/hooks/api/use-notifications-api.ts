@@ -45,14 +45,16 @@ export function useUnreadNotificationCount(
  * Mark notification as read with optimistic update
  */
 export function useMarkNotificationRead(
-  options?: UseMutationOptions<void, Error, string, { previousNotifications: any[]; previousCount?: { count: number } }>
+  options?: UseMutationOptions<void, Error, string, { previousNotifications: [unknown, unknown][]; previousCount?: { count: number } }>
 ) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: string) => api.patch(`/advisor/notifications/${id}`, { isRead: true }),
+    mutationFn: async (id: string) => {
+      await api.patch(`/advisor/notifications/${id}`, { isRead: true })
+    },
     // Optimistic update
-    onMutate: async (id): Promise<{ previousNotifications: any[]; previousCount?: { count: number } }> => {
+    onMutate: async (id): Promise<{ previousNotifications: [unknown, unknown][]; previousCount?: { count: number } }> => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: queryKeys.notifications })
       await queryClient.cancelQueries({ queryKey: queryKeys.unreadCount })
@@ -82,13 +84,13 @@ export function useMarkNotificationRead(
         })
       }
 
-      return { previousNotifications, previousCount }
+      return { previousNotifications: previousNotifications as [unknown, unknown][], previousCount }
     },
     onError: (error, id, context) => {
       // Rollback on error
       if (context?.previousNotifications) {
         context.previousNotifications.forEach(([queryKey, data]) => {
-          queryClient.setQueryData(queryKey, data)
+          queryClient.setQueryData(queryKey as unknown[], data)
         })
       }
       if (context?.previousCount) {
@@ -113,7 +115,9 @@ export function useMarkAllNotificationsRead(
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: () => api.post('/advisor/notifications/mark-all-read'),
+    mutationFn: async () => {
+      await api.post('/advisor/notifications/mark-all-read')
+    },
     onSuccess: () => {
       // Invalidate notifications list
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications })

@@ -136,7 +136,7 @@ export function buildCouverture(data: ClientData, diagnostic: GlobalDiagnostic):
     ],
     alerts: [
       { 
-        type: diagnostic.verdict.level === 'EXCELLENT' || diagnostic.verdict.level === 'GOOD' ? 'success' : 'warning', 
+        typeCode: diagnostic.verdict.level === 'EXCELLENT' || diagnostic.verdict.level === 'GOOD' ? 'success' : 'warning', 
         title: 'Diagnostic',
         message: diagnostic.verdict.label + '. ' + (diagnostic.verdict.level === 'EXCELLENT' || diagnostic.verdict.level === 'GOOD' 
           ? 'Situation financière solide, endettement maîtrisé et forte capacité d\'investissement.'
@@ -198,7 +198,7 @@ export function buildPatrimoineGlobal(data: ClientData, diagnostic: GlobalDiagno
     },
     alerts: [
       { 
-        type: tauxGestion < 30 ? 'warning' : 'info', 
+        typeCode: tauxGestion < 30 ? 'warning' : 'info', 
         title: 'Conseil',
         message: tauxGestion < 30 
           ? 'Potentiel significatif d\'optimisation sur la part non gérée. Un accompagnement élargi permettrait d\'améliorer la performance globale.'
@@ -247,7 +247,7 @@ export function buildEvolution(data: ClientData, diagnostic: GlobalDiagnostic): 
     ],
     alerts: [
       { 
-        type: isPositive ? 'success' : 'info', 
+        typeCode: isPositive ? 'success' : 'info', 
         title: 'Lecture banque / CGP',
         message: isPositive 
           ? 'Croissance régulière et maîtrisée. Profil rassurant pour les établissements financiers.'
@@ -307,7 +307,7 @@ export function buildBudget(data: ClientData, diagnostic: GlobalDiagnostic): Bil
     }],
     alerts: [
       { 
-        type: isHCSFConforme && data.budget.epargne > 0 ? 'success' : 'warning', 
+        typeCode: isHCSFConforme && data.budget.epargne > 0 ? 'success' : 'warning', 
         title: 'Capacité d emprunt',
         message: isHCSFConforme 
           ? `Capacité d'emprunt disponible significative. Le profil permet d'envisager de nouveaux projets d'investissement ou d'acquisition.`
@@ -359,7 +359,7 @@ export function buildFiscalite(data: ClientData, diagnostic: GlobalDiagnostic): 
     ],
     alerts: [
       { 
-        type: isTMIEleve ? 'warning' : 'info', 
+        typeCode: isTMIEleve ? 'warning' : 'info', 
         title: 'Optimisation fiscale',
         message: isTMIEleve 
           ? `Profil à fort enjeu d'optimisation fiscale. Chaque euro de déduction génère ${effetLevier}% d'économie. Priorités : PER, démembrement, arbitrages sur revenus fonciers.`
@@ -409,7 +409,7 @@ export function buildContrats(data: ClientData, _diagnostic: GlobalDiagnostic): 
     }],
     alerts: [
       {
-        type: 'info',
+        typeCode: 'info',
         title: 'Point de vigilance',
         message: 'Vérifier les clauses bénéficiaires des contrats d\'assurance-vie et s\'assurer de leur adéquation avec la situation familiale actuelle.'
       }
@@ -457,7 +457,7 @@ export function buildObjectifs(data: ClientData, diagnostic: GlobalDiagnostic): 
     ],
     alerts: [
       { 
-        type: isOnTrack ? 'success' : 'warning', 
+        typeCode: isOnTrack ? 'success' : 'warning', 
         title: isOnTrack ? 'Sur la bonne trajectoire' : 'Progression a accelerer',
         message: isOnTrack 
           ? 'L\'objectif est en bonne voie d\'atteinte. Maintenir l\'effort actuel permettra de sécuriser cette trajectoire.'
@@ -516,7 +516,7 @@ export function buildReporting(data: ClientData, _diagnostic: GlobalDiagnostic):
     },
     alerts: [
       {
-        type: isPerformancePositive ? 'success' : 'info',
+        typeCode: isPerformancePositive ? 'success' : 'info',
         title: 'Suivi',
         message: isPerformancePositive 
           ? 'Performance positive sur la période. Le suivi régulier permet d\'optimiser les points d\'entrée et de sortie.'

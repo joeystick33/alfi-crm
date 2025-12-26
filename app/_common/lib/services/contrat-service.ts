@@ -1,6 +1,5 @@
 import { getPrismaClient } from '../prisma'
-import type { ContratType } from '@/app/_common/lib/constants/reference-types'
-import { ContratStatus, type Prisma } from '@prisma/client'
+import { ContratType, ContratStatus, type Prisma } from '@prisma/client'
 import { Decimal } from '@prisma/client/runtime/library'
 
 // Using Record for dynamic Prisma queries

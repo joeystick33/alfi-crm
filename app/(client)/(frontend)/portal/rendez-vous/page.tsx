@@ -129,7 +129,7 @@ export default function RendezVousPage() {
   }, [apiData])
 
   const stats = useMemo(() => {
-    if (apiData?.stats) return apiData.stats
+    if (apiData?.stats) return apiData.stats as unknown as typeof DEMO_STATS
     return DEMO_STATS
   }, [apiData])
 

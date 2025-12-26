@@ -126,7 +126,7 @@ export default function ObjectifsPage() {
   }, [apiData])
 
   const stats = useMemo(() => {
-    if (apiData?.stats) return apiData.stats
+    if (apiData?.stats) return apiData.stats as typeof EMPTY_STATS
     return EMPTY_STATS
   }, [apiData])
 

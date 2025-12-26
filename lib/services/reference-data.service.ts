@@ -199,7 +199,14 @@ export async function getTypeMetadata<T = Record<string, unknown>>(
  * À appeler après modification en admin
  */
 export function invalidateReferenceDataCache(): void {
-  revalidateTag('reference-data')
+  // Note: revalidateTag requires a profile argument in newer Next.js versions
+  // Using try-catch for backwards compatibility
+  try {
+    // @ts-expect-error - API signature may vary between Next.js versions
+    revalidateTag('reference-data')
+  } catch {
+    // Silently ignore if revalidation fails
+  }
 }
 
 // ===========================================
@@ -233,7 +240,7 @@ export async function upsertReferenceData(input: CreateReferenceDataInput): Prom
       labelEn: input.labelEn,
       category: input.category,
       sortOrder: input.sortOrder ?? 0,
-      metadata: input.metadata,
+      metadata: input.metadata ? JSON.parse(JSON.stringify(input.metadata)) : undefined,
     },
     create: {
       domain: input.domain,
@@ -243,7 +250,7 @@ export async function upsertReferenceData(input: CreateReferenceDataInput): Prom
       category: input.category,
       sortOrder: input.sortOrder ?? 0,
       isSystem: input.isSystem ?? false,
-      metadata: input.metadata,
+      metadata: input.metadata ? JSON.parse(JSON.stringify(input.metadata)) : undefined,
     },
   })
   

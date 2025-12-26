@@ -19,7 +19,7 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, fullWidth, asChild = false, loading, disabled, leftIcon, rightIcon, children, ...props }, ref) => {
+  ({ className, variant, size, fullWidth, asChild = false, loading, disabled, leftIcon, rightIcon, children, 'aria-label': ariaLabel, ...props }, ref) => {
     const Comp = asChild ? Slot : 'button'
     
     return (
@@ -27,17 +27,20 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(buttonVariants({ variant, size, fullWidth, className }))}
         ref={ref}
         disabled={disabled || loading}
+        aria-disabled={disabled || loading}
+        aria-busy={loading}
+        aria-label={loading ? `${ariaLabel || children} - Chargement en cours` : ariaLabel}
         {...props}
       >
         {loading && (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
         )}
         {!loading && leftIcon && (
-          <span className="mr-2 shrink-0">{leftIcon}</span>
+          <span className="mr-2 shrink-0" aria-hidden="true">{leftIcon}</span>
         )}
         {children}
         {!loading && rightIcon && (
-          <span className="ml-2 shrink-0">{rightIcon}</span>
+          <span className="ml-2 shrink-0" aria-hidden="true">{rightIcon}</span>
         )}
       </Comp>
     )

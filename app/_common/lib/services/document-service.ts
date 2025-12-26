@@ -1,6 +1,5 @@
 import { getPrismaClient } from '../prisma'
-import type { DocumentType, DocumentCategory } from '@/app/_common/lib/constants/reference-types'
-import { SignatureStatus, SignatureProvider, type Prisma, PrismaClient } from '@prisma/client'
+import { DocumentType, DocumentCategory, SignatureStatus, SignatureProvider, type Prisma, PrismaClient } from '@prisma/client'
 
 export interface CreateDocumentInput {
   name: string

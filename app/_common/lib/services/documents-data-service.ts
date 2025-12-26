@@ -19,9 +19,11 @@ import type {
 
 export const VALID_DOCUMENT_CATEGORIES: DocumentCategory[] = [
   'IDENTITE',
-  'PATRIMONY', 
-  'RISK_PROFILE',
-  'COMPLIANCE'
+  'FISCAL',
+  'PATRIMOINE',
+  'REGLEMENTAIRE',
+  'COMMERCIAL',
+  'AUTRE'
 ]
 
 export const VALID_DOCUMENT_STATUSES: DocumentStatus[] = [

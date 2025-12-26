@@ -25,6 +25,8 @@ import {
   Target,
   History,
   Settings,
+  Briefcase,
+  Shield,
 } from 'lucide-react'
 
 // Lazy load des tabs
@@ -35,12 +37,16 @@ const TabDocumentsConformite = lazy(() => import('../client360/tabs/TabDocuments
 const TabProjetsUnified = lazy(() => import('./tabs/TabProjetsUnified'))
 const ActivityTimelineTab = lazy(() => import('./tabs/ActivityTimelineTab'))
 const TabParametresComplet = lazy(() => import('../client360/tabs/TabParametresComplet').then(m => ({ default: m.TabParametresComplet })))
+const TabOperationsIntegration = lazy(() => import('../client360/tabs/TabOperationsIntegration').then(m => ({ default: m.default })))
+const TabComplianceIntegration = lazy(() => import('../client360/tabs/TabComplianceIntegration').then(m => ({ default: m.default })))
 
-// Configuration des 6 tabs simplifiés
+// Configuration des 8 tabs
 const TAB_CONFIG = [
   { id: 'synthese', label: 'Synthèse', icon: LayoutDashboard },
   { id: 'profil', label: 'Profil', icon: User },
   { id: 'patrimoine', label: 'Patrimoine', icon: Wallet },
+  { id: 'operations', label: 'Opérations', icon: Briefcase },
+  { id: 'conformite', label: 'Conformité', icon: Shield },
   { id: 'documents', label: 'Documents', icon: FolderOpen },
   { id: 'projets', label: 'Projets', icon: Target },
   { id: 'historique', label: 'Historique', icon: History },
@@ -193,6 +199,18 @@ export function Client360ContainerV2({
         <TabsContent value="patrimoine" className="mt-4">
           <Suspense fallback={<SectionSkeleton />}>
             <TabPatrimoineUnified clientId={clientId} client={client} wealth={wealth} />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="operations" className="mt-4">
+          <Suspense fallback={<SectionSkeleton />}>
+            <TabOperationsIntegration clientId={clientId} client={client} />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="conformite" className="mt-4">
+          <Suspense fallback={<SectionSkeleton />}>
+            <TabComplianceIntegration clientId={clientId} client={client} />
           </Suspense>
         </TabsContent>
 

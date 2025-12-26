@@ -121,22 +121,22 @@ export default function ProfilPage() {
   const updateProfileMutation = useUpdateClientProfile()
 
   const profile = useMemo(() => {
-    if (apiData?.profile) return apiData.profile
+    if (apiData?.profile) return apiData.profile as typeof DEMO_PROFILE.profile
     return DEMO_PROFILE.profile
   }, [apiData])
 
   const advisor = useMemo(() => {
-    if (apiData?.advisor) return apiData.advisor
+    if (apiData?.advisor) return apiData.advisor as typeof DEMO_PROFILE.advisor
     return DEMO_PROFILE.advisor
   }, [apiData])
 
   const cabinet = useMemo(() => {
-    if (apiData?.cabinet) return apiData.cabinet
+    if (apiData?.cabinet) return apiData.cabinet as typeof DEMO_PROFILE.cabinet
     return DEMO_PROFILE.cabinet
   }, [apiData])
 
   const familyMembers = useMemo(() => {
-    if (apiData?.familyMembers) return apiData.familyMembers
+    if (apiData?.familyMembers) return apiData.familyMembers as typeof DEMO_PROFILE.familyMembers
     return DEMO_PROFILE.familyMembers
   }, [apiData])
 

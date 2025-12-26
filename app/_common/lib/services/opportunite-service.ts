@@ -1,6 +1,5 @@
 import { getPrismaClient } from '@/app/_common/lib/prisma'
-import { OpportuniteStatus, Priority, type Prisma } from '@prisma/client'
-import type { OpportuniteType } from '@/app/_common/lib/constants/reference-types'
+import { OpportuniteStatus, OpportuniteType, OpportunitePriority, type Prisma } from '@prisma/client'
 import { Decimal } from '@prisma/client/runtime/library'
 
 export class OpportuniteService {

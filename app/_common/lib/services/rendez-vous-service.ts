@@ -1,6 +1,5 @@
 import { getPrismaClient } from '@/app/_common/lib/prisma'
-import { RendezVousStatus } from '@prisma/client'
-import type { RendezVousType } from '@/app/_common/lib/constants/reference-types'
+import { RendezVousStatus, RendezVousType } from '@prisma/client'
 import type { Prisma } from '@prisma/client'
 
 function isRecord(value: unknown): value is Record<string, unknown> {

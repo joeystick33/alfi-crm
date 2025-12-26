@@ -24,7 +24,7 @@ const createAppointmentSchema = z.object({
   location: z.string().optional(),
   isVirtual: z.boolean().optional().default(false),
   meetingUrl: z.string().optional(),
-  type: z.enum(['FIRST_MEETING', 'SUIVI', 'ANNUAL_REVIEW', 'SIGNING', 'PHONE_CALL', 'VIDEO_CALL', 'AUTRE']).default('AUTRE'),
+  type: z.enum(['PREMIER_RDV', 'SUIVI', 'BILAN_ANNUEL', 'SIGNATURE', 'APPEL_TEL', 'VISIO', 'AUTRE']).default('AUTRE'),
   clientId: z.string().optional(),
   notes: z.string().optional(),
   // Récurrence
@@ -149,7 +149,7 @@ export async function GET(request: NextRequest) {
     const appointments = await service.getRendezVous({
       conseillerId: user.id,
       clientId: params.clientId,
-      type: params.type as 'FIRST_MEETING' | 'SUIVI' | 'ANNUAL_REVIEW' | 'SIGNING' | 'PHONE_CALL' | 'VIDEO_CALL' | 'AUTRE' | undefined,
+      type: params.type as 'PREMIER_RDV' | 'SUIVI' | 'BILAN_ANNUEL' | 'SIGNATURE' | 'APPEL_TEL' | 'VISIO' | 'AUTRE' | undefined,
       status: status as any, // Cast to any or RendezVousStatus to fix build error
       startDate,
       endDate,

@@ -54,7 +54,7 @@ const formatDate = (date: Date | string, formatType: 'date' | 'time' | 'datetime
   return d.toLocaleDateString('fr-FR')
 }
 
-interface AuditLog {
+interface AuditLog extends Record<string, unknown> {
   id: string
   action: string
   entityType: string
@@ -285,11 +285,11 @@ export default function AuditLogsPage() {
       key: 'createdAt',
       label: 'Date',
       sortable: true,
-      render: (log: AuditLog) => (
+      render: (_value: unknown, item: AuditLog) => (
         <div className="text-sm">
-          {formatDate(log.createdAt, 'date')}
+          {formatDate(item.createdAt, 'date')}
           <div className="text-xs text-muted-foreground">
-            {formatDate(log.createdAt, 'time')}
+            {formatDate(item.createdAt, 'time')}
           </div>
         </div>
       ),
@@ -297,14 +297,14 @@ export default function AuditLogsPage() {
     {
       key: 'user',
       label: 'Utilisateur',
-      render: (log: AuditLog) => (
+      render: (_value: unknown, item: AuditLog) => (
         <div className="text-sm">
-          {log.user ? (
+          {item.user ? (
             <>
               <div className="font-medium">
-                {log.user.firstName} {log.user.lastName}
+                {item.user.firstName} {item.user.lastName}
               </div>
-              <div className="text-xs text-muted-foreground">{log.user.email}</div>
+              <div className="text-xs text-muted-foreground">{item.user.email}</div>
             </>
           ) : (
             <span className="text-muted-foreground">N/A</span>
@@ -316,9 +316,9 @@ export default function AuditLogsPage() {
       key: 'action',
       label: 'Action',
       sortable: true,
-      render: (log: AuditLog) => (
-        <Badge variant={ACTION_COLORS[log.action] || 'default'}>
-          {ACTION_LABELS[log.action] || log.action}
+      render: (_value: unknown, item: AuditLog) => (
+        <Badge variant={ACTION_COLORS[item.action] || 'default'}>
+          {ACTION_LABELS[item.action] || item.action}
         </Badge>
       ),
     },
@@ -326,26 +326,26 @@ export default function AuditLogsPage() {
       key: 'entityType',
       label: 'Type',
       sortable: true,
-      render: (log: AuditLog) => <span className="text-sm font-mono">{log.entityType}</span>,
+      render: (_value: unknown, item: AuditLog) => <span className="text-sm font-mono">{item.entityType}</span>,
     },
     {
       key: 'entityId',
       label: 'Détails',
-      render: (log: AuditLog) => (
+      render: (_value: unknown, item: AuditLog) => (
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground truncate max-w-[150px]">
-            {log.entityId}
+            {item.entityId}
           </span>
-          {log.changes && (
+          {item.changes && (
             <Button
               variant="ghost"
               size="sm"
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation()
-                setExpandedRow(expandedRow === log.id ? null : log.id)
+                setExpandedRow(expandedRow === item.id ? null : item.id)
               }}
             >
-              {expandedRow === log.id ? (
+              {expandedRow === item.id ? (
                 <ChevronDown className="h-4 w-4" />
               ) : (
                 <ChevronRight className="h-4 w-4" />

@@ -27,7 +27,7 @@ export function useInvoice(id: string) {
 export function useCreateInvoice(options?: UseMutationOptions<Record<string, unknown>, Error, Record<string, unknown>>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) => api.post('/advisor/invoices', data),
+    mutationFn: (data: Record<string, unknown>) => api.post<Record<string, unknown>>('/advisor/invoices', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
       queryClient.invalidateQueries({ queryKey: ['invoice-stats'] })
@@ -43,7 +43,7 @@ export function useCreateInvoice(options?: UseMutationOptions<Record<string, unk
 export function useUpdateInvoice(options?: UseMutationOptions<Record<string, unknown>, Error, { id: string; data: Record<string, unknown> }>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }) => api.patch(`/advisor/invoices/${id}`, data),
+    mutationFn: ({ id, data }) => api.patch<Record<string, unknown>>(`/advisor/invoices/${id}`, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
       queryClient.invalidateQueries({ queryKey: ['invoices', id] })
@@ -60,7 +60,7 @@ export function useUpdateInvoice(options?: UseMutationOptions<Record<string, unk
 export function useDeleteInvoice(options?: UseMutationOptions<Record<string, unknown>, Error, string>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => api.delete(`/advisor/invoices/${id}`),
+    mutationFn: (id: string) => api.delete<Record<string, unknown>>(`/advisor/invoices/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
       queryClient.invalidateQueries({ queryKey: ['invoice-stats'] })
@@ -76,7 +76,7 @@ export function useDeleteInvoice(options?: UseMutationOptions<Record<string, unk
 export function useAddInvoiceItem(options?: UseMutationOptions<Record<string, unknown>, Error, { invoiceId: string; data: Record<string, unknown> }>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ invoiceId, data }) => api.post(`/advisor/invoices/${invoiceId}/items`, data),
+    mutationFn: ({ invoiceId, data }) => api.post<Record<string, unknown>>(`/advisor/invoices/${invoiceId}/items`, data),
     onSuccess: (_, { invoiceId }) => {
       queryClient.invalidateQueries({ queryKey: ['invoices', invoiceId] })
       toast({ title: 'Ligne ajoutée', variant: 'success' })
@@ -91,7 +91,7 @@ export function useAddInvoiceItem(options?: UseMutationOptions<Record<string, un
 export function useRemoveInvoiceItem(options?: UseMutationOptions<Record<string, unknown>, Error, { invoiceId: string; itemId: string }>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ invoiceId, itemId }) => api.delete(`/advisor/invoices/${invoiceId}/items?itemId=${itemId}`),
+    mutationFn: ({ invoiceId, itemId }) => api.delete<Record<string, unknown>>(`/advisor/invoices/${invoiceId}/items?itemId=${itemId}`),
     onSuccess: (_, { invoiceId }) => {
       queryClient.invalidateQueries({ queryKey: ['invoices', invoiceId] })
       toast({ title: 'Ligne supprimée', variant: 'success' })
@@ -106,7 +106,7 @@ export function useRemoveInvoiceItem(options?: UseMutationOptions<Record<string,
 export function useAddPayment(options?: UseMutationOptions<Record<string, unknown>, Error, { invoiceId: string; data: Record<string, unknown> }>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ invoiceId, data }) => api.post(`/advisor/invoices/${invoiceId}/payments`, data),
+    mutationFn: ({ invoiceId, data }) => api.post<Record<string, unknown>>(`/advisor/invoices/${invoiceId}/payments`, data),
     onSuccess: (_, { invoiceId }) => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
       queryClient.invalidateQueries({ queryKey: ['invoices', invoiceId] })
@@ -123,7 +123,7 @@ export function useAddPayment(options?: UseMutationOptions<Record<string, unknow
 export function useSendInvoice(options?: UseMutationOptions<Record<string, unknown>, Error, string>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => api.post(`/advisor/invoices/${id}/send`),
+    mutationFn: (id: string) => api.post<Record<string, unknown>>(`/advisor/invoices/${id}/send`),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
       queryClient.invalidateQueries({ queryKey: ['invoices', id] })
@@ -140,7 +140,7 @@ export function useSendInvoice(options?: UseMutationOptions<Record<string, unkno
 export function useMarkInvoiceAsPaid(options?: UseMutationOptions<Record<string, unknown>, Error, { id: string; paidDate?: string }>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, paidDate }) => api.post(`/advisor/invoices/${id}/mark-paid`, paidDate ? { paidDate } : {}),
+    mutationFn: ({ id, paidDate }) => api.post<Record<string, unknown>>(`/advisor/invoices/${id}/mark-paid`, paidDate ? { paidDate } : {}),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
       queryClient.invalidateQueries({ queryKey: ['invoices', id] })
@@ -157,7 +157,7 @@ export function useMarkInvoiceAsPaid(options?: UseMutationOptions<Record<string,
 export function useCancelInvoice(options?: UseMutationOptions<Record<string, unknown>, Error, string>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => api.post(`/advisor/invoices/${id}/cancel`),
+    mutationFn: (id: string) => api.post<Record<string, unknown>>(`/advisor/invoices/${id}/cancel`),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
       queryClient.invalidateQueries({ queryKey: ['invoices', id] })

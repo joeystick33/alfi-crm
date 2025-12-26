@@ -28,7 +28,7 @@ export function useUpdateTask(
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, data }) => api.patch(`/advisor/taches/${id}`, data),
+    mutationFn: ({ id, data }) => api.patch<Record<string, unknown>>(`/advisor/taches/${id}`, data),
     // Optimistic update
     onMutate: async ({ id, data }): Promise<{ previousTasks: [unknown, unknown][] }> => {
       // Cancel outgoing refetches
@@ -60,7 +60,7 @@ export function useUpdateTask(
         }
       )
 
-      return { previousTasks }
+      return { previousTasks: previousTasks as [unknown, unknown][] }
     },
     onError: (error: Error, _variables, context) => {
       // Rollback on error
@@ -93,7 +93,7 @@ export function useCreateTask(
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: CreateTacheRequest) => api.post('/advisor/taches', data),
+    mutationFn: (data: CreateTacheRequest) => api.post<Record<string, unknown>>('/advisor/taches', data),
     onSuccess: () => {
       // Invalidate tasks list
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks })

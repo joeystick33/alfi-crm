@@ -25,6 +25,7 @@ import type {
   DocumentCategory,
   DocumentStatus
 } from '@/app/_common/types/client360'
+import type { DocumentType, DocumentCategory as PrismaDocumentCategory } from '@prisma/client'
 
 /**
  * Calculate KYC status from documents
@@ -260,13 +261,13 @@ function transformDocuments(rawDocuments: RawDocument[]): Document[] {
             break
           case 'PATRIMOINE':
           case 'FISCAL':
-            category = 'PATRIMONY'
+            category = 'PATRIMOINE'
             break
           case 'RAPPORTS':
-            category = 'RISK_PROFILE'
+            category = 'REGLEMENTAIRE'
             break
           default:
-            category = 'COMPLIANCE'
+            category = 'AUTRE'
         }
         break
       }
@@ -448,8 +449,8 @@ export async function POST(
         fileUrl,
         fileSize,
         mimeType,
-        type: type as unknown as DocumentType,
-        category: category as unknown as DocumentCategory,
+        type: type as DocumentType,
+        category: category as PrismaDocumentCategory,
         checksum,
         metadata: {
           certifiedAt: new Date().toISOString(),

@@ -153,7 +153,9 @@ export function useDeleteReclamation(
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: (id: string) => api.delete(`/reclamations/${id}`),
+    mutationFn: async (id: string) => {
+      await api.delete(`/reclamations/${id}`)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.reclamations })
       queryClient.invalidateQueries({ queryKey: queryKeys.reclamationStats() })

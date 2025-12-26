@@ -40,9 +40,9 @@ model SuperAdmin {
   auditLogs AuditLog[]
 
   // Relations SaaS
-  sessions  UserSession[]
-  apiKeys   ApiKey[]
-  webhooks  WebhookEndpoint[]
+  sessions UserSession[]
+  apiKeys  ApiKey[]
+  webhooks WebhookEndpoint[]
 
   @@index([email])
   @@index([isActive])
@@ -80,16 +80,16 @@ model Cabinet {
   usage             Json?
   features          Json?
   restrictions      Json?
-  
+
   // BYOK Integrations
   googleClientId        String?
   googleClientSecret    String?
   microsoftClientId     String?
   microsoftClientSecret String?
-  
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  createdBy         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
 
   users             User[]
   clients           Client[]
@@ -126,10 +126,23 @@ model Cabinet {
   events            Event[]
 
   // Relations SaaS
-  userSessions  UserSession[]
-  apiKeys       ApiKey[]
-  webhooks      WebhookEndpoint[]
-  saasInvoices  SaaSInvoice[]
+  userSessions UserSession[]
+  apiKeys      ApiKey[]
+  webhooks     WebhookEndpoint[]
+  saasInvoices SaaSInvoice[]
+
+  // Relations Compliance Refonte
+  complianceAlerts         ComplianceAlert[]
+  complianceTimelineEvents ComplianceTimelineEvent[]
+
+  // Relations Operations Refonte
+  affairesNouvelles  AffaireNouvelle[]
+  operationsGestion  OperationGestion[]
+  operationProviders OperationProvider[]
+
+  // Relations Documents Refonte
+  regulatoryDocumentTemplates  RegulatoryDocumentTemplate[]
+  regulatoryGeneratedDocuments RegulatoryGeneratedDocument[]
 
   @@index([slug])
   @@index([status])
@@ -197,6 +210,20 @@ model User {
   sessions UserSession[]
   events   Event[]
 
+  // Relations Compliance Refonte
+  alertsAcknowledged       ComplianceAlert[]         @relation("AlertAcknowledger")
+  complianceTimelineEvents ComplianceTimelineEvent[] @relation("ComplianceTimelineUser")
+
+  // Relations Operations Refonte
+  affairesCreated        AffaireNouvelle[]        @relation("AffaireCreator")
+  affaireStatusHistory   AffaireStatusHistory[]   @relation("AffaireStatusHistoryUser")
+  operationsCreated      OperationGestion[]       @relation("OperationCreator")
+  operationStatusHistory OperationStatusHistory[] @relation("OperationStatusHistoryUser")
+
+  // Relations Documents Refonte
+  regulatoryTemplatesCreated   RegulatoryDocumentTemplate[]  @relation("RegulatoryTemplateCreator")
+  regulatoryDocumentsGenerated RegulatoryGeneratedDocument[] @relation("RegulatoryDocumentGenerator")
+
   @@index([cabinetId])
   @@index([cabinetId, role])
   @@index([email])
@@ -261,12 +288,12 @@ model ApporteurAffaires {
 // ============================================
 
 enum MaritalStatus {
-  CELIBATAIRE    // Célibataire
-  MARIE          // Marié(e)
-  DIVORCE        // Divorcé(e)
-  VEUF           // Veuf/Veuve
-  PACSE          // Pacsé(e)
-  CONCUBINAGE    // Concubinage
+  CELIBATAIRE // Célibataire
+  MARIE // Marié(e)
+  DIVORCE // Divorcé(e)
+  VEUF // Veuf/Veuve
+  PACSE // Pacsé(e)
+  CONCUBINAGE // Concubinage
 }
 
 enum RiskProfile {
@@ -278,25 +305,25 @@ enum RiskProfile {
 }
 
 enum InvestmentHorizon {
-  COURT   // Court terme (<3 ans)
-  MOYEN   // Moyen terme (3-8 ans)
-  LONG    // Long terme (>8 ans)
+  COURT // Court terme (<3 ans)
+  MOYEN // Moyen terme (3-8 ans)
+  LONG // Long terme (>8 ans)
 }
 
 enum KYCStatus {
-  EN_ATTENTE  // En attente
-  EN_COURS    // En cours
-  COMPLET     // Complet
-  EXPIRE      // Expiré
-  REJETE      // Rejeté
+  EN_ATTENTE // En attente
+  EN_COURS // En cours
+  COMPLET // Complet
+  EXPIRE // Expiré
+  REJETE // Rejeté
 }
 
 enum ClientStatus {
-  PROSPECT   // Prospect
-  ACTIF      // Client actif
-  INACTIF    // Client inactif
-  ARCHIVE    // Archivé
-  PERDU      // Perdu
+  PROSPECT // Prospect
+  ACTIF // Client actif
+  INACTIF // Client inactif
+  ARCHIVE // Archivé
+  PERDU // Perdu
 }
 
 enum ClientType {
@@ -451,13 +478,13 @@ model Client {
   settings            ClientSettings?
 
   // === RELATIONS BUDGET DÉTAILLÉ & BIENS MOBILIERS ===
-  revenues            Revenue[]
-  expenses            Expense[]
-  credits             Credit[]
-  biensMobiliers      BienMobilier[]
+  revenues       Revenue[]
+  expenses       Expense[]
+  credits        Credit[]
+  biensMobiliers BienMobilier[]
 
   // === RELATIONS CLIENT360 PRO ===
-  interlocuteurs       Interlocuteur[]
+  interlocuteurs         Interlocuteur[]
   epargneSalariale       EpargneSalariale[]
   protectionSocialePro   ProtectionSocialePro[]
   financementsPro        FinancementPro[]
@@ -465,19 +492,32 @@ model Client {
   patrimoineFinancierPro PatrimoineFinancierPro[]
 
   // === SNAPSHOTS PATRIMOINE ===
-  patrimoineSnapshots  PatrimoineSnapshot[]
+  patrimoineSnapshots PatrimoineSnapshot[]
+
+  // === RELATIONS COMPLIANCE REFONTE ===
+  complianceAlerts         ComplianceAlert[]
+  complianceTimelineEvents ComplianceTimelineEvent[]
+
+  // === RELATIONS OPERATIONS REFONTE ===
+  affairesNouvelles AffaireNouvelle[]
+  operationsGestion OperationGestion[]
+
+  // === RELATIONS DOCUMENTS REFONTE ===
+  regulatoryGeneratedDocuments RegulatoryGeneratedDocument[]
 
   // === CHAMPS DÉNORMALISÉS POUR PERFORMANCE ===
   // Ces champs sont mis à jour par PatrimoineSnapshot
-  totalActifs       Decimal?  @db.Decimal(15, 2)
-  totalPassifs      Decimal?  @db.Decimal(15, 2)
-  patrimoineNet     Decimal?  @db.Decimal(15, 2)
-  totalRevenus      Decimal?  @db.Decimal(12, 2)
-  totalCharges      Decimal?  @db.Decimal(12, 2)
-  capaciteEpargne   Decimal?  @db.Decimal(12, 2)
-  tauxEndettement   Decimal?  @db.Decimal(5, 2)
-  lastSnapshotAt    DateTime?
+  totalActifs     Decimal?  @db.Decimal(15, 2)
+  totalPassifs    Decimal?  @db.Decimal(15, 2)
+  patrimoineNet   Decimal?  @db.Decimal(15, 2)
+  totalRevenus    Decimal?  @db.Decimal(12, 2)
+  totalCharges    Decimal?  @db.Decimal(12, 2)
+  capaciteEpargne Decimal?  @db.Decimal(12, 2)
+  tauxEndettement Decimal?  @db.Decimal(5, 2)
+  lastSnapshotAt  DateTime?
 
+  // CONTRAINTE UNIQUE
+  @@unique([cabinetId, email])
   // INDEX EXISTANTS
   @@index([cabinetId])
   @@index([conseillerId])
@@ -485,28 +525,23 @@ model Client {
   @@index([clientType])
   @@index([kycStatus])
   @@index([email])
-
   // NOUVEAUX INDEX COMPOSITES POUR PERFORMANCE
   @@index([cabinetId, conseillerId, status])
   @@index([cabinetId, status, lastContactDate])
   @@index([cabinetId, kycStatus, kycNextReviewDate])
   @@index([cabinetId, clientType, status])
   @@index([cabinetId, patrimoineNet])
-
-  // CONTRAINTE UNIQUE
-  @@unique([cabinetId, email])
-
   @@map("clients")
 }
 
 enum FamilyRelationship {
-  CONJOINT      // Époux/Épouse, Partenaire PACS
-  ENFANT        // Enfant
-  PARENT        // Père/Mère
-  FRATRIE       // Frère/Sœur
-  PETIT_ENFANT  // Petit-enfant
-  AUTRE         // Autre lien
-  ASCENDANT     // Grand-parent, arrière-grand-parent
+  CONJOINT // Époux/Épouse, Partenaire PACS
+  ENFANT // Enfant
+  PARENT // Père/Mère
+  FRATRIE // Frère/Sœur
+  PETIT_ENFANT // Petit-enfant
+  AUTRE // Autre lien
+  ASCENDANT // Grand-parent, arrière-grand-parent
 }
 
 model FamilyMember {
@@ -668,18 +703,18 @@ model ClientSettings {
 }
 
 enum TaxOptimizationPriority {
-  BASSE     // Basse
-  MOYENNE   // Moyenne
-  HAUTE     // Haute
-  URGENTE   // Urgente
+  BASSE // Basse
+  MOYENNE // Moyenne
+  HAUTE // Haute
+  URGENTE // Urgente
 }
 
 enum TaxOptimizationStatus {
-  DETECTEE    // Détectée automatiquement
-  EN_COURS    // En cours de mise en place
-  APPLIQUEE   // Appliquée/Réalisée
-  REJETEE     // Rejetée/Écartée
-  EXPIREE     // Expirée
+  DETECTEE // Détectée automatiquement
+  EN_COURS // En cours de mise en place
+  APPLIQUEE // Appliquée/Réalisée
+  REJETEE // Rejetée/Écartée
+  EXPIREE // Expirée
 }
 
 model TaxOptimization {
@@ -718,71 +753,71 @@ model TaxOptimization {
 
 enum ActifType {
   // === IMMOBILIER ===
-  RESIDENCE_PRINCIPALE       // Résidence principale
-  IMMOBILIER_LOCATIF         // Immobilier locatif
-  RESIDENCE_SECONDAIRE       // Résidence secondaire
-  IMMOBILIER_COMMERCIAL      // Immobilier commercial
-  SCPI                       // SCPI
-  SCI                        // SCI
-  OPCI                       // OPCI
-  CROWDFUNDING_IMMO          // Crowdfunding immobilier
-  VIAGER                     // Viager
-  NUE_PROPRIETE              // Nue-propriété
-  USUFRUIT                   // Usufruit
-  
+  RESIDENCE_PRINCIPALE // Résidence principale
+  IMMOBILIER_LOCATIF // Immobilier locatif
+  RESIDENCE_SECONDAIRE // Résidence secondaire
+  IMMOBILIER_COMMERCIAL // Immobilier commercial
+  SCPI // SCPI
+  SCI // SCI
+  OPCI // OPCI
+  CROWDFUNDING_IMMO // Crowdfunding immobilier
+  VIAGER // Viager
+  NUE_PROPRIETE // Nue-propriété
+  USUFRUIT // Usufruit
+
   // === ÉPARGNE SALARIALE ===
-  PEE                        // Plan Épargne Entreprise
-  PEG                        // Plan Épargne Groupe
-  PERCO                      // PERCO (ancien)
-  PERECO                     // PER Collectif (nouveau)
-  CET                        // Compte Épargne Temps
-  PARTICIPATION              // Participation
-  INTERESSEMENT              // Intéressement
-  STOCK_OPTIONS              // Stock-options
-  ACTIONS_GRATUITES          // Actions gratuites
-  BSPCE                      // BSPCE
-  
+  PEE // Plan Épargne Entreprise
+  PEG // Plan Épargne Groupe
+  PERCO // PERCO (ancien)
+  PERECO // PER Collectif (nouveau)
+  CET // Compte Épargne Temps
+  PARTICIPATION // Participation
+  INTERESSEMENT // Intéressement
+  STOCK_OPTIONS // Stock-options
+  ACTIONS_GRATUITES // Actions gratuites
+  BSPCE // BSPCE
+
   // === ÉPARGNE RETRAITE ===
-  PER                        // PER individuel
-  PERP                       // PERP (ancien)
-  MADELIN                    // Contrat Madelin
-  ARTICLE_83                 // Article 83
-  PREFON                     // PREFON
-  COREM                      // COREM
-  
+  PER // PER individuel
+  PERP // PERP (ancien)
+  MADELIN // Contrat Madelin
+  ARTICLE_83 // Article 83
+  PREFON // PREFON
+  COREM // COREM
+
   // === PLACEMENTS FINANCIERS ===
-  ASSURANCE_VIE              // Assurance-vie
-  CONTRAT_CAPITALISATION     // Contrat de capitalisation
-  COMPTE_TITRES              // Compte-titres ordinaire
-  PEA                        // PEA
-  PEA_PME                    // PEA-PME
-  
+  ASSURANCE_VIE // Assurance-vie
+  CONTRAT_CAPITALISATION // Contrat de capitalisation
+  COMPTE_TITRES // Compte-titres ordinaire
+  PEA // PEA
+  PEA_PME // PEA-PME
+
   // === ÉPARGNE BANCAIRE ===
-  COMPTE_BANCAIRE            // Compte courant
-  LIVRETS                    // Livrets (A, LDDS, LEP)
-  PEL                        // PEL
-  CEL                        // CEL
-  COMPTE_A_TERME             // Compte à terme
-  
+  COMPTE_BANCAIRE // Compte courant
+  LIVRETS // Livrets (A, LDDS, LEP)
+  PEL // PEL
+  CEL // CEL
+  COMPTE_A_TERME // Compte à terme
+
   // === ACTIFS PROFESSIONNELS ===
-  PARTS_SOCIALES             // Parts sociales / actions entreprise
-  IMMOBILIER_PRO             // Immobilier professionnel
-  MATERIEL_PRO               // Matériel professionnel
-  FONDS_COMMERCE             // Fonds de commerce
-  BREVETS_PI                 // Brevets et PI
-  
+  PARTS_SOCIALES // Parts sociales / actions entreprise
+  IMMOBILIER_PRO // Immobilier professionnel
+  MATERIEL_PRO // Matériel professionnel
+  FONDS_COMMERCE // Fonds de commerce
+  BREVETS_PI // Brevets et PI
+
   // === MOBILIER & DIVERS ===
-  METAUX_PRECIEUX            // Or / Métaux précieux
-  BIJOUX                     // Bijoux
-  OEUVRES_ART                // Œuvres d'art / Tableaux
-  VINS                       // Vins & spiritueux
-  MONTRES                    // Montres de collection
-  VEHICULES                  // Véhicules (voiture, moto, bateau)
-  MOBILIER                   // Mobilier de valeur
-  CRYPTO                     // Cryptomonnaies
-  NFT                        // NFT / Actifs numériques
-  
-  AUTRE                      // Autre
+  METAUX_PRECIEUX // Or / Métaux précieux
+  BIJOUX // Bijoux
+  OEUVRES_ART // Œuvres d'art / Tableaux
+  VINS // Vins & spiritueux
+  MONTRES // Montres de collection
+  VEHICULES // Véhicules (voiture, moto, bateau)
+  MOBILIER // Mobilier de valeur
+  CRYPTO // Cryptomonnaies
+  NFT // NFT / Actifs numériques
+
+  AUTRE // Autre
 }
 
 enum ActifCategory {
@@ -806,7 +841,7 @@ model Actif {
   value            Decimal       @db.Decimal(15, 2)
   acquisitionDate  DateTime?
   acquisitionValue Decimal?      @db.Decimal(15, 2)
-  details          Json?         // Champs spécifiques selon type (voir patrimoine-config.ts)
+  details          Json? // Champs spécifiques selon type (voir patrimoine-config.ts)
   annualIncome     Decimal?      @db.Decimal(12, 2)
   taxDetails       Json?
 
@@ -815,101 +850,101 @@ model Actif {
   managementFees Decimal? @db.Decimal(5, 2)
 
   // === DONNÉES COMMUNES ===
-  location          String?   // Localisation (ville, pays)
-  managementAdvisor String?   // Conseiller référent
+  location          String? // Localisation (ville, pays)
+  managementAdvisor String? // Conseiller référent
   managementSince   DateTime? // Date début gestion
   currency          String    @default("EUR") // Devise
 
   // === IMMOBILIER ===
   // Adresse et caractéristiques
-  propertyAddress       String?  // Adresse complète
-  propertyCity          String?  // Ville
-  propertyPostalCode    String?  // Code postal
+  propertyAddress       String? // Adresse complète
+  propertyCity          String? // Ville
+  propertyPostalCode    String? // Code postal
   propertySurface       Decimal? @db.Decimal(10, 2) // Surface m²
-  propertyRooms         Int?     // Nombre de pièces
-  propertyType          String?  // Appartement, Maison, Terrain, etc.
-  propertyCondition     String?  // Neuf, Ancien, VEFA
-  propertyParkingSpaces Int?     // Places de parking
-  
+  propertyRooms         Int? // Nombre de pièces
+  propertyType          String? // Appartement, Maison, Terrain, etc.
+  propertyCondition     String? // Neuf, Ancien, VEFA
+  propertyParkingSpaces Int? // Places de parking
+
   // Dispositif fiscal locatif
-  rentalScheme          String?  // NUE (nu), LMNP, LMP, DEFICIT_FONCIER, PINEL, DENORMANDIE, MALRAUX, MONUMENT_HISTORIQUE, COSSE, LOI_DEMESSINE
+  rentalScheme          String? // NUE (nu), LMNP, LMP, DEFICIT_FONCIER, PINEL, DENORMANDIE, MALRAUX, MONUMENT_HISTORIQUE, COSSE, LOI_DEMESSINE
   rentalSchemeStartDate DateTime? // Date début dispositif
   rentalSchemeEndDate   DateTime? // Date fin engagement
-  rentalMonthlyRent     Decimal? @db.Decimal(12, 2) // Loyer mensuel
-  rentalCharges         Decimal? @db.Decimal(12, 2) // Charges locatives
-  rentalOccupancyRate   Decimal? @db.Decimal(5, 2)  // Taux d'occupation %
-  rentalTenantName      String?  // Nom du locataire actuel
+  rentalMonthlyRent     Decimal?  @db.Decimal(12, 2) // Loyer mensuel
+  rentalCharges         Decimal?  @db.Decimal(12, 2) // Charges locatives
+  rentalOccupancyRate   Decimal?  @db.Decimal(5, 2) // Taux d'occupation %
+  rentalTenantName      String? // Nom du locataire actuel
   rentalLeaseEndDate    DateTime? // Fin du bail
 
   // Données IFI
-  fiscalPropertyType    String?  // RP, SECONDARY, RENTAL, COMMERCIAL
-  fiscalRpAbatement     Boolean  @default(false) // Abattement 30% RP
-  fiscalManualDiscount  Decimal? @db.Decimal(5, 2) // Décote manuelle %
-  fiscalIfiValue        Decimal? @db.Decimal(15, 2) // Valeur IFI calculée
+  fiscalPropertyType   String? // RP, SECONDARY, RENTAL, COMMERCIAL
+  fiscalRpAbatement    Boolean  @default(false) // Abattement 30% RP
+  fiscalManualDiscount Decimal? @db.Decimal(5, 2) // Décote manuelle %
+  fiscalIfiValue       Decimal? @db.Decimal(15, 2) // Valeur IFI calculée
 
   // Démembrement
-  dismembermentType     String?  // PLEINE_PROPRIETE, NUE_PROPRIETE, USUFRUIT
-  dismembermentEndDate  DateTime? // Fin du démembrement
-  usufructuaryName      String?  // Nom de l'usufruitier
-  bareOwnerName         String?  // Nom du nu-propriétaire
+  dismembermentType    String? // PLEINE_PROPRIETE, NUE_PROPRIETE, USUFRUIT
+  dismembermentEndDate DateTime? // Fin du démembrement
+  usufructuaryName     String? // Nom de l'usufruitier
+  bareOwnerName        String? // Nom du nu-propriétaire
 
   // === ASSURANCE-VIE / CONTRAT DE CAPITALISATION ===
-  insurerName           String?  // Nom de l'assureur
-  contractNumber        String?  // Numéro de contrat
+  insurerName           String? // Nom de l'assureur
+  contractNumber        String? // Numéro de contrat
   contractOpenDate      DateTime? // Date d'ouverture (antériorité fiscale)
-  beneficiaryClause     String?  @db.Text // Clause bénéficiaire complète
-  beneficiaryClauseType String?  // STANDARD, DEMEMBREE, PERSONNALISEE
-  beneficiaries         Json?    // [{name, percentage, rank, relationship}]
-  totalPremiums         Decimal? @db.Decimal(15, 2) // Total versements
-  premiumsBefore70      Decimal? @db.Decimal(15, 2) // Versements avant 70 ans
-  premiumsAfter70       Decimal? @db.Decimal(15, 2) // Versements après 70 ans
-  surrenderValue        Decimal? @db.Decimal(15, 2) // Valeur de rachat
-  unrealizedGains       Decimal? @db.Decimal(15, 2) // Plus-value latente
-  fundsAllocation       Json?    // [{fundName, isin, percentage, value, type: 'EURO'|'UC'}]
-  euroFundRate          Decimal? @db.Decimal(5, 2)  // Taux fonds euros
-  managementMode        String?  // LIBRE, GESTION_PILOTEE, GESTION_SOUS_MANDAT
+  beneficiaryClause     String?   @db.Text // Clause bénéficiaire complète
+  beneficiaryClauseType String? // STANDARD, DEMEMBREE, PERSONNALISEE
+  beneficiaries         Json? // [{name, percentage, rank, relationship}]
+  totalPremiums         Decimal?  @db.Decimal(15, 2) // Total versements
+  premiumsBefore70      Decimal?  @db.Decimal(15, 2) // Versements avant 70 ans
+  premiumsAfter70       Decimal?  @db.Decimal(15, 2) // Versements après 70 ans
+  surrenderValue        Decimal?  @db.Decimal(15, 2) // Valeur de rachat
+  unrealizedGains       Decimal?  @db.Decimal(15, 2) // Plus-value latente
+  fundsAllocation       Json? // [{fundName, isin, percentage, value, type: 'EURO'|'UC'}]
+  euroFundRate          Decimal?  @db.Decimal(5, 2) // Taux fonds euros
+  managementMode        String? // LIBRE, GESTION_PILOTEE, GESTION_SOUS_MANDAT
 
   // === PEA / COMPTE-TITRES ===
-  brokerName            String?  // Nom du courtier/banque
-  accountNumber         String?  // Numéro de compte
-  portfolioLines        Json?    // [{isin, name, quantity, buyPrice, currentPrice, sector}]
-  dividendsReceived     Decimal? @db.Decimal(12, 2) // Dividendes reçus année
+  brokerName        String? // Nom du courtier/banque
+  accountNumber     String? // Numéro de compte
+  portfolioLines    Json? // [{isin, name, quantity, buyPrice, currentPrice, sector}]
+  dividendsReceived Decimal? @db.Decimal(12, 2) // Dividendes reçus année
 
   // === ÉPARGNE SALARIALE ===
-  employerName          String?  // Nom de l'employeur
-  vestingSchedule       Json?    // Calendrier d'acquisition
-  availabilityDate      DateTime? // Date de disponibilité
-  unvestedAmount        Decimal? @db.Decimal(15, 2) // Montant non acquis
-  
+  employerName     String? // Nom de l'employeur
+  vestingSchedule  Json? // Calendrier d'acquisition
+  availabilityDate DateTime? // Date de disponibilité
+  unvestedAmount   Decimal?  @db.Decimal(15, 2) // Montant non acquis
+
   // === MOBILIER / OBJETS DE VALEUR ===
-  objectBrand           String?  // Marque (Rolex, Cartier, etc.)
-  objectModel           String?  // Modèle
-  objectSerial          String?  // Numéro de série
-  objectCertificate     Boolean  @default(false) // Certificat authenticité
-  objectInsured         Boolean  @default(false) // Assuré
-  objectInsuranceValue  Decimal? @db.Decimal(15, 2) // Valeur assurée
-  lastAppraisalDate     DateTime? // Dernière expertise
-  lastAppraisalValue    Decimal? @db.Decimal(15, 2) // Valeur expertise
+  objectBrand          String? // Marque (Rolex, Cartier, etc.)
+  objectModel          String? // Modèle
+  objectSerial         String? // Numéro de série
+  objectCertificate    Boolean   @default(false) // Certificat authenticité
+  objectInsured        Boolean   @default(false) // Assuré
+  objectInsuranceValue Decimal?  @db.Decimal(15, 2) // Valeur assurée
+  lastAppraisalDate    DateTime? // Dernière expertise
+  lastAppraisalValue   Decimal?  @db.Decimal(15, 2) // Valeur expertise
 
   // === VÉHICULES ===
-  vehicleBrand          String?  // Marque
-  vehicleModel          String?  // Modèle
-  vehicleYear           Int?     // Année
-  vehicleRegistration   String?  // Immatriculation
-  vehicleMileage        Int?     // Kilométrage
+  vehicleBrand        String? // Marque
+  vehicleModel        String? // Modèle
+  vehicleYear         Int? // Année
+  vehicleRegistration String? // Immatriculation
+  vehicleMileage      Int? // Kilométrage
 
   // === CRYPTO / NFT ===
-  walletAddress         String?  // Adresse du wallet
-  exchangePlatform      String?  // Plateforme (Binance, Coinbase, etc.)
-  tokenSymbol           String?  // Symbole (BTC, ETH, etc.)
-  tokenQuantity         Decimal? @db.Decimal(20, 8) // Quantité
-  
+  walletAddress    String? // Adresse du wallet
+  exchangePlatform String? // Plateforme (Binance, Coinbase, etc.)
+  tokenSymbol      String? // Symbole (BTC, ETH, etc.)
+  tokenQuantity    Decimal? @db.Decimal(20, 8) // Quantité
+
   // === PROFESSIONNEL ===
-  companyName           String?  // Nom de l'entreprise
-  companySiren          String?  // SIREN
-  companyLegalForm      String?  // Forme juridique
-  companySharesCount    Int?     // Nombre de parts/actions
-  companyTotalShares    Int?     // Total parts/actions
+  companyName        String? // Nom de l'entreprise
+  companySiren       String? // SIREN
+  companyLegalForm   String? // Forme juridique
+  companySharesCount Int? // Nombre de parts/actions
+  companyTotalShares Int? // Total parts/actions
 
   // Linkage actif ↔ passif
   linkedPassifId String? // ID du passif associé (crédit)
@@ -920,18 +955,16 @@ model Actif {
 
   clients   ClientActif[]
   documents ActifDocument[]
-  passifs   Passif[]  // Passifs liés à cet actif
+  passifs   Passif[] // Passifs liés à cet actif
 
   // INDEX EXISTANTS
   @@index([cabinetId])
   @@index([type])
   @@index([category])
-
   // NOUVEAUX INDEX COMPOSITES
   @@index([cabinetId, category, isActive])
   @@index([cabinetId, managedByFirm, isActive])
   @@index([cabinetId, type, isActive])
-
   @@map("actifs")
 }
 
@@ -952,114 +985,114 @@ model ClientActif {
 }
 
 enum PassifType {
-  CREDIT_IMMOBILIER     // Crédit immobilier
-  PTZ                   // Prêt à taux zéro
-  PRET_ACTION_LOGEMENT  // Prêt Action Logement
-  CREDIT_CONSOMMATION   // Crédit consommation
-  CREDIT_AUTO           // Crédit auto
-  PRET_ETUDIANT         // Prêt étudiant
-  PRET_PROFESSIONNEL    // Prêt professionnel
-  CREDIT_REVOLVING      // Crédit revolving
-  PRET_RELAIS           // Prêt relais
-  PRET_IN_FINE          // Prêt in fine
-  PRET_FAMILIAL         // Prêt familial
-  DECOUVERT             // Découvert bancaire
-  LEASING               // Leasing / LOA
-  AUTRE                 // Autre
+  CREDIT_IMMOBILIER // Crédit immobilier
+  PTZ // Prêt à taux zéro
+  PRET_ACTION_LOGEMENT // Prêt Action Logement
+  CREDIT_CONSOMMATION // Crédit consommation
+  CREDIT_AUTO // Crédit auto
+  PRET_ETUDIANT // Prêt étudiant
+  PRET_PROFESSIONNEL // Prêt professionnel
+  CREDIT_REVOLVING // Crédit revolving
+  PRET_RELAIS // Prêt relais
+  PRET_IN_FINE // Prêt in fine
+  PRET_FAMILIAL // Prêt familial
+  DECOUVERT // Découvert bancaire
+  LEASING // Leasing / LOA
+  AUTRE // Autre
 }
 
 model Passif {
-  id              String     @id @default(cuid())
-  cabinetId       String
-  cabinet         Cabinet    @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
-  clientId        String
-  client          Client     @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  type            PassifType
-  name            String
-  description     String?
+  id          String     @id @default(cuid())
+  cabinetId   String
+  cabinet     Cabinet    @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  clientId    String
+  client      Client     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  type        PassifType
+  name        String
+  description String?
 
   // === MONTANTS ===
-  initialAmount   Decimal    @db.Decimal(15, 2) // Capital emprunté
-  remainingAmount Decimal    @db.Decimal(15, 2) // CRD (Capital Restant Dû)
-  monthlyPayment  Decimal    @db.Decimal(12, 2) // Mensualité hors assurance
+  initialAmount   Decimal @db.Decimal(15, 2) // Capital emprunté
+  remainingAmount Decimal @db.Decimal(15, 2) // CRD (Capital Restant Dû)
+  monthlyPayment  Decimal @db.Decimal(12, 2) // Mensualité hors assurance
 
   // === TAUX ET CONDITIONS ===
-  interestRate      Decimal    @db.Decimal(5, 4) // Taux nominal annuel
-  effectiveRate     Decimal?   @db.Decimal(5, 4) // TAEG
-  rateType          String?    // FIXED, VARIABLE, CAPPED_VARIABLE
-  variableCap       Decimal?   @db.Decimal(5, 2) // Plafond si variable
-  deferralType      String?    // NONE, PARTIAL, TOTAL
-  deferralMonths    Int?       // Nombre de mois de différé
-  deferralEndDate   DateTime?  // Fin du différé
+  interestRate    Decimal   @db.Decimal(5, 4) // Taux nominal annuel
+  effectiveRate   Decimal?  @db.Decimal(5, 4) // TAEG
+  rateType        String? // FIXED, VARIABLE, CAPPED_VARIABLE
+  variableCap     Decimal?  @db.Decimal(5, 2) // Plafond si variable
+  deferralType    String? // NONE, PARTIAL, TOTAL
+  deferralMonths  Int? // Nombre de mois de différé
+  deferralEndDate DateTime? // Fin du différé
 
   // === DATES ===
-  startDate         DateTime   // Date de déblocage
-  endDate           DateTime   // Date de fin théorique
-  firstPaymentDate  DateTime?  // Date première échéance
-  lastPaymentDate   DateTime?  // Date dernière échéance prévue
+  startDate        DateTime // Date de déblocage
+  endDate          DateTime // Date de fin théorique
+  firstPaymentDate DateTime? // Date première échéance
+  lastPaymentDate  DateTime? // Date dernière échéance prévue
 
   // === RATTACHEMENT ACTIF ===
-  linkedActifId     String?    // ID de l'actif financé
-  linkedActif       Actif?     @relation(fields: [linkedActifId], references: [id], onDelete: SetNull)
+  linkedActifId String? // ID de l'actif financé
+  linkedActif   Actif?  @relation(fields: [linkedActifId], references: [id], onDelete: SetNull)
 
   // === EMPRUNTEURS ===
-  borrowerType      String?    // SOLO, JOINT
-  primaryBorrower   String?    // Nom emprunteur principal
+  borrowerType         String? // SOLO, JOINT
+  primaryBorrower      String? // Nom emprunteur principal
   primaryBorrowerQuota Decimal? @db.Decimal(5, 2) // Quotité emprunteur principal %
-  coBorrower        String?    // Nom co-emprunteur
-  coBorrowerQuota   Decimal?   @db.Decimal(5, 2) // Quotité co-emprunteur %
-  borrowers         Json?      // [{name, quota, isGuarantor}] pour cas complexes
+  coBorrower           String? // Nom co-emprunteur
+  coBorrowerQuota      Decimal? @db.Decimal(5, 2) // Quotité co-emprunteur %
+  borrowers            Json? // [{name, quota, isGuarantor}] pour cas complexes
 
   // === ASSURANCE EMPRUNTEUR ===
-  insuranceType     String?    // GROUPE, DELEGATION
-  insuranceProvider String?    // Nom assureur
-  insuranceRate     Decimal?   @db.Decimal(5, 4) // Taux global %
-  insuranceMonthly  Decimal?   @db.Decimal(12, 2) // Prime mensuelle totale
-  insuranceTotalCost Decimal?  @db.Decimal(15, 2) // Coût total assurance
-  insuranceGuarantees Json?    // [{type: 'DC'|'PTIA'|'ITT'|'IPT'|'IPP'|'PE', covered: true, quota: 100}]
-  insuranceDetails  Json?      // Détails par emprunteur [{borrower, guarantees, quota, monthlyPremium}]
+  insuranceType       String? // GROUPE, DELEGATION
+  insuranceProvider   String? // Nom assureur
+  insuranceRate       Decimal? @db.Decimal(5, 4) // Taux global %
+  insuranceMonthly    Decimal? @db.Decimal(12, 2) // Prime mensuelle totale
+  insuranceTotalCost  Decimal? @db.Decimal(15, 2) // Coût total assurance
+  insuranceGuarantees Json? // [{type: 'DC'|'PTIA'|'ITT'|'IPT'|'IPP'|'PE', covered: true, quota: 100}]
+  insuranceDetails    Json? // Détails par emprunteur [{borrower, guarantees, quota, monthlyPremium}]
 
   // === GARANTIES DU PRÊT ===
-  guaranteeType     String?    // HYPOTHEQUE, PPD, CAUTION_MUTUELLE, NANTISSEMENT, AUCUNE
-  guaranteeProvider String?    // Crédit Logement, CASDEN, etc.
-  guaranteeAmount   Decimal?   @db.Decimal(15, 2) // Montant de la garantie
-  guaranteeCost     Decimal?   @db.Decimal(12, 2) // Frais de garantie
+  guaranteeType        String? // HYPOTHEQUE, PPD, CAUTION_MUTUELLE, NANTISSEMENT, AUCUNE
+  guaranteeProvider    String? // Crédit Logement, CASDEN, etc.
+  guaranteeAmount      Decimal? @db.Decimal(15, 2) // Montant de la garantie
+  guaranteeCost        Decimal? @db.Decimal(12, 2) // Frais de garantie
   guaranteeRestitution Decimal? @db.Decimal(12, 2) // Montant restituable (caution)
 
   // === PRÊTEUR ===
-  lenderName        String?    // Nom de la banque/organisme
-  lenderType        String?    // BANQUE, ORGANISME_CREDIT, PARTICULIER, EMPLOYEUR
-  contractNumber    String?    // Numéro de contrat
-  accountNumber     String?    // Numéro de compte prélevé
+  lenderName     String? // Nom de la banque/organisme
+  lenderType     String? // BANQUE, ORGANISME_CREDIT, PARTICULIER, EMPLOYEUR
+  contractNumber String? // Numéro de contrat
+  accountNumber  String? // Numéro de compte prélevé
 
   // === REMBOURSEMENT ANTICIPÉ ===
-  earlyRepaymentAllowed Boolean @default(true)
-  earlyRepaymentPenalty Decimal? @db.Decimal(5, 2) // IRA %
+  earlyRepaymentAllowed    Boolean  @default(true)
+  earlyRepaymentPenalty    Decimal? @db.Decimal(5, 2) // IRA %
   earlyRepaymentPenaltyMax Decimal? @db.Decimal(12, 2) // Plafond IRA €
-  partialRepayments Json?     // [{date, amount, newMonthly, newEndDate}]
+  partialRepayments        Json? // [{date, amount, newMonthly, newEndDate}]
 
   // === RENÉGOCIATION / RACHAT ===
-  isRenegotiated    Boolean    @default(false)
-  originalRate      Decimal?   @db.Decimal(5, 4) // Ancien taux
-  renegotiationDate DateTime?  // Date de renégociation
-  renegotiationCost Decimal?   @db.Decimal(12, 2) // Coût de la renégociation
-  
+  isRenegotiated    Boolean   @default(false)
+  originalRate      Decimal?  @db.Decimal(5, 4) // Ancien taux
+  renegotiationDate DateTime? // Date de renégociation
+  renegotiationCost Decimal?  @db.Decimal(12, 2) // Coût de la renégociation
+
   // === MODULARITÉ ===
-  isModular         Boolean    @default(false) // Mensualités modulables
-  modularityRange   Json?      // {min: -30, max: +30} % de modularité
-  pauseAllowed      Boolean    @default(false) // Pause possible
-  pauseMaxMonths    Int?       // Nombre max de mois de pause
+  isModular       Boolean @default(false) // Mensualités modulables
+  modularityRange Json? // {min: -30, max: +30} % de modularité
+  pauseAllowed    Boolean @default(false) // Pause possible
+  pauseMaxMonths  Int? // Nombre max de mois de pause
 
   // === CALCULS ===
-  totalInterestCost  Decimal?  @db.Decimal(15, 2) // Coût total intérêts
-  totalCost          Decimal?  @db.Decimal(15, 2) // Coût total crédit (intérêts + assurance + frais)
-  
-  // Legacy
-  insurance         Json?      // Ancien champ, garder pour rétrocompatibilité
+  totalInterestCost Decimal? @db.Decimal(15, 2) // Coût total intérêts
+  totalCost         Decimal? @db.Decimal(15, 2) // Coût total crédit (intérêts + assurance + frais)
 
-  isActive          Boolean    @default(true)
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  // Legacy
+  insurance Json? // Ancien champ, garder pour rétrocompatibilité
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   documents PassifDocument[]
 
@@ -1068,32 +1101,30 @@ model Passif {
   @@index([clientId])
   @@index([type])
   @@index([linkedActifId])
-
   // NOUVEAUX INDEX COMPOSITES
   @@index([cabinetId, clientId, isActive])
   @@index([clientId, type, isActive])
   @@index([endDate])
-
   @@map("passifs")
 }
 
 enum ContratType {
-  ASSURANCE_VIE         // Assurance-vie
-  MUTUELLE              // Mutuelle santé
-  ASSURANCE_HABITATION  // Assurance habitation
-  ASSURANCE_AUTO        // Assurance auto
-  ASSURANCE_PRO         // Assurance professionnelle
-  ASSURANCE_DECES       // Assurance décès
-  PREVOYANCE            // Prévoyance
-  EPARGNE_RETRAITE      // Épargne retraite
-  AUTRE                 // Autre
+  ASSURANCE_VIE // Assurance-vie
+  MUTUELLE // Mutuelle santé
+  ASSURANCE_HABITATION // Assurance habitation
+  ASSURANCE_AUTO // Assurance auto
+  ASSURANCE_PRO // Assurance professionnelle
+  ASSURANCE_DECES // Assurance décès
+  PREVOYANCE // Prévoyance
+  EPARGNE_RETRAITE // Épargne retraite
+  AUTRE // Autre
 }
 
 enum ContratStatus {
-  ACTIF      // Actif
-  SUSPENDU   // Suspendu
-  RESILIE    // Résilié
-  EXPIRE     // Expiré
+  ACTIF // Actif
+  SUSPENDU // Suspendu
+  RESILIE // Résilié
+  EXPIRE // Expiré
 }
 
 model Contrat {
@@ -1126,12 +1157,10 @@ model Contrat {
   @@index([clientId])
   @@index([type])
   @@index([status])
-
   // NOUVEAUX INDEX COMPOSITES
   @@index([cabinetId, clientId, status])
   @@index([cabinetId, type, status])
   @@index([nextRenewalDate, status])
-
   @@map("contrats")
 }
 
@@ -1140,26 +1169,26 @@ model Contrat {
 // ============================================
 
 enum DocumentType {
-  CARTE_IDENTITE          // Carte d'identité
-  PASSEPORT               // Passeport
-  JUSTIFICATIF_DOMICILE   // Justificatif de domicile
-  AVIS_IMPOSITION         // Avis d'imposition
-  RELEVE_BANCAIRE         // Relevé bancaire
-  TITRE_PROPRIETE         // Titre de propriété
-  CONTRAT_PRET            // Contrat de prêt
-  CONTRAT_ASSURANCE       // Contrat d'assurance
-  RELEVE_PLACEMENT        // Relevé de placement
-  CONVENTION_ENTREE       // Convention d'entrée
-  LETTRE_MISSION          // Lettre de mission
-  DECLARATION_ADEQUATION  // Déclaration d'adéquation
-  PROFIL_INVESTISSEUR     // Profil investisseur
-  RAPPORT_ANNUEL          // Rapport annuel
-  PIECE_JOINTE_EMAIL      // Pièce jointe email
-  COMPTE_RENDU_RDV        // Compte-rendu RDV
-  PROPOSITION             // Proposition
-  CONTRAT                 // Contrat
-  FACTURE                 // Facture
-  AUTRE                   // Autre
+  CARTE_IDENTITE // Carte d'identité
+  PASSEPORT // Passeport
+  JUSTIFICATIF_DOMICILE // Justificatif de domicile
+  AVIS_IMPOSITION // Avis d'imposition
+  RELEVE_BANCAIRE // Relevé bancaire
+  TITRE_PROPRIETE // Titre de propriété
+  CONTRAT_PRET // Contrat de prêt
+  CONTRAT_ASSURANCE // Contrat d'assurance
+  RELEVE_PLACEMENT // Relevé de placement
+  CONVENTION_ENTREE // Convention d'entrée
+  LETTRE_MISSION // Lettre de mission
+  DECLARATION_ADEQUATION // Déclaration d'adéquation
+  PROFIL_INVESTISSEUR // Profil investisseur
+  RAPPORT_ANNUEL // Rapport annuel
+  PIECE_JOINTE_EMAIL // Pièce jointe email
+  COMPTE_RENDU_RDV // Compte-rendu RDV
+  PROPOSITION // Proposition
+  CONTRAT // Contrat
+  FACTURE // Facture
+  AUTRE // Autre
 }
 
 enum DocumentCategory {
@@ -1172,21 +1201,21 @@ enum DocumentCategory {
 }
 
 enum SignatureStatus {
-  EN_ATTENTE          // En attente
-  EN_COURS            // En cours de signature
-  SIGNE               // Signé
+  EN_ATTENTE // En attente
+  EN_COURS // En cours de signature
+  SIGNE // Signé
   PARTIELLEMENT_SIGNE // Partiellement signé
-  REJETE              // Rejeté
-  EXPIRE              // Expiré
-  ANNULE              // Annulé
+  REJETE // Rejeté
+  EXPIRE // Expiré
+  ANNULE // Annulé
 }
 
 enum SignatureProvider {
-  YOUSIGN     // Yousign
-  DOCUSIGN    // DocuSign
-  UNIVERSIGN  // Universign
-  INTERNE     // Signature interne
-  AUTRE       // Autre fournisseur
+  YOUSIGN // Yousign
+  DOCUSIGN // DocuSign
+  UNIVERSIGN // Universign
+  INTERNE // Signature interne
+  AUTRE // Autre fournisseur
 }
 
 model Document {
@@ -1247,11 +1276,9 @@ model Document {
   @@index([signatureStatus])
   @@index([expiresAt])
   @@index([archivedAt])
-
   // NOUVEAUX INDEX COMPOSITES
   @@index([cabinetId, type, category])
   @@index([cabinetId, uploadedById])
-
   @@map("documents")
 }
 
@@ -1355,20 +1382,20 @@ model ContratDocument {
 }
 
 enum KYCDocumentType {
-  IDENTITE              // Pièce d'identité
+  IDENTITE // Pièce d'identité
   JUSTIFICATIF_DOMICILE // Justificatif de domicile
-  AVIS_IMPOSITION       // Avis d'imposition
-  RIB_BANCAIRE          // RIB bancaire
+  AVIS_IMPOSITION // Avis d'imposition
+  RIB_BANCAIRE // RIB bancaire
   JUSTIFICATIF_PATRIMOINE // Justificatif de patrimoine
-  ORIGINE_FONDS         // Origine des fonds
-  AUTRE                 // Autre document
+  ORIGINE_FONDS // Origine des fonds
+  AUTRE // Autre document
 }
 
 enum KYCDocStatus {
-  EN_ATTENTE  // En attente de validation
-  VALIDE      // Validé
-  REJETE      // Rejeté
-  EXPIRE      // Expiré
+  EN_ATTENTE // En attente de validation
+  VALIDE // Validé
+  REJETE // Rejeté
+  EXPIRE // Expiré
 }
 
 model KYCDocument {
@@ -1397,41 +1424,40 @@ model KYCDocument {
   @@index([clientId])
   @@index([status])
   @@index([expiresAt])
-
   // NOUVEAUX INDEX COMPOSITES
   @@index([cabinetId, clientId, status])
   @@index([expiresAt, status])
-
   @@map("kyc_documents")
 }
 
 enum KYCCheckType {
-  VERIFICATION_IDENTITE       // Vérification d'identité
-  VERIFICATION_ADRESSE        // Vérification d'adresse
-  SITUATION_FINANCIERE        // Situation financière
+  VERIFICATION_IDENTITE // Vérification d'identité
+  VERIFICATION_ADRESSE // Vérification d'adresse
+  SITUATION_FINANCIERE // Situation financière
   CONNAISSANCE_INVESTISSEMENT // Connaissance en investissement
-  PROFIL_RISQUE               // Profil de risque
-  ORIGINE_PATRIMOINE          // Origine du patrimoine
-  PERSONNE_EXPOSEE            // Personne politiquement exposée
-  CRIBLAGE_SANCTIONS          // Criblage sanctions
-  REVUE_PERIODIQUE            // Revue périodique
-  AUTRE                       // Autre
+  PROFIL_RISQUE // Profil de risque
+  ORIGINE_PATRIMOINE // Origine du patrimoine
+  PERSONNE_EXPOSEE // Personne politiquement exposée
+  CRIBLAGE_SANCTIONS // Criblage sanctions
+  REVUE_PERIODIQUE // Revue périodique
+  AUTRE // Autre
 }
 
 enum KYCCheckStatus {
-  EN_ATTENTE      // En attente
-  EN_COURS        // En cours
-  TERMINE         // Terminé
-  ECHOUE          // Échoué
-  ACTION_REQUISE  // Action requise
-  ESCALADE        // Escaladé
+  EN_ATTENTE // En attente
+  EN_COURS // En cours
+  TERMINE // Terminé
+  ECHOUE // Échoué
+  ACTION_REQUISE // Action requise
+  ESCALADE // Escaladé
+  EN_RETARD // En retard
 }
 
 enum KYCCheckPriority {
-  BASSE     // Basse
-  MOYENNE   // Moyenne
-  HAUTE     // Haute
-  URGENTE   // Urgente
+  BASSE // Basse
+  MOYENNE // Moyenne
+  HAUTE // Haute
+  URGENTE // Urgente
 }
 
 model KYCCheck {
@@ -1466,11 +1492,9 @@ model KYCCheck {
   @@index([priority])
   @@index([dueDate])
   @@index([isACPRMandatory])
-
   // NOUVEAUX INDEX COMPOSITES
   @@index([cabinetId, clientId, status])
   @@index([dueDate, status])
-
   @@map("kyc_checks")
 }
 
@@ -1479,28 +1503,28 @@ model KYCCheck {
 // ============================================
 
 enum ObjectifType {
-  RETRAITE                  // Préparation retraite
-  ACHAT_IMMOBILIER          // Achat immobilier
-  ETUDES                    // Financement études
-  TRANSMISSION              // Transmission patrimoine
-  OPTIMISATION_FISCALE      // Optimisation fiscale
-  REVENUS_COMPLEMENTAIRES   // Revenus complémentaires
-  PROTECTION_CAPITAL        // Protection du capital
-  AUTRE                     // Autre
+  RETRAITE // Préparation retraite
+  ACHAT_IMMOBILIER // Achat immobilier
+  ETUDES // Financement études
+  TRANSMISSION // Transmission patrimoine
+  OPTIMISATION_FISCALE // Optimisation fiscale
+  REVENUS_COMPLEMENTAIRES // Revenus complémentaires
+  PROTECTION_CAPITAL // Protection du capital
+  AUTRE // Autre
 }
 
 enum ObjectifPriority {
-  BASSE     // Basse
-  MOYENNE   // Moyenne
-  HAUTE     // Haute
-  URGENTE   // Urgente
+  BASSE // Basse
+  MOYENNE // Moyenne
+  HAUTE // Haute
+  URGENTE // Urgente
 }
 
 enum ObjectifStatus {
-  ACTIF      // Actif
-  ATTEINT    // Atteint
-  ANNULE     // Annulé
-  EN_PAUSE   // En pause
+  ACTIF // Actif
+  ATTEINT // Atteint
+  ANNULE // Annulé
+  EN_PAUSE // En pause
 }
 
 model Objectif {
@@ -1532,21 +1556,21 @@ model Objectif {
 }
 
 enum ProjetType {
-  ACHAT_IMMOBILIER             // Achat immobilier
-  CREATION_ENTREPRISE          // Création entreprise
-  PREPARATION_RETRAITE         // Préparation retraite
-  RESTRUCTURATION_PATRIMOINE   // Restructuration patrimoine
-  OPTIMISATION_FISCALE         // Optimisation fiscale
-  PLANIFICATION_SUCCESSION     // Planification succession
-  AUTRE                        // Autre
+  ACHAT_IMMOBILIER // Achat immobilier
+  CREATION_ENTREPRISE // Création entreprise
+  PREPARATION_RETRAITE // Préparation retraite
+  RESTRUCTURATION_PATRIMOINE // Restructuration patrimoine
+  OPTIMISATION_FISCALE // Optimisation fiscale
+  PLANIFICATION_SUCCESSION // Planification succession
+  AUTRE // Autre
 }
 
 enum ProjetStatus {
-  PLANIFIE   // Planifié
-  EN_COURS   // En cours
-  TERMINE    // Terminé
-  ANNULE     // Annulé
-  EN_PAUSE   // En pause
+  PLANIFIE // Planifié
+  EN_COURS // En cours
+  TERMINE // Terminé
+  ANNULE // Annulé
+  EN_PAUSE // En pause
 }
 
 model Projet {
@@ -1599,33 +1623,33 @@ model ProjetDocument {
 // ============================================
 
 enum OpportuniteType {
-  ASSURANCE_VIE             // Assurance-vie
-  EPARGNE_RETRAITE          // Épargne retraite (PER, PERP...)
+  ASSURANCE_VIE // Assurance-vie
+  EPARGNE_RETRAITE // Épargne retraite (PER, PERP...)
   INVESTISSEMENT_IMMOBILIER // Investissement immobilier
-  INVESTISSEMENT_FINANCIER  // Investissement financier (CTO, PEA...)
-  OPTIMISATION_FISCALE      // Optimisation fiscale
-  RESTRUCTURATION_CREDIT    // Restructuration de crédit
-  TRANSMISSION_PATRIMOINE   // Transmission de patrimoine
-  AUDIT_ASSURANCES          // Audit des assurances
-  AUTRE                     // Autre opportunité
+  INVESTISSEMENT_FINANCIER // Investissement financier (CTO, PEA...)
+  OPTIMISATION_FISCALE // Optimisation fiscale
+  RESTRUCTURATION_CREDIT // Restructuration de crédit
+  TRANSMISSION_PATRIMOINE // Transmission de patrimoine
+  AUDIT_ASSURANCES // Audit des assurances
+  AUTRE // Autre opportunité
 }
 
 enum OpportunitePriority {
-  BASSE     // Basse
-  MOYENNE   // Moyenne
-  HAUTE     // Haute
-  URGENTE   // Urgente
+  BASSE // Basse
+  MOYENNE // Moyenne
+  HAUTE // Haute
+  URGENTE // Urgente
 }
 
 enum OpportuniteStatus {
-  DETECTEE    // Détectée
-  QUALIFIEE   // Qualifiée
-  CONTACTEE   // Contactée
-  PRESENTEE   // Présentée
-  ACCEPTEE    // Acceptée
-  CONVERTIE   // Convertie
-  REJETEE     // Rejetée
-  PERDUE      // Perdue
+  DETECTEE // Détectée
+  QUALIFIEE // Qualifiée
+  CONTACTEE // Contactée
+  PRESENTEE // Présentée
+  ACCEPTEE // Acceptée
+  CONVERTIE // Convertie
+  REJETEE // Rejetée
+  PERDUE // Perdue
 }
 
 model Opportunite {
@@ -1671,13 +1695,11 @@ model Opportunite {
   @@index([clientId])
   @@index([status])
   @@index([type])
-
   // NOUVEAUX INDEX COMPOSITES
   @@index([cabinetId, conseillerId, status])
   @@index([cabinetId, clientId, status])
   @@index([cabinetId, status, priority])
   @@index([actionDeadline, status])
-
   @@map("opportunites")
 }
 
@@ -1686,29 +1708,29 @@ model Opportunite {
 // ============================================
 
 enum TacheType {
-  APPEL                   // Appel téléphonique
-  EMAIL                   // Email
-  REUNION                 // Réunion
-  REVUE_DOCUMENTS         // Revue documents
-  MISE_A_JOUR_KYC         // Mise à jour KYC
-  RENOUVELLEMENT_CONTRAT  // Renouvellement contrat
-  SUIVI                   // Suivi
-  ADMINISTRATIF           // Administratif
-  AUTRE                   // Autre
+  APPEL // Appel téléphonique
+  EMAIL // Email
+  REUNION // Réunion
+  REVUE_DOCUMENTS // Revue documents
+  MISE_A_JOUR_KYC // Mise à jour KYC
+  RENOUVELLEMENT_CONTRAT // Renouvellement contrat
+  SUIVI // Suivi
+  ADMINISTRATIF // Administratif
+  AUTRE // Autre
 }
 
 enum TachePriority {
-  BASSE     // Basse
-  MOYENNE   // Moyenne
-  HAUTE     // Haute
-  URGENTE   // Urgente
+  BASSE // Basse
+  MOYENNE // Moyenne
+  HAUTE // Haute
+  URGENTE // Urgente
 }
 
 enum TacheStatus {
-  A_FAIRE    // À faire
-  EN_COURS   // En cours
-  TERMINE    // Terminé
-  ANNULE     // Annulé
+  A_FAIRE // À faire
+  EN_COURS // En cours
+  TERMINE // Terminé
+  ANNULE // Annulé
 }
 
 model Tache {
@@ -1746,13 +1768,11 @@ model Tache {
   @@index([clientId])
   @@index([status])
   @@index([dueDate])
-
   // NOUVEAUX INDEX COMPOSITES
   @@index([cabinetId, assignedToId, status])
   @@index([cabinetId, assignedToId, status, dueDate])
   @@index([cabinetId, clientId, status])
   @@index([dueDate, status])
-
   @@map("taches")
 }
 
@@ -1769,21 +1789,21 @@ model TacheDocument {
 }
 
 enum RendezVousType {
-  PREMIER_RDV    // Premier rendez-vous
-  SUIVI          // Suivi
-  BILAN_ANNUEL   // Bilan annuel
-  SIGNATURE      // Signature
-  APPEL_TEL      // Appel téléphonique
-  VISIO          // Visioconférence
-  AUTRE          // Autre
+  PREMIER_RDV // Premier rendez-vous
+  SUIVI // Suivi
+  BILAN_ANNUEL // Bilan annuel
+  SIGNATURE // Signature
+  APPEL_TEL // Appel téléphonique
+  VISIO // Visioconférence
+  AUTRE // Autre
 }
 
 enum RendezVousStatus {
-  PLANIFIE   // Planifié
-  CONFIRME   // Confirmé
-  TERMINE    // Terminé
-  ANNULE     // Annulé
-  ABSENT     // Absent
+  PLANIFIE // Planifié
+  CONFIRME // Confirmé
+  TERMINE // Terminé
+  ANNULE // Annulé
+  ABSENT // Absent
 }
 
 model RendezVous {
@@ -1845,13 +1865,11 @@ model RendezVous {
   @@index([parentRecurrenceId])
   @@index([recurrenceOccurrenceDate])
   @@index([isRecurring])
-
   // NOUVEAUX INDEX COMPOSITES
   @@index([cabinetId, conseillerId, status])
   @@index([cabinetId, conseillerId, startDate])
   @@index([cabinetId, clientId, startDate])
   @@index([startDate, status])
-
   @@map("rendez_vous")
 }
 
@@ -1881,12 +1899,12 @@ model CalendarSync {
 }
 
 model Event {
-  id          String   @id @default(cuid())
-  cabinetId   String
-  cabinet     Cabinet  @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id        String  @id @default(cuid())
+  cabinetId String
+  cabinet   Cabinet @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   title       String
   description String?  @db.Text
   startDate   DateTime
@@ -1897,15 +1915,15 @@ model Event {
   status      String   @default("CONFIRMED") // CONFIRMED, TENTATIVE, CANCELLED
 
   // Relations
-  clientId    String?
-  client      Client?  @relation(fields: [clientId], references: [id])
-  
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id])
+
   // External Sync
-  externalId  String?  // ID from Google/Outlook
+  externalId       String? // ID from Google/Outlook
   externalProvider CalendarProvider?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([cabinetId])
   @@index([userId])
@@ -1919,14 +1937,14 @@ model Event {
 // ============================================
 
 enum EmailStatus {
-  BROUILLON   // Brouillon
-  PLANIFIE    // Planifié
-  ENVOYE      // Envoyé
-  DELIVRE     // Délivré
-  OUVERT      // Ouvert
-  CLIQUE      // Cliqué
-  REBOND      // Rebond
-  ECHEC       // Échec
+  BROUILLON // Brouillon
+  PLANIFIE // Planifié
+  ENVOYE // Envoyé
+  DELIVRE // Délivré
+  OUVERT // Ouvert
+  CLIQUE // Cliqué
+  REBOND // Rebond
+  ECHEC // Échec
 }
 
 model Email {
@@ -1966,8 +1984,8 @@ enum EmailProvider {
 }
 
 enum EmailDirection {
-  ENTRANT   // Email reçu
-  SORTANT   // Email envoyé
+  ENTRANT // Email reçu
+  SORTANT // Email envoyé
 }
 
 // Emails synchronisés depuis Gmail/Outlook
@@ -2148,16 +2166,16 @@ model EmailIntegration {
 }
 
 enum NotificationType {
-  TACHE_ASSIGNEE        // Tâche assignée
-  TACHE_ECHEANCE        // Tâche à échéance
-  RAPPEL_RDV            // Rappel de rendez-vous
-  DOCUMENT_TELEVERSE    // Document téléversé
-  KYC_EXPIRATION        // Expiration KYC
+  TACHE_ASSIGNEE // Tâche assignée
+  TACHE_ECHEANCE // Tâche à échéance
+  RAPPEL_RDV // Rappel de rendez-vous
+  DOCUMENT_TELEVERSE // Document téléversé
+  KYC_EXPIRATION // Expiration KYC
   RENOUVELLEMENT_CONTRAT // Renouvellement de contrat
-  OPPORTUNITE_DETECTEE  // Opportunité détectée
-  MESSAGE_CLIENT        // Message du client
-  SYSTEME               // Système
-  AUTRE                 // Autre
+  OPPORTUNITE_DETECTEE // Opportunité détectée
+  MESSAGE_CLIENT // Message du client
+  SYSTEME // Système
+  AUTRE // Autre
 }
 
 model Notification {
@@ -2184,19 +2202,19 @@ model Notification {
 }
 
 enum CampagneType {
-  EMAIL   // Email
-  SMS     // SMS
-  POSTAL  // Courrier postal
-  MIXTE   // Mixte
+  EMAIL // Email
+  SMS // SMS
+  POSTAL // Courrier postal
+  MIXTE // Mixte
 }
 
 enum CampagneStatus {
-  BROUILLON   // Brouillon
-  PLANIFIEE   // Planifiée
-  EN_ENVOI    // En cours d'envoi
-  ENVOYEE     // Envoyée
-  TERMINEE    // Terminée
-  ANNULEE     // Annulée
+  BROUILLON // Brouillon
+  PLANIFIEE // Planifiée
+  EN_ENVOI // En cours d'envoi
+  ENVOYEE // Envoyée
+  TERMINEE // Terminée
+  ANNULEE // Annulée
 }
 
 model Campagne {
@@ -2228,25 +2246,25 @@ model Campagne {
 // ============================================
 
 enum TemplateType {
-  EMAIL     // Email
-  COURRIER  // Courrier
-  CONTRAT   // Contrat
-  RAPPORT   // Rapport
-  DOCUMENT  // Document
+  EMAIL // Email
+  COURRIER // Courrier
+  CONTRAT // Contrat
+  RAPPORT // Rapport
+  DOCUMENT // Document
 }
 
 enum TemplateCategory {
-  CONVENTION_ENTREE       // Convention d'entrée
-  LETTRE_MISSION          // Lettre de mission
-  DECLARATION_ADEQUATION  // Déclaration d'adéquation
-  PROFIL_INVESTISSEUR     // Profil investisseur
-  RAPPORT_ANNUEL          // Rapport annuel
-  PROPOSITION             // Proposition
-  DEVIS                   // Devis
-  SUIVI                   // Suivi
-  COMPTE_RENDU_RDV        // Compte-rendu de RDV
-  NOTE_INTERNE            // Note interne
-  AUTRE                   // Autre
+  CONVENTION_ENTREE // Convention d'entrée
+  LETTRE_MISSION // Lettre de mission
+  DECLARATION_ADEQUATION // Déclaration d'adéquation
+  PROFIL_INVESTISSEUR // Profil investisseur
+  RAPPORT_ANNUEL // Rapport annuel
+  PROPOSITION // Proposition
+  DEVIS // Devis
+  SUIVI // Suivi
+  COMPTE_RENDU_RDV // Compte-rendu de RDV
+  NOTE_INTERNE // Note interne
+  AUTRE // Autre
 }
 
 model Template {
@@ -2277,21 +2295,21 @@ model Template {
 // ============================================
 
 enum SimulationType {
-  RETRAITE                // Simulation retraite
-  CREDIT_IMMOBILIER       // Crédit immobilier
-  ASSURANCE_VIE           // Assurance-vie
+  RETRAITE // Simulation retraite
+  CREDIT_IMMOBILIER // Crédit immobilier
+  ASSURANCE_VIE // Assurance-vie
   TRANSMISSION_PATRIMOINE // Transmission patrimoine
-  OPTIMISATION_FISCALE    // Optimisation fiscale
+  OPTIMISATION_FISCALE // Optimisation fiscale
   PROJECTION_INVESTISSEMENT // Projection investissement
-  ANALYSE_BUDGET          // Analyse budget
-  AUTRE                   // Autre
+  ANALYSE_BUDGET // Analyse budget
+  AUTRE // Autre
 }
 
 enum SimulationStatus {
-  BROUILLON   // Brouillon
-  TERMINE     // Terminé
-  PARTAGE     // Partagé
-  ARCHIVE     // Archivé
+  BROUILLON // Brouillon
+  TERMINE // Terminé
+  PARTAGE // Partagé
+  ARCHIVE // Archivé
 }
 
 model Simulation {
@@ -2327,11 +2345,11 @@ model Simulation {
 // ============================================
 
 enum ConsentementType {
-  TRAITEMENT_DONNEES        // Traitement des données
-  COMMUNICATION_MARKETING   // Communication marketing
-  PARTAGE_DONNEES           // Partage de données
-  PROFILAGE                 // Profilage
-  DECISION_AUTOMATISEE      // Décision automatisée
+  TRAITEMENT_DONNEES // Traitement des données
+  COMMUNICATION_MARKETING // Communication marketing
+  PARTAGE_DONNEES // Partage de données
+  PROFILAGE // Profilage
+  DECISION_AUTOMATISEE // Décision automatisée
 }
 
 model Consentement {
@@ -2355,28 +2373,28 @@ model Consentement {
 }
 
 enum ReclamationType {
-  QUALITE_SERVICE   // Qualité du service
-  TARIFICATION      // Tarification/Frais
-  QUALITE_CONSEIL   // Qualité du conseil
-  COMMUNICATION     // Communication
-  DOCUMENT          // Document
-  AUTRE             // Autre
+  QUALITE_SERVICE // Qualité du service
+  TARIFICATION // Tarification/Frais
+  QUALITE_CONSEIL // Qualité du conseil
+  COMMUNICATION // Communication
+  DOCUMENT // Document
+  AUTRE // Autre
 }
 
 enum ReclamationStatus {
-  RECUE              // Reçue
-  EN_COURS           // En cours de traitement
-  EN_ATTENTE_INFO    // En attente d'informations
-  RESOLUE            // Résolue
-  CLOTUREE           // Clôturée
-  ESCALADEE          // Escaladée au médiateur
+  RECUE // Reçue
+  EN_COURS // En cours de traitement
+  EN_ATTENTE_INFO // En attente d'informations
+  RESOLUE // Résolue
+  CLOTUREE // Clôturée
+  ESCALADEE // Escaladée au médiateur
 }
 
 enum SLASeverity {
-  BASSE     // Basse
-  MOYENNE   // Moyenne
-  HAUTE     // Haute
-  CRITIQUE  // Critique
+  BASSE // Basse
+  MOYENNE // Moyenne
+  HAUTE // Haute
+  CRITIQUE // Critique
 }
 
 model Reclamation {
@@ -2423,17 +2441,17 @@ model Reclamation {
 }
 
 enum SLAEventType {
-  CREE              // Créé
-  ASSIGNE           // Assigné
-  STATUT_MODIFIE    // Statut modifié
-  ESCALADE          // Escaladé
-  ECHEANCE_PROCHE   // Échéance proche
+  CREE // Créé
+  ASSIGNE // Assigné
+  STATUT_MODIFIE // Statut modifié
+  ESCALADE // Escaladé
+  ECHEANCE_PROCHE // Échéance proche
   ECHEANCE_DEPASSEE // Échéance dépassée
-  RESOLU            // Résolu
-  REPONSE_ENVOYEE   // Réponse envoyée
-  RETOUR_CLIENT     // Retour client
-  NOTE_INTERNE      // Note interne
-  AUTRE             // Autre
+  RESOLU // Résolu
+  REPONSE_ENVOYEE // Réponse envoyée
+  RETOUR_CLIENT // Retour client
+  NOTE_INTERNE // Note interne
+  AUTRE // Autre
 }
 
 model SLAEvent {
@@ -2459,15 +2477,15 @@ model SLAEvent {
 // ============================================
 
 enum AuditAction {
-  CREATION      // Création
-  MODIFICATION  // Modification
-  SUPPRESSION   // Suppression
-  CONSULTATION  // Consultation
-  EXPORT        // Export
-  PARTAGE       // Partage
-  SIGNATURE     // Signature
-  APPROBATION   // Approbation
-  REJET         // Rejet
+  CREATION // Création
+  MODIFICATION // Modification
+  SUPPRESSION // Suppression
+  CONSULTATION // Consultation
+  EXPORT // Export
+  PARTAGE // Partage
+  SIGNATURE // Signature
+  APPROBATION // Approbation
+  REJET // Rejet
 }
 
 // ============================================
@@ -2475,11 +2493,11 @@ enum AuditAction {
 // ============================================
 
 enum CommercialActionStatus {
-  BROUILLON   // Brouillon
-  PLANIFIEE   // Planifiée
-  EN_COURS    // En cours
-  TERMINEE    // Terminée
-  ARCHIVEE    // Archivée
+  BROUILLON // Brouillon
+  PLANIFIEE // Planifiée
+  EN_COURS // En cours
+  TERMINEE // Terminée
+  ARCHIVEE // Archivée
 }
 
 model CommercialAction {
@@ -2528,11 +2546,9 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([action])
   @@index([createdAt])
-
   // NOUVEAUX INDEX COMPOSITES
   @@index([cabinetId, entityType, createdAt])
   @@index([userId, createdAt])
-
   @@map("audit_logs")
 }
 
@@ -2617,14 +2633,14 @@ model TimelineEvent {
 // ============================================
 
 enum ExportType {
-  CLIENTS           // Export clients
-  ACTIFS            // Export actifs
-  PASSIFS           // Export passifs
-  CONTRATS          // Export contrats
-  DOCUMENTS         // Export documents
-  TACHES            // Export tâches
-  RENDEZ_VOUS       // Export rendez-vous
-  OPPORTUNITES      // Export opportunités
+  CLIENTS // Export clients
+  ACTIFS // Export actifs
+  PASSIFS // Export passifs
+  CONTRATS // Export contrats
+  DOCUMENTS // Export documents
+  TACHES // Export tâches
+  RENDEZ_VOUS // Export rendez-vous
+  OPPORTUNITES // Export opportunités
   PATRIMOINE_COMPLET // Export patrimoine complet
 }
 
@@ -2636,10 +2652,10 @@ enum ExportFormat {
 }
 
 enum ExportStatus {
-  EN_ATTENTE  // En attente
-  EN_COURS    // En cours
-  TERMINE     // Terminé
-  ECHEC       // Échec
+  EN_ATTENTE // En attente
+  EN_COURS // En cours
+  TERMINE // Terminé
+  ECHEC // Échec
 }
 
 model ExportJob {
@@ -2671,19 +2687,19 @@ model ExportJob {
 // ============================================
 
 enum InvoiceStatus {
-  BROUILLON   // Brouillon
-  ENVOYEE     // Envoyée au client
-  PAYEE       // Payée intégralement
-  EN_RETARD   // En retard de paiement
-  ANNULEE     // Annulée
+  BROUILLON // Brouillon
+  ENVOYEE // Envoyée au client
+  PAYEE // Payée intégralement
+  EN_RETARD // En retard de paiement
+  ANNULEE // Annulée
 }
 
 enum PaymentMethod {
-  VIREMENT        // Virement bancaire
-  CHEQUE          // Chèque
-  ESPECES         // Espèces
-  CARTE_BANCAIRE  // Carte bancaire
-  AUTRE           // Autre
+  VIREMENT // Virement bancaire
+  CHEQUE // Chèque
+  ESPECES // Espèces
+  CARTE_BANCAIRE // Carte bancaire
+  AUTRE // Autre
 }
 
 model Invoice {
@@ -2743,17 +2759,14 @@ model Invoice {
   updatedAt DateTime @updatedAt
 
   @@unique([cabinetId, invoiceNumber])
-
   // INDEX EXISTANTS
   @@index([cabinetId, clientId])
   @@index([cabinetId, conseillerId])
   @@index([cabinetId, status])
   @@index([issueDate])
   @@index([dueDate])
-
   // NOUVEAUX INDEX COMPOSITES
   @@index([cabinetId, status, dueDate])
-
   @@map("invoices")
 }
 
@@ -2814,19 +2827,19 @@ model Payment {
 
 enum ApporteurEntityType {
   PERSONNE_PHYSIQUE // Personne physique
-  SOCIETE           // Société
+  SOCIETE // Société
 }
 
 enum CommissionType {
-  POURCENTAGE   // Pourcentage du CA
-  MONTANT_FIXE  // Montant fixe
+  POURCENTAGE // Pourcentage du CA
+  MONTANT_FIXE // Montant fixe
 }
 
 enum CommissionStatus {
-  EN_ATTENTE  // En attente
-  VALIDEE     // Validée/Approuvée
-  PAYEE       // Payée
-  ANNULEE     // Annulée
+  EN_ATTENTE // En attente
+  VALIDEE // Validée/Approuvée
+  PAYEE // Payée
+  ANNULEE // Annulée
 }
 
 model Apporteur {
@@ -3022,7 +3035,6 @@ model Dossier {
   archivedBy String? // ID du conseiller qui a archivé
 
   @@unique([cabinetId, reference])
-
   // INDEX EXISTANTS
   @@index([cabinetId, clientId])
   @@index([cabinetId, conseillerId])
@@ -3031,11 +3043,9 @@ model Dossier {
   @@index([cabinetId, priorite])
   @@index([cabinetId, dateOuverture])
   @@index([clientId, status])
-
   // NOUVEAUX INDEX COMPOSITES
   @@index([cabinetId, status, priorite])
   @@index([dateCloturePrevu, status])
-
   @@map("dossiers")
 }
 
@@ -3094,6 +3104,7 @@ enum EmailMessageStatus {
   CLIQUE
   REBOND
   ERREUR
+  ECHOUE
 }
 
 model Campaign {
@@ -3171,10 +3182,8 @@ model Campaign {
   @@index([cabinetId, type])
   @@index([createdBy])
   @@index([scheduledAt])
-
   // NOUVEAUX INDEX
   @@index([cabinetId, status, scheduledAt])
-
   @@map("campaigns")
 }
 
@@ -3344,11 +3353,9 @@ model EmailMessage {
   @@index([campaignId])
   @@index([scenarioId])
   @@index([sentAt])
-
   // NOUVEAUX INDEX COMPOSITES
   @@index([cabinetId, clientId, status])
   @@index([scheduledAt, status])
-
   @@map("email_messages")
 }
 
@@ -3358,9 +3365,9 @@ model EmailMessage {
 
 // Statuts de demande d'inscription
 enum RegistrationRequestStatus {
-  EN_ATTENTE  // En attente
-  APPROUVEE   // Approuvée
-  REJETEE     // Rejetée
+  EN_ATTENTE // En attente
+  APPROUVEE // Approuvée
+  REJETEE // Rejetée
 }
 
 // Demandes d'inscription de nouveaux cabinets
@@ -3378,7 +3385,7 @@ model RegistrationRequest {
   cabinetName    String
   cabinetEmail   String
   cabinetPhone   String?
-  cabinetAddress Json?   // { street, city, postalCode, country }
+  cabinetAddress Json? // { street, city, postalCode, country }
   website        String?
   siret          String?
 
@@ -3389,9 +3396,9 @@ model RegistrationRequest {
   adminPhone     String?
 
   // Plan demandé
-  planRequested  String @default("STARTER")
-  expectedUsers  Int    @default(1)
-  expectedClients Int   @default(100)
+  planRequested   String @default("STARTER")
+  expectedUsers   Int    @default(1)
+  expectedClients Int    @default(100)
 
   // Informations supplémentaires
   message String? @db.Text
@@ -3423,7 +3430,7 @@ model UserSession {
   cabinet   Cabinet? @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
 
   // Token de session
-  sessionToken String @unique
+  sessionToken String   @unique
   expiresAt    DateTime
 
   // Informations de connexion
@@ -3456,7 +3463,7 @@ model SystemConfig {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  key         String @unique
+  key         String  @unique
   value       Json
   description String? @db.Text
   category    String  @default("general") // general, email, security, limits, notifications
@@ -3505,9 +3512,9 @@ model ApiKey {
 
 // Statuts des webhooks
 enum WebhookStatus {
-  ACTIF     // Actif
-  INACTIF   // Inactif
-  ERREUR    // En erreur
+  ACTIF // Actif
+  INACTIF // Inactif
+  ERREUR // En erreur
 }
 
 // Endpoints webhook pour notifications
@@ -3525,12 +3532,12 @@ model WebhookEndpoint {
   // Configuration
   url    String
   secret String // Secret pour signature HMAC
-  events Json   // Liste des événements à écouter
+  events Json // Liste des événements à écouter
 
   // Statut
-  status       WebhookStatus @default(ACTIF)
-  lastError    String?       @db.Text
-  lastErrorAt  DateTime?
+  status      WebhookStatus @default(ACTIF)
+  lastError   String?       @db.Text
+  lastErrorAt DateTime?
 
   // Statistiques
   lastTriggeredAt DateTime?
@@ -3545,12 +3552,12 @@ model WebhookEndpoint {
 
 // Statuts facturation SaaS
 enum SaaSInvoiceStatus {
-  BROUILLON   // Brouillon
-  EN_ATTENTE  // En attente
-  PAYEE       // Payée
-  EN_RETARD   // En retard
-  ANNULEE     // Annulée
-  REMBOURSEE  // Remboursée
+  BROUILLON // Brouillon
+  EN_ATTENTE // En attente
+  PAYEE // Payée
+  EN_RETARD // En retard
+  ANNULEE // Annulée
+  REMBOURSEE // Remboursée
 }
 
 // Factures SaaS (facturation des cabinets)
@@ -3572,24 +3579,24 @@ model SaaSInvoice {
 
   // Montants
   amountHT  Decimal @db.Decimal(12, 2)
-  tva       Decimal @db.Decimal(5, 2) @default(20.00)
+  tva       Decimal @default(20.00) @db.Decimal(5, 2)
   amountTTC Decimal @db.Decimal(12, 2)
 
   // Détails
-  planName      String
-  planPrice     Decimal @db.Decimal(12, 2)
-  additionalFees Json?   // { name, amount }[]
+  planName       String
+  planPrice      Decimal @db.Decimal(12, 2)
+  additionalFees Json? // { name, amount }[]
 
   // Statut
-  status   SaaSInvoiceStatus @default(BROUILLON)
-  dueDate  DateTime
-  paidAt   DateTime?
-  paidAmount Decimal? @db.Decimal(12, 2)
+  status     SaaSInvoiceStatus @default(BROUILLON)
+  dueDate    DateTime
+  paidAt     DateTime?
+  paidAmount Decimal?          @db.Decimal(12, 2)
 
   // Paiement
-  stripeInvoiceId   String?
-  stripePaymentId   String?
-  paymentMethod     String?
+  stripeInvoiceId String?
+  stripePaymentId String?
+  paymentMethod   String?
 
   // PDF
   pdfUrl         String?
@@ -3635,70 +3642,70 @@ enum RevenueCategory {
   // ============================================
   // Revenus du travail salarié
   // ============================================
-  SALAIRE                              // Salaire - Rémunération contrat de travail
-  PRIME                                // Prime - Primes exceptionnelles, intéressement, participation
-  BONUS                                // Bonus - Bonus annuel, variable
-  AVANTAGE_NATURE                      // Avantage en nature - Voiture, logement, téléphone
-  INDEMNITE_LICENCIEMENT               // Indemnité de licenciement
-  INDEMNITE_RUPTURE_CONVENTIONNELLE    // Indemnité rupture conventionnelle
-  
+  SALAIRE // Salaire - Rémunération contrat de travail
+  PRIME // Prime - Primes exceptionnelles, intéressement, participation
+  BONUS // Bonus - Bonus annuel, variable
+  AVANTAGE_NATURE // Avantage en nature - Voiture, logement, téléphone
+  INDEMNITE_LICENCIEMENT // Indemnité de licenciement
+  INDEMNITE_RUPTURE_CONVENTIONNELLE // Indemnité rupture conventionnelle
+
   // ============================================
   // Revenus des indépendants (TNS)
   // ============================================
-  BIC                                  // Bénéfices Industriels et Commerciaux
-  BNC                                  // Bénéfices Non Commerciaux
-  BA                                   // Bénéfices Agricoles
-  HONORAIRES                           // Honoraires - Professions libérales
-  DROITS_AUTEUR                        // Droits d'auteur - Royalties, propriété intellectuelle
-  
+  BIC // Bénéfices Industriels et Commerciaux
+  BNC // Bénéfices Non Commerciaux
+  BA // Bénéfices Agricoles
+  HONORAIRES // Honoraires - Professions libérales
+  DROITS_AUTEUR // Droits d'auteur - Royalties, propriété intellectuelle
+
   // ============================================
   // Revenus de dirigeant
   // ============================================
-  REMUNERATION_GERANT                  // Rémunération gérant - Gérant majoritaire ou minoritaire
-  DIVIDENDES                           // Dividendes - Distribution de bénéfices
-  JETONS_PRESENCE                      // Jetons de présence - Administrateur
-  
+  REMUNERATION_GERANT // Rémunération gérant - Gérant majoritaire ou minoritaire
+  DIVIDENDES // Dividendes - Distribution de bénéfices
+  JETONS_PRESENCE // Jetons de présence - Administrateur
+
   // ============================================
   // Revenus immobiliers
   // ============================================
-  REVENUS_FONCIERS                     // Revenus fonciers - Location nue
-  LMNP                                 // Location Meublée Non Professionnelle
-  LMP                                  // Location Meublée Professionnelle
-  LOCATION_SAISONNIERE                 // Location saisonnière - Airbnb, tourisme
-  SCPI                                 // Revenus SCPI - Distributions SCPI
-  
+  REVENUS_FONCIERS // Revenus fonciers - Location nue
+  LMNP // Location Meublée Non Professionnelle
+  LMP // Location Meublée Professionnelle
+  LOCATION_SAISONNIERE // Location saisonnière - Airbnb, tourisme
+  SCPI // Revenus SCPI - Distributions SCPI
+
   // ============================================
   // Revenus de capitaux mobiliers
   // ============================================
-  INTERETS                             // Intérêts - Comptes, obligations
-  PLUS_VALUES_MOBILIERES               // Plus-values mobilières - Cession titres
-  ASSURANCE_VIE_RACHAT                 // Rachat assurance-vie - Retrait contrat
-  CRYPTO                               // Crypto-actifs - Gains crypto-monnaies
-  
+  INTERETS // Intérêts - Comptes, obligations
+  PLUS_VALUES_MOBILIERES // Plus-values mobilières - Cession titres
+  ASSURANCE_VIE_RACHAT // Rachat assurance-vie - Retrait contrat
+  CRYPTO // Crypto-actifs - Gains crypto-monnaies
+
   // ============================================
   // Retraite et pension
   // ============================================
-  PENSION_RETRAITE                     // Pension de retraite - Régime de base et complémentaire
-  RETRAITE_COMPLEMENTAIRE              // Retraite complémentaire - AGIRC-ARRCO, Madelin
-  PER_RENTE                            // Rente PER - Sortie en rente PER
-  PENSION_REVERSION                    // Pension de réversion - Conjoint décédé
-  
+  PENSION_RETRAITE // Pension de retraite - Régime de base et complémentaire
+  RETRAITE_COMPLEMENTAIRE // Retraite complémentaire - AGIRC-ARRCO, Madelin
+  PER_RENTE // Rente PER - Sortie en rente PER
+  PENSION_REVERSION // Pension de réversion - Conjoint décédé
+
   // ============================================
   // Prestations sociales
   // ============================================
-  PENSION_ALIMENTAIRE_RECUE            // Pension alimentaire reçue - Versée par ex-conjoint
-  PENSION_INVALIDITE                   // Pension d'invalidité - Sécurité sociale
-  ALLOCATION_CHOMAGE                   // Allocations chômage - Pôle Emploi
-  RSA                                  // RSA - Revenu de Solidarité Active
-  ALLOCATIONS_FAMILIALES               // Allocations familiales - CAF
-  APL                                  // APL - Aide Personnalisée au Logement
-  
+  PENSION_ALIMENTAIRE_RECUE // Pension alimentaire reçue - Versée par ex-conjoint
+  PENSION_INVALIDITE // Pension d'invalidité - Sécurité sociale
+  ALLOCATION_CHOMAGE // Allocations chômage - Pôle Emploi
+  RSA // RSA - Revenu de Solidarité Active
+  ALLOCATIONS_FAMILIALES // Allocations familiales - CAF
+  APL // APL - Aide Personnalisée au Logement
+
   // ============================================
   // Autres revenus
   // ============================================
-  RENTE_VIAGERE                        // Rente viagère - Contrat viager
-  REVENU_EXCEPTIONNEL                  // Revenu exceptionnel - Indemnités, gains exceptionnels
-  AUTRE                                // Autre revenu - Divers
+  RENTE_VIAGERE // Rente viagère - Contrat viager
+  REVENU_EXCEPTIONNEL // Revenu exceptionnel - Indemnités, gains exceptionnels
+  AUTRE // Autre revenu - Divers
 }
 
 enum RevenueFrequency {
@@ -3722,40 +3729,40 @@ enum RevenueFiscalite {
 }
 
 model Revenue {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   cabinetId String
   clientId  String
-  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client    Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   // Identification
   libelle     String
-  description String?  @db.Text
+  description String?         @db.Text
   categorie   RevenueCategory
-  
+
   // Montants
-  montant          Decimal @db.Decimal(12, 2)
-  frequence        RevenueFrequency @default(MENSUEL)
-  montantAnnuel    Decimal @db.Decimal(12, 2) // Calculé automatiquement
-  
+  montant       Decimal          @db.Decimal(12, 2)
+  frequence     RevenueFrequency @default(MENSUEL)
+  montantAnnuel Decimal          @db.Decimal(12, 2) // Calculé automatiquement
+
   // Fiscalité
-  fiscalite        RevenueFiscalite @default(IMPOSABLE_IR)
-  tauxImposition   Decimal? @db.Decimal(5, 2)
-  abattementForfaitaire Decimal? @db.Decimal(5, 2) // Ex: 10% pour frais pro
-  chargesSociales  Decimal? @db.Decimal(5, 2)
-  
+  fiscalite             RevenueFiscalite @default(IMPOSABLE_IR)
+  tauxImposition        Decimal?         @db.Decimal(5, 2)
+  abattementForfaitaire Decimal?         @db.Decimal(5, 2) // Ex: 10% pour frais pro
+  chargesSociales       Decimal?         @db.Decimal(5, 2)
+
   // Périodes
-  dateDebut        DateTime?
-  dateFin          DateTime?
-  estRecurrent     Boolean @default(true)
-  
+  dateDebut    DateTime?
+  dateFin      DateTime?
+  estRecurrent Boolean   @default(true)
+
   // Source
-  sourceOrganisme  String? // Employeur, locataire, banque...
-  numeroContrat    String?
-  
+  sourceOrganisme String? // Employeur, locataire, banque...
+  numeroContrat   String?
+
   // Métadonnées
-  notes            String? @db.Text
-  documents        Json?   // IDs des documents liés
-  
+  notes     String? @db.Text
+  documents Json? // IDs des documents liés
+
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -3771,94 +3778,94 @@ enum ExpenseCategory {
   // ============================================
   // Logement
   // ============================================
-  LOYER                                // Loyer - Location résidence principale
-  CHARGES_COPROPRIETE                  // Charges copropriété - Charges courantes
-  TAXE_FONCIERE                        // Taxe foncière - Impôt local
-  TAXE_HABITATION                      // Taxe habitation RS - Résidence secondaire uniquement
-  ASSURANCE_HABITATION                 // Assurance habitation - MRH, PNO
-  ELECTRICITE_GAZ                      // Électricité / Gaz - Énergie
-  EAU                                  // Eau - Consommation eau
-  INTERNET_TELEPHONE                   // Internet / Téléphone - Abonnements télécom
-  TRAVAUX_ENTRETIEN                    // Travaux entretien - Réparations, maintenance
-  FRAIS_GESTION_LOCATIVE               // Frais gestion locative - Agence immobilière
-  
+  LOYER // Loyer - Location résidence principale
+  CHARGES_COPROPRIETE // Charges copropriété - Charges courantes
+  TAXE_FONCIERE // Taxe foncière - Impôt local
+  TAXE_HABITATION // Taxe habitation RS - Résidence secondaire uniquement
+  ASSURANCE_HABITATION // Assurance habitation - MRH, PNO
+  ELECTRICITE_GAZ // Électricité / Gaz - Énergie
+  EAU // Eau - Consommation eau
+  INTERNET_TELEPHONE // Internet / Téléphone - Abonnements télécom
+  TRAVAUX_ENTRETIEN // Travaux entretien - Réparations, maintenance
+  FRAIS_GESTION_LOCATIVE // Frais gestion locative - Agence immobilière
+
   // ============================================
   // Transport
   // ============================================
-  CREDIT_AUTO                          // Crédit auto - Remboursement véhicule
-  ASSURANCE_AUTO                       // Assurance auto - Responsabilité civile, tous risques
-  CARBURANT                            // Carburant - Essence, diesel, électrique
-  ENTRETIEN_VEHICULE                   // Entretien véhicule - Révisions, réparations
-  PARKING                              // Parking - Abonnement stationnement
-  TRANSPORT_COMMUN                     // Transports en commun - Abonnements RATP, SNCF
-  PEAGES                               // Péages - Autoroutes
-  
+  CREDIT_AUTO // Crédit auto - Remboursement véhicule
+  ASSURANCE_AUTO // Assurance auto - Responsabilité civile, tous risques
+  CARBURANT // Carburant - Essence, diesel, électrique
+  ENTRETIEN_VEHICULE // Entretien véhicule - Révisions, réparations
+  PARKING // Parking - Abonnement stationnement
+  TRANSPORT_COMMUN // Transports en commun - Abonnements RATP, SNCF
+  PEAGES // Péages - Autoroutes
+
   // ============================================
   // Santé
   // ============================================
-  MUTUELLE                             // Mutuelle santé - Complémentaire santé
-  FRAIS_MEDICAUX                       // Frais médicaux - Consultations, médicaments
-  OPTIQUE_DENTAIRE                     // Optique / Dentaire - Lunettes, prothèses
-  
+  MUTUELLE // Mutuelle santé - Complémentaire santé
+  FRAIS_MEDICAUX // Frais médicaux - Consultations, médicaments
+  OPTIQUE_DENTAIRE // Optique / Dentaire - Lunettes, prothèses
+
   // ============================================
   // Assurances
   // ============================================
-  ASSURANCE_VIE_PRIMES                 // Primes assurance-vie - Versements AV
-  PREVOYANCE                           // Prévoyance - Décès, invalidité, incapacité
-  ASSURANCE_EMPRUNTEUR                 // Assurance emprunteur - ADI crédit immobilier
-  PROTECTION_JURIDIQUE                 // Protection juridique - Défense et recours
-  GAV                                  // GAV - Garantie Accidents de la Vie
-  
+  ASSURANCE_VIE_PRIMES // Primes assurance-vie - Versements AV
+  PREVOYANCE // Prévoyance - Décès, invalidité, incapacité
+  ASSURANCE_EMPRUNTEUR // Assurance emprunteur - ADI crédit immobilier
+  PROTECTION_JURIDIQUE // Protection juridique - Défense et recours
+  GAV // GAV - Garantie Accidents de la Vie
+
   // ============================================
   // Enfants / Famille
   // ============================================
-  GARDE_ENFANTS                        // Garde d'enfants - Crèche, nounou, périscolaire
-  SCOLARITE                            // Scolarité - École privée, cantine
-  ACTIVITES_ENFANTS                    // Activités extra-scolaires - Sport, musique, loisirs
-  PENSION_ALIMENTAIRE_VERSEE           // Pension alimentaire versée - Enfants, ex-conjoint
-  ETUDES_SUPERIEURES                   // Études supérieures - Frais universitaires
-  
+  GARDE_ENFANTS // Garde d'enfants - Crèche, nounou, périscolaire
+  SCOLARITE // Scolarité - École privée, cantine
+  ACTIVITES_ENFANTS // Activités extra-scolaires - Sport, musique, loisirs
+  PENSION_ALIMENTAIRE_VERSEE // Pension alimentaire versée - Enfants, ex-conjoint
+  ETUDES_SUPERIEURES // Études supérieures - Frais universitaires
+
   // ============================================
   // Épargne et investissement
   // ============================================
-  VERSEMENT_PER                        // Versement PER - Plan Épargne Retraite
-  VERSEMENT_PERP                       // Versement PERP/Madelin - Retraite TNS
-  VERSEMENT_EPARGNE                    // Épargne programmée - Versements réguliers
-  INVESTISSEMENT_FIP_FCPI              // FIP / FCPI - Private Equity défiscalisant
-  INVESTISSEMENT_SOFICA                // SOFICA - Investissement cinéma
-  
+  VERSEMENT_PER // Versement PER - Plan Épargne Retraite
+  VERSEMENT_PERP // Versement PERP/Madelin - Retraite TNS
+  VERSEMENT_EPARGNE // Épargne programmée - Versements réguliers
+  INVESTISSEMENT_FIP_FCPI // FIP / FCPI - Private Equity défiscalisant
+  INVESTISSEMENT_SOFICA // SOFICA - Investissement cinéma
+
   // ============================================
   // Crédits et emprunts
   // ============================================
-  CREDIT_IMMOBILIER_RP                 // Crédit immobilier RP - Résidence principale
-  CREDIT_IMMOBILIER_LOCATIF            // Crédit immobilier locatif - Investissement locatif
-  CREDIT_CONSOMMATION                  // Crédit consommation - Prêt personnel
-  CREDIT_REVOLVING                     // Crédit renouvelable - Réserve d'argent
-  
+  CREDIT_IMMOBILIER_RP // Crédit immobilier RP - Résidence principale
+  CREDIT_IMMOBILIER_LOCATIF // Crédit immobilier locatif - Investissement locatif
+  CREDIT_CONSOMMATION // Crédit consommation - Prêt personnel
+  CREDIT_REVOLVING // Crédit renouvelable - Réserve d'argent
+
   // ============================================
   // Charges professionnelles
   // ============================================
-  COTISATIONS_SOCIALES                 // Cotisations sociales - URSSAF, RSI, caisses
-  CFE                                  // CFE - Cotisation Foncière des Entreprises
-  FRAIS_COMPTABILITE                   // Comptabilité - Expert-comptable
-  COTISATION_SYNDICALE                 // Cotisations syndicales - Syndicats professionnels
-  FORMATION_PROFESSIONNELLE            // Formation professionnelle - Stages, certifications
-  
+  COTISATIONS_SOCIALES // Cotisations sociales - URSSAF, RSI, caisses
+  CFE // CFE - Cotisation Foncière des Entreprises
+  FRAIS_COMPTABILITE // Comptabilité - Expert-comptable
+  COTISATION_SYNDICALE // Cotisations syndicales - Syndicats professionnels
+  FORMATION_PROFESSIONNELLE // Formation professionnelle - Stages, certifications
+
   // ============================================
   // Impôts et taxes
   // ============================================
-  IMPOT_REVENU                         // Impôt sur le revenu - IR annuel
-  IFI                                  // IFI - Impôt sur la Fortune Immobilière
-  PRELEVEMENTS_SOCIAUX                 // Prélèvements sociaux - CSG, CRDS
-  
+  IMPOT_REVENU // Impôt sur le revenu - IR annuel
+  IFI // IFI - Impôt sur la Fortune Immobilière
+  PRELEVEMENTS_SOCIAUX // Prélèvements sociaux - CSG, CRDS
+
   // ============================================
   // Divers
   // ============================================
-  DONS                                 // Dons - Associations, fondations
-  EMPLOI_DOMICILE                      // Emploi à domicile - Ménage, jardinage
-  ABONNEMENTS_LOISIRS                  // Abonnements / Loisirs - Salle de sport, streaming
-  ALIMENTATION                         // Alimentation - Courses alimentaires
-  AUTRE_CHARGE                         // Autre charge - Divers
+  DONS // Dons - Associations, fondations
+  EMPLOI_DOMICILE // Emploi à domicile - Ménage, jardinage
+  ABONNEMENTS_LOISIRS // Abonnements / Loisirs - Salle de sport, streaming
+  ALIMENTATION // Alimentation - Courses alimentaires
+  AUTRE_CHARGE // Autre charge - Divers
 }
 
 enum ExpenseFrequency {
@@ -3871,41 +3878,41 @@ enum ExpenseFrequency {
 }
 
 model Expense {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   cabinetId String
   clientId  String
-  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client    Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   // Identification
   libelle     String
-  description String?  @db.Text
+  description String?         @db.Text
   categorie   ExpenseCategory
-  
+
   // Montants
-  montant          Decimal @db.Decimal(12, 2)
-  frequence        ExpenseFrequency @default(MENSUEL)
-  montantAnnuel    Decimal @db.Decimal(12, 2) // Calculé automatiquement
-  
+  montant       Decimal          @db.Decimal(12, 2)
+  frequence     ExpenseFrequency @default(MENSUEL)
+  montantAnnuel Decimal          @db.Decimal(12, 2) // Calculé automatiquement
+
   // Classification
-  estFixe          Boolean @default(true)  // Charge fixe vs variable
-  estEssentiel     Boolean @default(false) // Essentiel vs optionnel
-  estDeductible    Boolean @default(false) // Déductible fiscalement
+  estFixe           Boolean  @default(true) // Charge fixe vs variable
+  estEssentiel      Boolean  @default(false) // Essentiel vs optionnel
+  estDeductible     Boolean  @default(false) // Déductible fiscalement
   tauxDeductibilite Decimal? @db.Decimal(5, 2)
-  
+
   // Périodes
-  dateDebut        DateTime?
-  dateFin          DateTime?
-  datePrelevement  Int?     @default(1) // Jour du mois
-  
+  dateDebut       DateTime?
+  dateFin         DateTime?
+  datePrelevement Int?      @default(1) // Jour du mois
+
   // Source
-  beneficiaire     String?  // À qui on paie
-  numeroContrat    String?
-  referenceMandat  String?  // Pour prélèvements
-  
+  beneficiaire    String? // À qui on paie
+  numeroContrat   String?
+  referenceMandat String? // Pour prélèvements
+
   // Métadonnées
-  notes            String? @db.Text
-  documents        Json?   // IDs des documents liés
-  
+  notes     String? @db.Text
+  documents Json? // IDs des documents liés
+
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -3958,68 +3965,68 @@ enum AmortissementType {
 }
 
 model Credit {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   cabinetId String
   clientId  String
-  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client    Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   // Identification
-  libelle         String
-  type            CreditType
-  status          CreditStatus @default(EN_COURS)
-  numeroContrat   String?
-  
+  libelle       String
+  type          CreditType
+  status        CreditStatus @default(EN_COURS)
+  numeroContrat String?
+
   // Organisme prêteur
-  organisme       String
-  agence          String?
-  contactNom      String?
-  contactTel      String?
-  contactEmail    String?
-  
+  organisme    String
+  agence       String?
+  contactNom   String?
+  contactTel   String?
+  contactEmail String?
+
   // Montants
-  montantInitial      Decimal @db.Decimal(15, 2)
-  capitalRestantDu    Decimal @db.Decimal(15, 2)
-  montantRembourse    Decimal @db.Decimal(15, 2) @default(0)
-  
+  montantInitial   Decimal @db.Decimal(15, 2)
+  capitalRestantDu Decimal @db.Decimal(15, 2)
+  montantRembourse Decimal @default(0) @db.Decimal(15, 2)
+
   // Taux
-  tauxNominal         Decimal @db.Decimal(6, 4) // Ex: 2.5000%
-  tauxEffectifGlobal  Decimal? @db.Decimal(6, 4) // TAEG
-  typeAmortissement   AmortissementType @default(LINEAIRE)
-  
+  tauxNominal        Decimal           @db.Decimal(6, 4) // Ex: 2.5000%
+  tauxEffectifGlobal Decimal?          @db.Decimal(6, 4) // TAEG
+  typeAmortissement  AmortissementType @default(LINEAIRE)
+
   // Échéances
-  mensualiteHorsAssurance Decimal @db.Decimal(12, 2)
-  mensualiteTotale        Decimal @db.Decimal(12, 2)
+  mensualiteHorsAssurance Decimal  @db.Decimal(12, 2)
+  mensualiteTotale        Decimal  @db.Decimal(12, 2)
   dateDebut               DateTime
   dateFin                 DateTime
   dureeInitialeMois       Int
   dureeRestanteMois       Int
-  jourPrelevement         Int @default(5)
-  
+  jourPrelevement         Int      @default(5)
+
   // Assurance emprunteur
-  assuranceEmprunteur     Boolean @default(false)
-  assureurNom             String?
-  assuranceMontant        Decimal? @db.Decimal(12, 2) // Mensualité assurance
-  assuranceTaux           Decimal? @db.Decimal(5, 4)  // Taux sur capital initial
-  assuranceQuotite        Decimal? @db.Decimal(5, 2)  // Quotité assurée %
-  assuranceCouvertures    Json?    // [DECES, PTIA, ITT, IPT, IPP, PERTE_EMPLOI]
-  assuranceDateFin        DateTime?
-  assuranceDelegation     Boolean @default(false) // Délégation d'assurance
-  
+  assuranceEmprunteur  Boolean   @default(false)
+  assureurNom          String?
+  assuranceMontant     Decimal?  @db.Decimal(12, 2) // Mensualité assurance
+  assuranceTaux        Decimal?  @db.Decimal(5, 4) // Taux sur capital initial
+  assuranceQuotite     Decimal?  @db.Decimal(5, 2) // Quotité assurée %
+  assuranceCouvertures Json? // [DECES, PTIA, ITT, IPT, IPP, PERTE_EMPLOI]
+  assuranceDateFin     DateTime?
+  assuranceDelegation  Boolean   @default(false) // Délégation d'assurance
+
   // Garanties
-  garanties               Json?    // [{ type: HYPOTHEQUE|CAUTION|PPD|NANTISSEMENT, details }]
-  bienFinanceId           String?  // Lien vers l'actif financé
-  
+  garanties     Json? // [{ type: HYPOTHEQUE|CAUTION|PPD|NANTISSEMENT, details }]
+  bienFinanceId String? // Lien vers l'actif financé
+
   // Options
-  modulable               Boolean @default(false)
-  differe                 Boolean @default(false)
-  differeMois             Int?
-  rachetable              Boolean @default(true)
-  penalitesRemboursement  Decimal? @db.Decimal(5, 2) // % pénalités anticipées
-  
+  modulable              Boolean  @default(false)
+  differe                Boolean  @default(false)
+  differeMois            Int?
+  rachetable             Boolean  @default(true)
+  penalitesRemboursement Decimal? @db.Decimal(5, 2) // % pénalités anticipées
+
   // Métadonnées
-  notes                   String? @db.Text
-  documents               Json?   // IDs des documents liés
-  
+  notes     String? @db.Text
+  documents Json? // IDs des documents liés
+
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -4126,61 +4133,61 @@ enum SourceEstimation {
 }
 
 model BienMobilier {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   cabinetId String
   clientId  String
-  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client    Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   // Classification
-  type            BienMobilierType
-  categorie       BienMobilierCategorie
-  
+  type      BienMobilierType
+  categorie BienMobilierCategorie
+
   // Identification
   libelle         String
-  description     String?  @db.Text
-  marque          String?  // Marque ou artiste
+  description     String? @db.Text
+  marque          String? // Marque ou artiste
   modele          String?
   annee           Int?
   numeroSerie     String?
   immatriculation String?
-  
+
   // Valorisation
-  valeurAcquisition   Decimal @db.Decimal(15, 2)
-  dateAcquisition     DateTime?
-  valeurActuelle      Decimal @db.Decimal(15, 2)
-  dateEstimation      DateTime?
-  sourceEstimation    SourceEstimation @default(DECLARATION)
-  plusValueLatente    Decimal? @db.Decimal(15, 2) // Calculé
-  
+  valeurAcquisition Decimal          @db.Decimal(15, 2)
+  dateAcquisition   DateTime?
+  valeurActuelle    Decimal          @db.Decimal(15, 2)
+  dateEstimation    DateTime?
+  sourceEstimation  SourceEstimation @default(DECLARATION)
+  plusValueLatente  Decimal?         @db.Decimal(15, 2) // Calculé
+
   // Détention
-  modeDetention       ModeDetention @default(PLEINE_PROPRIETE)
-  quotiteDetention    Decimal @db.Decimal(5, 2) @default(100.00)
-  
+  modeDetention    ModeDetention @default(PLEINE_PROPRIETE)
+  quotiteDetention Decimal       @default(100.00) @db.Decimal(5, 2)
+
   // Assurance
-  estAssure           Boolean @default(false)
-  assureur            String?
-  montantAssurance    Decimal? @db.Decimal(15, 2)
-  numeroPolice        String?
-  
+  estAssure        Boolean  @default(false)
+  assureur         String?
+  montantAssurance Decimal? @db.Decimal(15, 2)
+  numeroPolice     String?
+
   // Financement
-  estGage             Boolean @default(false)
-  organismePreteur    String?
-  capitalRestantDu    Decimal? @db.Decimal(15, 2)
-  creditId            String?  // Lien vers le crédit associé
-  
+  estGage          Boolean  @default(false)
+  organismePreteur String?
+  capitalRestantDu Decimal? @db.Decimal(15, 2)
+  creditId         String? // Lien vers le crédit associé
+
   // Amortissement (équipements pro)
-  estAmortissable     Boolean @default(false)
-  dureeAmortissement  Int?    // En années
-  valeurResiduelle    Decimal? @db.Decimal(15, 2)
-  
+  estAmortissable    Boolean  @default(false)
+  dureeAmortissement Int? // En années
+  valeurResiduelle   Decimal? @db.Decimal(15, 2)
+
   // Localisation
-  localisation        String? // Lieu de stockage/garage
-  
+  localisation String? // Lieu de stockage/garage
+
   // Métadonnées
-  photos              Json?   // URLs des photos
-  documents           Json?   // IDs des documents liés
-  notes               String? @db.Text
-  
+  photos    Json? // URLs des photos
+  documents Json? // IDs des documents liés
+  notes     String? @db.Text
+
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -4210,20 +4217,20 @@ enum InterlocuteurRole {
 }
 
 model Interlocuteur {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   cabinetId String
   clientId  String
-  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client    Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
-  nom           String
-  prenom        String
-  role          InterlocuteurRole @default(AUTRE)
-  fonction      String?
-  email         String?
-  telephone     String?
-  mobile        String?
-  isPrincipal   Boolean @default(false)
-  notes         String? @db.Text
+  nom         String
+  prenom      String
+  role        InterlocuteurRole @default(AUTRE)
+  fonction    String?
+  email       String?
+  telephone   String?
+  mobile      String?
+  isPrincipal Boolean           @default(false)
+  notes       String?           @db.Text
 
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -4249,28 +4256,28 @@ enum TypeEpargneSalariale {
 }
 
 model EpargneSalariale {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   cabinetId String
   clientId  String
-  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client    Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
-  type              TypeEpargneSalariale
-  libelle           String
-  organisme         String?
-  employeur         String?
-  
-  montantVerse      Decimal  @db.Decimal(15, 2)
-  montantActuel     Decimal  @db.Decimal(15, 2)
-  montantAbonde     Decimal? @db.Decimal(15, 2)
-  
+  type      TypeEpargneSalariale
+  libelle   String
+  organisme String?
+  employeur String?
+
+  montantVerse  Decimal  @db.Decimal(15, 2)
+  montantActuel Decimal  @db.Decimal(15, 2)
+  montantAbonde Decimal? @db.Decimal(15, 2)
+
   dateOuverture     DateTime?
   dateDisponibilite DateTime?
-  
-  supports          Json?    // Répartition des supports
-  performanceYTD    Decimal? @db.Decimal(5, 2)
-  
-  notes             String?  @db.Text
-  documents         Json?
+
+  supports       Json? // Répartition des supports
+  performanceYTD Decimal? @db.Decimal(5, 2)
+
+  notes     String? @db.Text
+  documents Json?
 
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -4293,28 +4300,28 @@ enum TypeProtectionSocialePro {
 }
 
 model ProtectionSocialePro {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   cabinetId String
   clientId  String
-  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client    Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
-  type              TypeProtectionSocialePro
-  libelle           String
-  assureur          String?
-  numeroContrat     String?
-  
+  type          TypeProtectionSocialePro
+  libelle       String
+  assureur      String?
+  numeroContrat String?
+
   cotisationAnnuelle Decimal? @db.Decimal(12, 2)
   partPatronale      Decimal? @db.Decimal(5, 2)
   partSalariale      Decimal? @db.Decimal(5, 2)
-  
-  garanties          Json?    // Détail des garanties (DC, ITT, IPT, etc.)
-  beneficiaires      Json?
-  
-  dateEffet          DateTime?
-  dateEcheance       DateTime?
-  
-  notes              String?  @db.Text
-  documents          Json?
+
+  garanties     Json? // Détail des garanties (DC, ITT, IPT, etc.)
+  beneficiaires Json?
+
+  dateEffet    DateTime?
+  dateEcheance DateTime?
+
+  notes     String? @db.Text
+  documents Json?
 
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -4342,30 +4349,30 @@ enum TypeFinancementPro {
 }
 
 model FinancementPro {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   cabinetId String
   clientId  String
-  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client    Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
-  type              TypeFinancementPro
-  libelle           String
-  organisme         String?
-  numeroContrat     String?
-  
-  montantInitial    Decimal  @db.Decimal(15, 2)
-  capitalRestantDu  Decimal  @db.Decimal(15, 2)
-  tauxInteret       Decimal? @db.Decimal(5, 4)
-  mensualite        Decimal? @db.Decimal(12, 2)
-  
+  type          TypeFinancementPro
+  libelle       String
+  organisme     String?
+  numeroContrat String?
+
+  montantInitial   Decimal  @db.Decimal(15, 2)
+  capitalRestantDu Decimal  @db.Decimal(15, 2)
+  tauxInteret      Decimal? @db.Decimal(5, 4)
+  mensualite       Decimal? @db.Decimal(12, 2)
+
   dateDebut         DateTime?
   dateFin           DateTime?
   dureeInitialeMois Int?
-  
-  garanties         Json?    // Cautions, nantissements, hypothèques
-  objet             String?  // Objet du financement
-  
-  notes             String?  @db.Text
-  documents         Json?
+
+  garanties Json? // Cautions, nantissements, hypothèques
+  objet     String? // Objet du financement
+
+  notes     String? @db.Text
+  documents Json?
 
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -4398,33 +4405,33 @@ enum ModeDetentionPro {
 }
 
 model ImmobilierPro {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   cabinetId String
   clientId  String
-  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client    Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
-  type              TypeImmobilierPro
-  libelle           String
-  adresse           Json?
-  surface           Decimal? @db.Decimal(10, 2)
-  
-  valeurAcquisition  Decimal  @db.Decimal(15, 2)
-  dateAcquisition    DateTime?
-  valeurActuelle     Decimal  @db.Decimal(15, 2)
-  
-  modeDetention      ModeDetentionPro @default(PLEINE_PROPRIETE)
-  quotiteDetention   Decimal @db.Decimal(5, 2) @default(100.00)
-  
-  loyerMensuel       Decimal? @db.Decimal(12, 2)
-  chargesAnnuelles   Decimal? @db.Decimal(12, 2)
-  taxeFonciere       Decimal? @db.Decimal(12, 2)
-  
-  locataire          String?
-  bailType           String?
-  bailEcheance       DateTime?
-  
-  notes              String?  @db.Text
-  documents          Json?
+  type    TypeImmobilierPro
+  libelle String
+  adresse Json?
+  surface Decimal?          @db.Decimal(10, 2)
+
+  valeurAcquisition Decimal   @db.Decimal(15, 2)
+  dateAcquisition   DateTime?
+  valeurActuelle    Decimal   @db.Decimal(15, 2)
+
+  modeDetention    ModeDetentionPro @default(PLEINE_PROPRIETE)
+  quotiteDetention Decimal          @default(100.00) @db.Decimal(5, 2)
+
+  loyerMensuel     Decimal? @db.Decimal(12, 2)
+  chargesAnnuelles Decimal? @db.Decimal(12, 2)
+  taxeFonciere     Decimal? @db.Decimal(12, 2)
+
+  locataire    String?
+  bailType     String?
+  bailEcheance DateTime?
+
+  notes     String? @db.Text
+  documents Json?
 
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -4441,51 +4448,51 @@ model ImmobilierPro {
 // ============================================
 
 enum TypePlacementPro {
-  CONTRAT_CAPITALISATION    // Contrat de capitalisation personne morale
-  COMPTE_TITRES             // Compte-titres entreprise
-  COMPTE_A_TERME            // CAT / Dépôt à terme
-  OPCVM                     // SICAV, FCP
-  OBLIGATIONS               // Obligations, titres de créance
-  ACTIONS                   // Actions cotées/non cotées
-  TRESORERIE_REMUNEREE      // Compte courant rémunéré, livret pro
-  FCPR_FPCI                 // Private equity
-  SCPI_OPCI                 // Pierre-papier
-  CRYPTO_ACTIFS             // Crypto-actifs entreprise
+  CONTRAT_CAPITALISATION // Contrat de capitalisation personne morale
+  COMPTE_TITRES // Compte-titres entreprise
+  COMPTE_A_TERME // CAT / Dépôt à terme
+  OPCVM // SICAV, FCP
+  OBLIGATIONS // Obligations, titres de créance
+  ACTIONS // Actions cotées/non cotées
+  TRESORERIE_REMUNEREE // Compte courant rémunéré, livret pro
+  FCPR_FPCI // Private equity
+  SCPI_OPCI // Pierre-papier
+  CRYPTO_ACTIFS // Crypto-actifs entreprise
   AUTRE
 }
 
 model PatrimoineFinancierPro {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   cabinetId String
   clientId  String
-  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client    Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
-  type              TypePlacementPro
-  libelle           String
-  
+  type    TypePlacementPro
+  libelle String
+
   // Établissement
-  etablissement     String?            // Banque, assureur, gestionnaire
-  numeroContrat     String?
-  
+  etablissement String? // Banque, assureur, gestionnaire
+  numeroContrat String?
+
   // Valorisation
-  montantInvesti    Decimal  @db.Decimal(15, 2)
-  valeurActuelle    Decimal  @db.Decimal(15, 2)
-  dateOuverture     DateTime?
-  dateEcheance      DateTime?          // Pour CAT, obligations
-  
+  montantInvesti Decimal   @db.Decimal(15, 2)
+  valeurActuelle Decimal   @db.Decimal(15, 2)
+  dateOuverture  DateTime?
+  dateEcheance   DateTime? // Pour CAT, obligations
+
   // Performance
-  tauxRendement     Decimal? @db.Decimal(6, 4)  // Taux annuel
-  plusValueLatente  Decimal? @db.Decimal(15, 2)
-  
+  tauxRendement    Decimal? @db.Decimal(6, 4) // Taux annuel
+  plusValueLatente Decimal? @db.Decimal(15, 2)
+
   // Liquidité
-  disponible        Boolean  @default(true)     // Liquidité immédiate
-  preavisSortie     Int?                        // Jours de préavis
-  
+  disponible    Boolean @default(true) // Liquidité immédiate
+  preavisSortie Int? // Jours de préavis
+
   // Fiscalité
-  regimeFiscal      String?            // IS, PFU, etc.
-  
-  notes             String?  @db.Text
-  documents         Json?
+  regimeFiscal String? // IS, PFU, etc.
+
+  notes     String? @db.Text
+  documents Json?
 
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -4502,21 +4509,21 @@ model PatrimoineFinancierPro {
 // ============================================================================
 
 model ReferenceData {
-  id        String   @id @default(cuid())
-  
-  domain    String   // ACTIF_TYPE, PASSIF_TYPE, DOCUMENT_TYPE, etc.
-  code      String   // Code technique (ex: IMMOBILIER_RP)
-  label     String   // Label FR (ex: "Résidence principale")
-  labelEn   String?  // Label EN optionnel
-  
-  category  String?  // Sous-catégorie pour grouper (ex: IMMOBILIER, FINANCIER)
-  sortOrder Int      @default(0)
-  
-  isSystem  Boolean  @default(false) // Non modifiable si true
-  isActive  Boolean  @default(true)
-  
-  metadata  Json?    // Config spécifique par type
-  
+  id String @id @default(cuid())
+
+  domain  String // ACTIF_TYPE, PASSIF_TYPE, DOCUMENT_TYPE, etc.
+  code    String // Code technique (ex: IMMOBILIER_RP)
+  label   String // Label FR (ex: "Résidence principale")
+  labelEn String? // Label EN optionnel
+
+  category  String? // Sous-catégorie pour grouper (ex: IMMOBILIER, FINANCIER)
+  sortOrder Int     @default(0)
+
+  isSystem Boolean @default(false) // Non modifiable si true
+  isActive Boolean @default(true)
+
+  metadata Json? // Config spécifique par type
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -4530,46 +4537,493 @@ model ReferenceData {
 // ============================================================================
 
 model PatrimoineSnapshot {
-  id        String   @id @default(cuid())
-  clientId  String
-  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   // Date du snapshot
-  date      DateTime @default(now())
+  date DateTime @default(now())
 
   // === TOTAUX PATRIMOINE ===
-  totalActifs       Decimal  @db.Decimal(15, 2)
-  totalPassifs      Decimal  @db.Decimal(15, 2)
-  patrimoineNet     Decimal  @db.Decimal(15, 2)
-  patrimoineGere    Decimal  @db.Decimal(15, 2) // Géré par le cabinet
-  patrimoineNonGere Decimal  @db.Decimal(15, 2)
+  totalActifs       Decimal @db.Decimal(15, 2)
+  totalPassifs      Decimal @db.Decimal(15, 2)
+  patrimoineNet     Decimal @db.Decimal(15, 2)
+  patrimoineGere    Decimal @db.Decimal(15, 2) // Géré par le cabinet
+  patrimoineNonGere Decimal @db.Decimal(15, 2)
 
   // === DÉTAIL PAR CATÉGORIE ===
   // Format: { "IMMOBILIER": 500000, "FINANCIER": 200000, ... }
-  detailActifs      Json
-  detailPassifs     Json
+  detailActifs  Json
+  detailPassifs Json
 
   // === BUDGET ===
-  totalRevenus      Decimal  @db.Decimal(12, 2)
-  totalCharges      Decimal  @db.Decimal(12, 2)
-  capaciteEpargne   Decimal  @db.Decimal(12, 2)
-  tauxEpargne       Decimal  @db.Decimal(5, 2)  // %
-  
+  totalRevenus    Decimal @db.Decimal(12, 2)
+  totalCharges    Decimal @db.Decimal(12, 2)
+  capaciteEpargne Decimal @db.Decimal(12, 2)
+  tauxEpargne     Decimal @db.Decimal(5, 2) // %
+
   // === ENDETTEMENT ===
-  totalMensualites  Decimal  @db.Decimal(12, 2)
-  tauxEndettement   Decimal  @db.Decimal(5, 2)  // %
-  
+  totalMensualites Decimal @db.Decimal(12, 2)
+  tauxEndettement  Decimal @db.Decimal(5, 2) // %
+
   // === IFI ===
-  baseIFI           Decimal? @db.Decimal(15, 2)
-  montantIFI        Decimal? @db.Decimal(12, 2)
+  baseIFI    Decimal? @db.Decimal(15, 2)
+  montantIFI Decimal? @db.Decimal(12, 2)
 
   // === METADATA ===
-  isAutoGenerated   Boolean  @default(true)
-  notes             String?  @db.Text
+  isAutoGenerated Boolean @default(true)
+  notes           String? @db.Text
 
-  createdAt         DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([clientId, date])
   @@index([clientId])
   @@map("patrimoine_snapshots")
+}
+
+// ============================================================================
+// MODULE: COMPLIANCE REFONTE - Alertes et Timeline
+// ============================================================================
+
+enum ComplianceAlertType {
+  DOCUMENT_EXPIRING // Document expirant bientôt
+  DOCUMENT_EXPIRED // Document expiré
+  KYC_INCOMPLETE // KYC incomplet
+  CONTROL_OVERDUE // Contrôle en retard
+  RECLAMATION_SLA_BREACH // Dépassement SLA réclamation
+  MIFID_OUTDATED // Questionnaire MiFID obsolète
+  OPERATION_BLOCKED // Opération bloquée
+  AFFAIRE_INACTIVE // Affaire inactive
+}
+
+enum ComplianceAlertSeverity {
+  LOW // Basse
+  WARNING // Avertissement
+  HIGH // Haute
+  CRITICAL // Critique
+}
+
+model ComplianceAlert {
+  id               String                  @id @default(cuid())
+  cabinetId        String
+  cabinet          Cabinet                 @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  clientId         String?
+  client           Client?                 @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  operationId      String? // Référence vers AffaireNouvelle ou OperationGestion
+  type             ComplianceAlertType
+  severity         ComplianceAlertSeverity
+  title            String
+  description      String                  @db.Text
+  actionRequired   String
+  actionUrl        String?
+  acknowledged     Boolean                 @default(false)
+  acknowledgedAt   DateTime?
+  acknowledgedById String?
+  acknowledgedBy   User?                   @relation("AlertAcknowledger", fields: [acknowledgedById], references: [id], onDelete: SetNull)
+  resolved         Boolean                 @default(false)
+  resolvedAt       DateTime?
+  createdAt        DateTime                @default(now())
+
+  @@index([cabinetId])
+  @@index([clientId])
+  @@index([severity])
+  @@index([resolved])
+  @@index([type])
+  @@index([cabinetId, resolved, severity])
+  @@index([cabinetId, clientId, resolved])
+  @@map("compliance_alerts")
+}
+
+enum ComplianceTimelineEventType {
+  DOCUMENT_UPLOADED // Document téléversé
+  DOCUMENT_VALIDATED // Document validé
+  DOCUMENT_REJECTED // Document rejeté
+  DOCUMENT_EXPIRED // Document expiré
+  REMINDER_SENT // Relance envoyée
+  CONTROL_CREATED // Contrôle créé
+  CONTROL_COMPLETED // Contrôle terminé
+  QUESTIONNAIRE_COMPLETED // Questionnaire complété
+  RECLAMATION_CREATED // Réclamation créée
+  RECLAMATION_RESOLVED // Réclamation résolue
+  OPERATION_CREATED // Opération créée
+  OPERATION_STATUS_CHANGED // Statut opération modifié
+  DOCUMENT_GENERATED // Document généré
+  DOCUMENT_SIGNED // Document signé
+  DOCUMENT_EXPORTED // Document exporté
+}
+
+model ComplianceTimelineEvent {
+  id          String                      @id @default(cuid())
+  cabinetId   String
+  cabinet     Cabinet                     @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  clientId    String
+  client      Client                      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  operationId String? // Référence vers AffaireNouvelle ou OperationGestion
+  type        ComplianceTimelineEventType
+  title       String
+  description String                      @db.Text
+  metadata    Json? // Données additionnelles selon le type d'événement
+  userId      String
+  user        User                        @relation("ComplianceTimelineUser", fields: [userId], references: [id])
+  createdAt   DateTime                    @default(now())
+
+  @@index([cabinetId])
+  @@index([clientId])
+  @@index([operationId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([cabinetId, clientId, createdAt])
+  @@map("compliance_timeline_events")
+}
+
+// ============================================================================
+// MODULE: COMPLIANCE REFONTE - Opérations (Affaires Nouvelles et Gestion)
+// ============================================================================
+
+enum OperationProductType {
+  ASSURANCE_VIE
+  PER_INDIVIDUEL
+  PER_ENTREPRISE
+  SCPI
+  OPCI
+  COMPTE_TITRES
+  PEA
+  PEA_PME
+  CAPITALISATION
+  FCPR
+  FCPI
+  FIP
+  IMMOBILIER_DIRECT
+  CREDIT_IMMOBILIER
+}
+
+enum AffaireNouvelleStatus {
+  PROSPECT // Opportunité identifiée
+  QUALIFICATION // Besoins client évalués
+  CONSTITUTION // Documents en cours de collecte
+  SIGNATURE // En attente de signature client
+  ENVOYE // Envoyé au fournisseur
+  EN_TRAITEMENT // En cours de traitement par le fournisseur
+  VALIDE // Contrat confirmé et actif
+  REJETE // Rejeté par le fournisseur
+  ANNULE // Annulé par le client ou conseiller
+}
+
+enum AffaireNouvelleSource {
+  PROSPECTION // Prospection directe
+  REFERRAL // Recommandation
+  CLIENT_EXISTANT // Client existant
+  PARTENAIRE // Partenaire
+  SITE_WEB // Site web
+  AUTRE // Autre
+}
+
+model AffaireNouvelle {
+  id                 String                @id @default(cuid())
+  cabinetId          String
+  cabinet            Cabinet               @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  reference          String                @unique // Format: AN-YYYY-NNNN
+  clientId           String
+  client             Client                @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  productType        OperationProductType
+  providerId         String
+  provider           OperationProvider     @relation(fields: [providerId], references: [id])
+  productId          String?
+  product            OperationProduct?     @relation(fields: [productId], references: [id])
+  status             AffaireNouvelleStatus @default(PROSPECT)
+  source             AffaireNouvelleSource
+  estimatedAmount    Decimal               @db.Decimal(15, 2)
+  actualAmount       Decimal?              @db.Decimal(15, 2)
+  targetDate         DateTime?
+  productDetails     Json? // Détails spécifiques au type de produit
+  entryFees          Decimal?              @db.Decimal(5, 2)
+  managementFees     Decimal?              @db.Decimal(5, 2)
+  expectedCommission Decimal?              @db.Decimal(15, 2)
+  lastActivityAt     DateTime              @default(now())
+  pausedAt           DateTime?
+  pauseReason        String?
+  rejectionReason    String?               @db.Text
+  cancellationReason String?               @db.Text
+  createdById        String
+  createdBy          User                  @relation("AffaireCreator", fields: [createdById], references: [id])
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  // Relations
+  operationsGestion  OperationGestion[]
+  statusHistory      AffaireStatusHistory[]
+  generatedDocuments RegulatoryGeneratedDocument[]
+
+  @@index([cabinetId])
+  @@index([clientId])
+  @@index([status])
+  @@index([providerId])
+  @@index([lastActivityAt])
+  @@index([cabinetId, status])
+  @@index([cabinetId, clientId, status])
+  @@map("affaires_nouvelles")
+}
+
+model AffaireStatusHistory {
+  id         String                 @id @default(cuid())
+  affaireId  String
+  affaire    AffaireNouvelle        @relation(fields: [affaireId], references: [id], onDelete: Cascade)
+  fromStatus AffaireNouvelleStatus?
+  toStatus   AffaireNouvelleStatus
+  note       String?                @db.Text
+  userId     String
+  user       User                   @relation("AffaireStatusHistoryUser", fields: [userId], references: [id])
+  createdAt  DateTime               @default(now())
+
+  @@index([affaireId])
+  @@index([createdAt])
+  @@map("affaire_status_history")
+}
+
+enum OperationGestionType {
+  VERSEMENT_COMPLEMENTAIRE // Versement complémentaire
+  ARBITRAGE // Arbitrage
+  RACHAT_PARTIEL // Rachat partiel
+  RACHAT_TOTAL // Rachat total
+  AVANCE // Avance
+  MODIFICATION_BENEFICIAIRE // Modification clause bénéficiaire
+  CHANGEMENT_OPTION_GESTION // Changement option de gestion
+  TRANSFERT // Transfert
+}
+
+enum OperationGestionStatus {
+  BROUILLON // Brouillon
+  EN_ATTENTE_SIGNATURE // En attente de signature
+  ENVOYE // Envoyé au fournisseur
+  EN_TRAITEMENT // En cours de traitement
+  EXECUTE // Exécuté
+  REJETE // Rejeté
+}
+
+model OperationGestion {
+  id               String                 @id @default(cuid())
+  cabinetId        String
+  cabinet          Cabinet                @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  reference        String                 @unique // Format: OG-YYYY-NNNN
+  clientId         String
+  client           Client                 @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  contractId       String // Référence externe du contrat
+  affaireOrigineId String
+  affaireOrigine   AffaireNouvelle        @relation(fields: [affaireOrigineId], references: [id])
+  type             OperationGestionType
+  status           OperationGestionStatus @default(BROUILLON)
+  amount           Decimal?               @db.Decimal(15, 2)
+  effectiveDate    DateTime?
+  operationDetails Json? // Détails spécifiques au type d'opération
+  rejectionReason  String?                @db.Text
+  executedAt       DateTime?
+  createdById      String
+  createdBy        User                   @relation("OperationCreator", fields: [createdById], references: [id])
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  // Relations
+  statusHistory      OperationStatusHistory[]
+  generatedDocuments RegulatoryGeneratedDocument[]
+
+  @@index([cabinetId])
+  @@index([clientId])
+  @@index([affaireOrigineId])
+  @@index([status])
+  @@index([cabinetId, status])
+  @@index([cabinetId, clientId, status])
+  @@map("operations_gestion")
+}
+
+model OperationStatusHistory {
+  id          String                  @id @default(cuid())
+  operationId String
+  operation   OperationGestion        @relation(fields: [operationId], references: [id], onDelete: Cascade)
+  fromStatus  OperationGestionStatus?
+  toStatus    OperationGestionStatus
+  note        String?                 @db.Text
+  userId      String
+  user        User                    @relation("OperationStatusHistoryUser", fields: [userId], references: [id])
+  createdAt   DateTime                @default(now())
+
+  @@index([operationId])
+  @@index([createdAt])
+  @@map("operation_status_history")
+}
+
+// ============================================================================
+// MODULE: COMPLIANCE REFONTE - Fournisseurs et Produits
+// ============================================================================
+
+enum OperationProviderType {
+  ASSUREUR // Assureur
+  SOCIETE_GESTION // Société de gestion
+  BANQUE // Banque
+  PLATEFORME // Plateforme
+}
+
+enum OperationConventionStatus {
+  ACTIVE // Active
+  INACTIVE // Inactive
+  PENDING // En attente
+}
+
+model OperationProvider {
+  id                String                    @id @default(cuid())
+  cabinetId         String
+  cabinet           Cabinet                   @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  name              String
+  type              OperationProviderType
+  siren             String?
+  address           String?
+  commercialContact Json? // { name, email, phone }
+  backOfficeContact Json? // { name, email, phone }
+  extranetUrl       String?
+  extranetNotes     String?                   @db.Text
+  commissionGridUrl String?
+  conventionStatus  OperationConventionStatus @default(ACTIVE)
+  isFavorite        Boolean                   @default(false)
+  notes             String?                   @db.Text
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+
+  // Relations
+  products                    OperationProduct[]
+  affaires                    AffaireNouvelle[]
+  regulatoryDocumentTemplates RegulatoryDocumentTemplate[]
+
+  @@index([cabinetId])
+  @@index([type])
+  @@index([conventionStatus])
+  @@index([cabinetId, type, conventionStatus])
+  @@map("operation_providers")
+}
+
+model OperationProduct {
+  id                String               @id @default(cuid())
+  providerId        String
+  provider          OperationProvider    @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  name              String
+  code              String
+  type              OperationProductType
+  characteristics   Json // { entryFees: {min, max, default}, managementFees: {min, max, default}, exitFees, options }
+  availableFunds    Json? // [{ id, isin, name, category, riskLevel, ongoingCharges }]
+  minimumInvestment Decimal              @db.Decimal(15, 2)
+  documentTemplates String[] // IDs des templates de documents
+  isActive          Boolean              @default(true)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  // Relations
+  affaires AffaireNouvelle[]
+
+  @@index([providerId])
+  @@index([type])
+  @@index([isActive])
+  @@index([providerId, type, isActive])
+  @@map("operation_products")
+}
+
+// ============================================================================
+// MODULE: COMPLIANCE REFONTE - Documents Réglementaires
+// ============================================================================
+
+enum RegulatoryDocumentType {
+  DER // Document d'Entrée en Relation
+  RECUEIL_INFORMATIONS // Recueil d'Informations Client
+  LETTRE_MISSION // Lettre de Mission
+  RAPPORT_MISSION // Rapport de Mission / Fiche Conseil
+  CONVENTION_HONORAIRES // Convention d'Honoraires
+  ATTESTATION_CONSEIL // Attestation de Conseil
+  MANDAT_GESTION // Mandat de Gestion
+  DECLARATION_ADEQUATION // Déclaration d'Adéquation
+  QUESTIONNAIRE_MIFID // Questionnaire MiFID II
+  BULLETIN_SOUSCRIPTION // Bulletin de Souscription
+  ORDRE_ARBITRAGE // Ordre d'Arbitrage
+  DEMANDE_RACHAT // Demande de Rachat
+  BULLETIN_VERSEMENT // Bulletin de Versement Complémentaire
+  SIMULATION_FISCALE // Simulation Fiscale
+}
+
+enum RegulatoryAssociationType {
+  CNCGP // Chambre Nationale des Conseils en Gestion de Patrimoine
+  ANACOFI // Association Nationale des Conseils Financiers
+  CNCEF // Chambre Nationale des Conseils Experts Financiers
+  GENERIC // Générique (non affilié)
+}
+
+enum RegulatoryDocumentFormat {
+  PDF
+  DOCX
+}
+
+enum RegulatoryDocumentStatus {
+  DRAFT // Brouillon
+  FINAL // Final
+  SIGNED // Signé
+}
+
+model RegulatoryDocumentTemplate {
+  id                   String                    @id @default(cuid())
+  cabinetId            String
+  cabinet              Cabinet                   @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  documentType         RegulatoryDocumentType
+  associationType      RegulatoryAssociationType @default(GENERIC)
+  providerId           String?
+  provider             OperationProvider?        @relation(fields: [providerId], references: [id])
+  name                 String
+  version              String
+  content              Json // { header, sections[], footer, styles }
+  mandatorySections    String[]
+  customizableSections String[]
+  isActive             Boolean                   @default(true)
+  createdById          String
+  createdBy            User                      @relation("RegulatoryTemplateCreator", fields: [createdById], references: [id])
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+
+  // Relations
+  generatedDocuments RegulatoryGeneratedDocument[]
+
+  @@index([cabinetId])
+  @@index([documentType])
+  @@index([associationType])
+  @@index([isActive])
+  @@index([cabinetId, documentType, isActive])
+  @@map("regulatory_document_templates")
+}
+
+model RegulatoryGeneratedDocument {
+  id              String                     @id @default(cuid())
+  cabinetId       String
+  cabinet         Cabinet                    @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  clientId        String
+  client          Client                     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  affaireId       String?
+  affaire         AffaireNouvelle?           @relation(fields: [affaireId], references: [id])
+  operationId     String?
+  operation       OperationGestion?          @relation(fields: [operationId], references: [id])
+  templateId      String
+  template        RegulatoryDocumentTemplate @relation(fields: [templateId], references: [id])
+  documentType    RegulatoryDocumentType
+  fileName        String
+  fileUrl         String
+  format          RegulatoryDocumentFormat
+  status          RegulatoryDocumentStatus   @default(DRAFT)
+  signatureStatus Json? // { signatureRequestId, signers[], status, sentAt, completedAt }
+  generatedData   Json // Données utilisées pour la génération
+  generatedById   String
+  generatedBy     User                       @relation("RegulatoryDocumentGenerator", fields: [generatedById], references: [id])
+  generatedAt     DateTime                   @default(now())
+  signedAt        DateTime?
+  expiresAt       DateTime?
+
+  @@index([cabinetId])
+  @@index([clientId])
+  @@index([affaireId])
+  @@index([operationId])
+  @@index([documentType])
+  @@index([status])
+  @@index([cabinetId, clientId, documentType])
+  @@map("regulatory_generated_documents")
 }

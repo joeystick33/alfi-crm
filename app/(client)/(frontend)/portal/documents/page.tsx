@@ -153,7 +153,7 @@ export default function DocumentsPage() {
             </div>
           </CardContent>
         </Card>
-        {apiData?.filters?.categories?.slice(0, 3).map((cat: any) => (
+        {((apiData?.filters as { categories?: Array<{ value: string; count: number }> })?.categories ?? []).slice(0, 3).map((cat) => (
           <Card key={cat.value}>
             <CardContent className="p-4 flex items-center gap-3">
               <div className="h-10 w-10 bg-gray-100 rounded-lg flex items-center justify-center">

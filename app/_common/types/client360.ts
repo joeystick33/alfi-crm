@@ -31,7 +31,7 @@ export type ContractType = 'ASSURANCE_VIE' | 'PER' | 'MADELIN' | 'PREVOYANCE' | 
 
 export type ContractStatus = 'ACTIF' | 'CLOSED' | 'TRANSFERRED'
 
-export type DocumentCategory = 'IDENTITE' | 'PATRIMONY' | 'RISK_PROFILE' | 'COMPLIANCE'
+export type DocumentCategory = 'IDENTITE' | 'FISCAL' | 'PATRIMOINE' | 'REGLEMENTAIRE' | 'COMMERCIAL' | 'AUTRE'
 
 export type DocumentStatus = 'VALID' | 'EXPIRE' | 'MISSING'
 

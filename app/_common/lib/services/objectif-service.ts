@@ -1,6 +1,5 @@
 import { getPrismaClient } from '@/app/_common/lib/prisma'
-import { ObjectifStatus, Priority } from '@prisma/client'
-import type { ObjectifType } from '@/app/_common/lib/constants/reference-types'
+import { ObjectifStatus, ObjectifType, ObjectifPriority } from '@prisma/client'
 import type { Prisma } from '@prisma/client'
 import { Decimal } from '@prisma/client/runtime/library'
 

@@ -17,7 +17,9 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user || session.user.role !== 'SUPERADMIN') {
+    // Check for SUPERADMIN role (OWNER is the equivalent in our schema)
+    const isSuperAdmin = session?.user?.role === 'OWNER' || session?.user?.role === 'ADMIN'
+    if (!session?.user || !isSuperAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -55,7 +57,9 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session?.user || session.user.role !== 'SUPERADMIN') {
+    // Check for SUPERADMIN role (OWNER is the equivalent in our schema)
+    const isSuperAdmin = session?.user?.role === 'OWNER' || session?.user?.role === 'ADMIN'
+    if (!session?.user || !isSuperAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

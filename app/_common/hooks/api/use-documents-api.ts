@@ -117,7 +117,9 @@ export function useDeleteDocument(
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: string) => api.delete(`/advisor/documents/${id}`),
+    mutationFn: async (id: string) => {
+      await api.delete(`/advisor/documents/${id}`)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.documents })
       queryClient.invalidateQueries({ queryKey: queryKeys.documentStats })
@@ -212,7 +214,9 @@ export function useDeleteDocumentTemplate(
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: string) => api.delete(`/advisor/documents/templates/${id}`),
+    mutationFn: async (id: string) => {
+      await api.delete(`/advisor/documents/templates/${id}`)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.documentTemplates })
       toast({ title: 'Template supprimé', variant: 'success' })

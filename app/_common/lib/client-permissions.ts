@@ -363,7 +363,7 @@ export async function logClientPortalAccess(
         action,
         entityType: resourceType || 'CLIENT_PORTAL',
         entityId: resourceId || clientId,
-        changes: metadata || {},
+        changes: metadata ? JSON.parse(JSON.stringify(metadata)) : undefined,
         ipAddress: null, // Can be extracted from request headers if needed
         userAgent: null, // Can be extracted from request headers if needed
       },

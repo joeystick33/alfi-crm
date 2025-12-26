@@ -37,22 +37,34 @@ export interface SnapshotResult {
 // ===========================================
 
 async function calculatePatrimoine(clientId: string): Promise<PatrimoineData> {
-  // Récupérer les actifs du client
+  // Récupérer les actifs du client via la table de liaison
   const clientActifs = await prisma.clientActif.findMany({
     where: { clientId },
-    include: {
-      actif: {
-        where: { isActive: true },
-        select: {
-          id: true,
-          value: true,
-          category: true,
-          type: true,
-          managedByFirm: true,
-        },
-      },
+    select: {
+      id: true,
+      ownershipPercentage: true,
+      actifId: true,
     },
   })
+
+  // Récupérer les actifs actifs séparément
+  const actifIds = clientActifs.map(ca => ca.actifId)
+  const actifs = await prisma.actif.findMany({
+    where: {
+      id: { in: actifIds },
+      isActive: true,
+    },
+    select: {
+      id: true,
+      value: true,
+      category: true,
+      type: true,
+      managedByFirm: true,
+    },
+  })
+
+  // Créer un map pour accès rapide
+  const actifMap = new Map(actifs.map(a => [a.id, a]))
 
   // Récupérer les passifs du client
   const passifs = await prisma.passif.findMany({
@@ -97,18 +109,19 @@ async function calculatePatrimoine(clientId: string): Promise<PatrimoineData> {
   const detailActifs: Record<string, number> = {}
 
   for (const ca of clientActifs) {
-    if (!ca.actif) continue
+    const actif = actifMap.get(ca.actifId)
+    if (!actif) continue
     
-    const value = ca.actif.value.mul(ca.ownershipPercentage).div(100)
+    const value = actif.value.mul(ca.ownershipPercentage).div(100)
     totalActifs = totalActifs.add(value)
     
-    if (ca.actif.managedByFirm) {
+    if (actif.managedByFirm) {
       patrimoineGere = patrimoineGere.add(value)
     } else {
       patrimoineNonGere = patrimoineNonGere.add(value)
     }
 
-    const category = ca.actif.category
+    const category = actif.category
     if (!detailActifs[category]) {
       detailActifs[category] = 0
     }

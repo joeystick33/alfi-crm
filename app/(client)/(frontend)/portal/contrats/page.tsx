@@ -116,8 +116,8 @@ export default function ContratsPage() {
   }, [apiData])
 
   const stats = useMemo(() => {
-    if (apiData?.stats) return apiData.stats
-    return EMPTY_STATS
+    if (apiData?.stats) return apiData.stats as unknown as { total: number; portfolioValue: number; byType: unknown[] }
+    return EMPTY_STATS as unknown as { total: number; portfolioValue: number; byType: unknown[] }
   }, [apiData])
 
   const upcomingRenewals = useMemo(() => {

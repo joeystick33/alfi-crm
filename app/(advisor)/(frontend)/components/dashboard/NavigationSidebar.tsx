@@ -47,6 +47,7 @@ import {
   Wallet,
   CreditCard,
   Globe,
+  History,
 } from 'lucide-react'
 
 // Context pour gérer l'accordion (une seule section ouverte)
@@ -180,28 +181,37 @@ const navigationStructure: NavItem[] = [
     ]
   },
 
-  // 6. Conformité
+  // 6. Opérations
+  {
+    name: 'Opérations',
+    icon: Briefcase,
+    children: [
+      { name: 'Vue d\'ensemble', href: '/dashboard/operations', icon: BarChart3 },
+      { name: 'Affaires nouvelles', href: '/dashboard/operations/affaires-nouvelles', icon: TrendingUp },
+      { name: 'Affaires en cours', href: '/dashboard/operations/en-cours', icon: Activity },
+      { name: 'Opérations gestion', href: '/dashboard/operations/gestion', icon: Settings },
+      { name: 'Pilotage', href: '/dashboard/operations/pilotage', icon: Target },
+    ]
+  },
+
+  // 7. Conformité
   {
     name: 'Conformité',
     icon: Shield,
     children: [
-      {
-        name: 'KYC & MIF',
-        icon: FileCheck,
-        children: [
-          { name: 'KYC clients', href: '/dashboard/kyc', icon: FileCheck },
-          { name: 'Documents manquants', href: '/dashboard/kyc/manquants', icon: AlertTriangle },
-          { name: 'Contrôles ACPR', href: '/dashboard/kyc/controles', icon: Shield },
-        ]
-      },
-      { name: 'Réclamations', href: '/dashboard/reclamations', icon: AlertTriangle },
+      { name: 'Vue d\'ensemble', href: '/dashboard/conformite', icon: BarChart3 },
+      { name: 'Documents KYC', href: '/dashboard/conformite/documents', icon: FileCheck },
+      { name: 'Contrôles ACPR', href: '/dashboard/conformite/controles', icon: Shield },
+      { name: 'Réclamations', href: '/dashboard/conformite/reclamations', icon: AlertTriangle },
+      { name: 'Alertes', href: '/dashboard/conformite/alertes', icon: AlertTriangle },
+      { name: 'Timeline', href: '/dashboard/conformite/timeline', icon: History },
       {
         name: 'Documents & GED',
         icon: FileText,
         children: [
           { name: 'Tous les documents', href: '/dashboard/documents', icon: FileText },
           { name: 'À signer', href: '/dashboard/documents/signature', icon: FileSignature },
-          { name: 'Templates', href: '/dashboard/documents/templates', icon: BookTemplate },
+          { name: 'Templates', href: '/dashboard/settings/templates', icon: BookTemplate },
         ]
       },
     ]
@@ -216,6 +226,7 @@ const sectionColors: Record<string, { bg: string; icon: string; activeBg: string
   'Actions commerciales': { bg: 'bg-amber-500/20', icon: 'text-amber-400', activeBg: 'bg-amber-500/15' },
   'Organisation': { bg: 'bg-violet-500/20', icon: 'text-violet-400', activeBg: 'bg-violet-500/15' },
   'Outils patrimoniaux': { bg: 'bg-cyan-500/20', icon: 'text-cyan-400', activeBg: 'bg-cyan-500/15' },
+  'Opérations': { bg: 'bg-sky-500/20', icon: 'text-sky-400', activeBg: 'bg-sky-500/15' },
   'Conformité': { bg: 'bg-rose-500/20', icon: 'text-rose-400', activeBg: 'bg-rose-500/15' },
 }
 

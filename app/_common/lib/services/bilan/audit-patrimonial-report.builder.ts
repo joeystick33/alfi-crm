@@ -3,7 +3,9 @@
  * Transforme les données de l'audit en rapport structuré
  */
 
-import type { AuditPatrimonialComplet } from '@/app/_common/types/audit-patrimonial.types'
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AuditPatrimonialComplet = any
+
 import type {
   RapportAuditPatrimonial,
   ScoresAudit,

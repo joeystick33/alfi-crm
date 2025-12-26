@@ -75,7 +75,7 @@ export default function PatrimoinePage() {
   const [activeTab, setActiveTab] = useState('overview')
 
   const data = useMemo(() => {
-    if (apiData) return apiData
+    if (apiData) return apiData as unknown as typeof EMPTY_DATA
     return EMPTY_DATA
   }, [apiData])
 

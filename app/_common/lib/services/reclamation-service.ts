@@ -1,6 +1,5 @@
 import { getPrismaClient } from '../prisma'
-import { ReclamationStatus, Priority, SLAEventType } from '@prisma/client'
-import type { ReclamationType } from '@/app/_common/lib/constants/reference-types'
+import { ReclamationStatus, ReclamationType, SLAEventType, SLASeverity } from '@prisma/client'
 
 export interface CreateReclamationInput {
   cabinetId: string

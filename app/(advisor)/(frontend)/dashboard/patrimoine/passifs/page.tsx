@@ -14,7 +14,24 @@ import {
   ArrowLeft,
   AlertCircle
 } from 'lucide-react';
-import type { Passif, PassifType } from '@prisma/client';
+import type { PassifType } from '@prisma/client';
+import type { Passif as PrismaPassif } from '@prisma/client';
+
+// Local interface extending Record for DataTable compatibility
+interface Passif extends Record<string, unknown> {
+  id: string;
+  name: string;
+  type: PassifType;
+  remainingAmount: number;
+  interestRate?: number;
+  monthlyPayment?: number;
+  endDate?: Date | string | null;
+  initialAmount?: number;
+  startDate?: Date | string | null;
+  description?: string;
+  linkedActifId?: string;
+  clientId?: string;
+}
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/_common/components/ui/Card';
 import { Button } from '@/app/_common/components/ui/Button';
 import { Input } from '@/app/_common/components/ui/Input';
@@ -34,7 +51,7 @@ export default function PassifsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [createOpen, setCreateOpen] = useState(false);
-  const [editPassif, setEditPassif] = useState<Passif | null>(null);
+  const [editPassif, setEditPassif] = useState<PrismaPassif | null>(null);
 
   const filters = useMemo(() => {
     return filterType !== 'all' ? { type: filterType as PassifType } : {};
@@ -64,7 +81,7 @@ export default function PassifsPage() {
     }
   };
 
-  const handleEditClick = (passif: Passif) => {
+  const handleEditClick = (passif: PrismaPassif) => {
     setEditPassif(passif);
   };
 
@@ -113,7 +130,7 @@ export default function PassifsPage() {
     return variants[type] || 'secondary';
   };
 
-  const filteredPassifs = passifs?.filter((passif) => {
+  const filteredPassifs = (passifs as unknown as Passif[])?.filter((passif) => {
     if (!searchTerm) return true;
     const search = searchTerm.toLowerCase();
     return (
@@ -126,69 +143,69 @@ export default function PassifsPage() {
     {
       key: 'name',
       label: 'Nom du passif',
-      render: (row: Passif) => (
-        <span className="font-medium text-foreground">{row.name as string}</span>
+      render: (_value: unknown, item: Passif) => (
+        <span className="font-medium text-foreground">{item.name as string}</span>
       )
     },
     {
       key: 'type',
       label: 'Type',
-      render: (row: Passif) => (
-        <Badge variant={getTypeVariant(row.type as string)}>
-          {getTypeLabel(row.type as string)}
+      render: (_value: unknown, item: Passif) => (
+        <Badge variant={getTypeVariant(item.type as string)}>
+          {getTypeLabel(item.type as string)}
         </Badge>
       )
     },
     {
       key: 'remainingAmount',
       label: 'Montant Restant',
-      render: (row: Passif) => (
+      render: (_value: unknown, item: Passif) => (
         <span className="font-semibold text-destructive">
-          {formatCurrency(Number(row.remainingAmount))}
+          {formatCurrency(Number(item.remainingAmount))}
         </span>
       )
     },
     {
       key: 'interestRate',
       label: 'Taux',
-      render: (row: Passif) => (
+      render: (_value: unknown, item: Passif) => (
         <span className="text-foreground">
-          {row.interestRate ? `${Number(row.interestRate).toFixed(2)}%` : '-'}
+          {item.interestRate ? `${Number(item.interestRate).toFixed(2)}%` : '-'}
         </span>
       )
     },
     {
       key: 'monthlyPayment',
       label: 'Mensualité',
-      render: (row: Passif) => (
+      render: (_value: unknown, item: Passif) => (
         <span className="text-foreground">
-          {formatCurrency(Number(row.monthlyPayment))}
+          {formatCurrency(Number(item.monthlyPayment))}
         </span>
       )
     },
     {
       key: 'endDate',
       label: 'Date Fin',
-      render: (row: Passif) => (
-        <span className="text-muted-foreground">{formatDate(row.endDate)}</span>
+      render: (_value: unknown, item: Passif) => (
+        <span className="text-muted-foreground">{formatDate(item.endDate as string | Date | null)}</span>
       )
     },
     {
       key: 'actions',
       label: 'Actions',
-      render: (row: Passif) => (
+      render: (_value: unknown, item: Passif) => (
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleEditClick(row)}
+            onClick={() => handleEditClick(item as unknown as PrismaPassif)}
           >
             <Edit className="w-4 h-4 text-muted-foreground" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleDelete(row.id as string)}
+            onClick={() => handleDelete(item.id as string)}
           >
             <Trash2 className="w-4 h-4 text-destructive" />
           </Button>
@@ -196,11 +213,11 @@ export default function PassifsPage() {
       )
     }
   ];
-
-  const totalPassifs = filteredPassifs.reduce((sum: number, passif: Passif) => sum + (Number(passif.remainingAmount) || 0), 0);
-  const totalMensualites = filteredPassifs.reduce((sum: number, passif: Passif) => sum + (Number(passif.monthlyPayment) || 0), 0);
+  
+  const totalPassifs = filteredPassifs.reduce((sum: number, passif) => sum + (Number(passif.remainingAmount) || 0), 0);
+  const totalMensualites = filteredPassifs.reduce((sum: number, passif) => sum + (Number(passif.monthlyPayment) || 0), 0);
   const avgTaux = filteredPassifs.length > 0
-    ? filteredPassifs.reduce((sum: number, passif: Passif) => sum + (Number(passif.interestRate) || 0), 0) / filteredPassifs.length
+    ? filteredPassifs.reduce((sum: number, passif) => sum + (Number(passif.interestRate) || 0), 0) / filteredPassifs.length
     : 0;
 
   return (

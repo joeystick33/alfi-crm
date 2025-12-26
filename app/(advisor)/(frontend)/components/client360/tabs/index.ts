@@ -31,6 +31,10 @@ export { TabOpportunitesComplet } from './TabOpportunitesComplet'
 export { TabActivitesHistorique } from './TabActivitesHistorique'
 export { TabParametresComplet } from './TabParametresComplet'
 
+// Integration Components for Compliance and Operations
+export { TabComplianceIntegration } from './TabComplianceIntegration'
+export { TabOperationsIntegration } from './TabOperationsIntegration'
+
 // Default exports
 export { default as TabVueEnsembleDefault } from './TabVueEnsemble'
 export { default as TabProfilFamilleDefault } from './TabProfilFamille'
@@ -44,3 +48,7 @@ export { default as TabObjectifsProjetsDefault } from './TabObjectifsProjets'
 export { default as TabOpportunitesCompletDefault } from './TabOpportunitesComplet'
 export { default as TabActivitesHistoriqueDefault } from './TabActivitesHistorique'
 export { default as TabParametresCompletDefault } from './TabParametresComplet'
+
+// Integration Components default exports
+export { default as TabComplianceIntegrationDefault } from './TabComplianceIntegration'
+export { default as TabOperationsIntegrationDefault } from './TabOperationsIntegration'

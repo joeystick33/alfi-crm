@@ -189,6 +189,56 @@ export function DropdownMenuLabel({ children, className }: DropdownMenuLabelProp
   )
 }
 
+export interface DropdownMenuCheckboxItemProps {
+  children: React.ReactNode
+  checked?: boolean
+  onCheckedChange?: (checked: boolean) => void
+  disabled?: boolean
+  className?: string
+}
+
+export function DropdownMenuCheckboxItem({
+  children,
+  checked = false,
+  onCheckedChange,
+  disabled,
+  className,
+}: DropdownMenuCheckboxItemProps) {
+  const handleClick = () => {
+    if (!disabled && onCheckedChange) {
+      onCheckedChange(!checked)
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={disabled}
+      className={cn(
+        'relative flex w-full cursor-pointer select-none items-center rounded-md px-3 py-2 text-sm outline-none',
+        'transition-colors',
+        'hover:bg-accent hover:text-accent-foreground',
+        'focus:bg-accent focus:text-accent-foreground',
+        'disabled:pointer-events-none disabled:opacity-50',
+        className
+      )}
+    >
+      <span className={cn(
+        'mr-2 flex h-4 w-4 items-center justify-center rounded border',
+        checked ? 'bg-primary border-primary' : 'border-gray-300'
+      )}>
+        {checked && (
+          <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+          </svg>
+        )}
+      </span>
+      {children}
+    </button>
+  )
+}
+
 /* Compatibility for Dropdown.jsx users */
 
 export const DropdownItem = DropdownMenuItem

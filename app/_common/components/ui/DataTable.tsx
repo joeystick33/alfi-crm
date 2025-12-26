@@ -1,4 +1,3 @@
- 
 'use client'
 
 import * as React from 'react'
@@ -18,7 +17,7 @@ export interface Column<T> {
   key: string
   label: string
   sortable?: boolean
-  render?: (value: any, item: T) => React.ReactNode
+  render?: (value: unknown, item: T) => React.ReactNode
   className?: string
 }
 
@@ -40,9 +39,13 @@ export interface DataTableProps<T> {
   onExport?: () => void
   mobileBreakpoint?: 'sm' | 'md' | 'lg'
   className?: string
+  /** Accessible label for the table */
+  ariaLabel?: string
+  /** ID for the table caption */
+  captionId?: string
 }
 
-export function DataTable<T extends Record<string, any>>({
+export function DataTable<T extends Record<string, unknown>>({
   data,
   columns,
   loading,
@@ -55,6 +58,8 @@ export function DataTable<T extends Record<string, any>>({
   onExport,
   mobileBreakpoint = 'md',
   className,
+  ariaLabel = 'Tableau de données',
+  captionId,
 }: DataTableProps<T>) {
   // Client-side state
   const [sortConfig, setSortConfig] = React.useState<{ key: string | null; direction: 'asc' | 'desc' }>({ key: null, direction: 'asc' })
@@ -150,12 +155,12 @@ export function DataTable<T extends Record<string, any>>({
     <div className={cn('w-full space-y-4', className)}>
       {/* Toolbar */}
       {(isSearchable || exportable) && (
-        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between" role="toolbar" aria-label="Actions du tableau">
           {isSearchable && (
             <div className="relative w-full sm:w-96">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" aria-hidden="true" />
               <input
-                type="text"
+                type="search"
                 placeholder="Rechercher..."
                 value={filterText}
                 onChange={(e) => {
@@ -163,6 +168,8 @@ export function DataTable<T extends Record<string, any>>({
                   if (!pagination) setCurrentPage(1)
                 }}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                aria-label="Rechercher dans le tableau"
+                role="searchbox"
               />
             </div>
           )}
@@ -171,7 +178,8 @@ export function DataTable<T extends Record<string, any>>({
             <Button
               variant="outline"
               onClick={onExport}
-              leftIcon={<Download className="h-4 w-4" />}
+              leftIcon={<Download className="h-4 w-4" aria-hidden="true" />}
+              aria-label="Exporter les données du tableau"
             >
               Exporter
             </Button>
@@ -182,9 +190,14 @@ export function DataTable<T extends Record<string, any>>({
       {/* Desktop Table */}
       <div className={`hidden ${mobileBreakpoint}:block rounded-md border`}>
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table 
+            className="w-full"
+            role="grid"
+            aria-label={ariaLabel}
+            aria-describedby={captionId}
+          >
             <thead>
-              <tr className="border-b bg-gray-50/50">
+              <tr className="border-b bg-gray-50/50" role="row">
                 {columns.map((column) => (
                   <th
                     key={column.key}
@@ -194,11 +207,27 @@ export function DataTable<T extends Record<string, any>>({
                       column.className
                     )}
                     onClick={() => column.sortable && handleSort(column.key)}
+                    onKeyDown={(e) => {
+                      if (column.sortable && (e.key === 'Enter' || e.key === ' ')) {
+                        e.preventDefault()
+                        handleSort(column.key)
+                      }
+                    }}
+                    tabIndex={column.sortable ? 0 : undefined}
+                    role="columnheader"
+                    aria-sort={
+                      sortConfig.key === column.key
+                        ? sortConfig.direction === 'asc'
+                          ? 'ascending'
+                          : 'descending'
+                        : undefined
+                    }
+                    scope="col"
                   >
                     <div className="flex items-center gap-2">
                       {column.label}
                       {column.sortable && (
-                        <span className="ml-auto">
+                        <span className="ml-auto" aria-hidden="true">
                           {sortConfig.key === column.key ? (
                             sortConfig.direction === 'asc' ? (
                               <ChevronUp className="h-4 w-4" />
@@ -217,20 +246,29 @@ export function DataTable<T extends Record<string, any>>({
             </thead>
             <tbody>
               {displayData.length === 0 ? (
-                <tr>
-                  <td colSpan={columns.length} className="px-6 py-12 text-center text-gray-500">
+                <tr role="row">
+                  <td colSpan={columns.length} className="px-6 py-12 text-center text-gray-500" role="gridcell">
                     {emptyMessage}
                   </td>
                 </tr>
               ) : (
                 displayData.map((item, index) => (
                   <tr
-                    key={item.id || index}
+                    key={item.id as string || index}
                     className={cn(
                       'border-b transition-colors hover:bg-muted/50',
                       onRowClick && 'cursor-pointer'
                     )}
                     onClick={() => onRowClick?.(item)}
+                    onKeyDown={(e) => {
+                      if (onRowClick && (e.key === 'Enter' || e.key === ' ')) {
+                        e.preventDefault()
+                        onRowClick(item)
+                      }
+                    }}
+                    tabIndex={onRowClick ? 0 : undefined}
+                    role="row"
+                    aria-rowindex={index + 1}
                   >
                     {columns.map((column) => (
                       <td
@@ -239,10 +277,11 @@ export function DataTable<T extends Record<string, any>>({
                           'p-4 align-middle',
                           column.className
                         )}
+                        role="gridcell"
                       >
                         {column.render
                           ? column.render(item[column.key], item)
-                          : item[column.key]}
+                          : item[column.key] as React.ReactNode}
                       </td>
                     ))}
                   </tr>
@@ -254,19 +293,27 @@ export function DataTable<T extends Record<string, any>>({
       </div>
 
       {/* Mobile Cards */}
-      <div className={`${mobileBreakpoint}:hidden space-y-3`}>
+      <div className={`${mobileBreakpoint}:hidden space-y-3`} role="list" aria-label={ariaLabel}>
         {displayData.length === 0 ? (
-          <div className="text-center py-12 text-gray-500 border rounded-lg bg-gray-50">
+          <div className="text-center py-12 text-gray-500 border rounded-lg bg-gray-50" role="status">
             {emptyMessage}
           </div>
         ) : (
           displayData.map((item, index) => (
             <div
-              key={item.id || index}
+              key={item.id as string || index}
               onClick={() => onRowClick?.(item)}
+              onKeyDown={(e) => {
+                if (onRowClick && (e.key === 'Enter' || e.key === ' ')) {
+                  e.preventDefault()
+                  onRowClick(item)
+                }
+              }}
+              tabIndex={onRowClick ? 0 : undefined}
+              role="listitem"
               className={cn(
                 'bg-white rounded-lg border p-4 space-y-3',
-                onRowClick && 'cursor-pointer hover:shadow-md transition-shadow'
+                onRowClick && 'cursor-pointer hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-primary-500'
               )}
             >
               {columns.map((col) => (
@@ -275,7 +322,7 @@ export function DataTable<T extends Record<string, any>>({
                     {col.label}
                   </span>
                   <span className="text-sm text-gray-900 text-right flex-1">
-                    {col.render ? col.render(item[col.key], item) : item[col.key]}
+                    {col.render ? col.render(item[col.key], item) : item[col.key] as React.ReactNode}
                   </span>
                 </div>
               ))}
@@ -286,8 +333,8 @@ export function DataTable<T extends Record<string, any>>({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-sm text-muted-foreground">
+        <nav className="flex flex-col sm:flex-row items-center justify-between gap-4" aria-label="Pagination du tableau">
+          <div className="text-sm text-muted-foreground" aria-live="polite">
             Page {currentPageNumber} sur {totalPages} ({totalResults} résultats)
           </div>
           <div className="flex items-center gap-2">
@@ -296,8 +343,9 @@ export function DataTable<T extends Record<string, any>>({
               size="sm"
               onClick={() => handlePageChange(currentPageNumber - 1)}
               disabled={currentPageNumber === 1}
+              aria-label="Page précédente"
             >
-              <ChevronLeft className="h-4 w-4 mr-1" />
+              <ChevronLeft className="h-4 w-4 mr-1" aria-hidden="true" />
               Précédent
             </Button>
             <Button
@@ -305,12 +353,13 @@ export function DataTable<T extends Record<string, any>>({
               size="sm"
               onClick={() => handlePageChange(currentPageNumber + 1)}
               disabled={currentPageNumber === totalPages}
+              aria-label="Page suivante"
             >
               Suivant
-              <ChevronRight className="h-4 w-4 ml-1" />
+              <ChevronRight className="h-4 w-4 ml-1" aria-hidden="true" />
             </Button>
           </div>
-        </div>
+        </nav>
       )}
     </div>
   )

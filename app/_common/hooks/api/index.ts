@@ -15,3 +15,10 @@ export * from './use-dossiers-api'
 export * from './use-dashboard-api'
 export * from './use-pilotage-api'
 export * from './use-client-portal-api'
+
+// Compliance Refonte Hooks
+export * from './use-compliance-api'
+export * from './use-operations-api'
+export * from './use-regulatory-documents-api'
+export * from './use-providers-api'
+export * from './use-compliance-pilotage-api'

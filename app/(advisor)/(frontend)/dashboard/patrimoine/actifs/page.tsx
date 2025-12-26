@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { ActifType } from '@prisma/client';
 
 // Type local pour les actifs
-interface Actif {
+interface Actif extends Record<string, unknown> {
   id: string;
   name: string;
   type: ActifType;
@@ -139,33 +139,33 @@ export default function ActifsPage() {
     {
       key: 'name',
       label: 'Nom de l\'actif',
-      render: (row: Actif) => (
-        <span className="font-medium text-foreground">{row.name}</span>
+      render: (_value: unknown, item: Actif) => (
+        <span className="font-medium text-foreground">{item.name}</span>
       )
     },
     {
       key: 'type',
       label: 'Type',
-      render: (row: Actif) => (
-        <Badge variant={getTypeVariant(row.type)}>
-          {getTypeLabel(row.type)}
+      render: (_value: unknown, item: Actif) => (
+        <Badge variant={getTypeVariant(item.type)}>
+          {getTypeLabel(item.type)}
         </Badge>
       )
     },
     {
       key: 'value',
       label: 'Valeur',
-      render: (row: Actif) => (
+      render: (_value: unknown, item: Actif) => (
         <span className="font-semibold text-foreground">
-          {formatCurrency(row.value)}
+          {formatCurrency(item.value)}
         </span>
       )
     },
     {
       key: 'performance',
       label: 'Performance',
-      render: (row: Actif) => {
-        const value = row.performance;
+      render: (_value: unknown, item: Actif) => {
+        const value = item.performance;
         if (value === undefined || value === null) return <span className="text-muted-foreground">-</span>;
         const isPositive = value >= 0;
         return (
@@ -181,28 +181,28 @@ export default function ActifsPage() {
     {
       key: 'managedByFirm',
       label: 'Gestion',
-      render: (row: Actif) => (
-        <Badge variant={row.managedByFirm ? 'default' : 'secondary'}>
-          {row.managedByFirm ? 'Géré' : 'Non géré'}
+      render: (_value: unknown, item: Actif) => (
+        <Badge variant={item.managedByFirm ? 'default' : 'secondary'}>
+          {item.managedByFirm ? 'Géré' : 'Non géré'}
         </Badge>
       )
     },
     {
       key: 'actions',
       label: 'Actions',
-      render: (row: Actif) => (
+      render: (_value: unknown, item: Actif) => (
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleEditClick(row)}
+            onClick={() => handleEditClick(item)}
           >
             <Edit className="w-4 h-4 text-muted-foreground" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleDelete(row.id)}
+            onClick={() => handleDelete(item.id)}
           >
             <Trash2 className="w-4 h-4 text-destructive" />
           </Button>

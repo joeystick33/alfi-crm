@@ -25,7 +25,7 @@ export interface GmailMessage {
 }
 
 export class GmailService {
-  private oauth2Client: ReturnType<typeof google.auth.OAuth2.prototype.constructor>
+  private oauth2Client: InstanceType<typeof google.auth.OAuth2>
   private gmail: ReturnType<typeof google.gmail>
 
   constructor(tokens?: GmailTokens) {
@@ -149,7 +149,7 @@ export class GmailService {
           format: 'full',
         })
 
-        const parsed = this.parseGmailMessage(fullMessage.data)
+        const parsed = this.parseGmailMessage(fullMessage.data as unknown as Record<string, unknown>)
         parsedMessages.push(parsed)
       } catch (error: unknown) {
         console.error(`Error fetching message ${message.id}:`, error)
@@ -166,7 +166,8 @@ export class GmailService {
    * Parse Gmail message to standard format
    */
   private parseGmailMessage(message: Record<string, unknown>): GmailMessage {
-    const headers = message.payload.headers
+    const payload = message.payload as Record<string, unknown> | undefined
+    const headers = (payload?.headers || []) as Array<{ name: string; value: string }>
     const getHeader = (name: string) => {
       const header = headers.find((h: { name: string; value: string }) => h.name.toLowerCase() === name.toLowerCase())
       return header ? header.value : null
@@ -176,14 +177,18 @@ export class GmailService {
     let body = ''
     let bodyHtml = ''
 
-    if (message.payload.body.data) {
-      body = Buffer.from(message.payload.body.data, 'base64').toString('utf-8')
-    } else if (message.payload.parts) {
-      for (const part of message.payload.parts) {
-        if (part.mimeType === 'text/plain' && part.body.data) {
-          body = Buffer.from(part.body.data, 'base64').toString('utf-8')
-        } else if (part.mimeType === 'text/html' && part.body.data) {
-          bodyHtml = Buffer.from(part.body.data, 'base64').toString('utf-8')
+    const payloadBody = payload?.body as Record<string, unknown> | undefined
+    const payloadParts = payload?.parts as Array<Record<string, unknown>> | undefined
+
+    if (payloadBody?.data) {
+      body = Buffer.from(payloadBody.data as string, 'base64').toString('utf-8')
+    } else if (payloadParts) {
+      for (const part of payloadParts) {
+        const partBody = part.body as Record<string, unknown> | undefined
+        if (part.mimeType === 'text/plain' && partBody?.data) {
+          body = Buffer.from(partBody.data as string, 'base64').toString('utf-8')
+        } else if (part.mimeType === 'text/html' && partBody?.data) {
+          bodyHtml = Buffer.from(partBody.data as string, 'base64').toString('utf-8')
         }
       }
     }
@@ -197,21 +202,23 @@ export class GmailService {
         .filter(Boolean)
     }
 
+    const labelIds = message.labelIds as string[] | undefined
+
     return {
-      externalId: message.id,
-      threadId: message.threadId,
+      externalId: message.id as string,
+      threadId: message.threadId as string,
       from: getHeader('From') || '',
       to: parseEmails(getHeader('To')),
       cc: parseEmails(getHeader('Cc')),
       subject: getHeader('Subject') || '(No Subject)',
       body,
       bodyHtml,
-      snippet: message.snippet || body.substring(0, 100),
-      sentAt: new Date(parseInt(message.internalDate)),
-      receivedAt: new Date(parseInt(message.internalDate)),
-      isRead: !message.labelIds?.includes('UNREAD'),
-      hasAttachments: ((message.payload as Record<string, unknown>)?.parts as Array<{ filename?: string }> | undefined)?.some((p) => p.filename) || false,
-      labels: message.labelIds || [],
+      snippet: (message.snippet as string) || body.substring(0, 100),
+      sentAt: new Date(parseInt(message.internalDate as string)),
+      receivedAt: new Date(parseInt(message.internalDate as string)),
+      isRead: !labelIds?.includes('UNREAD'),
+      hasAttachments: payloadParts?.some((p) => (p.filename as string | undefined)) || false,
+      labels: labelIds || [],
     }
   }
 

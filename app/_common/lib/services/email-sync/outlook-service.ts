@@ -171,20 +171,25 @@ export class OutlookService {
    * Parse Outlook message to standard format
    */
   private parseOutlookMessage(message: Record<string, unknown>): OutlookMessage {
+    const from = message.from as { emailAddress?: { address?: string } } | undefined
+    const body = message.body as { contentType?: string; content?: string } | undefined
+    const toRecipients = message.toRecipients as Array<{ emailAddress: { address: string } }> | undefined
+    const ccRecipients = message.ccRecipients as Array<{ emailAddress: { address: string } }> | undefined
+
     return {
-      externalId: message.id,
-      threadId: message.conversationId || message.id,
-      from: message.from?.emailAddress?.address || '',
-      to: (message.toRecipients as Array<{ emailAddress: { address: string } }> | undefined)?.map((r) => r.emailAddress.address) || [],
-      cc: (message.ccRecipients as Array<{ emailAddress: { address: string } }> | undefined)?.map((r) => r.emailAddress.address) || [],
-      subject: message.subject || '(No Subject)',
-      body: message.body?.contentType === 'text' ? message.body.content : '',
-      bodyHtml: message.body?.contentType === 'html' ? message.body.content : '',
-      snippet: message.bodyPreview || '',
-      sentAt: new Date(message.sentDateTime),
-      receivedAt: new Date(message.receivedDateTime),
-      isRead: message.isRead,
-      hasAttachments: message.hasAttachments,
+      externalId: message.id as string,
+      threadId: (message.conversationId || message.id) as string,
+      from: from?.emailAddress?.address || '',
+      to: toRecipients?.map((r) => r.emailAddress.address) || [],
+      cc: ccRecipients?.map((r) => r.emailAddress.address) || [],
+      subject: (message.subject as string) || '(No Subject)',
+      body: body?.contentType === 'text' ? (body.content || '') : '',
+      bodyHtml: body?.contentType === 'html' ? (body.content || '') : '',
+      snippet: (message.bodyPreview as string) || '',
+      sentAt: new Date(message.sentDateTime as string),
+      receivedAt: new Date(message.receivedDateTime as string),
+      isRead: message.isRead as boolean,
+      hasAttachments: message.hasAttachments as boolean,
       labels: [],
     }
   }

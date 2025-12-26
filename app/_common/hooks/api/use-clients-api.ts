@@ -37,10 +37,11 @@ export function useClient(
 ) {
   return useQuery({
     queryKey: queryKeys.client(id),
-    queryFn: async () => {
+    queryFn: async (): Promise<ClientDetail> => {
       const response = await api.get<{ data?: ClientDetail } | ClientDetail>(`/advisor/clients/${id}?include=all`)
       // L'API retourne { data: ClientDetail } ou directement ClientDetail
-      return response?.data || response
+      const result = (response as { data?: ClientDetail })?.data || response
+      return result as ClientDetail
     },
     enabled: !!id,
     ...options,
@@ -154,7 +155,9 @@ export function useDeleteClient(
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: string) => api.delete(`/advisor/clients/${id}`),
+    mutationFn: async (id: string) => {
+      await api.delete(`/advisor/clients/${id}`)
+    },
     onSuccess: (_, id) => {
       // Remove from cache
       queryClient.removeQueries({ queryKey: queryKeys.client(id) })
@@ -193,30 +196,33 @@ export function useClientWealth(
     queryFn: async () => {
       const response = await api.get<Record<string, unknown>>(`/advisor/patrimoine/stats?clientId=${clientId}`)
       // Extract data from wrapper if needed
-      const data = response?.data || response
+      const data = (response as { data?: Record<string, unknown> })?.data || response
       
       // Calculate debt ratio
-      const totalActifs = data?.totalActifs || 0
-      const totalPassifs = data?.totalPassifs || 0
+      const totalActifs = (data?.totalActifs as number) || 0
+      const totalPassifs = (data?.totalPassifs as number) || 0
       const debtRatio = totalActifs > 0 ? (totalPassifs / totalActifs) * 100 : 0
       
       // Transform allocation data for charts
-      const allocationByType = data?.allocationByType 
-        ? Object.entries(data.allocationByType).map(([type, value]) => ({
+      const allocationByTypeData = data?.allocationByType as Record<string, number> | undefined
+      const allocationByType = allocationByTypeData 
+        ? Object.entries(allocationByTypeData).map(([type, value]) => ({
             type,
             value: value as number,
             percentage: totalActifs > 0 ? ((value as number) / totalActifs) * 100 : 0,
           }))
         : []
       
-      const allocationByCategory = data?.allocationByCategory
-        ? Object.entries(data.allocationByCategory).map(([category, value]) => ({
+      const allocationByCategoryData = data?.allocationByCategory as Record<string, number> | undefined
+      const allocationPercentagesData = data?.allocationPercentages as Record<string, number> | undefined
+      const allocationByCategory = allocationByCategoryData
+        ? Object.entries(allocationByCategoryData).map(([category, value]) => ({
             category,
             value: value as number,
             percentage: totalActifs > 0 ? ((value as number) / totalActifs) * 100 : 0,
           }))
-        : data?.allocationPercentages
-          ? Object.entries(data.allocationPercentages)
+        : allocationPercentagesData
+          ? Object.entries(allocationPercentagesData)
               .filter(([_, pct]) => (pct as number) > 0)
               .map(([category, pct]) => ({
                 category: category.charAt(0).toUpperCase() + category.slice(1),
@@ -226,15 +232,15 @@ export function useClientWealth(
           : []
       
       return {
-        patrimoineNet: data?.patrimoineNet || data?.totalNet || data?.netWealth || 0,
-        patrimoineGere: data?.patrimoineGere || data?.totalGere || data?.managedAssets || 0,
-        patrimoineNonGere: data?.patrimoineNonGere || data?.unmanagedAssets || 0,
+        patrimoineNet: (data?.patrimoineNet as number) || (data?.totalNet as number) || (data?.netWealth as number) || 0,
+        patrimoineGere: (data?.patrimoineGere as number) || (data?.totalGere as number) || (data?.managedAssets as number) || 0,
+        patrimoineNonGere: (data?.patrimoineNonGere as number) || (data?.unmanagedAssets as number) || 0,
         totalActifs,
         totalPassifs,
         debtRatio,
         allocationByType,
         allocationByCategory,
-        lastCalculated: data?.lastCalculated || new Date().toISOString(),
+        lastCalculated: (data?.lastCalculated as string) || new Date().toISOString(),
       }
     },
     enabled: !!clientId,
@@ -260,18 +266,21 @@ export function useClientReporting(
           api.get<Record<string, unknown>>(`/advisor/actifs?clientId=${clientId}`),
         ])
         
-        const patrimoine = patrimoineRes?.data || patrimoineRes
-        const actifs = actifsRes?.data?.data || actifsRes?.data || []
+        const patrimoine = (patrimoineRes as { data?: Record<string, unknown> })?.data || patrimoineRes
+        const actifsData = actifsRes as { data?: { data?: Record<string, unknown>[] } | Record<string, unknown>[] }
+        const actifs = (actifsData?.data as { data?: Record<string, unknown>[] })?.data || actifsData?.data || []
         
-        const hasAssets = actifs.length > 0
-        const totalValue = patrimoine?.totalActifs || 0
+        const hasAssets = Array.isArray(actifs) && actifs.length > 0
+        const totalValue = (patrimoine?.totalActifs as number) || 0
         
         // Calculate allocation by type
         const allocationMap: Record<string, number> = {}
-        actifs.forEach((actif: Record<string, unknown>) => {
-          const type = actif.type || 'AUTRE'
-          allocationMap[type] = (allocationMap[type] || 0) + Number(actif.currentValue || actif.value || 0)
-        })
+        if (Array.isArray(actifs)) {
+          actifs.forEach((actif: Record<string, unknown>) => {
+            const type = (actif.type as string) || 'AUTRE'
+            allocationMap[type] = (allocationMap[type] || 0) + Number(actif.currentValue || actif.value || 0)
+          })
+        }
         
         const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
         const allocation = Object.entries(allocationMap).map(([name, value], index) => ({

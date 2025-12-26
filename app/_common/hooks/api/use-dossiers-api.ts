@@ -26,7 +26,7 @@ export function useDossier(id: string) {
 export function useCreateDossier(options?: UseMutationOptions<Record<string, unknown>, Error, Record<string, unknown>>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) => api.post('/advisor/dossiers', data),
+    mutationFn: (data: Record<string, unknown>) => api.post<Record<string, unknown>>('/advisor/dossiers', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dossiers'] })
       queryClient.invalidateQueries({ queryKey: ['dossier-stats'] })
@@ -42,7 +42,7 @@ export function useCreateDossier(options?: UseMutationOptions<Record<string, unk
 export function useUpdateDossier(options?: UseMutationOptions<Record<string, unknown>, Error, { id: string; data: Record<string, unknown> }>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }) => api.patch(`/advisor/dossiers/${id}`, data),
+    mutationFn: ({ id, data }) => api.patch<Record<string, unknown>>(`/advisor/dossiers/${id}`, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['dossiers'] })
       queryClient.invalidateQueries({ queryKey: ['dossiers', id] })
@@ -59,7 +59,7 @@ export function useUpdateDossier(options?: UseMutationOptions<Record<string, unk
 export function useDeleteDossier(options?: UseMutationOptions<Record<string, unknown>, Error, string>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => api.delete(`/advisor/dossiers/${id}`),
+    mutationFn: (id: string) => api.delete<Record<string, unknown>>(`/advisor/dossiers/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dossiers'] })
       queryClient.invalidateQueries({ queryKey: ['dossier-stats'] })
@@ -75,7 +75,7 @@ export function useDeleteDossier(options?: UseMutationOptions<Record<string, unk
 export function useActivateDossier(options?: UseMutationOptions<Record<string, unknown>, Error, string>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => api.post(`/advisor/dossiers/${id}/activate`),
+    mutationFn: (id: string) => api.post<Record<string, unknown>>(`/advisor/dossiers/${id}/activate`),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['dossiers'] })
       queryClient.invalidateQueries({ queryKey: ['dossiers', id] })
@@ -91,7 +91,7 @@ export function useActivateDossier(options?: UseMutationOptions<Record<string, u
 export function useStartDossier(options?: UseMutationOptions<Record<string, unknown>, Error, string>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => api.post(`/advisor/dossiers/${id}/start`),
+    mutationFn: (id: string) => api.post<Record<string, unknown>>(`/advisor/dossiers/${id}/start`),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['dossiers'] })
       queryClient.invalidateQueries({ queryKey: ['dossiers', id] })
@@ -107,7 +107,7 @@ export function useStartDossier(options?: UseMutationOptions<Record<string, unkn
 export function usePauseDossier(options?: UseMutationOptions<Record<string, unknown>, Error, string>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => api.post(`/advisor/dossiers/${id}/pause`),
+    mutationFn: (id: string) => api.post<Record<string, unknown>>(`/advisor/dossiers/${id}/pause`),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['dossiers'] })
       queryClient.invalidateQueries({ queryKey: ['dossiers', id] })
@@ -123,7 +123,7 @@ export function usePauseDossier(options?: UseMutationOptions<Record<string, unkn
 export function useCompleteDossier(options?: UseMutationOptions<Record<string, unknown>, Error, string>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => api.post(`/advisor/dossiers/${id}/complete`),
+    mutationFn: (id: string) => api.post<Record<string, unknown>>(`/advisor/dossiers/${id}/complete`),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['dossiers'] })
       queryClient.invalidateQueries({ queryKey: ['dossiers', id] })
@@ -139,7 +139,7 @@ export function useCompleteDossier(options?: UseMutationOptions<Record<string, u
 export function useCancelDossier(options?: UseMutationOptions<Record<string, unknown>, Error, string>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => api.post(`/advisor/dossiers/${id}/cancel`),
+    mutationFn: (id: string) => api.post<Record<string, unknown>>(`/advisor/dossiers/${id}/cancel`),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['dossiers'] })
       queryClient.invalidateQueries({ queryKey: ['dossiers', id] })
@@ -155,7 +155,7 @@ export function useCancelDossier(options?: UseMutationOptions<Record<string, unk
 export function useArchiveDossier(options?: UseMutationOptions<Record<string, unknown>, Error, string>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => api.post(`/advisor/dossiers/${id}/archive`),
+    mutationFn: (id: string) => api.post<Record<string, unknown>>(`/advisor/dossiers/${id}/archive`),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['dossiers'] })
       queryClient.invalidateQueries({ queryKey: ['dossiers', id] })
@@ -171,7 +171,7 @@ export function useArchiveDossier(options?: UseMutationOptions<Record<string, un
 export function useUnarchiveDossier(options?: UseMutationOptions<Record<string, unknown>, Error, string>) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => api.post(`/advisor/dossiers/${id}/unarchive`),
+    mutationFn: (id: string) => api.post<Record<string, unknown>>(`/advisor/dossiers/${id}/unarchive`),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['dossiers'] })
       queryClient.invalidateQueries({ queryKey: ['dossiers', id] })

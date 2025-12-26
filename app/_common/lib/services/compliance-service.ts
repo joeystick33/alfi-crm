@@ -114,12 +114,12 @@ export class ComplianceService {
         details.push(...this.checkMIF2Suitability({
           mifidCompleted: client.kycStatus === 'COMPLET',
           investmentObjectives: typeof client.investmentGoals === 'string' ? client.investmentGoals : undefined,
-          investmentHorizonCode: typeof client.investmentHorizonCode === 'string' ? client.investmentHorizonCode : (client.investmentHorizonCode ? String(client.investmentHorizonCode) : undefined),
+          investmentHorizonCode: typeof client.investmentHorizon === 'string' ? client.investmentHorizon : (client.investmentHorizon ? String(client.investmentHorizon) : undefined),
         }))
         break
       case 'MIF2_APPROPRIATENESS':
         details.push(...this.checkMIF2Appropriateness({
-          appropriatenessTestPassed: Boolean(client.investmentKnowledgeCode),
+          appropriatenessTestPassed: Boolean(client.investmentKnowledge),
         }))
         break
       case 'CONFLICT_INTEREST':

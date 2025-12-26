@@ -26,7 +26,7 @@ export async function GET(
             plan: true,
           },
         },
-        advisor: {
+        conseiller: {
           select: {
             id: true,
             firstName: true,
