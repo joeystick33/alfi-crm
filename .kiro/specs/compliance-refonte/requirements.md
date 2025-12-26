@@ -25,17 +25,23 @@ La section Conformité couvre :
 - **Compliance_Timeline** : Historique chronologique des événements conformité
 - **Signature_Manager** : Gestionnaire des signatures électroniques
 - **Client_Portal** : Interface client pour upload de documents
-- **Client_360_View** : Vue complète du profil client incluant la section conformité
-- **Dossier_View** : Vue d'un dossier client avec documents associés
-- **Operations_Manager** : Gestionnaire des opérations (affaires nouvelles, arbitrages, rachats, versements)
-- **Affaire_Nouvelle** : Module de création et suivi d'une nouvelle souscription
+- **Client_360_View** : Vue complète du profil client incluant conformité, opérations et portefeuille
+- **Dossier_View** : Vue d'un dossier client avec documents et opérations associés
+- **Operations_Manager** : Gestionnaire central des opérations commerciales et de gestion
+- **Affaire_Nouvelle** : Module de création et suivi d'une nouvelle souscription (vente)
+- **Operation_Gestion** : Module de gestion des opérations post-vente (arbitrage, rachat, versement)
 - **Document_Export** : Module d'export de documents en Word/PDF pour signature
 - **Association_Templates** : Templates de documents spécifiques par association CGP (CNCGP, ANACOFI, CNCEF)
+- **Provider_Catalog** : Base de données des fournisseurs/assureurs et leurs produits
+- **Pilotage_Dashboard** : Tableau de bord de pilotage commercial avec KPIs et pipeline
 - **Client** : Personne physique ou morale suivie par le conseiller
 - **CGP** : Conseiller en Gestion de Patrimoine (utilisateur principal)
 - **SLA** : Service Level Agreement - délais réglementaires de traitement
 - **PPE** : Personne Politiquement Exposée
 - **ACPR** : Autorité de Contrôle Prudentiel et de Résolution
+- **AUM** : Assets Under Management - Encours sous gestion
+- **DER** : Document d'Entrée en Relation
+- **LCB-FT** : Lutte Contre le Blanchiment et Financement du Terrorisme
 
 ## Requirements
 
@@ -314,128 +320,378 @@ La section Conformité couvre :
 6. WHEN an association updates its template requirements, THE Template_Manager SHALL notify affected CGPs
 7. THE Association_Templates SHALL be versioned to track regulatory changes over time
 
-### Requirement 18: Section "Mes Opérations" - Affaire Nouvelle
+### Requirement 18: Section "Mes Opérations" - Structure Globale
 
-**User Story:** As a CGP, I want to manage new business operations (subscriptions, switches, withdrawals, contributions) in a dedicated section, so that I can track the complete lifecycle of client operations and generate appropriate documentation.
+**User Story:** As a CGP, I want a comprehensive operations management section that clearly separates new business, ongoing deals, and management operations, so that I can effectively pilot my commercial activity and ensure compliance.
 
 #### Acceptance Criteria
 
-1. THE Operations_Manager SHALL provide a dedicated "Mes Opérations" section accessible from the main navigation
-2. THE Operations_Manager SHALL support the following operation types:
-   - Souscription (new contract subscription)
-   - Arbitrage (fund switch within existing contract)
-   - Rachat (partial or total withdrawal)
-   - Versement (additional contribution to existing contract)
+1. THE Operations_Manager SHALL provide a dedicated "Mes Opérations" section accessible from the main navigation with three distinct sub-sections:
+   - **Affaires Nouvelles** : New client subscriptions (vente)
+   - **Affaires en Cours** : Ongoing deals to resume/complete
+   - **Opérations de Gestion** : Post-sale operations on existing contracts
 
-3. THE Operations_Manager SHALL support the following contract/product types:
+2. THE Operations_Manager SHALL generate unique reference numbers for all operations:
+   - Affaire Nouvelle: AN-YYYY-NNNN
+   - Opération de Gestion: OG-YYYY-NNNN
+
+3. THE Operations_Manager SHALL support the following contract/product types across all operation categories:
    - Assurance Vie (life insurance)
-   - PER (Plan d'Épargne Retraite)
-   - SCPI (Société Civile de Placement Immobilier)
-   - OPCI (Organisme de Placement Collectif Immobilier)
-   - Compte-titres (securities account)
-   - PEA (Plan d'Épargne en Actions)
+   - PER Individuel / PER Entreprise (retirement savings)
+   - SCPI (real estate investment trust)
+   - OPCI (real estate collective investment)
+   - Compte-titres ordinaire (securities account)
+   - PEA / PEA-PME (equity savings plan)
    - Contrat de capitalisation
-   - Private Equity / FCPR / FCPI / FIP
+   - Private Equity (FCPR, FCPI, FIP)
+   - Immobilier direct (real estate)
+   - Crédit immobilier (mortgage - for tracking)
 
-4. WHEN creating an "Affaire Nouvelle" (new subscription), THE Affaire_Nouvelle SHALL require:
-   - Client selection
-   - Operation type
-   - Contract/product type
-   - Provider/Insurer selection
-   - Investment amount
-   - Investment supports/funds selection (if applicable)
-   - Beneficiary clause (for life insurance)
+4. THE Operations_Manager SHALL link every operation to:
+   - The associated Client record (Client_360_View)
+   - The client's Dossier (Dossier_View) if applicable
+   - All generated compliance documents (Document_Manager)
+   - The compliance timeline (Compliance_Timeline)
+   - KYC status verification (KYC_System)
 
-5. THE Affaire_Nouvelle SHALL track operation status through workflow:
-   - Brouillon (draft)
-   - En cours de constitution (documents being gathered)
-   - Envoyé au fournisseur (sent to provider)
-   - En traitement (being processed)
-   - Validé (validated/completed)
-   - Rejeté (rejected - with reason)
+5. THE Operations_Manager SHALL display a unified dashboard showing:
+   - Count of Affaires Nouvelles by status
+   - Count of Affaires en Cours requiring action
+   - Count of Opérations de Gestion pending
+   - Total amounts in pipeline by product type
+   - Alerts for operations with missing compliance documents
 
-6. WHEN an operation status changes, THE Operations_Manager SHALL record the change with timestamp and user
-7. THE Operations_Manager SHALL display operations in a filterable table with columns: Reference, Client, Type, Product, Provider, Amount, Status, Created date, Actions
+6. WHEN any operation is created or modified, THE Operations_Manager SHALL verify KYC compliance status and display warnings if documents are expired or missing
 
-### Requirement 19: Génération Documents par Type d'Opération
+### Requirement 19: Affaires Nouvelles (Vente)
 
-**User Story:** As a CGP, I want the system to automatically suggest and generate the appropriate regulatory documents based on the operation type, so that I can ensure compliance without manually determining which documents are required.
+**User Story:** As a CGP, I want to create and track new business deals from initial contact to completion, so that I can manage my sales pipeline and ensure all regulatory documents are generated.
 
 #### Acceptance Criteria
 
-1. WHEN creating a Souscription (new subscription), THE Affaire_Nouvelle SHALL require/suggest the following documents:
-   - Document d'Entrée en Relation (DER) - if first operation with client
-   - Recueil d'Informations Client - if not up to date
-   - Lettre de Mission
-   - Questionnaire MiFID II / Profil investisseur - if not completed or outdated
-   - Déclaration d'Adéquation (suitability statement)
-   - Bulletin de souscription (subscription form)
+1. THE Affaire_Nouvelle SHALL track new subscriptions through the following workflow stages:
+   - **Prospect** : Initial opportunity identified
+   - **Qualification** : Client needs assessed, product identified
+   - **Constitution** : Documents being gathered and generated
+   - **Signature** : Awaiting client signature
+   - **Envoyé** : Sent to provider/insurer
+   - **En traitement** : Being processed by provider
+   - **Validé** : Contract confirmed and active
+   - **Rejeté** : Rejected by provider (with reason)
+   - **Annulé** : Cancelled by client or advisor
 
-2. WHEN creating an Arbitrage (fund switch), THE Affaire_Nouvelle SHALL require/suggest:
-   - Fiche Conseil / Rapport de Mission
-   - Déclaration d'Adéquation
+2. WHEN creating an Affaire Nouvelle, THE Affaire_Nouvelle SHALL require:
+   - Client selection (linked to Client_360_View)
+   - Product type selection
+   - Provider/Insurer selection
+   - Estimated investment amount
+   - Target completion date
+   - Source/Origin (referral, prospection, existing client)
+
+3. WHEN an Affaire Nouvelle reaches "Constitution" stage, THE Affaire_Nouvelle SHALL:
+   - Verify client KYC status and display missing documents
+   - Check MiFID questionnaire validity (alert if older than 12 months)
+   - Generate checklist of required regulatory documents based on product type
+   - Link to Document_Generator for one-click document creation
+
+4. THE Affaire_Nouvelle SHALL require the following information based on product type:
+   - **Assurance Vie / Capitalisation**: Investment supports allocation, beneficiary clause, payment mode
+   - **PER**: Compartments selection (individual/collective), beneficiary clause, exit options
+   - **SCPI/OPCI**: Number of shares, payment schedule, dismemberment option
+   - **Compte-titres/PEA**: Initial allocation, management mandate type
+   - **Private Equity**: Commitment amount, call schedule, lock-up period
+
+5. THE Affaire_Nouvelle SHALL calculate and display:
+   - Expected commission/fees for the advisor
+   - Entry fees for the client
+   - Ongoing management fees
+
+6. WHEN an Affaire Nouvelle status changes, THE Operations_Manager SHALL:
+   - Record the change with timestamp, user, and optional note
+   - Update the Compliance_Timeline for the associated client
+   - Send notification if configured (email/in-app)
+
+7. THE Affaire_Nouvelle SHALL support document attachment for:
+   - Signed subscription forms
+   - Proof of funds (origine des fonds)
+   - Provider confirmation letters
+   - Any additional supporting documents
+
+### Requirement 20: Affaires en Cours (Reprise)
+
+**User Story:** As a CGP, I want to easily identify and resume incomplete deals, so that I can ensure no opportunity is lost and all pending actions are tracked.
+
+#### Acceptance Criteria
+
+1. THE Operations_Manager SHALL automatically categorize an Affaire Nouvelle as "En Cours" when:
+   - Status is between "Qualification" and "Envoyé" (not yet submitted to provider)
+   - More than 7 days have passed since last activity
+   - Required documents are still missing
+
+2. THE Operations_Manager SHALL display Affaires en Cours in a dedicated view with:
+   - Days since last activity (with color coding: green <7d, orange 7-30d, red >30d)
+   - Missing documents count
+   - Next action required
+   - Blocking issues (expired KYC, missing signature, etc.)
+
+3. THE Operations_Manager SHALL provide quick actions for Affaires en Cours:
+   - "Reprendre" : Open the deal for editing
+   - "Relancer client" : Send reminder (linked to Alert_Engine)
+   - "Mettre en pause" : Mark as intentionally paused with reason
+   - "Annuler" : Cancel with reason (requires confirmation)
+
+4. THE Operations_Manager SHALL generate alerts for Affaires en Cours:
+   - WHEN an Affaire has no activity for 14 days, create "warning" alert
+   - WHEN an Affaire has no activity for 30 days, create "high" alert
+   - WHEN client KYC expires while Affaire is pending, create "critical" alert
+
+5. THE Operations_Manager SHALL track "win rate" statistics:
+   - Conversion rate from Prospect to Validé
+   - Average time to completion by product type
+   - Drop-off rate by stage
+   - Rejection reasons analysis
+
+### Requirement 21: Opérations de Gestion
+
+**User Story:** As a CGP, I want to manage post-sale operations on existing contracts (switches, withdrawals, contributions), so that I can track all client interactions and maintain compliance documentation.
+
+#### Acceptance Criteria
+
+1. THE Operations_Manager SHALL support the following operation types in "Opérations de Gestion":
+   - **Versement complémentaire** : Additional contribution to existing contract
+   - **Arbitrage** : Fund switch within contract
+   - **Rachat partiel** : Partial withdrawal
+   - **Rachat total** : Full surrender
+   - **Avance** : Policy loan
+   - **Modification clause bénéficiaire** : Beneficiary change
+   - **Changement d'option de gestion** : Management option change
+   - **Transfert** : Contract transfer (PER, assurance vie under conditions)
+
+2. WHEN creating an Opération de Gestion, THE Operations_Manager SHALL require:
+   - Client selection
+   - Existing contract selection (from client's portfolio)
+   - Operation type
+   - Amount (if applicable)
+   - Effective date requested
+
+3. THE Operations_Manager SHALL track Opérations de Gestion through workflow:
+   - **Brouillon** : Draft, not yet submitted
+   - **En attente signature** : Awaiting client signature
+   - **Envoyé** : Sent to provider
+   - **En traitement** : Being processed
+   - **Exécuté** : Completed successfully
+   - **Rejeté** : Rejected (with reason)
+
+4. FOR Arbitrage operations, THE Operations_Manager SHALL require:
+   - Source funds selection (which supports to sell)
+   - Target funds selection (which supports to buy)
+   - Amount or percentage to switch
+   - Arbitrage type (ponctuel, programmé)
+
+5. FOR Rachat operations, THE Operations_Manager SHALL:
+   - Display current contract value
+   - Calculate tax implications based on contract age and gains
+   - Warn if rachat affects ongoing benefits (prévoyance, garantie plancher)
+   - Require destination account (RIB) verification
+
+6. FOR Versement complémentaire, THE Operations_Manager SHALL:
+   - Verify if client situation has changed significantly (trigger Recueil update)
+   - Check if investment profile is still adequate
+   - Apply same allocation as initial or allow new allocation
+
+7. THE Operations_Manager SHALL link each Opération de Gestion to:
+   - The original Affaire Nouvelle that created the contract
+   - All subsequent operations on the same contract
+   - Generated compliance documents (Fiche Conseil, Déclaration d'Adéquation)
+
+### Requirement 22: Génération Documents par Type d'Opération
+
+**User Story:** As a CGP, I want the system to automatically determine and generate the appropriate regulatory documents based on the operation type, so that I can ensure compliance without manually determining which documents are required.
+
+#### Acceptance Criteria
+
+1. WHEN creating an Affaire Nouvelle (new subscription), THE Document_Generator SHALL require/suggest based on context:
+   - **Toujours requis**:
+     - Lettre de Mission (if not already signed for this client)
+     - Recueil d'Informations Client (if not up to date or >12 months)
+     - Questionnaire MiFID II / Profil investisseur (if not completed or >12 months)
+     - Déclaration d'Adéquation (suitability statement)
+   - **Si première relation**:
+     - Document d'Entrée en Relation (DER)
+   - **Selon produit**:
+     - Bulletin de souscription (provider-specific form)
+     - Annexe financière (for unit-linked products)
+     - Justificatif origine des fonds (if amount > threshold or risk profile)
+
+2. WHEN creating an Arbitrage, THE Document_Generator SHALL require:
+   - Fiche Conseil / Rapport de Mission (justifying the switch)
+   - Déclaration d'Adéquation (confirming suitability)
    - Ordre d'arbitrage (switch order form)
 
-3. WHEN creating a Rachat (withdrawal), THE Affaire_Nouvelle SHALL require/suggest:
-   - Fiche Conseil (if partial withdrawal with reinvestment advice)
+3. WHEN creating a Rachat (withdrawal), THE Document_Generator SHALL require:
    - Demande de rachat (withdrawal request form)
+   - Fiche Conseil (if partial withdrawal with reinvestment advice)
+   - Simulation fiscale (tax impact document)
 
-4. WHEN creating a Versement (additional contribution), THE Affaire_Nouvelle SHALL require/suggest:
-   - Mise à jour du Recueil d'Informations (if significant change in situation)
-   - Déclaration d'Adéquation
+4. WHEN creating a Versement complémentaire, THE Document_Generator SHALL require:
+   - Déclaration d'Adéquation (if allocation changes)
    - Bulletin de versement complémentaire
+   - Mise à jour Recueil d'Informations (if significant change flagged)
 
-5. THE Affaire_Nouvelle SHALL display a checklist of required documents with status (generated, pending, missing)
-6. THE Affaire_Nouvelle SHALL allow one-click generation of all required documents for an operation
-7. WHEN a required document is missing, THE Affaire_Nouvelle SHALL block operation submission with a clear warning
-8. THE Affaire_Nouvelle SHALL link generated documents to the operation for audit trail
+5. THE Operations_Manager SHALL display a compliance checklist for each operation showing:
+   - Document name
+   - Status: Généré / En attente / Manquant / Expiré
+   - Generation date (if applicable)
+   - Signature status (if applicable)
+   - Quick action buttons (Generate, View, Send for signature)
 
-### Requirement 20: Suivi et Historique des Opérations
+6. THE Operations_Manager SHALL block operation submission when:
+   - Required documents are missing (status "Manquant")
+   - KYC documents are expired
+   - MiFID questionnaire is outdated (>12 months)
+   - Display clear message explaining what is blocking
 
-**User Story:** As a CGP, I want to track the complete history of operations for each client, so that I can provide comprehensive reporting and demonstrate due diligence during audits.
+7. THE Operations_Manager SHALL allow override of blocking with:
+   - Supervisor approval (for cabinet with multiple users)
+   - Documented justification (stored in audit log)
+   - Time-limited exception (must be resolved within X days)
+
+8. WHEN all required documents are generated and signed, THE Operations_Manager SHALL:
+   - Update operation status to allow submission
+   - Generate a compliance summary document
+   - Link all documents to the operation record
+
+### Requirement 23: Pilotage Commercial et Reporting
+
+**User Story:** As a CGP, I want comprehensive dashboards and reports on my operations, so that I can pilot my commercial activity and analyze my performance.
 
 #### Acceptance Criteria
 
-1. THE Operations_Manager SHALL maintain a complete history of all operations per client
-2. THE Client_360_View SHALL display a summary of recent operations with quick access to details
-3. THE Operations_Manager SHALL calculate and display statistics:
-   - Total operations count by type
-   - Total amounts by operation type
-   - Average processing time
-   - Rejection rate
+1. THE Operations_Manager SHALL provide a "Pilotage" dashboard displaying:
+   - **Pipeline commercial**: Total value of Affaires Nouvelles by stage
+   - **Taux de transformation**: Conversion rate from Prospect to Validé
+   - **Délai moyen**: Average time to close by product type
+   - **Encours sous gestion**: Total AUM from validated operations
+   - **Commissions prévisionnelles**: Expected commissions from pipeline
 
-4. THE Operations_Manager SHALL support filtering operations by:
-   - Date range
-   - Operation type
+2. THE Operations_Manager SHALL calculate and display KPIs:
+   - Number of new clients acquired (period)
+   - Number of operations by type (period)
+   - Total collected amounts by product type
+   - Average ticket size by product type
+   - Top providers by volume
+
+3. THE Operations_Manager SHALL provide filtering and grouping by:
+   - Date range (custom, MTD, QTD, YTD)
    - Product type
    - Provider
-   - Status
-   - Amount range
+   - Client segment (if defined)
+   - Operation status
+   - Advisor (for multi-advisor cabinets)
 
-5. THE Operations_Manager SHALL support export of operations list to Excel/CSV for reporting
-6. WHEN viewing an operation, THE Operations_Manager SHALL display:
-   - Complete operation details
-   - All associated documents
-   - Status history with timestamps
-   - Notes and comments
+4. THE Operations_Manager SHALL generate exportable reports:
+   - Operations list (Excel/CSV)
+   - Pipeline report (PDF)
+   - Commission statement (PDF)
+   - Compliance summary (PDF for audits)
 
-7. THE Operations_Manager SHALL allow adding notes/comments to operations for internal tracking
+5. THE Operations_Manager SHALL provide trend analysis:
+   - Month-over-month comparison
+   - Year-over-year comparison
+   - Seasonal patterns identification
 
-### Requirement 21: Intégration Fournisseurs et Assureurs
+6. THE Operations_Manager SHALL integrate with Client_360_View to show:
+   - Client's complete operation history
+   - Total relationship value
+   - Product diversification
+   - Last interaction date
 
-**User Story:** As a CGP, I want to have a database of providers/insurers with their product offerings, so that I can quickly select the appropriate provider when creating operations.
+### Requirement 24: Intégration Fournisseurs et Catalogue Produits
+
+**User Story:** As a CGP, I want a comprehensive database of providers and their products, so that I can quickly select appropriate solutions and access provider-specific requirements.
 
 #### Acceptance Criteria
 
-1. THE Operations_Manager SHALL maintain a database of providers/insurers including:
-   - Company name and legal information
-   - Contact information
-   - Product catalog (contracts available)
-   - Commission rates (if applicable)
-   - Extranet/portal access links
+1. THE Operations_Manager SHALL maintain a Provider database with:
+   - Company name and legal information (SIREN, address)
+   - Provider type (Assureur, Société de gestion, Banque, Plateforme)
+   - Contact information (commercial contact, back-office contact)
+   - Extranet/portal URL and access notes
+   - Commission grid reference
+   - Convention de distribution status (active/inactive)
 
-2. THE Template_Manager SHALL allow associating document templates with specific providers
-3. WHEN creating an operation, THE Affaire_Nouvelle SHALL filter available products based on selected provider
-4. THE Operations_Manager SHALL display provider-specific requirements for each operation type
-5. THE Operations_Manager SHALL allow CGPs to add custom providers not in the default database
-6. THE Operations_Manager SHALL track which providers are most used for reporting purposes
+2. THE Operations_Manager SHALL maintain a Product catalog linked to providers:
+   - Product name and code
+   - Product type (Assurance Vie, PER, SCPI, etc.)
+   - Key characteristics (frais entrée, frais gestion, options)
+   - Available investment supports (for unit-linked)
+   - Minimum investment amounts
+   - Document templates specific to product
+
+3. WHEN creating an operation, THE Affaire_Nouvelle SHALL:
+   - Filter available products based on selected provider
+   - Display product characteristics summary
+   - Pre-fill provider-specific form fields
+   - Link to provider extranet for submission (if applicable)
+
+4. THE Operations_Manager SHALL track provider relationships:
+   - Total volume placed with each provider
+   - Number of active contracts per provider
+   - Average processing time per provider
+   - Rejection rate per provider
+
+5. THE Operations_Manager SHALL allow CGPs to:
+   - Add custom providers not in default database
+   - Mark favorite providers for quick access
+   - Add notes/comments on provider experience
+   - Flag providers with issues (slow processing, frequent rejections)
+
+6. THE Template_Manager SHALL support provider-specific document templates:
+   - Subscription forms with provider branding
+   - Pre-filled fields based on provider requirements
+   - Specific regulatory mentions required by provider
+
+### Requirement 25: Lien Conformité-Opérations
+
+**User Story:** As a CGP, I want operations and compliance to be fully integrated, so that I can ensure regulatory requirements are met throughout the client lifecycle.
+
+#### Acceptance Criteria
+
+1. THE Operations_Manager SHALL verify compliance status before allowing operation creation:
+   - KYC documents validity (all required documents valid and not expired)
+   - MiFID questionnaire validity (<12 months)
+   - LCB-FT controls status (no pending high-risk alerts)
+   - Display clear compliance status indicator (green/orange/red)
+
+2. WHEN compliance issues are detected, THE Operations_Manager SHALL:
+   - Display specific issues with links to resolve them
+   - Provide quick actions (e.g., "Mettre à jour KYC", "Compléter questionnaire MiFID")
+   - Allow operation creation in "draft" mode but block submission
+
+3. THE Compliance_Dashboard SHALL display operations-related metrics:
+   - Operations blocked due to compliance issues
+   - Operations with pending compliance documents
+   - Clients with operations but incomplete KYC
+
+4. THE Client_360_View SHALL display integrated view:
+   - Compliance status summary
+   - Active operations list
+   - Contract portfolio
+   - Document checklist with status
+
+5. THE Compliance_Timeline SHALL record all operation events:
+   - Operation created (with type and amount)
+   - Status changes
+   - Documents generated
+   - Signatures obtained
+   - Provider submissions and responses
+
+6. THE Alert_Engine SHALL create compliance alerts for operations:
+   - WHEN operation is pending and KYC expires, create "critical" alert
+   - WHEN operation requires document that is missing, create "high" alert
+   - WHEN operation is blocked for >7 days due to compliance, create "warning" alert
+
+7. THE Control_Manager SHALL link periodic controls to operations:
+   - Flag clients with recent large operations for enhanced due diligence
+   - Trigger automatic control creation for high-value operations
+   - Link control findings to operation records
