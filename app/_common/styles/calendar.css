@@ -1,0 +1,445 @@
+@reference "tailwindcss";
+@reference "../../globals.css";
+
+/* ============================================
+   React Big Calendar - Premium Light Theme
+   Design moderne, solide, sans glassmorphism
+   ============================================ */
+
+/* Base Calendar */
+.rbc-calendar {
+  @apply font-sans text-slate-700;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+/* Header Days */
+.rbc-header {
+  @apply py-4 text-xs font-semibold uppercase tracking-wider text-slate-500 border-b-2 border-slate-100 bg-slate-50;
+}
+
+.rbc-header + .rbc-header {
+  @apply border-l border-slate-100;
+}
+
+/* Month View */
+.rbc-month-view {
+  @apply border border-slate-200 rounded-2xl bg-white overflow-hidden;
+}
+
+.rbc-month-header {
+  @apply bg-slate-50;
+}
+
+.rbc-month-row {
+  @apply border-b border-slate-100;
+}
+
+.rbc-month-row:last-child {
+  @apply border-b-0;
+}
+
+.rbc-day-bg {
+  @apply border-l border-slate-100 transition-colors duration-150;
+}
+
+.rbc-day-bg:first-child {
+  @apply border-l-0;
+}
+
+.rbc-day-bg:hover {
+  @apply bg-indigo-50/40;
+}
+
+.rbc-off-range-bg {
+  @apply bg-slate-50/70;
+}
+
+.rbc-today {
+  @apply bg-indigo-50;
+}
+
+/* Date Cells */
+.rbc-date-cell {
+  @apply p-2 text-right;
+}
+
+.rbc-date-cell > a {
+  @apply inline-flex items-center justify-center w-7 h-7 text-xs font-medium text-slate-600 rounded-full transition-colors;
+}
+
+.rbc-date-cell > a:hover {
+  @apply bg-slate-100 text-slate-900;
+}
+
+.rbc-now > a {
+  @apply bg-indigo-600 text-white font-bold;
+}
+
+.rbc-now > a:hover {
+  @apply bg-indigo-700;
+}
+
+.rbc-off-range a {
+  @apply text-slate-300;
+}
+
+/* Row Content */
+.rbc-row-content {
+  @apply z-10;
+}
+
+.rbc-row-segment {
+  @apply px-1 py-0.5;
+}
+
+/* Events - Design Premium */
+.rbc-event {
+  @apply rounded-lg text-xs font-medium border-0 px-2 py-1.5 shadow-sm;
+  @apply transition-all duration-150 cursor-pointer;
+  background-color: #4f46e5;
+  color: white;
+}
+
+.rbc-event:hover {
+  @apply shadow-md;
+  transform: translateY(-1px);
+}
+
+.rbc-event.rbc-selected {
+  @apply ring-2 ring-offset-1 ring-indigo-300;
+  background-color: #4338ca;
+}
+
+.rbc-event-content {
+  @apply truncate;
+}
+
+.rbc-event-label {
+  @apply hidden;
+}
+
+/* Event continues indicator */
+.rbc-event-continues-prior {
+  @apply rounded-l-none;
+}
+
+.rbc-event-continues-after {
+  @apply rounded-r-none;
+}
+
+/* Show More Link */
+.rbc-show-more {
+  @apply text-xs font-medium text-indigo-600 hover:text-indigo-800 px-2 py-1 cursor-pointer transition-colors;
+}
+
+/* ============================================
+   Toolbar - Clean Modern Style
+   ============================================ */
+.rbc-toolbar {
+  @apply flex flex-wrap items-center justify-between gap-4 mb-6 p-4 bg-white rounded-2xl border border-slate-200;
+}
+
+.rbc-toolbar-label {
+  @apply text-xl font-bold text-slate-900 order-1;
+  font-family: var(--font-display), var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.rbc-btn-group {
+  @apply flex bg-slate-100 rounded-xl p-1 gap-0.5;
+}
+
+.rbc-btn-group button {
+  @apply border-none shadow-none text-sm font-medium text-slate-600 px-4 py-2 rounded-lg cursor-pointer;
+  @apply transition-all duration-150 bg-transparent;
+}
+
+.rbc-btn-group button:hover {
+  @apply bg-slate-200/70 text-slate-800;
+}
+
+.rbc-btn-group button.rbc-active {
+  @apply bg-white text-indigo-600 shadow-sm font-semibold;
+}
+
+.rbc-btn-group button:focus {
+  @apply outline-none ring-2 ring-indigo-200 ring-offset-1;
+}
+
+.rbc-btn-group button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Navigation Buttons */
+.rbc-toolbar button:first-child {
+  @apply rounded-l-lg;
+}
+
+.rbc-toolbar button:last-child {
+  @apply rounded-r-lg;
+}
+
+/* ============================================
+   Week & Day Views - Time Grid
+   ============================================ */
+.rbc-time-view {
+  @apply border border-slate-200 rounded-2xl bg-white;
+  overflow: visible !important;
+}
+
+.rbc-time-header {
+  @apply bg-slate-50 border-b border-slate-200;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.rbc-time-header-content {
+  @apply border-l border-slate-200;
+}
+
+.rbc-time-header-cell {
+  @apply py-3;
+}
+
+.rbc-allday-cell {
+  @apply border-b border-slate-100;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+.rbc-time-content {
+  @apply border-t-0;
+  overflow-y: visible !important;
+}
+
+.rbc-time-column {
+  @apply border-l border-slate-100;
+}
+
+.rbc-time-column:first-child {
+  @apply border-l-0;
+}
+
+.rbc-timeslot-group {
+  @apply border-b border-slate-100;
+  min-height: 48px !important;
+}
+
+.rbc-time-slot {
+  @apply border-t border-slate-50;
+  min-height: 24px;
+}
+
+.rbc-time-gutter {
+  @apply bg-slate-50/50;
+  min-width: 70px;
+}
+
+.rbc-time-gutter .rbc-timeslot-group {
+  @apply border-r border-slate-200;
+}
+
+.rbc-time-gutter .rbc-time-slot {
+  @apply text-xs text-slate-500 font-medium text-right pr-3;
+  font-variant-numeric: tabular-nums;
+}
+
+.rbc-label {
+  @apply text-xs text-slate-500 font-medium;
+  padding: 2px 8px;
+}
+
+.rbc-day-slot .rbc-events-container {
+  @apply mr-1;
+}
+
+.rbc-day-slot .rbc-event {
+  @apply border-l-4 border-l-indigo-400;
+}
+
+.rbc-day-slot .rbc-background-event {
+  @apply opacity-50;
+}
+
+.rbc-time-content {
+  position: relative;
+}
+
+.rbc-time-column,
+.rbc-day-slot {
+  position: relative;
+}
+
+.rbc-current-time-indicator {
+  @apply bg-red-500;
+  height: 2px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.rbc-current-time-indicator::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #ef4444;
+}
+
+/* Fix for day/week view scrolling */
+.rbc-time-view .rbc-time-content {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Ensure time view takes full height */
+.rbc-time-view {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Time slot styling */
+.rbc-day-slot .rbc-time-slot {
+  border-top: 1px solid #f1f5f9;
+}
+
+.rbc-day-slot .rbc-timeslot-group {
+  min-height: 40px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* Today column highlight */
+.rbc-time-view .rbc-today {
+  background-color: #eef2ff;
+}
+
+/* Event in time grid */
+.rbc-time-view .rbc-event {
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Working hours background */
+.rbc-day-slot .rbc-time-slot.rbc-now {
+  background-color: transparent;
+}
+
+/* Better scrolling for time content */
+.rbc-time-content {
+  overflow-y: auto !important;
+  flex: 1 1 auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+}
+
+/* Week view header */
+.rbc-time-header-content .rbc-header {
+  padding: 12px 4px;
+  font-size: 13px;
+}
+
+.rbc-time-header-content .rbc-header.rbc-today {
+  background-color: #eef2ff;
+  color: #4f46e5;
+  font-weight: 600;
+}
+
+/* ============================================
+   Agenda View - List Style
+   ============================================ */
+.rbc-agenda-view {
+  @apply bg-white rounded-2xl border border-slate-200 overflow-hidden;
+}
+
+.rbc-agenda-view table {
+  @apply w-full;
+}
+
+.rbc-agenda-table {
+  @apply border-none;
+}
+
+.rbc-agenda-table thead {
+  @apply bg-slate-50;
+}
+
+.rbc-agenda-table thead > tr > th {
+  @apply border-b-2 border-slate-200 py-4 px-4 text-xs uppercase text-slate-500 font-semibold tracking-wider text-left;
+}
+
+.rbc-agenda-table tbody > tr {
+  @apply transition-colors duration-150;
+}
+
+.rbc-agenda-table tbody > tr:hover {
+  @apply bg-slate-50/50;
+}
+
+.rbc-agenda-table tbody > tr > td {
+  @apply py-4 px-4 text-sm text-slate-700 border-b border-slate-100 align-middle;
+}
+
+.rbc-agenda-table tbody > tr:last-child > td {
+  @apply border-b-0;
+}
+
+.rbc-agenda-date-cell {
+  @apply font-semibold text-slate-900;
+}
+
+.rbc-agenda-time-cell {
+  @apply font-medium text-slate-500;
+  font-variant-numeric: tabular-nums;
+}
+
+.rbc-agenda-event-cell {
+  @apply text-indigo-600 font-medium;
+}
+
+.rbc-agenda-empty {
+  @apply text-center py-12 text-slate-400;
+}
+
+/* ============================================
+   Overlay & Popups
+   ============================================ */
+.rbc-overlay {
+  @apply bg-white rounded-xl shadow-xl border border-slate-200 p-3 z-50;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.rbc-overlay-header {
+  @apply text-sm font-semibold text-slate-900 pb-2 mb-2 border-b border-slate-100;
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+@media (max-width: 768px) {
+  .rbc-toolbar {
+    @apply flex-col items-stretch gap-3 p-3;
+  }
+  
+  .rbc-toolbar-label {
+    @apply text-center text-lg;
+  }
+  
+  .rbc-btn-group {
+    @apply justify-center;
+  }
+  
+  .rbc-btn-group button {
+    @apply px-3 py-1.5 text-xs;
+  }
+}

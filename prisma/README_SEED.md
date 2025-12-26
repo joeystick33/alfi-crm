@@ -6,10 +6,10 @@ This seed script populates the database with realistic test data for development
 
 The seed script creates:
 
-- **1 Cabinet**: Cabinet ALFI Test (complete configuration)
+- **1 Cabinet**: Cabinet Aura Test (complete configuration)
 - **2 Users**: 
-  - Admin: `admin@alfi.fr` (ADMIN role)
-  - Conseiller: `conseiller@alfi.fr` (ADVISOR role)
+  - Admin: `admin@aura.fr` (ADMIN role)
+  - Conseiller: `conseiller@aura.fr` (ADVISOR role)
   - Password for both: `Password123!`
 
 - **5 Clients**:
@@ -76,12 +76,12 @@ npm run db:seed
 After seeding, you can login with:
 
 - **Admin**: 
-  - Email: `admin@alfi.fr`
+  - Email: `admin@aura.fr`
   - Password: `Password123!`
   - Role: ADMIN (full permissions)
 
 - **Conseiller**: 
-  - Email: `conseiller@alfi.fr`
+  - Email: `conseiller@aura.fr`
   - Password: `Password123!`
   - Role: ADVISOR (client management)
 

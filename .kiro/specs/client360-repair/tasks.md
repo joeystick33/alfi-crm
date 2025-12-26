@@ -1,0 +1,166 @@
+# Implementation Plan
+
+- [x] 1. Fix TabBudget component and charts
+  - [x] 1.1 Fix Recharts imports and ResponsiveContainer usage in TabBudget
+    - Ensure BarChart and PieChart render correctly
+    - Add proper width/height to ResponsiveContainer
+    - Fix tooltip formatters for currency display
+    - _Requirements: 1.1, 1.2, 7.1, 7.2, 7.3_
+  - [x] 1.2 Fix budget data loading and state management
+    - Ensure API calls return proper data structure
+    - Handle null/undefined budget data gracefully
+    - Display loading skeleton during fetch
+    - _Requirements: 1.3, 6.1, 6.2_
+  - [x] 1.3 Fix KPI cards display with proper metrics
+    - Display annual income, expenses, savings capacity, savings rate
+    - Format currency values correctly
+    - _Requirements: 1.3_
+  - [x] 1.4 Fix budget alerts display with severity styling
+    - Apply correct colors for CRITICAL, WARNING, INFO
+    - Display recommendation text
+    - _Requirements: 1.4_
+  - [x] 1.5 Write property test for budget metrics calculation
+    - **Property 1: Budget metrics calculation consistency**
+    - **Validates: Requirements 1.3, 1.6**
+  - [x] 1.6 Write property test for expense pie chart data transformation
+    - **Property 3: Expense pie chart data transformation**
+    - **Validates: Requirements 1.2**
+
+- [x] 2. Fix TabWealth component and data display
+  - [x] 2.1 Fix BentoGrid KPI cards rendering
+    - Display Total Assets, Total Liabilities, Net Worth, Debt Ratio
+    - Apply correct gradient colors based on values
+    - _Requirements: 2.1, 4.1_
+  - [x] 2.2 Fix advanced metrics calculation and display
+    - Calculate liquidity ratio correctly
+    - Display managed assets total
+    - Show leveraged assets count
+    - _Requirements: 2.2_
+  - [x] 2.3 Fix asset list sorting functionality
+    - Implement sort by value, type, date, netValue
+    - Display asset details with proper formatting
+    - _Requirements: 2.3_
+  - [x] 2.4 Fix liability list display
+    - Show remaining amount, interest rate, monthly payment
+    - Format currency and percentage values
+    - _Requirements: 2.4_
+  - [x] 2.5 Fix contracts DataTable rendering
+    - Ensure DataTable receives correct column definitions
+    - Display type, provider, value, status
+    - _Requirements: 2.5_
+  - [x] 2.6 Write property test for wealth net worth calculation
+    - **Property 4: Wealth net worth calculation**
+    - **Validates: Requirements 2.1, 4.1**
+  - [x] 2.7 Write property test for asset sorting consistency
+    - **Property 5: Asset sorting consistency**
+    - **Validates: Requirements 2.3**
+  - [x] 2.8 Write property test for liquidity ratio calculation
+    - **Property 6: Liquidity ratio calculation**
+    - **Validates: Requirements 2.2**
+
+- [x] 3. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 4. Fix TabTaxation component and calculations
+  - [x] 4.1 Fix taxation data loading and state management
+    - Ensure API calls return proper data structure
+    - Handle null taxation data gracefully
+    - _Requirements: 3.1, 6.3_
+  - [x] 4.2 Fix IR KPI cards and bracket visualization
+    - Display annual IR amount, tax bracket, shares
+    - Highlight current bracket in visualization
+    - _Requirements: 3.1, 3.2_
+  - [x] 4.3 Fix IR breakdown pie chart
+    - Display gross IR, credits, reductions, net IR
+    - Use correct colors for each segment
+    - _Requirements: 3.3_
+  - [x] 4.4 Fix IFI section display
+    - Show taxable assets, deductible liabilities, net taxable
+    - Display IFI amount due
+    - _Requirements: 3.4_
+  - [x] 4.5 Fix tax optimizations list with filtering
+    - Display priority, status, potential savings
+    - Implement status and priority filters
+    - _Requirements: 3.5_
+  - [x] 4.6 Write property test for tax bracket highlighting
+    - **Property 7: Tax bracket highlighting**
+    - **Validates: Requirements 3.2**
+  - [x] 4.7 Write property test for IFI calculation consistency
+    - **Property 8: IFI calculation consistency**
+    - **Validates: Requirements 3.4**
+  - [x] 4.8 Write property test for tax optimization filtering
+    - **Property 9: Tax optimization filtering**
+    - **Validates: Requirements 3.5**
+
+- [x] 5. Fix TabOverview component and SimulationHistory
+  - [x] 5.1 Fix Overview KPI cards display
+    - Display Total Assets, Total Liabilities, Net Worth, Debt Ratio
+    - Format values correctly
+    - _Requirements: 4.1_
+  - [x] 5.2 Fix allocation progress bars
+    - Display allocation by type with percentage
+    - Display allocation by category with percentage
+    - _Requirements: 4.2_
+  - [x] 5.3 Fix KYC alerts display
+    - Show critical alert for EXPIRED status
+    - Show warning alert for PENDING status
+    - Show success alert for COMPLETED status
+    - _Requirements: 4.3, 4.4_
+  - [x] 5.4 Fix timeline events display
+    - Show 5 most recent events
+    - Display title, description, date
+    - _Requirements: 4.5_
+  - [x] 5.5 Fix SimulationHistory component
+    - Load simulations from API
+    - Display type icon, name, status badge
+    - Show feasibility score when available
+    - _Requirements: 5.1, 5.2, 5.3_
+  - [x] 5.6 Write property test for KYC alert mapping
+    - **Property 10: KYC alert mapping**
+    - **Validates: Requirements 4.3, 4.4**
+  - [x] 5.7 Write property test for timeline event limiting
+    - **Property 11: Timeline event limiting**
+    - **Validates: Requirements 4.5**
+  - [x] 5.8 Write property test for simulation status badge mapping
+    - **Property 12: Simulation status badge mapping**
+    - **Validates: Requirements 5.2**
+
+- [x] 6. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 7. Fix API routes and data consistency
+  - [x] 7.1 Fix budget API route parameter handling
+    - Update to Next.js 15 async params pattern
+    - Ensure proper error responses
+    - _Requirements: 6.1, 6.2_
+  - [x] 7.2 Fix taxation API route parameter handling
+    - Update to Next.js 15 async params pattern
+    - Ensure proper error responses
+    - _Requirements: 6.3_
+  - [x] 7.3 Fix wealth API route and calculations
+    - Ensure wealth summary includes all required fields
+    - Calculate allocations correctly
+    - _Requirements: 6.4_
+  - [x] 7.4 Fix simulations API route
+    - Return simulations with createdBy relation
+    - Handle empty results gracefully
+    - _Requirements: 6.5_
+
+- [x] 8. Fix chart utilities and empty states
+  - [x] 8.1 Create chart empty state component
+    - Display icon and message when data is empty
+    - Use consistent styling
+    - _Requirements: 7.4_
+  - [x] 8.2 Fix currency formatter for tooltips
+    - Format numbers as French currency
+    - Handle edge cases (null, undefined, 0)
+    - _Requirements: 7.5_
+  - [x] 8.3 Write property test for empty chart placeholder
+    - **Property 13: Empty chart placeholder**
+    - **Validates: Requirements 7.4**
+  - [x] 8.4 Write property test for currency tooltip formatting
+    - **Property 14: Currency tooltip formatting**
+    - **Validates: Requirements 7.5**
+
+- [x] 9. Final Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.

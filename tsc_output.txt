@@ -1,0 +1,340 @@
+app/(client)/(backend)/api/client/objectives/route.ts(67,7): error TS2322: Type 'string' is not assignable to type 'ObjectifStatus'.
+app/(client)/(backend)/api/client/objectives/route.ts(127,26): error TS2339: Property 'length' does not exist on type 'unknown'.
+app/(client)/(backend)/api/client/objectives/route.ts(134,24): error TS2339: Property 'length' does not exist on type 'unknown'.
+app/(client)/(backend)/api/client/objectives/route.ts(139,24): error TS2339: Property 'length' does not exist on type 'unknown'.
+app/(client)/(frontend)/portal/contrats/page.tsx(239,78): error TS2339: Property 'portfolioValue' does not exist on type '{ total: number; active: number; totalValue: number; } | { total: number; portfolioValue: number; byType: any[]; }'.
+  Property 'portfolioValue' does not exist on type '{ total: number; active: number; totalValue: number; }'.
+app/(client)/(frontend)/portal/documents/page.tsx(156,40): error TS2339: Property 'slice' does not exist on type 'unknown'.
+app/(client)/(frontend)/portal/objectifs/page.tsx(240,61): error TS2339: Property 'globalProgress' does not exist on type '{ total: number; achieved: number; inProgress: number; }'.
+app/(client)/(frontend)/portal/objectifs/page.tsx(241,38): error TS2339: Property 'globalProgress' does not exist on type '{ total: number; achieved: number; inProgress: number; }'.
+app/(client)/(frontend)/portal/patrimoine/page.tsx(121,40): error TS2339: Property 'summary' does not exist on type 'WealthSummary | { summary: { totalActifs: number; totalPassifs: number; netWealth: number; evolution: any; lastCalculated: any; }; actifs: { total: number; count: number; byCategory: any[]; }; passifs: { ...; }; }'.
+  Property 'summary' does not exist on type 'WealthSummary'.
+app/(client)/(frontend)/portal/patrimoine/page.tsx(124,25): error TS2339: Property 'actifs' does not exist on type 'WealthSummary | { summary: { totalActifs: number; totalPassifs: number; netWealth: number; evolution: any; lastCalculated: any; }; actifs: { total: number; count: number; byCategory: any[]; }; passifs: { ...; }; }'.
+  Property 'actifs' does not exist on type 'WealthSummary'.
+app/(client)/(frontend)/portal/patrimoine/page.tsx(141,40): error TS2339: Property 'summary' does not exist on type 'WealthSummary | { summary: { totalActifs: number; totalPassifs: number; netWealth: number; evolution: any; lastCalculated: any; }; actifs: { total: number; count: number; byCategory: any[]; }; passifs: { ...; }; }'.
+  Property 'summary' does not exist on type 'WealthSummary'.
+app/(client)/(frontend)/portal/patrimoine/page.tsx(144,25): error TS2339: Property 'passifs' does not exist on type 'WealthSummary | { summary: { totalActifs: number; totalPassifs: number; netWealth: number; evolution: any; lastCalculated: any; }; actifs: { total: number; count: number; byCategory: any[]; }; passifs: { ...; }; }'.
+  Property 'passifs' does not exist on type 'WealthSummary'.
+app/(client)/(frontend)/portal/patrimoine/page.tsx(161,40): error TS2339: Property 'summary' does not exist on type 'WealthSummary | { summary: { totalActifs: number; totalPassifs: number; netWealth: number; evolution: any; lastCalculated: any; }; actifs: { total: number; count: number; byCategory: any[]; }; passifs: { ...; }; }'.
+  Property 'summary' does not exist on type 'WealthSummary'.
+app/(client)/(frontend)/portal/patrimoine/page.tsx(163,23): error TS2339: Property 'summary' does not exist on type 'WealthSummary | { summary: { totalActifs: number; totalPassifs: number; netWealth: number; evolution: any; lastCalculated: any; }; actifs: { total: number; count: number; byCategory: any[]; }; passifs: { ...; }; }'.
+  Property 'summary' does not exist on type 'WealthSummary'.
+app/(client)/(frontend)/portal/patrimoine/page.tsx(165,27): error TS2339: Property 'summary' does not exist on type 'WealthSummary | { summary: { totalActifs: number; totalPassifs: number; netWealth: number; evolution: any; lastCalculated: any; }; actifs: { total: number; count: number; byCategory: any[]; }; passifs: { ...; }; }'.
+  Property 'summary' does not exist on type 'WealthSummary'.
+app/(client)/(frontend)/portal/patrimoine/page.tsx(171,30): error TS2339: Property 'summary' does not exist on type 'WealthSummary | { summary: { totalActifs: number; totalPassifs: number; netWealth: number; evolution: any; lastCalculated: any; }; actifs: { total: number; count: number; byCategory: any[]; }; passifs: { ...; }; }'.
+  Property 'summary' does not exist on type 'WealthSummary'.
+app/(client)/(frontend)/portal/patrimoine/page.tsx(199,23): error TS2339: Property 'actifs' does not exist on type 'WealthSummary | { summary: { totalActifs: number; totalPassifs: number; netWealth: number; evolution: any; lastCalculated: any; }; actifs: { total: number; count: number; byCategory: any[]; }; passifs: { ...; }; }'.
+  Property 'actifs' does not exist on type 'WealthSummary'.
+app/(client)/(frontend)/portal/patrimoine/page.tsx(239,17): error TS2339: Property 'actifs' does not exist on type 'WealthSummary | { summary: { totalActifs: number; totalPassifs: number; netWealth: number; evolution: any; lastCalculated: any; }; actifs: { total: number; count: number; byCategory: any[]; }; passifs: { ...; }; }'.
+  Property 'actifs' does not exist on type 'WealthSummary'.
+app/(client)/(frontend)/portal/patrimoine/page.tsx(280,17): error TS2339: Property 'passifs' does not exist on type 'WealthSummary | { summary: { totalActifs: number; totalPassifs: number; netWealth: number; evolution: any; lastCalculated: any; }; actifs: { total: number; count: number; byCategory: any[]; }; passifs: { ...; }; }'.
+  Property 'passifs' does not exist on type 'WealthSummary'.
+app/(client)/(frontend)/portal/patrimoine/page.tsx(320,17): error TS2339: Property 'passifs' does not exist on type 'WealthSummary | { summary: { totalActifs: number; totalPassifs: number; netWealth: number; evolution: any; lastCalculated: any; }; actifs: { total: number; count: number; byCategory: any[]; }; passifs: { ...; }; }'.
+  Property 'passifs' does not exist on type 'WealthSummary'.
+app/(client)/(frontend)/portal/profil/page.tsx(162,7): error TS2322: Type 'unknown' is not assignable to type 'string'.
+app/(client)/(frontend)/portal/profil/page.tsx(163,7): error TS2322: Type 'unknown' is not assignable to type 'string'.
+app/(client)/(frontend)/portal/profil/page.tsx(164,7): error TS2739: Type '{}' is missing the following properties from type '{ street: string; postalCode: string; city: string; country: string; }': street, postalCode, city, country
+app/(client)/(frontend)/portal/profil/page.tsx(261,21): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+app/(client)/(frontend)/portal/profil/page.tsx(261,41): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+app/(client)/(frontend)/portal/profil/page.tsx(266,35): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+app/(client)/(frontend)/portal/profil/page.tsx(266,70): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+app/(client)/(frontend)/portal/profil/page.tsx(280,44): error TS2538: Type 'unknown' cannot be used as an index type.
+app/(client)/(frontend)/portal/profil/page.tsx(286,21): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+app/(client)/(frontend)/portal/profil/page.tsx(292,21): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+app/(client)/(frontend)/portal/profil/page.tsx(298,33): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+app/(client)/(frontend)/portal/profil/page.tsx(347,51): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+app/(client)/(frontend)/portal/profil/page.tsx(365,21): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+app/(client)/(frontend)/portal/profil/page.tsx(383,21): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+app/(client)/(frontend)/portal/profil/page.tsx(424,45): error TS2339: Property 'street' does not exist on type 'unknown'.
+app/(client)/(frontend)/portal/profil/page.tsx(425,45): error TS2339: Property 'postalCode' does not exist on type 'unknown'.
+app/(client)/(frontend)/portal/profil/page.tsx(425,74): error TS2339: Property 'city' does not exist on type 'unknown'.
+app/(client)/(frontend)/portal/profil/page.tsx(511,58): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+app/(client)/(frontend)/portal/profil/page.tsx(515,40): error TS2339: Property 'street' does not exist on type 'unknown'.
+app/(client)/(frontend)/portal/profil/page.tsx(516,40): error TS2339: Property 'postalCode' does not exist on type 'unknown'.
+app/(client)/(frontend)/portal/profil/page.tsx(516,70): error TS2339: Property 'city' does not exist on type 'unknown'.
+app/(client)/(frontend)/portal/profil/page.tsx(521,23): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+app/(client)/(frontend)/portal/profil/page.tsx(525,44): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+app/(client)/(frontend)/portal/profil/page.tsx(538,55): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+app/(client)/(frontend)/portal/rendez-vous/page.tsx(385,57): error TS2339: Property 'scheduled' does not exist on type '{ total: number; upcoming: number; completed: number; } | { total: number; scheduled: number; completed: number; cancelled: number; }'.
+  Property 'scheduled' does not exist on type '{ total: number; upcoming: number; completed: number; }'.
+app/(superadmin)/(backend)/api/superadmin/clients/[id]/route.ts(29,9): error TS2353: Object literal may only specify known properties, and 'advisor' does not exist in type 'ClientInclude<DefaultArgs>'.
+app/_common/components/charts/ModernBarChart.tsx(86,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: Props, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<...> | Promise<...> | Component<...>', gave the following error.
+    Type '(value: number) => string | number' is not assignable to type '(value: any, index: number) => string'.
+      Type 'string | number' is not assignable to type 'string'.
+        Type 'number' is not assignable to type 'string'.
+  Overload 2 of 2, '(props: Props): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | Promise<...> | Component<...>', gave the following error.
+    Type '(value: number) => string | number' is not assignable to type '(value: any, index: number) => string'.
+      Type 'string | number' is not assignable to type 'string'.
+        Type 'number' is not assignable to type 'string'.
+app/_common/components/charts/ModernPieChart.tsx(106,21): error TS2322: Type '({ cx, cy, midAngle, innerRadius, outerRadius, percent }: { cx: number; cy: number; midAngle: number; innerRadius: number; outerRadius: number; percent: number; }) => JSX.Element' is not assignable to type 'PieLabel'.
+  Type '({ cx, cy, midAngle, innerRadius, outerRadius, percent }: { cx: number; cy: number; midAngle: number; innerRadius: number; outerRadius: number; percent: number; }) => JSX.Element' is not assignable to type '(props: PieLabelRenderProps) => ReactNode | ReactElement<SVGElement, string | JSXElementConstructor<any>>'.
+    Types of parameters '__0' and 'props' are incompatible.
+      Type 'PieLabelRenderProps' is not assignable to type '{ cx: number; cy: number; midAngle: number; innerRadius: number; outerRadius: number; percent: number; }'.
+        Property 'midAngle' is optional in type 'PieLabelRenderProps' but required in type '{ cx: number; cy: number; midAngle: number; innerRadius: number; outerRadius: number; percent: number; }'.
+app/_common/hooks/api/use-admin-api.ts(52,5): error TS2322: Type '(data: Record<string, unknown>) => Promise<unknown>' is not assignable to type 'MutationFunction<Record<string, unknown>, Record<string, unknown>>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<Record<string, unknown>>'.
+    Type 'unknown' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type '{}'.
+app/_common/hooks/api/use-admin-api.ts(105,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<Record<string, unknown>, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<Record<string, unknown>>'.
+    Type 'unknown' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type '{}'.
+app/_common/hooks/api/use-campaigns-api.ts(115,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<void, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<void>'.
+    Type 'unknown' is not assignable to type 'void'.
+app/_common/hooks/api/use-campaigns-api.ts(337,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<void, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<void>'.
+    Type 'unknown' is not assignable to type 'void'.
+app/_common/hooks/api/use-clients-api.ts(40,5): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(options: DefinedInitialDataOptions<ClientDetail, Error, ClientDetail, readonly unknown[]>, queryClient?: QueryClient): DefinedUseQueryResult<...>', gave the following error.
+    Type '() => Promise<unknown>' is not assignable to type 'QueryFunction<ClientDetail, readonly unknown[]>'.
+      Type 'Promise<unknown>' is not assignable to type 'ClientDetail | Promise<ClientDetail>'.
+        Type 'Promise<unknown>' is not assignable to type 'Promise<ClientDetail>'.
+          Type '{}' is missing the following properties from type 'ClientDetail': id, email, firstName, lastName, and 12 more.
+  Overload 2 of 3, '(options: UndefinedInitialDataOptions<ClientDetail, Error, ClientDetail, readonly unknown[]>, queryClient?: QueryClient): UseQueryResult<...>', gave the following error.
+    Type '() => Promise<unknown>' is not assignable to type 'unique symbol | QueryFunction<ClientDetail, readonly unknown[], never>'.
+      Type '() => Promise<unknown>' is not assignable to type 'QueryFunction<ClientDetail, readonly unknown[], never>'.
+        Type 'Promise<unknown>' is not assignable to type 'ClientDetail | Promise<ClientDetail>'.
+          Type 'Promise<unknown>' is not assignable to type 'Promise<ClientDetail>'.
+            Type '{}' is missing the following properties from type 'ClientDetail': id, email, firstName, lastName, and 12 more.
+  Overload 3 of 3, '(options: UseQueryOptions<ClientDetail, Error, ClientDetail, readonly unknown[]>, queryClient?: QueryClient): UseQueryResult<ClientDetail, Error>', gave the following error.
+    Type '() => Promise<unknown>' is not assignable to type 'unique symbol | QueryFunction<ClientDetail, readonly unknown[], never>'.
+      Type '() => Promise<unknown>' is not assignable to type 'QueryFunction<ClientDetail, readonly unknown[], never>'.
+        Type 'Promise<unknown>' is not assignable to type 'ClientDetail | Promise<ClientDetail>'.
+          Type 'Promise<unknown>' is not assignable to type 'Promise<ClientDetail>'.
+            Type '{}' is missing the following properties from type 'ClientDetail': id, email, firstName, lastName, and 12 more.
+app/_common/hooks/api/use-clients-api.ts(157,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<void, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<void>'.
+    Type 'unknown' is not assignable to type 'void'.
+app/_common/hooks/api/use-clients-api.ts(199,33): error TS2339: Property 'totalActifs' does not exist on type 'unknown'.
+app/_common/hooks/api/use-clients-api.ts(200,34): error TS2339: Property 'totalPassifs' does not exist on type 'unknown'.
+app/_common/hooks/api/use-clients-api.ts(204,38): error TS2339: Property 'allocationByType' does not exist on type 'unknown'.
+app/_common/hooks/api/use-clients-api.ts(205,31): error TS2339: Property 'allocationByType' does not exist on type 'unknown'.
+app/_common/hooks/api/use-clients-api.ts(212,42): error TS2339: Property 'allocationByCategory' does not exist on type 'unknown'.
+app/_common/hooks/api/use-clients-api.ts(213,31): error TS2339: Property 'allocationByCategory' does not exist on type 'unknown'.
+app/_common/hooks/api/use-clients-api.ts(218,17): error TS2339: Property 'allocationPercentages' does not exist on type 'unknown'.
+app/_common/hooks/api/use-clients-api.ts(219,33): error TS2339: Property 'allocationPercentages' does not exist on type 'unknown'.
+app/_common/hooks/api/use-clients-api.ts(229,30): error TS2339: Property 'patrimoineNet' does not exist on type 'unknown'.
+app/_common/hooks/api/use-clients-api.ts(229,53): error TS2339: Property 'totalNet' does not exist on type 'unknown'.
+app/_common/hooks/api/use-clients-api.ts(229,71): error TS2339: Property 'netWealth' does not exist on type 'unknown'.
+app/_common/hooks/api/use-clients-api.ts(230,31): error TS2339: Property 'patrimoineGere' does not exist on type 'unknown'.
+app/_common/hooks/api/use-clients-api.ts(230,55): error TS2339: Property 'totalGere' does not exist on type 'unknown'.
+app/_common/hooks/api/use-clients-api.ts(230,74): error TS2339: Property 'managedAssets' does not exist on type 'unknown'.
+app/_common/hooks/api/use-clients-api.ts(231,34): error TS2339: Property 'patrimoineNonGere' does not exist on type 'unknown'.
+app/_common/hooks/api/use-clients-api.ts(231,61): error TS2339: Property 'unmanagedAssets' does not exist on type 'unknown'.
+app/_common/hooks/api/use-clients-api.ts(237,31): error TS2339: Property 'lastCalculated' does not exist on type 'unknown'.
+app/_common/hooks/api/use-clients-api.ts(264,41): error TS2339: Property 'data' does not exist on type 'unknown'.
+app/_common/hooks/api/use-clients-api.ts(267,40): error TS2339: Property 'totalActifs' does not exist on type 'unknown'.
+app/_common/hooks/api/use-clients-api.ts(273,25): error TS2538: Type 'unknown' cannot be used as an index type.
+app/_common/hooks/api/use-clients-api.ts(273,48): error TS2538: Type 'unknown' cannot be used as an index type.
+app/_common/hooks/api/use-documents-api.ts(120,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<void, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<void>'.
+    Type 'unknown' is not assignable to type 'void'.
+app/_common/hooks/api/use-documents-api.ts(215,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<void, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<void>'.
+    Type 'unknown' is not assignable to type 'void'.
+app/_common/hooks/api/use-dossiers-api.ts(29,5): error TS2322: Type '(data: Record<string, unknown>) => Promise<unknown>' is not assignable to type 'MutationFunction<Record<string, unknown>, Record<string, unknown>>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<Record<string, unknown>>'.
+    Type 'unknown' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type '{}'.
+app/_common/hooks/api/use-dossiers-api.ts(62,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<Record<string, unknown>, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<Record<string, unknown>>'.
+    Type 'unknown' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type '{}'.
+app/_common/hooks/api/use-dossiers-api.ts(78,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<Record<string, unknown>, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<Record<string, unknown>>'.
+    Type 'unknown' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type '{}'.
+app/_common/hooks/api/use-dossiers-api.ts(94,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<Record<string, unknown>, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<Record<string, unknown>>'.
+    Type 'unknown' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type '{}'.
+app/_common/hooks/api/use-dossiers-api.ts(110,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<Record<string, unknown>, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<Record<string, unknown>>'.
+    Type 'unknown' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type '{}'.
+app/_common/hooks/api/use-dossiers-api.ts(126,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<Record<string, unknown>, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<Record<string, unknown>>'.
+    Type 'unknown' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type '{}'.
+app/_common/hooks/api/use-dossiers-api.ts(142,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<Record<string, unknown>, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<Record<string, unknown>>'.
+    Type 'unknown' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type '{}'.
+app/_common/hooks/api/use-dossiers-api.ts(158,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<Record<string, unknown>, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<Record<string, unknown>>'.
+    Type 'unknown' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type '{}'.
+app/_common/hooks/api/use-dossiers-api.ts(174,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<Record<string, unknown>, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<Record<string, unknown>>'.
+    Type 'unknown' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type '{}'.
+app/_common/hooks/api/use-email-templates-api.ts(141,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<void, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<void>'.
+    Type 'unknown' is not assignable to type 'void'.
+app/_common/hooks/api/use-invoices-api.ts(30,5): error TS2322: Type '(data: Record<string, unknown>) => Promise<unknown>' is not assignable to type 'MutationFunction<Record<string, unknown>, Record<string, unknown>>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<Record<string, unknown>>'.
+    Type 'unknown' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type '{}'.
+app/_common/hooks/api/use-invoices-api.ts(63,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<Record<string, unknown>, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<Record<string, unknown>>'.
+    Type 'unknown' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type '{}'.
+app/_common/hooks/api/use-invoices-api.ts(126,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<Record<string, unknown>, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<Record<string, unknown>>'.
+    Type 'unknown' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type '{}'.
+app/_common/hooks/api/use-invoices-api.ts(160,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<Record<string, unknown>, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<Record<string, unknown>>'.
+    Type 'unknown' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type '{}'.
+app/_common/hooks/api/use-kyc-api.ts(98,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<void, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<void>'.
+    Type 'unknown' is not assignable to type 'void'.
+app/_common/hooks/api/use-kyc-api.ts(227,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<void, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<void>'.
+    Type 'unknown' is not assignable to type 'void'.
+app/_common/hooks/api/use-notifications-api.ts(53,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<void, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<void>'.
+    Type 'unknown' is not assignable to type 'void'.
+app/_common/hooks/api/use-notifications-api.ts(116,5): error TS2322: Type '() => Promise<unknown>' is not assignable to type 'MutationFunction<void, void>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<void>'.
+    Type 'unknown' is not assignable to type 'void'.
+app/_common/hooks/api/use-partners-api.ts(109,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<void, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<void>'.
+    Type 'unknown' is not assignable to type 'void'.
+app/_common/hooks/api/use-reclamations-api.ts(156,5): error TS2322: Type '(id: string) => Promise<unknown>' is not assignable to type 'MutationFunction<void, string>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<void>'.
+    Type 'unknown' is not assignable to type 'void'.
+app/_common/hooks/api/use-tasks-api.ts(96,5): error TS2322: Type '(data: CreateTacheRequest) => Promise<unknown>' is not assignable to type 'MutationFunction<Record<string, unknown>, CreateTacheRequest>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<Record<string, unknown>>'.
+    Type 'unknown' is not assignable to type 'Record<string, unknown>'.
+      Index signature for type 'string' is missing in type '{}'.
+app/_common/lib/client-permissions.ts(366,9): error TS2322: Type 'Record<string, unknown>' is not assignable to type 'InputJsonValue | NullableJsonNullValueInput'.
+  Type 'Record<string, unknown>' is missing the following properties from type 'readonly InputJsonValue[]': length, concat, join, slice, and 19 more.
+app/_common/lib/prisma-middleware.ts(76,15): error TS2698: Spread types may only be created from object types.
+app/_common/lib/prisma-middleware.ts(84,15): error TS2698: Spread types may only be created from object types.
+app/_common/lib/prisma-middleware.ts(98,17): error TS2698: Spread types may only be created from object types.
+app/_common/lib/prisma-middleware.ts(126,40): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+app/_common/lib/prisma-middleware.ts(139,19): error TS2339: Property 'where' does not exist on type 'unknown'.
+app/_common/lib/prisma-middleware.ts(140,24): error TS2339: Property 'where' does not exist on type 'unknown'.
+app/_common/lib/prisma-middleware.ts(148,19): error TS2339: Property 'data' does not exist on type 'unknown'.
+app/_common/lib/prisma-middleware.ts(149,24): error TS2339: Property 'data' does not exist on type 'unknown'.
+app/_common/lib/prisma-middleware.ts(157,37): error TS2339: Property 'data' does not exist on type 'unknown'.
+app/_common/lib/prisma-middleware.ts(158,21): error TS2339: Property 'data' does not exist on type 'unknown'.
+app/_common/lib/prisma-middleware.ts(163,21): error TS2339: Property 'data' does not exist on type 'unknown'.
+app/_common/lib/prisma-middleware.ts(164,26): error TS2339: Property 'data' does not exist on type 'unknown'.
+app/_common/lib/prisma-middleware.ts(177,19): error TS2339: Property 'where' does not exist on type 'unknown'.
+app/_common/lib/prisma-middleware.ts(178,24): error TS2339: Property 'where' does not exist on type 'unknown'.
+app/_common/lib/prisma-middleware.ts(186,19): error TS2339: Property 'where' does not exist on type 'unknown'.
+app/_common/lib/prisma-middleware.ts(187,24): error TS2339: Property 'where' does not exist on type 'unknown'.
+app/_common/lib/services/bilan/audit-patrimonial-report.builder.ts(6,46): error TS2307: Cannot find module '@/app/_common/types/audit-patrimonial.types' or its corresponding type declarations.
+app/_common/lib/services/bilan/audit-patrimonial-report.types.ts(6,46): error TS2307: Cannot find module '@/app/_common/types/audit-patrimonial.types' or its corresponding type declarations.
+app/_common/lib/services/bilan/bilan-premium.renderer.ts(7,23): error TS2307: Cannot find module 'puppeteer' or its corresponding type declarations.
+app/_common/lib/services/bilan/bilan.builder.ts(139,9): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type '{ typeCode: "info" | "success" | "warning" | "danger"; title?: string; message: string; }'.
+app/_common/lib/services/bilan/bilan.builder.ts(201,9): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type '{ typeCode: "info" | "success" | "warning" | "danger"; title?: string; message: string; }'.
+app/_common/lib/services/bilan/bilan.builder.ts(250,9): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type '{ typeCode: "info" | "success" | "warning" | "danger"; title?: string; message: string; }'.
+app/_common/lib/services/bilan/bilan.builder.ts(310,9): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type '{ typeCode: "info" | "success" | "warning" | "danger"; title?: string; message: string; }'.
+app/_common/lib/services/bilan/bilan.builder.ts(362,9): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type '{ typeCode: "info" | "success" | "warning" | "danger"; title?: string; message: string; }'.
+app/_common/lib/services/bilan/bilan.builder.ts(412,9): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type '{ typeCode: "info" | "success" | "warning" | "danger"; title?: string; message: string; }'.
+app/_common/lib/services/bilan/bilan.builder.ts(460,9): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type '{ typeCode: "info" | "success" | "warning" | "danger"; title?: string; message: string; }'.
+app/_common/lib/services/bilan/bilan.builder.ts(519,9): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type '{ typeCode: "info" | "success" | "warning" | "danger"; title?: string; message: string; }'.
+app/_common/lib/services/compliance-service.ts(117,48): error TS2551: Property 'investmentHorizonCode' does not exist on type '{ actifs: ({ actif: { value: Decimal; }; } & { id: string; createdAt: Date; clientId: string; actifId: string; ownershipPercentage: Decimal; ownershipType: string; })[]; contrats: { ...; }[]; kycDocuments: { ...; }[]; } & { ...; }'. Did you mean 'investmentHorizon'?
+app/_common/lib/services/compliance-service.ts(117,92): error TS2551: Property 'investmentHorizonCode' does not exist on type '{ actifs: ({ actif: { value: Decimal; }; } & { id: string; createdAt: Date; clientId: string; actifId: string; ownershipPercentage: Decimal; ownershipType: string; })[]; contrats: { ...; }[]; kycDocuments: { ...; }[]; } & { ...; }'. Did you mean 'investmentHorizon'?
+app/_common/lib/services/compliance-service.ts(117,124): error TS2551: Property 'investmentHorizonCode' does not exist on type '{ actifs: ({ actif: { value: Decimal; }; } & { id: string; createdAt: Date; clientId: string; actifId: string; ownershipPercentage: Decimal; ownershipType: string; })[]; contrats: { ...; }[]; kycDocuments: { ...; }[]; } & { ...; }'. Did you mean 'investmentHorizon'?
+app/_common/lib/services/compliance-service.ts(117,162): error TS2551: Property 'investmentHorizonCode' does not exist on type '{ actifs: ({ actif: { value: Decimal; }; } & { id: string; createdAt: Date; clientId: string; actifId: string; ownershipPercentage: Decimal; ownershipType: string; })[]; contrats: { ...; }[]; kycDocuments: { ...; }[]; } & { ...; }'. Did you mean 'investmentHorizon'?
+app/_common/lib/services/compliance-service.ts(122,53): error TS2551: Property 'investmentKnowledgeCode' does not exist on type '{ actifs: ({ actif: { value: Decimal; }; } & { id: string; createdAt: Date; clientId: string; actifId: string; ownershipPercentage: Decimal; ownershipType: string; })[]; contrats: { ...; }[]; kycDocuments: { ...; }[]; } & { ...; }'. Did you mean 'investmentKnowledge'?
+app/_common/lib/services/contrat-service.ts(2,34): error TS2307: Cannot find module '@/app/_common/lib/constants/reference-types' or its corresponding type declarations.
+app/_common/lib/services/document-service.ts(2,53): error TS2307: Cannot find module '@/app/_common/lib/constants/reference-types' or its corresponding type declarations.
+app/_common/lib/services/email-sync/gmail-service.ts(28,36): error TS2344: Type 'Function' does not satisfy the constraint '(...args: any) => any'.
+  Type 'Function' provides no match for the signature '(...args: any): any'.
+app/_common/lib/services/email-sync/gmail-service.ts(152,47): error TS2345: Argument of type 'Schema$Message' is not assignable to parameter of type 'Record<string, unknown>'.
+  Index signature for type 'string' is missing in type 'Schema$Message'.
+app/_common/lib/services/email-sync/gmail-service.ts(169,37): error TS2339: Property 'headers' does not exist on type 'unknown'.
+app/_common/lib/services/email-sync/gmail-service.ts(179,25): error TS2339: Property 'body' does not exist on type 'unknown'.
+app/_common/lib/services/email-sync/gmail-service.ts(180,42): error TS2339: Property 'body' does not exist on type 'unknown'.
+app/_common/lib/services/email-sync/gmail-service.ts(181,32): error TS2339: Property 'parts' does not exist on type 'unknown'.
+app/_common/lib/services/email-sync/gmail-service.ts(182,42): error TS2339: Property 'parts' does not exist on type 'unknown'.
+app/_common/lib/services/email-sync/gmail-service.ts(201,7): error TS2322: Type 'unknown' is not assignable to type 'string'.
+app/_common/lib/services/email-sync/gmail-service.ts(202,7): error TS2322: Type 'unknown' is not assignable to type 'string'.
+app/_common/lib/services/email-sync/gmail-service.ts(209,7): error TS2322: Type 'unknown' is not assignable to type 'string'.
+app/_common/lib/services/email-sync/gmail-service.ts(210,33): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+app/_common/lib/services/email-sync/gmail-service.ts(211,37): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+app/_common/lib/services/email-sync/gmail-service.ts(212,34): error TS2339: Property 'includes' does not exist on type 'unknown'.
+app/_common/lib/services/email-sync/gmail-service.ts(214,7): error TS2740: Type '{}' is missing the following properties from type 'string[]': length, pop, push, concat, and 28 more.
+app/_common/lib/services/email-sync/outlook-service.ts(175,7): error TS2322: Type 'unknown' is not assignable to type 'string'.
+app/_common/lib/services/email-sync/outlook-service.ts(176,7): error TS2322: Type 'unknown' is not assignable to type 'string'.
+app/_common/lib/services/email-sync/outlook-service.ts(177,27): error TS2339: Property 'emailAddress' does not exist on type 'unknown'.
+app/_common/lib/services/email-sync/outlook-service.ts(180,7): error TS2322: Type 'unknown' is not assignable to type 'string'.
+app/_common/lib/services/email-sync/outlook-service.ts(181,27): error TS2339: Property 'contentType' does not exist on type 'unknown'.
+app/_common/lib/services/email-sync/outlook-service.ts(181,65): error TS2339: Property 'content' does not exist on type 'unknown'.
+app/_common/lib/services/email-sync/outlook-service.ts(182,31): error TS2339: Property 'contentType' does not exist on type 'unknown'.
+app/_common/lib/services/email-sync/outlook-service.ts(182,69): error TS2339: Property 'content' does not exist on type 'unknown'.
+app/_common/lib/services/email-sync/outlook-service.ts(183,7): error TS2322: Type 'unknown' is not assignable to type 'string'.
+app/_common/lib/services/email-sync/outlook-service.ts(184,24): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'string | number'.
+app/_common/lib/services/email-sync/outlook-service.ts(185,28): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'string | number'.
+app/_common/lib/services/email-sync/outlook-service.ts(186,7): error TS2322: Type 'unknown' is not assignable to type 'boolean'.
+app/_common/lib/services/email-sync/outlook-service.ts(187,7): error TS2322: Type 'unknown' is not assignable to type 'boolean'.
+app/_common/lib/services/email-template-service.ts(34,3): error TS2300: Duplicate identifier 'isActive'.
+app/_common/lib/services/email-template-service.ts(35,3): error TS2300: Duplicate identifier 'isActive'.
+app/_common/lib/services/email-template-service.ts(102,9): error TS1117: An object literal cannot have multiple properties with the same name.
+app/_common/lib/services/email-template-service.ts(379,9): error TS1117: An object literal cannot have multiple properties with the same name.
+app/_common/lib/services/email-template-service.ts(442,9): error TS1117: An object literal cannot have multiple properties with the same name.
+app/_common/lib/services/email-template-service.ts(475,9): error TS1117: An object literal cannot have multiple properties with the same name.
+app/_common/lib/services/email-template-service.ts(640,76): error TS1117: An object literal cannot have multiple properties with the same name.
+app/_common/lib/services/email-template-service.ts(641,77): error TS1117: An object literal cannot have multiple properties with the same name.
+app/_common/lib/services/kyc-service.ts(2,52): error TS2307: Cannot find module '@/app/_common/lib/constants/reference-types' or its corresponding type declarations.
+app/_common/lib/services/kyc-service.ts(3,10): error TS2305: Module '"@prisma/client"' has no exported member 'Priority'.
+app/_common/lib/services/kyc-service.ts(43,14): error TS2304: Cannot find name 'KYCCheckPriority'.
+app/_common/lib/services/kyc-service.ts(53,14): error TS2304: Cannot find name 'KYCCheckPriority'.
+app/_common/lib/services/kyc-service.ts(84,14): error TS2304: Cannot find name 'KYCCheckPriority'.
+app/_common/lib/services/kyc-service.ts(755,18): error TS2304: Cannot find name 'KYCCheckPriority'.
+app/_common/lib/services/objectif-service.ts(2,26): error TS2305: Module '"@prisma/client"' has no exported member 'Priority'.
+app/_common/lib/services/objectif-service.ts(3,35): error TS2307: Cannot find module '@/app/_common/lib/constants/reference-types' or its corresponding type declarations.
+app/_common/lib/services/objectif-service.ts(126,16): error TS2304: Cannot find name 'ObjectifPriority'.
+app/_common/lib/services/objectif-service.ts(190,16): error TS2304: Cannot find name 'ObjectifPriority'.
+app/_common/lib/services/objectif-service.ts(309,18): error TS2304: Cannot find name 'ObjectifPriority'.
+app/_common/lib/services/opportunite-service.ts(2,29): error TS2305: Module '"@prisma/client"' has no exported member 'Priority'.
+app/_common/lib/services/opportunite-service.ts(3,38): error TS2307: Cannot find module '@/app/_common/lib/constants/reference-types' or its corresponding type declarations.
+app/_common/lib/services/opportunite-service.ts(73,16): error TS2304: Cannot find name 'OpportunitePriority'.
+app/_common/lib/services/opportunite-service.ts(148,16): error TS2304: Cannot find name 'OpportunitePriority'.
+app/_common/lib/services/opportunite-service.ts(297,18): error TS2304: Cannot find name 'OpportunitePriority'.
+app/_common/lib/services/patrimoine-service.ts(3,72): error TS2307: Cannot find module '@/app/_common/lib/constants/reference-types' or its corresponding type declarations.
+app/_common/lib/services/reclamation-service.ts(2,29): error TS2305: Module '"@prisma/client"' has no exported member 'Priority'.
+app/_common/lib/services/reclamation-service.ts(3,38): error TS2307: Cannot find module '@/app/_common/lib/constants/reference-types' or its corresponding type declarations.
+app/_common/lib/services/reclamation-service.ts(11,14): error TS2304: Cannot find name 'SLASeverity'.
+app/_common/lib/services/reclamation-service.ts(21,14): error TS2304: Cannot find name 'SLASeverity'.
+app/_common/lib/services/reclamation-service.ts(43,14): error TS2304: Cannot find name 'SLASeverity'.
+app/_common/lib/services/reclamation-service.ts(99,60): error TS2304: Cannot find name 'SLASeverity'.
+app/_common/lib/services/rendez-vous-service.ts(3,37): error TS2307: Cannot find module '@/app/_common/lib/constants/reference-types' or its corresponding type declarations.
+app/_common/lib/services/simulation-export-service.ts(7,37): error TS2307: Cannot find module '@/app/_common/lib/constants/reference-types' or its corresponding type declarations.
+app/api/admin/queues/route.ts(4,34): error TS2307: Cannot find module 'next-auth' or its corresponding type declarations.
+app/api/admin/queues/route.ts(5,29): error TS2307: Cannot find module '@/lib/auth' or its corresponding type declarations.
+app/api/auth/outlook/callback/route.ts(111,13): error TS2353: Object literal may only specify known properties, and 'tokenExpiresAt' does not exist in type '(Without<EmailIntegrationUpdateInput, EmailIntegrationUncheckedUpdateInput> & EmailIntegrationUncheckedUpdateInput) | (Without<...> & EmailIntegrationUpdateInput)'.
+app/api/auth/outlook/callback/route.ts(125,13): error TS2353: Object literal may only specify known properties, and 'tokenExpiresAt' does not exist in type '(Without<EmailIntegrationCreateInput, EmailIntegrationUncheckedCreateInput> & EmailIntegrationUncheckedCreateInput) | (Without<...> & EmailIntegrationCreateInput)'.
+lib/queues/workers/email.worker.ts(38,11): error TS2353: Object literal may only specify known properties, and 'settings' does not exist in type 'CabinetSelect<DefaultArgs>'.
+lib/queues/workers/email.worker.ts(90,13): error TS2322: Type '"ECHOUE"' is not assignable to type 'EmailMessageStatus | EnumEmailMessageStatusFieldUpdateOperationsInput'.
+lib/queues/workers/email.worker.ts(161,21): error TS2322: Type '"EN_PAUSE"' is not assignable to type 'CampaignStatus | EnumCampaignStatusFieldUpdateOperationsInput'.
+lib/queues/workers/email.worker.ts(267,35): error TS2307: Cannot find module 'resend' or its corresponding type declarations.
+lib/queues/workers/email.worker.ts(294,31): error TS2307: Cannot find module '@sendgrid/mail' or its corresponding type declarations.
+lib/queues/workers/email.worker.ts(322,35): error TS2307: Cannot find module 'nodemailer' or its corresponding type declarations.
+lib/queues/workers/email.worker.ts(404,11): error TS2353: Object literal may only specify known properties, and 'to' does not exist in type '(Without<EmailMessageCreateInput, EmailMessageUncheckedCreateInput> & EmailMessageUncheckedCreateInput) | (Without<...> & EmailMessageCreateInput)'.
+lib/services/patrimoine-snapshot.service.ts(45,9): error TS2353: Object literal may only specify known properties, and 'where' does not exist in type 'ActifDefaultArgs<DefaultArgs>'.
+lib/services/patrimoine-snapshot.service.ts(100,13): error TS2551: Property 'actif' does not exist on type '{ id: string; createdAt: Date; clientId: string; actifId: string; ownershipPercentage: Decimal; ownershipType: string; }'. Did you mean 'actifId'?
+lib/services/patrimoine-snapshot.service.ts(102,22): error TS2551: Property 'actif' does not exist on type '{ id: string; createdAt: Date; clientId: string; actifId: string; ownershipPercentage: Decimal; ownershipType: string; }'. Did you mean 'actifId'?
+lib/services/patrimoine-snapshot.service.ts(105,12): error TS2551: Property 'actif' does not exist on type '{ id: string; createdAt: Date; clientId: string; actifId: string; ownershipPercentage: Decimal; ownershipType: string; }'. Did you mean 'actifId'?
+lib/services/patrimoine-snapshot.service.ts(111,25): error TS2551: Property 'actif' does not exist on type '{ id: string; createdAt: Date; clientId: string; actifId: string; ownershipPercentage: Decimal; ownershipType: string; }'. Did you mean 'actifId'?
+lib/services/reference-data.service.ts(202,3): error TS2554: Expected 2 arguments, but got 1.
+lib/services/reference-data.service.ts(236,7): error TS2322: Type 'Record<string, unknown>' is not assignable to type 'InputJsonValue | NullableJsonNullValueInput'.
+  Type 'Record<string, unknown>' is missing the following properties from type 'readonly InputJsonValue[]': length, concat, join, slice, and 19 more.
+lib/services/reference-data.service.ts(246,7): error TS2322: Type 'Record<string, unknown>' is not assignable to type 'InputJsonValue | NullableJsonNullValueInput'.
+  Type 'Record<string, unknown>' is missing the following properties from type 'readonly InputJsonValue[]': length, concat, join, slice, and 19 more.

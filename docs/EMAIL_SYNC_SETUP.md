@@ -24,7 +24,7 @@ Le système de synchronisation email permet aux conseillers de connecter leurs c
    - Aller dans "APIs & Services" > "Credentials"
    - Cliquer sur "Create Credentials" > "OAuth client ID"
    - Type d'application : "Web application"
-   - Nom : "ALFI CRM Email Sync"
+   - Nom : "Aura CRM Email Sync"
    - Authorized redirect URIs :
      - `http://localhost:3000/api/email/gmail/callback` (développement)
      - `https://votre-domaine.com/api/email/gmail/callback` (production)
@@ -44,7 +44,7 @@ Le système de synchronisation email permet aux conseillers de connecter leurs c
 1. Aller sur [Azure Portal](https://portal.azure.com/)
 2. Aller dans "Azure Active Directory" > "App registrations"
 3. Cliquer sur "New registration"
-   - Nom : "ALFI CRM Email Sync"
+   - Nom : "Aura CRM Email Sync"
    - Supported account types : "Accounts in any organizational directory and personal Microsoft accounts"
    - Redirect URI : 
      - Type : "Web"
@@ -56,7 +56,7 @@ Le système de synchronisation email permet aux conseillers de connecter leurs c
 5. Créer un Client Secret :
    - Aller dans "Certificates & secrets"
    - Cliquer sur "New client secret"
-   - Description : "ALFI CRM"
+   - Description : "Aura CRM"
    - Expiration : Choisir la durée
    - Cliquer sur "Add"
    - **IMPORTANT** : Copier immédiatement la valeur du secret (elle ne sera plus visible)

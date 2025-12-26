@@ -1,4 +1,4 @@
-# ALFI CRM - CRM Patrimonial Professionnel
+# Aura CRM - CRM Patrimonial Professionnel
 
 **Version**: 0.5.0 (En développement actif)  
 **Statut**: 🚧 Projet en cours - Non production-ready  
@@ -24,7 +24,7 @@
 
 ## 🎯 Vue d'Ensemble
 
-ALFI CRM est un CRM patrimonial moderne pour conseillers en gestion de patrimoine, construit avec Next.js 15, TypeScript, Prisma et PostgreSQL.
+Aura CRM est un CRM patrimonial moderne pour conseillers en gestion de patrimoine, construit avec Next.js 15, TypeScript, Prisma et PostgreSQL.
 
 **⚠️ IMPORTANT**: Ce projet est en développement actif et **n'est pas prêt pour la production**. Il nécessite encore 9-13 mois de développement pour être pleinement fonctionnel et conforme aux exigences réglementaires AMF.
 
@@ -58,9 +58,9 @@ ALFI CRM est un CRM patrimonial moderne pour conseillers en gestion de patrimoin
 - ✅ `/api/objectifs` - Gestion objectifs
 - ✅ `/api/taches` - Gestion tâches
 - ✅ `/api/rendez-vous` - Gestion rendez-vous
-- ✅ `/api/notifications` - Notifications
+- ✅ `/api/advisor/notifications` - Notifications
 - ✅ `/api/simulations` - Simulations
-- ✅ `/api/dashboard/counters` - Compteurs dashboard
+- ✅ `/api/advisor/dashboard/counters` - Compteurs dashboard
 - ✅ `/api/patrimoine/stats` - Stats patrimoine
 
 ### Frontend (35%)
@@ -111,7 +111,7 @@ ALFI CRM est un CRM patrimonial moderne pour conseillers en gestion de patrimoin
 ```bash
 # Cloner le repository
 git clone <repo-url>
-cd alfi-crm
+cd aura-crm
 
 # Installer les dépendances
 npm install
@@ -150,7 +150,7 @@ Ouvrir [http://localhost:3000](http://localhost:3000)
 ## 🏗️ Architecture
 
 ```
-alfi-crm/
+aura-crm/
 ├── app/
 │   ├── api/              # API Routes REST
 │   ├── dashboard/        # Pages dashboard (35% complètes)

@@ -7,8 +7,8 @@ Ce document fournit des exemples concrets d'utilisation du système de sécurit�
 ```typescript
 // app/api/clients/route.ts
 import { NextRequest } from 'next/server'
-import { requireAuth, createSuccessResponse, createErrorResponse } from '@/lib/auth-helpers'
-import { getPrismaClient, setRLSContext } from '@/lib/prisma'
+import { requireAuth, createSuccessResponse, createErrorResponse } from '@/app/_common/lib/auth-helpers'
+import { getPrismaClient, setRLSContext } from '@/app/_common/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
@@ -50,9 +50,9 @@ export async function GET(request: NextRequest) {
 ```typescript
 // app/api/clients/[id]/delete/route.ts
 import { NextRequest } from 'next/server'
-import { requirePermission, createSuccessResponse, createErrorResponse } from '@/lib/auth-helpers'
-import { getPrismaClient, setRLSContext } from '@/lib/prisma'
-import { canDeleteClient } from '@/lib/permissions'
+import { requirePermission, createSuccessResponse, createErrorResponse } from '@/app/_common/lib/auth-helpers'
+import { getPrismaClient, setRLSContext } from '@/app/_common/lib/prisma'
+import { canDeleteClient } from '@/app/_common/lib/permissions'
 
 export async function DELETE(
   request: NextRequest,
@@ -101,8 +101,8 @@ export async function DELETE(
 ```typescript
 // app/api/admin/cabinets/route.ts
 import { NextRequest } from 'next/server'
-import { requireSuperAdmin, createSuccessResponse, createErrorResponse } from '@/lib/auth-helpers'
-import { getPrismaClient } from '@/lib/prisma'
+import { requireSuperAdmin, createSuccessResponse, createErrorResponse } from '@/app/_common/lib/auth-helpers'
+import { getPrismaClient } from '@/app/_common/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
@@ -146,7 +146,7 @@ export async function GET(request: NextRequest) {
 
 ```typescript
 // app/dashboard/clients/page.tsx
-import { getPrismaClient, setRLSContext } from '@/lib/prisma'
+import { getPrismaClient, setRLSContext } from '@/app/_common/lib/prisma'
 import { getServerSession } from 'next-auth'
 
 export default async function ClientsPage() {
@@ -198,8 +198,8 @@ export default async function ClientsPage() {
 
 ```typescript
 // lib/services/client-service.ts
-import { getPrismaClient, setRLSContext } from '@/lib/prisma'
-import { createAuditMiddleware } from '@/lib/prisma-middleware'
+import { getPrismaClient, setRLSContext } from '@/app/_common/lib/prisma'
+import { createAuditMiddleware } from '@/app/_common/lib/prisma-middleware'
 
 export class ClientService {
   private prisma
@@ -270,8 +270,8 @@ export class ClientService {
 ```typescript
 // app/api/clients/[id]/route.ts
 import { NextRequest } from 'next/server'
-import { requireAuth, createSuccessResponse, createErrorResponse } from '@/lib/auth-helpers'
-import { ClientService } from '@/lib/services/client-service'
+import { requireAuth, createSuccessResponse, createErrorResponse } from '@/app/_common/lib/auth-helpers'
+import { ClientService } from '@/app/_common/lib/services/client-service'
 
 export async function GET(
   request: NextRequest,
@@ -328,7 +328,7 @@ export async function PATCH(
 
 ```typescript
 // __tests__/security/isolation.test.ts
-import { getPrismaClient, setRLSContext } from '@/lib/prisma'
+import { getPrismaClient, setRLSContext } from '@/app/_common/lib/prisma'
 
 describe('Cabinet Isolation', () => {
   it('should only return clients from the same cabinet', async () => {

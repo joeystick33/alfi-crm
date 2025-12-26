@@ -1,0 +1,735 @@
+/**
+ * usePatrimoine Hook
+ * React Query hooks for patrimoine (wealth) management with Prisma
+ */
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { api, buildQueryString } from '@/app/_common/lib/api-client'
+import type { WealthSummary } from '@/app/_common/lib/api-types'
+import type { OpportunitesData, PatrimoineData } from '@/app/_common/types/client360'
+import type { Actif, Passif, Contrat, ContratStatus, ActifType, ActifCategory, PassifType, ContratType } from '@prisma/client'
+
+// ============================================
+// TYPES
+// ============================================
+
+export interface PatrimoineCalculation {
+  totalActifs: number
+  totalPassifs: number
+  netWealth: number
+  managedAssets: number
+  unmanagedAssets: number
+  actifsByCategory: Record<string, number>
+  actifsByType: Record<string, number>
+  passifsByType: Record<string, number>
+  allocationPercentages: {
+    immobilier: number
+    financier: number
+    professionnel: number
+    autre: number
+  }
+  lastCalculated: Date
+}
+
+export interface ActifFilters {
+  type?: ActifType
+  category?: ActifCategory
+  clientId?: string
+  managedByFirm?: boolean
+  minValue?: number
+  maxValue?: number
+}
+
+export interface PassifFilters {
+  clientId?: string
+  type?: PassifType
+  isActive?: boolean
+}
+
+export interface ContratFilters {
+  clientId?: string
+  type?: ContratType
+  status?: ContratStatus
+  renewalDueSoon?: boolean
+}
+
+export interface CreateActifData {
+  type: ActifType
+  category: ActifCategory
+  name: string
+  description?: string
+  value: number
+  acquisitionDate?: Date | string
+  acquisitionValue?: number
+  details?: Record<string, unknown>
+  annualIncome?: number
+  taxDetails?: Record<string, unknown>
+  managedByFirm?: boolean
+  managementFees?: number
+  clientId?: string
+
+  // Immobilier
+  propertyAddress?: string
+  propertyCity?: string
+  propertyPostalCode?: string
+  propertySurface?: number
+  propertyRooms?: number
+  propertyType?: string
+  propertyCondition?: string
+
+  // Locatif
+  rentalScheme?: string
+  rentalSchemeStartDate?: string
+  rentalSchemeEndDate?: string
+  rentalMonthlyRent?: number
+  rentalCharges?: number
+  rentalOccupancyRate?: number
+  rentalTenantName?: string
+
+  // IFI
+  fiscalPropertyType?: string
+  fiscalRpAbatement?: boolean
+  fiscalManualDiscount?: number
+
+  // Démembrement
+  dismembermentType?: string
+  dismembermentEndDate?: string
+  usufructuaryName?: string
+  bareOwnerName?: string
+
+  // Assurance-vie
+  insurerName?: string
+  contractNumber?: string
+  contractOpenDate?: string
+  beneficiaryClause?: string
+  beneficiaryClauseType?: string
+  beneficiaries?: Array<{ name?: string; share?: number; clause?: string }>
+  totalPremiums?: number
+  premiumsBefore70?: number
+  premiumsAfter70?: number
+  fundsAllocation?: Record<string, unknown>
+  euroFundRate?: number
+  managementMode?: string
+
+  // Compte-titres
+  brokerName?: string
+  accountNumber?: string
+  portfolioLines?: Array<{ symbol?: string; quantity?: number; value?: number }>
+  dividendsReceived?: number
+
+  // Épargne salariale
+  employerName?: string
+  vestingSchedule?: Record<string, unknown>
+  availabilityDate?: string
+  unvestedAmount?: number
+
+  // Mobilier
+  objectBrand?: string
+  objectModel?: string
+  objectSerial?: string
+  objectCertificate?: boolean
+  objectInsured?: boolean
+  objectInsuranceValue?: number
+  lastAppraisalDate?: string
+  lastAppraisalValue?: number
+
+  // Véhicules
+  vehicleBrand?: string
+  vehicleModel?: string
+  vehicleYear?: number
+  vehicleRegistration?: string
+  vehicleMileage?: number
+
+  // Crypto
+  walletAddress?: string
+  exchangePlatform?: string
+  tokenSymbol?: string
+  tokenQuantity?: number
+
+  // Professionnel
+  companyName?: string
+  companySiren?: string
+  companyLegalForm?: string
+  companySharesCount?: number
+  companyTotalShares?: number
+}
+
+export interface CreatePassifData {
+  clientId: string
+  type: PassifType
+  name: string
+  description?: string
+
+  // Montants
+  initialAmount: number
+  remainingAmount: number
+  monthlyPayment: number
+
+  // Taux
+  interestRate: number
+  effectiveRate?: number
+  rateType?: string
+
+  // Dates
+  startDate: Date | string
+  endDate: Date | string
+  firstPaymentDate?: Date | string
+
+  // Différé
+  deferralType?: string
+  deferralMonths?: number
+
+  // Rattachement actif
+  linkedActifId?: string
+
+  // Emprunteurs
+  borrowerType?: string
+  primaryBorrower?: string
+  primaryBorrowerQuota?: number
+  coBorrower?: string
+  coBorrowerQuota?: number
+  borrowers?: Array<{ name?: string; quota?: number }>
+
+  // Assurance
+  insuranceType?: string
+  insuranceProvider?: string
+  insuranceRate?: number
+  insuranceMonthly?: number
+  insuranceTotalCost?: number
+  insuranceGuarantees?: Array<{ type?: string; covered?: boolean }>
+  insuranceDetails?: Record<string, unknown>
+  insurance?: Record<string, unknown> // Legacy
+
+  // Garantie
+  guaranteeType?: string
+  guaranteeProvider?: string
+  guaranteeAmount?: number
+  guaranteeCost?: number
+  guaranteeRestitution?: number
+
+  // Prêteur
+  lenderName?: string
+  lenderType?: string
+  contractNumber?: string
+  accountNumber?: string
+
+  // Remboursement anticipé
+  earlyRepaymentAllowed?: boolean
+  earlyRepaymentPenalty?: number
+  earlyRepaymentPenaltyMax?: number
+  partialRepayments?: Array<{ date?: string; amount?: number }>
+
+  // Renégociation
+  isRenegotiated?: boolean
+  originalRate?: number
+  renegotiationDate?: Date | string
+  renegotiationCost?: number
+
+  // Modularité
+  isModular?: boolean
+  modularityRange?: { min?: number; max?: number }
+  pauseAllowed?: boolean
+  pauseMaxMonths?: number
+
+  // Calculs
+  totalInterestCost?: number
+  totalCost?: number
+}
+
+export interface CreateContratData {
+  clientId: string
+  type: ContratType
+  name: string
+  provider: string
+  contractNumber?: string
+  startDate: Date | string
+  endDate?: Date | string
+  premium?: number
+  coverage?: number
+  value?: number
+  beneficiaries?: Array<{ name?: string; share?: number }>
+  details?: Record<string, unknown>
+  commission?: number
+  nextRenewalDate?: Date | string
+}
+
+// ============================================
+// QUERY KEYS
+// ============================================
+
+export const patrimoineKeys = {
+  all: ['patrimoine'] as const,
+
+  // Actifs
+  actifs: () => [...patrimoineKeys.all, 'actifs'] as const,
+  actifsList: (filters: ActifFilters) => [...patrimoineKeys.actifs(), 'list', filters] as const,
+  actif: (id: string) => [...patrimoineKeys.actifs(), 'detail', id] as const,
+  clientActifs: (clientId: string) => [...patrimoineKeys.actifs(), 'client', clientId] as const,
+
+  // Passifs
+  passifs: () => [...patrimoineKeys.all, 'passifs'] as const,
+  passifsList: (filters: PassifFilters) => [...patrimoineKeys.passifs(), 'list', filters] as const,
+  passif: (id: string) => [...patrimoineKeys.passifs(), 'detail', id] as const,
+  clientPassifs: (clientId: string) => [...patrimoineKeys.passifs(), 'client', clientId] as const,
+
+  // Contrats
+  contrats: () => [...patrimoineKeys.all, 'contrats'] as const,
+  contratsList: (filters: ContratFilters) => [...patrimoineKeys.contrats(), 'list', filters] as const,
+  contrat: (id: string) => [...patrimoineKeys.contrats(), 'detail', id] as const,
+  clientContrats: (clientId: string) => [...patrimoineKeys.contrats(), 'client', clientId] as const,
+
+  // Calculations
+  wealth: (clientId: string) => [...patrimoineKeys.all, 'wealth', clientId] as const,
+  clientPatrimoine: (clientId: string) => [...patrimoineKeys.all, 'client', clientId] as const,
+  opportunities: (clientId: string) => [...patrimoineKeys.all, 'opportunities', clientId] as const,
+}
+
+// ============================================
+// ACTIFS QUERIES
+// ============================================
+
+/**
+ * Fetch a single actif by ID
+ */
+export function useActif(id: string) {
+  return useQuery({
+    queryKey: patrimoineKeys.actif(id),
+    queryFn: async () => {
+      const response = await api.get<Actif>(`/advisor/actifs/${id}`)
+      return response
+    },
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+/**
+ * Fetch list of actifs with filters
+ */
+export function useActifs(filters: ActifFilters = {}) {
+  return useQuery({
+    queryKey: patrimoineKeys.actifsList(filters),
+    queryFn: async () => {
+      const queryString = buildQueryString(filters)
+      const response = await api.get<Actif[]>(`/advisor/actifs${queryString}`)
+      return response
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  })
+}
+
+/**
+ * Fetch actifs for a specific client
+ */
+export function useClientActifs(clientId: string) {
+  return useQuery({
+    queryKey: patrimoineKeys.clientActifs(clientId),
+    queryFn: async () => {
+      const response = await api.get<{ actifs: Actif[]; count: number }>(
+        `/advisor/clients/${clientId}/actifs`
+      )
+
+      return response?.actifs ?? []
+    },
+    enabled: !!clientId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  })
+}
+
+// ============================================
+// PASSIFS QUERIES
+// ============================================
+
+/**
+ * Fetch a single passif by ID
+ */
+export function usePassif(id: string) {
+  return useQuery({
+    queryKey: patrimoineKeys.passif(id),
+    queryFn: async () => {
+      const response = await api.get<Passif>(`/advisor/passifs/${id}`)
+      return response
+    },
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+/**
+ * Fetch list of passifs with filters
+ */
+export function usePassifs(filters: PassifFilters = {}) {
+  return useQuery({
+    queryKey: patrimoineKeys.passifsList(filters),
+    queryFn: async () => {
+      const queryString = buildQueryString(filters)
+      const response = await api.get<Passif[]>(`/advisor/passifs${queryString}`)
+      return response
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  })
+}
+
+/**
+ * Fetch passifs for a specific client
+ */
+export function useClientPassifs(clientId: string) {
+  return useQuery({
+    queryKey: patrimoineKeys.clientPassifs(clientId),
+    queryFn: async () => {
+      const response = await api.get<{ passifs: Passif[]; summary: unknown }>(
+        `/advisor/clients/${clientId}/passifs`
+      )
+      return response?.passifs ?? []
+    },
+    enabled: !!clientId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  })
+}
+
+// ============================================
+// CONTRATS QUERIES
+// ============================================
+
+/**
+ * Fetch a single contrat by ID
+ */
+export function useContrat(id: string) {
+  return useQuery({
+    queryKey: patrimoineKeys.contrat(id),
+    queryFn: async () => {
+      const response = await api.get<Contrat>(`/advisor/contrats/${id}`)
+      return response
+    },
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+/**
+ * Fetch list of contrats with filters
+ */
+export function useContrats(filters: ContratFilters = {}) {
+  return useQuery({
+    queryKey: patrimoineKeys.contratsList(filters),
+    queryFn: async () => {
+      const queryString = buildQueryString(filters)
+      const response = await api.get<Contrat[]>(`/advisor/contrats${queryString}`)
+      return response
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  })
+}
+
+/**
+ * Fetch contrats for a specific client
+ */
+export function useClientContrats(clientId: string) {
+  return useQuery({
+    queryKey: patrimoineKeys.clientContrats(clientId),
+    queryFn: async () => {
+      const response = await api.get<{ contrats: Contrat[]; count: number }>(
+        `/advisor/clients/${clientId}/contrats`
+      )
+      return response?.contrats ?? []
+    },
+    enabled: !!clientId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  })
+}
+
+// ============================================
+// WEALTH CALCULATIONS
+// ============================================
+
+/**
+ * Calculate client wealth
+ */
+export function useClientWealth(clientId: string) {
+  return useQuery({
+    queryKey: patrimoineKeys.wealth(clientId),
+    queryFn: async () => {
+      const response = await api.get<WealthSummary>(`/advisor/clients/${clientId}/wealth`)
+      return response
+    },
+    enabled: !!clientId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+/**
+ * Fetch complete patrimoine for a client (actifs + passifs + contrats + wealth)
+ */
+export function useClientPatrimoine(clientId: string) {
+  return useQuery({
+    queryKey: patrimoineKeys.clientPatrimoine(clientId),
+    queryFn: async () => {
+      const response = await api.get<PatrimoineData>(`/advisor/clients/${clientId}/patrimoine`)
+      return response
+    },
+    enabled: !!clientId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+/**
+ * Detect patrimoine opportunities for a client
+ */
+export function usePatrimoineOpportunities(clientId: string) {
+  return useQuery({
+    queryKey: patrimoineKeys.opportunities(clientId),
+    queryFn: async () => {
+      const response = await api.get<{
+        opportunities: OpportunitesData['opportunities']
+        matchedObjectives: OpportunitesData['matchedObjectives']
+        stats: unknown
+      }>(`/advisor/clients/${clientId}/opportunities`)
+
+      return {
+        opportunities: response.opportunities,
+        matchedObjectives: response.matchedObjectives,
+      }
+    },
+    enabled: !!clientId,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  })
+}
+
+// ============================================
+// ACTIFS MUTATIONS
+// ============================================
+
+/**
+ * Create a new actif
+ */
+export function useCreateActif() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (data: CreateActifData) => {
+      const response = await api.post<Actif>('/advisor/actifs', data)
+      return response
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: patrimoineKeys.actifs() })
+    },
+  })
+}
+
+/**
+ * Link actif to client
+ */
+export function useLinkActifToClient() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      actifId,
+      clientId,
+      ownershipPercentage,
+      ownershipType,
+    }: {
+      actifId: string
+      clientId: string
+      ownershipPercentage?: number
+      ownershipType?: string
+    }) => {
+      const response = await api.post<{ id: string; actifId: string; clientId: string }>(
+        `/advisor/actifs/${actifId}/link`,
+        { clientId, ownershipPercentage, ownershipType }
+      )
+      return response
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: patrimoineKeys.clientActifs(variables.clientId) })
+      queryClient.invalidateQueries({ queryKey: patrimoineKeys.wealth(variables.clientId) })
+      queryClient.invalidateQueries({ queryKey: patrimoineKeys.clientPatrimoine(variables.clientId) })
+    },
+  })
+}
+
+/**
+ * Update an actif
+ */
+export function useUpdateActif() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<CreateActifData> }) => {
+      const response = await api.put<Actif>(`/advisor/actifs/${id}`, data)
+      return response
+    },
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData(patrimoineKeys.actif(variables.id), data)
+      queryClient.invalidateQueries({ queryKey: patrimoineKeys.actifs() })
+      // Invalidate wealth for all linked clients
+      queryClient.invalidateQueries({ queryKey: patrimoineKeys.all })
+    },
+  })
+}
+
+/**
+ * Delete an actif
+ */
+export function useDeleteActif() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await api.delete<{ success: boolean }>(`/advisor/actifs/${id}`)
+      return response
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: patrimoineKeys.actifs() })
+      queryClient.invalidateQueries({ queryKey: patrimoineKeys.all })
+    },
+  })
+}
+
+// ============================================
+// PASSIFS MUTATIONS
+// ============================================
+
+/**
+ * Create a new passif
+ */
+export function useCreatePassif() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (data: CreatePassifData) => {
+      const response = await api.post<Passif>('/advisor/passifs', data)
+      return response
+    },
+    onSuccess: (data, variables) => {
+      const passifData = data as Passif & { client?: { id: string } }
+      const clientId = passifData?.clientId || passifData?.client?.id || variables.clientId
+      queryClient.invalidateQueries({ queryKey: patrimoineKeys.passifs() })
+      if (clientId) {
+        queryClient.invalidateQueries({ queryKey: patrimoineKeys.clientPassifs(clientId) })
+        queryClient.invalidateQueries({ queryKey: patrimoineKeys.wealth(clientId) })
+        queryClient.invalidateQueries({ queryKey: patrimoineKeys.clientPatrimoine(clientId) })
+      }
+    },
+  })
+}
+
+/**
+ * Update a passif
+ */
+export function useUpdatePassif() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<CreatePassifData> }) => {
+      const response = await api.put<Passif>(`/advisor/passifs/${id}`, data)
+      return response
+    },
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData(patrimoineKeys.passif(variables.id), data)
+      queryClient.invalidateQueries({ queryKey: patrimoineKeys.passifs() })
+      if (data.clientId) {
+        queryClient.invalidateQueries({ queryKey: patrimoineKeys.clientPassifs(data.clientId) })
+        queryClient.invalidateQueries({ queryKey: patrimoineKeys.wealth(data.clientId) })
+        queryClient.invalidateQueries({ queryKey: patrimoineKeys.clientPatrimoine(data.clientId) })
+      }
+    },
+  })
+}
+
+/**
+ * Delete a passif
+ */
+export function useDeletePassif() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await api.delete<{ success: boolean }>(`/advisor/passifs/${id}`)
+      return response
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: patrimoineKeys.passifs() })
+      queryClient.invalidateQueries({ queryKey: patrimoineKeys.all })
+    },
+  })
+}
+
+// ============================================
+// CONTRATS MUTATIONS
+// ============================================
+
+/**
+ * Create a new contrat
+ */
+export function useCreateContrat() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (data: CreateContratData) => {
+      const response = await api.post<Contrat>('/advisor/contrats', data)
+      return response
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: patrimoineKeys.contrats() })
+      queryClient.invalidateQueries({ queryKey: patrimoineKeys.clientContrats(data.clientId) })
+      queryClient.invalidateQueries({ queryKey: patrimoineKeys.clientPatrimoine(data.clientId) })
+    },
+  })
+}
+
+/**
+ * Update a contrat
+ */
+export function useUpdateContrat() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string
+      data: Partial<CreateContratData> & { status?: ContratStatus }
+    }) => {
+      const response = await api.put<Contrat>(`/advisor/contrats/${id}`, data)
+      return response
+    },
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData(patrimoineKeys.contrat(variables.id), data)
+      queryClient.invalidateQueries({ queryKey: patrimoineKeys.contrats() })
+      queryClient.invalidateQueries({ queryKey: patrimoineKeys.clientContrats(data.clientId) })
+      queryClient.invalidateQueries({ queryKey: patrimoineKeys.clientPatrimoine(data.clientId) })
+    },
+  })
+}
+
+/**
+ * Renew a contrat
+ */
+export function useRenewContrat() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      newEndDate,
+      newPremium,
+    }: {
+      id: string
+      newEndDate: Date | string
+      newPremium?: number
+    }) => {
+      const response = await api.put<Contrat>(
+        `/advisor/contrats/${id}`,
+        { endDate: newEndDate, ...(newPremium !== undefined ? { premium: newPremium } : {}) }
+      )
+      return response
+    },
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData(patrimoineKeys.contrat(variables.id), data)
+      queryClient.invalidateQueries({ queryKey: patrimoineKeys.contrats() })
+      queryClient.invalidateQueries({ queryKey: patrimoineKeys.clientContrats(data.clientId) })
+    },
+  })
+}

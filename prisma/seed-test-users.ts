@@ -9,10 +9,10 @@ async function main() {
   // 1. Créer un SuperAdmin
   const superAdminPassword = await bcrypt.hash('superadmin123', 10)
   const superAdmin = await prisma.superAdmin.upsert({
-    where: { email: 'superadmin@alfi.fr' },
+    where: { email: 'superadmin@aura.fr' },
     update: {},
     create: {
-      email: 'superadmin@alfi.fr',
+      email: 'superadmin@aura.fr',
       password: superAdminPassword,
       firstName: 'Super',
       lastName: 'Admin',
@@ -137,7 +137,7 @@ async function main() {
   console.log('\n🎉 Tous les utilisateurs de test ont été créés !')
   console.log('\n📋 IDENTIFIANTS DE TEST:\n')
   console.log('1️⃣  SUPERADMIN (Gestion globale)')
-  console.log('   Email: superadmin@alfi.fr')
+  console.log('   Email: superadmin@aura.fr')
   console.log('   Mot de passe: superadmin123\n')
   console.log('2️⃣  ADMIN CABINET (Gestion du cabinet)')
   console.log('   Email: admin@cabinet-test.fr')

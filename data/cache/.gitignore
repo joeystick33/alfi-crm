@@ -1,0 +1,6 @@
+# Cache des aides locales - Fichiers JSON générés automatiquement
+# Ne pas committer les données scrapées/API
+aides-locales/*.json
+
+# Garder le dossier
+!.gitkeep

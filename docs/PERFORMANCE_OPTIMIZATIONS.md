@@ -106,7 +106,7 @@ Located in `lib/lazy-components.ts`:
 
 ```typescript
 export const IncomeTaxCalculator = lazy(
-  () => import('@/components/calculators/IncomeTaxCalculator')
+  () => import('@/app/(advisor)/(frontend)/components/calculators/IncomeTaxCalculator')
 )
 ```
 
@@ -345,7 +345,7 @@ await refetchClients() // Wait for server + refetch
 import { Calculator } from '@/lib/lazy-components'
 
 // ❌ Bad - Bundled in main
-import { Calculator } from '@/components/calculators/Calculator'
+import { Calculator } from '@/app/(advisor)/(frontend)/components/calculators/Calculator'
 ```
 
 ### 4. Use Infinite Scroll for Long Lists

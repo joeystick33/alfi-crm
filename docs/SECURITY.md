@@ -1,8 +1,8 @@
-# Architecture de Sécurité - ALFI CRM
+# Architecture de Sécurité - Aura CRM
 
 ## Vue d'Ensemble
 
-Le CRM ALFI implémente une architecture de sécurité multi-couches pour garantir l'isolation complète des données entre les cabinets et un contrôle d'accès granulaire basé sur les rôles.
+Le CRM Aura implémente une architecture de sécurité multi-couches pour garantir l'isolation complète des données entre les cabinets et un contrôle d'accès granulaire basé sur les rôles.
 
 ## Couches de Sécurité
 
@@ -31,7 +31,7 @@ prisma/migrations/20251113_enable_rls/migration.sql
 
 Pour activer RLS dans une session:
 ```typescript
-import { setRLSContext } from '@/lib/prisma'
+import { setRLSContext } from '@/app/_common/lib/prisma'
 
 await setRLSContext(cabinetId, isSuperAdmin)
 ```
@@ -52,7 +52,7 @@ Le middleware Prisma ajoute automatiquement les filtres `cabinetId` à toutes le
 #### Utilisation
 
 ```typescript
-import { getPrismaClient } from '@/lib/prisma'
+import { getPrismaClient } from '@/app/_common/lib/prisma'
 
 // Client avec isolation
 const prisma = getPrismaClient(cabinetId, false)
@@ -85,7 +85,7 @@ Contrôle d'accès granulaire basé sur les rôles (RBAC).
 Les permissions sont définies dans `lib/permissions.ts`:
 
 ```typescript
-import { hasPermission, canAccessClient } from '@/lib/permissions'
+import { hasPermission, canAccessClient } from '@/app/_common/lib/permissions'
 
 // Vérifier une permission
 if (hasPermission(userRole, 'canManageClients')) {
@@ -107,7 +107,7 @@ Middlewares pour protéger les routes API.
 #### Utilisation
 
 ```typescript
-import { requireAuth, requirePermission, requireSuperAdmin } from '@/lib/auth-helpers'
+import { requireAuth, requirePermission, requireSuperAdmin } from '@/app/_common/lib/auth-helpers'
 
 // Route protégée (authentification requise)
 export async function GET(request: NextRequest) {
@@ -180,7 +180,7 @@ export async function DELETE(request: NextRequest) {
 Toutes les actions sensibles sont enregistrées dans `AuditLog`:
 
 ```typescript
-import { createAuditMiddleware } from '@/lib/prisma-middleware'
+import { createAuditMiddleware } from '@/app/_common/lib/prisma-middleware'
 
 // Ajouter l'audit à un client Prisma
 prisma.$use(createAuditMiddleware(userId, ipAddress, userAgent))

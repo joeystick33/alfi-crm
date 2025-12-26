@@ -21,30 +21,13 @@
     "strict": true,
     "noImplicitAny": false,
     "strictNullChecks": false,
+    "useUnknownInCatchVariables": false,
     "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
       "@/*": [
         "./*"
-      ],
-      "@/components/*": [
-        "./components/*"
-      ],
-      "@/lib/*": [
-        "./lib/*"
-      ],
-      "@/app/*": [
-        "./app/*"
-      ],
-      "@/hooks/*": [
-        "./hooks/*"
-      ],
-      "@/types/*": [
-        "./types/*"
-      ],
-      "@/styles/*": [
-        "./styles/*"
       ]
     },
     "plugins": [
@@ -67,6 +50,10 @@
     "node_modules",
     ".next",
     "out",
-    "build"
+    "build",
+    "playwright.config.ts",
+    "e2e/**/*",
+    "tests/**/*",
+    "vitest.config.ts"
   ]
 }

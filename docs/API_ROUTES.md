@@ -2,7 +2,7 @@
 
 ## Vue d'Ensemble
 
-Cette documentation décrit toutes les routes API disponibles dans le CRM ALFI. Toutes les routes sont protégées par authentification et respectent l'isolation multi-tenant.
+Cette documentation décrit toutes les routes API disponibles dans le CRM Aura. Toutes les routes sont protégées par authentification et respectent l'isolation multi-tenant.
 
 ## Base URL
 

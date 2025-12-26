@@ -15,7 +15,7 @@ async function main() {
 
   const users = [
     {
-      email: 'superadmin@alfi.fr',
+      email: 'superadmin@aura.fr',
       password: 'superadmin123',
       user_metadata: {
         firstName: 'Super',

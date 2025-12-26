@@ -1,0 +1,11 @@
+export { ParticulierStep1Identity } from './ParticulierStep1Identity'
+export { ParticulierStep2Contact } from './ParticulierStep2Contact'
+export { ParticulierStep3Family } from './ParticulierStep3Family'
+export { ParticulierStep4Professional } from './ParticulierStep4Professional'
+export { ParticulierStep5Financial } from './ParticulierStep5Financial'
+export { ParticulierStep6Investor } from './ParticulierStep6Investor'
+
+export { ProfessionnelStep1Entreprise } from './ProfessionnelStep1Entreprise'
+export { ProfessionnelStep2Activite } from './ProfessionnelStep2Activite'
+export { ProfessionnelStep3Representant } from './ProfessionnelStep3Representant'
+export { ProfessionnelStep4Coordonnees } from './ProfessionnelStep4Coordonnees'

@@ -1,4 +1,4 @@
-# ✅ Couverture Fonctionnelle Complète - ALFI CRM
+# ✅ Couverture Fonctionnelle Complète - Aura CRM
 
 ## 📊 Récapitulatif : Toutes vos questions sont couvertes !
 

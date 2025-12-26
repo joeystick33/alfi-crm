@@ -1,12 +1,12 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { updateSession } from '@/lib/supabase/middleware'
+import { updateSession } from '@/app/_common/lib/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  
+
   // Update Supabase session
   const { supabaseResponse, user } = await updateSession(request)
-  
+
   const isLoggedIn = !!user
   console.log(`Middleware: ${pathname} - LoggedIn: ${isLoggedIn} - User: ${user?.email}`)
 
@@ -41,7 +41,7 @@ export async function middleware(request: NextRequest) {
     // Protected routes: /dashboard, /client, /superadmin, /simulators
     const protectedPrefixes = ['/dashboard', '/client', '/superadmin', '/simulators']
     const isProtectedRoute = protectedPrefixes.some(prefix => pathname.startsWith(prefix))
-    
+
     if (isProtectedRoute) {
       const loginUrl = new URL('/login', request.url)
       loginUrl.searchParams.set('callbackUrl', pathname)

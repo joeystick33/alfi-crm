@@ -175,3 +175,15 @@ body {
 .dropdown-menu {
   z-index: 55 !important;
 }
+
+/* Fix pour les Select Radix UI - CRITIQUE pour les modals */
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+}
+
+/* Portal content z-index fix */
+[data-radix-select-content],
+[data-radix-dropdown-menu-content],
+[data-radix-popover-content] {
+  z-index: 9999 !important;
+}

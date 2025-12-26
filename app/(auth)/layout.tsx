@@ -1,8 +1,8 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'ALFI CRM - Connexion',
-  description: 'Authentification',
+  title: 'Aura - Authentification',
+  description: 'Portail de connexion sécurisé Aura',
 }
 
 export default function AuthLayout({
@@ -11,8 +11,8 @@ export default function AuthLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="auth-layout min-h-screen flex items-center justify-center">
+    <>
       {children}
-    </div>
+    </>
   )
 }

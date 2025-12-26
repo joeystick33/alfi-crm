@@ -1,0 +1,318 @@
+# Implementation Plan
+
+- [x] 1. Setup foundation and data models
+  - [x] 1.1 Extend Prisma schema with new models
+    - Add FamilyMember, Asset, Liability, Contract, Objective, Project, Opportunity, Activity, ClientSettings models
+    - Add relations to Client model
+    - Run migration
+    - _Requirements: 2.1, 3.1, 4.1, 9.1, 10.1, 11.1, 12.1, 13.1, 14.1_
+  - [x] 1.2 Create shared TypeScript interfaces
+    - Create types for all tab data structures
+    - Create shared enums for categories, statuses, priorities
+    - _Requirements: All_
+  - [x] 1.3 Create Client360 container and tab navigation
+    - Implement lazy-loaded tab system
+    - Add tab state persistence
+    - _Requirements: 15.1, 15.2_
+
+- [x] 2. Implement TabOverview (Vue d'ensemble)
+  - [x] 2.1 Create overview API route
+    - Aggregate patrimony summary, indicators, alerts
+    - Calculate evolution data points
+    - _Requirements: 1.1, 1.2, 1.3, 1.4_
+  - [x] 2.2 Implement patrimony donut chart
+    - Display net/gross values with allocation breakdown
+    - Use Recharts with proper colors
+    - _Requirements: 1.1_
+  - [x] 2.3 Implement evolution charts
+    - Patrimony evolution over time (monthly/yearly toggle)
+    - Revenue vs expenses chart
+    - _Requirements: 1.2, 1.3_
+  - [x] 2.4 Implement KPI cards with navigation
+    - Display taxation, income, contracts, risk, objectives
+    - Add click handlers for tab navigation
+    - _Requirements: 1.4, 1.6_
+  - [x] 2.5 Implement alerts section
+    - Display alerts with severity styling
+    - Add actionable links
+    - _Requirements: 1.5_
+  - [x] 2.6 Write property test for allocation sum consistency
+    - **Property 1: Allocation sum consistency**
+    - **Validates: Requirements 1.1, 3.1, 3.3, 4.1**
+  - [x] 2.7 Write property test for alert severity ordering
+    - **Property 15: Alert severity ordering**
+    - **Validates: Requirements 1.5**
+
+- [x] 3. Implement TabProfile (Profil & Famille)
+  - [x] 3.1 Create profile API route
+    - Return identity, family, legal rights, fiscal info
+    - _Requirements: 2.1, 2.2, 2.3, 2.4_
+  - [x] 3.2 Implement identity section
+    - Display personal information with edit capability
+    - _Requirements: 2.1_
+  - [x] 3.3 Implement family structure section
+    - Display family members with roles
+    - Add/edit/remove family members
+    - _Requirements: 2.2, 2.3, 2.7_
+  - [x] 3.4 Implement legal rights section
+    - Display matrimonial regime, professional status, structures
+    - _Requirements: 2.4_
+  - [x] 3.5 Implement fiscal shares calculation
+    - Auto-calculate based on family structure
+    - Display fiscal household summary
+    - _Requirements: 2.5_
+  - [x] 3.6 Write property test for fiscal shares calculation
+    - **Property 5: Fiscal shares calculation**
+    - **Validates: Requirements 2.5**
+  - [x] 3.7 Write property test for IFI recalculation on family change
+    - **Property 6: IFI taxable base calculation**
+    - **Validates: Requirements 2.6, 8.1, 8.2**
+
+- [x] 4. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 5. Implement TabPatrimoine (Patrimoine & Reporting)
+  - [x] 5.1 Create patrimoine API route
+    - Return assets, liabilities, allocations, performance
+    - Calculate summary metrics
+    - _Requirements: 3.1, 4.1_
+  - [x] 5.2 Implement assets section
+    - Display assets by category with pie charts
+    - CRUD operations for assets
+    - Managed/non-managed indicator
+    - _Requirements: 3.1, 3.2, 3.3, 3.5, 3.6, 3.7_
+  - [x] 5.3 Implement liabilities section
+    - Display liabilities by type
+    - CRUD operations for liabilities
+    - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
+  - [x] 5.4 Implement performance chart
+    - Display financial asset returns over time
+    - _Requirements: 3.4_
+  - [x] 5.5 Implement reporting section
+    - Generate patrimony report
+    - PDF and Excel export
+    - _Requirements: 5.1, 5.2, 5.3, 5.4_
+  - [x] 5.6 Write property test for entity categorization validity
+    - **Property 2: Entity categorization validity**
+    - **Validates: Requirements 3.2, 4.2, 9.1, 10.2, 12.2, 13.1**
+  - [x] 5.7 Write property test for net worth calculation
+    - **Property 16: Net worth calculation**
+    - **Validates: Requirements 3.1, 4.1**
+  - [x] 5.8 Write property test for managed status indicator
+    - **Property 17: Managed status indicator presence**
+    - **Validates: Requirements 3.7, 4.5**
+
+- [x] 6. Implement TabBudget (Budget & Flux Financiers)
+  - [x] 6.1 Create budget API route
+    - Return revenues, expenses, balance, projection, alerts
+    - _Requirements: 6.1, 6.2, 6.3_
+  - [x] 6.2 Implement revenues section
+    - Display recurring and one-time revenues
+    - CRUD operations
+    - _Requirements: 6.1_
+  - [x] 6.3 Implement expenses section
+    - Display fixed and variable expenses
+    - CRUD operations
+    - _Requirements: 6.2_
+  - [x] 6.4 Implement balance and metrics display
+    - Monthly/annual balances
+    - Savings rate calculation
+    - _Requirements: 6.3_
+  - [x] 6.5 Implement projection chart
+    - 12-month forecast visualization
+    - _Requirements: 6.4_
+  - [x] 6.6 Implement evolution charts
+    - Income/expense trends over time
+    - _Requirements: 6.5_
+  - [x] 6.7 Implement budget alerts
+    - Surplus, deficit, risk warnings
+    - _Requirements: 6.6_
+  - [x] 6.8 Write property test for budget balance calculation
+    - **Property 7: Budget balance calculation**
+    - **Validates: Requirements 6.3, 6.7**
+  - [x] 6.9 Write property test for budget projection consistency
+    - **Property 8: Budget projection consistency**
+    - **Validates: Requirements 6.4**
+
+- [x] 7. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 8. Implement TabFiscalite (Fiscalité)
+  - [x] 8.1 Create taxation API route
+    - Return IR data, IFI data, simulations
+    - _Requirements: 7.1, 8.1_
+  - [x] 8.2 Implement IR section
+    - Taxable income with revenue sources
+    - Deductible charges
+    - Marginal rate with bracket visualization
+    - _Requirements: 7.1, 7.2, 7.3_
+  - [x] 8.3 Implement IR simulation
+    - Calculate projected IR
+    - Compare scenarios
+    - _Requirements: 7.4, 7.5_
+  - [x] 8.4 Implement IFI section
+    - Taxable base display
+    - IFI-taxable vs non-taxable assets
+    - _Requirements: 8.1, 8.2_
+  - [x] 8.5 Implement IFI simulation
+    - Calculate IFI amount
+    - Display optimizations
+    - _Requirements: 8.3, 8.4_
+  - [x] 8.6 Write property test for IR calculation accuracy
+    - **Property 9: IR calculation accuracy**
+    - **Validates: Requirements 7.3, 7.4**
+  - [x] 8.7 Write property test for IFI calculation accuracy
+    - **Property 10: IFI calculation accuracy**
+    - **Validates: Requirements 8.3**
+
+- [x] 9. Implement TabContrats (Contrats)
+  - [x] 9.1 Create contracts API route
+    - Return contracts by type with summary
+    - _Requirements: 9.1, 9.3_
+  - [x] 9.2 Implement contracts list by type
+    - Categorized display (Assurance-vie, PER, etc.)
+    - _Requirements: 9.1_
+  - [x] 9.3 Implement contract details view
+    - Full characteristics, beneficiaries, fees, performance
+    - Versements history
+    - _Requirements: 9.2, 9.5_
+  - [x] 9.4 Implement contract CRUD operations
+    - Add, modify, close, transfer workflows
+    - _Requirements: 9.4, 9.6_
+  - [x] 9.5 Implement managed/non-managed dashboard
+    - Summary counts and values
+    - _Requirements: 9.3_
+  - [x] 9.6 Write property test for contract managed status consistency
+    - **Property 11: Contract managed status consistency**
+    - **Validates: Requirements 9.3**
+  - [x] 9.7 Write property test for entity completeness (contracts)
+    - **Property 4: Entity completeness**
+    - **Validates: Requirements 4.3, 9.2, 10.4, 11.2, 13.5**
+
+- [x] 10. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 11. Implement TabDocuments (Documents & Conformité)
+  - [x] 11.1 Create documents API route
+    - Return documents, KYC status, risk profile, compliance
+    - _Requirements: 10.1, 10.5_
+  - [x] 11.2 Implement documents list by category
+    - Identity, patrimony, risk profile, compliance categories
+    - Status indicators (valid, expired, missing)
+    - _Requirements: 10.1, 10.2_
+  - [x] 11.3 Implement document upload with metadata
+    - Certified archiving
+    - _Requirements: 10.4_
+  - [x] 11.4 Implement expiration alerts
+    - Display upcoming expirations
+    - _Requirements: 10.3_
+  - [x] 11.5 Implement risk profile section
+    - MIFID questionnaire status and score
+    - _Requirements: 10.5_
+  - [x] 11.6 Implement compliance section
+    - LCB-FT status and declarations
+    - _Requirements: 10.2_
+  - [x] 11.7 Write property test for document expiration alerts
+    - **Property 12: Document expiration alerts**
+    - **Validates: Requirements 10.3**
+
+- [x] 12. Implement TabObjectifs (Objectifs & Projets)
+  - [x] 12.1 Create objectives API route
+    - Return objectives, projects, timeline
+    - _Requirements: 11.1, 11.2_
+  - [x] 12.2 Implement objectives section
+    - Display by type (retirement, real estate, etc.)
+    - CRUD operations
+    - _Requirements: 11.1_
+  - [x] 12.3 Implement projects section
+    - Budget, deadlines, priorities
+    - Link to simulations
+    - _Requirements: 11.2, 11.3_
+  - [x] 12.4 Implement timeline visualization
+    - Milestones display
+    - _Requirements: 11.4_
+  - [x] 12.5 Implement project progress tracking
+    - Progress percentage, milestones achieved, risks
+    - _Requirements: 11.5_
+  - [x] 12.6 Write property test for project progress bounds
+    - **Property 13: Project progress bounds**
+    - **Validates: Requirements 11.5**
+  - [x] 12.7 Write property test for temporal data ordering
+    - **Property 3: Temporal data ordering**
+    - **Validates: Requirements 1.2, 1.3, 6.5, 13.4**
+
+- [x] 13. Implement TabOpportunites (Opportunités)
+  - [x] 13.1 Create opportunities API route
+    - Return opportunities with objective matching
+    - _Requirements: 12.1, 12.3_
+  - [x] 13.2 Implement opportunities list by category
+    - Fiscal, investment, reorganization categories
+    - _Requirements: 12.1, 12.2_
+  - [x] 13.3 Implement opportunity details
+    - Analysis with pros/cons, requirements, timeline
+    - _Requirements: 12.4_
+  - [x] 13.4 Implement objective matching display
+    - Show matched objectives with scores
+    - _Requirements: 12.3_
+  - [x] 13.5 Write property test for opportunity objective matching
+    - **Property 14: Opportunity objective matching**
+    - **Validates: Requirements 12.3**
+
+- [x] 14. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 15. Implement TabActivites (Activités & Historique)
+  - [x] 15.1 Create activities API route
+    - Return activities with filtering
+    - _Requirements: 13.1, 13.2, 13.3_
+  - [x] 15.2 Implement activities timeline
+    - Chronological display with type icons
+    - _Requirements: 13.4_
+  - [x] 15.3 Implement activity filtering
+    - Filter by type, date range, search
+    - _Requirements: 13.4_
+  - [x] 15.4 Implement activity creation
+    - Add with type, description, linked documents
+    - _Requirements: 13.5_
+  - [x] 15.5 Implement financial/fiscal logs display
+    - Show system-generated logs
+    - _Requirements: 13.3_
+
+- [x] 16. Implement TabParametres (Paramètres)
+  - [x] 16.1 Create settings API route
+    - Return all client settings
+    - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5, 14.6_
+  - [x] 16.2 Implement preferences section
+    - Communication, reporting frequency
+    - _Requirements: 14.1_
+  - [x] 16.3 Implement fiscal parameters section
+    - Tax year, regime options
+    - _Requirements: 14.2_
+  - [x] 16.4 Implement bank accounts section
+    - Linked accounts management
+    - _Requirements: 14.3_
+  - [x] 16.5 Implement access rights section
+    - Multi-advisor configuration
+    - _Requirements: 14.4_
+  - [x] 16.6 Implement notifications section
+    - Alert preferences
+    - _Requirements: 14.5_
+  - [x] 16.7 Implement privacy section
+    - Consent status display
+    - _Requirements: 14.6_
+
+- [x] 17. Final polish and integration
+  - [x] 17.1 Implement skeleton loaders for all tabs
+    - Consistent loading states
+    - _Requirements: 15.2_
+  - [x] 17.2 Implement error boundaries and recovery
+    - Contextual error messages
+    - _Requirements: 15.4_
+  - [x] 17.3 Implement keyboard navigation
+    - Tab navigation, common shortcuts
+    - _Requirements: 15.5_
+  - [x] 17.4 Add bulk action progress indicators
+    - _Requirements: 15.3_
+
+- [x] 18. Final Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.

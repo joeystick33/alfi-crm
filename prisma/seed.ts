@@ -3,26 +3,596 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
-async function main() {
-  console.log('🌱 Starting database seed...');
+// Helper constants
+const NOW = new Date(); // Should be Dec 2025
+const CURRENT_YEAR = NOW.getFullYear();
+const NEXT_YEAR = CURRENT_YEAR + 1;
+const PREV_YEAR = CURRENT_YEAR - 1;
 
-  // Check if cabinet already exists (idempotency)
-  const existingCabinet = await prisma.cabinet.findFirst({
-    where: { slug: 'cabinet-alfi-test' }
+// Helper to create dates relative to now
+function getDate(yearOffset: number, month: number, day: number, hour: number = 0): Date {
+  const year = CURRENT_YEAR + yearOffset;
+  return new Date(year, month, day, hour);
+}
+
+// Helper types
+interface ClientData {
+  id: string;
+  firstName: string;
+  lastName: string;
+  clientType: 'PARTICULIER' | 'PROFESSIONNEL';
+  profession?: string;
+  annualIncome?: number;
+  maritalStatus?: string;
+  numberOfChildren?: number;
+  taxBracket?: string;
+  ifiSubject?: boolean;
+  ifiAmount?: number;
+}
+
+// Helper function to create all associated data for a client
+async function createClientAssociatedData(
+  cabinetId: string,
+  conseillerId: string,
+  client: ClientData,
+  index: number
+) {
+  const isParticulier = client.clientType === 'PARTICULIER';
+  const baseIncome = client.annualIncome || 50000;
+
+  // ============ ACTIFS ============
+  const actifs = [];
+
+  // Actif 1: Résidence principale ou Local professionnel
+  const actif1 = await prisma.actif.create({
+    data: {
+      cabinetId,
+      type: isParticulier ? 'RESIDENCE_PRINCIPALE' : 'IMMOBILIER_PRO',
+      category: 'IMMOBILIER',
+      name: isParticulier ? `Résidence principale - ${client.lastName}` : `Local professionnel - ${client.lastName}`,
+      description: isParticulier ? 'Résidence principale du client' : 'Local commercial ou bureaux',
+      value: 250000 + (index * 50000),
+      acquisitionDate: getDate(-10 + (index % 5), index % 12, 1),
+      acquisitionValue: 200000 + (index * 40000),
+      details: {
+        surface: 80 + (index * 10),
+        rooms: 3 + (index % 3),
+      },
+      managedByFirm: false,
+      isActive: true
+    }
+  });
+  actifs.push(actif1);
+
+  await prisma.clientActif.create({
+    data: {
+      clientId: client.id,
+      actifId: actif1.id,
+      ownershipPercentage: 100,
+      ownershipType: 'Pleine propriété'
+    }
   });
 
-  if (existingCabinet) {
-    console.log('✅ Cabinet already exists, skipping seed');
-    return;
+  // Actif 2: Assurance Vie
+  const actif2 = await prisma.actif.create({
+    data: {
+      cabinetId,
+      type: 'ASSURANCE_VIE',
+      category: 'FINANCIER',
+      name: `Assurance Vie ${['Axa', 'Generali', 'Allianz', 'Swiss Life', 'CNP'][index % 5]} - ${client.lastName}`,
+      description: 'Contrat multisupport',
+      value: 50000 + (index * 15000),
+      acquisitionDate: getDate(-5 + (index % 4), (index * 2) % 12, 15),
+      acquisitionValue: 40000 + (index * 10000),
+      details: {
+        provider: ['Axa', 'Generali', 'Allianz', 'Swiss Life', 'CNP'][index % 5],
+        contractNumber: `AV${100000 + index}`,
+        fonds: ['Fonds euros 60%', 'UC actions 30%', 'UC obligations 10%']
+      },
+      annualIncome: 1500 + (index * 200),
+      managedByFirm: true,
+      managementFees: 1.5,
+      isActive: true
+    }
+  });
+  actifs.push(actif2);
+
+  await prisma.clientActif.create({
+    data: {
+      clientId: client.id,
+      actifId: actif2.id,
+      ownershipPercentage: 100
+    }
+  });
+
+  // Actif 3: PEA ou PER
+  const actif3 = await prisma.actif.create({
+    data: {
+      cabinetId,
+      type: index % 2 === 0 ? 'PEA' : 'PER',
+      category: 'FINANCIER',
+      name: `${index % 2 === 0 ? 'PEA' : 'PER'} ${['Boursorama', 'Fortuneo', 'BforBank', 'ING', 'Hello Bank'][index % 5]} - ${client.lastName}`,
+      description: index % 2 === 0 ? 'Plan Épargne Actions' : 'Plan Épargne Retraite',
+      value: 25000 + (index * 8000),
+      acquisitionDate: getDate(-3 + (index % 3), (index * 3) % 12, 10),
+      acquisitionValue: 20000 + (index * 5000),
+      details: {
+        provider: ['Boursorama', 'Fortuneo', 'BforBank', 'ING', 'Hello Bank'][index % 5],
+        accountNumber: `${index % 2 === 0 ? 'PEA' : 'PER'}${200000 + index}`
+      },
+      annualIncome: 800 + (index * 100),
+      managedByFirm: index % 2 === 0,
+      isActive: true
+    }
+  });
+  actifs.push(actif3);
+
+  await prisma.clientActif.create({
+    data: {
+      clientId: client.id,
+      actifId: actif3.id,
+      ownershipPercentage: 100
+    }
+  });
+
+  // ============ PASSIFS ============
+  // Passif 1: Crédit immobilier
+  await prisma.passif.create({
+    data: {
+      cabinetId,
+      clientId: client.id,
+      type: 'CREDIT_IMMOBILIER',
+      name: 'Prêt immobilier résidence',
+      description: `${['Crédit Agricole', 'BNP', 'Société Générale', 'LCL', 'CIC'][index % 5]} - ${20 + (index % 5)} ans`,
+      initialAmount: 180000 + (index * 30000),
+      remainingAmount: 100000 + (index * 20000),
+      interestRate: 1.5 + (index % 10) * 0.1,
+      monthlyPayment: 900 + (index * 100),
+      startDate: getDate(-8 + (index % 5), index % 12, 1),
+      endDate: getDate(12 + (index % 5), index % 12, 1),
+      linkedActifId: actif1.id,
+      insurance: {
+        provider: ['CNP', 'Cardif', 'Suravenir', 'BPCE Vie', 'ACM'][index % 5],
+        monthlyPremium: 30 + (index * 5)
+      },
+      isActive: true
+    }
+  });
+
+  // Passif 2: Crédit conso ou pro selon le type
+  if (index % 3 !== 0) {
+    await prisma.passif.create({
+      data: {
+        cabinetId,
+        clientId: client.id,
+        type: isParticulier ? 'CREDIT_CONSOMMATION' : 'PRET_PROFESSIONNEL',
+        name: isParticulier ? 'Crédit auto' : 'Crédit équipement professionnel',
+        description: 'Financement véhicule ou équipement',
+        initialAmount: 25000 + (index * 5000),
+        remainingAmount: 15000 + (index * 3000),
+        interestRate: 3.0 + (index % 5) * 0.2,
+        monthlyPayment: 400 + (index * 30),
+        startDate: getDate(-2, (index * 2) % 12, 1),
+        endDate: getDate(3, (index * 2) % 12, 1),
+        isActive: true
+      }
+    });
   }
 
-  // 1. Create Cabinet
-  console.log('📦 Creating cabinet...');
-  const cabinet = await prisma.cabinet.create({
+  // ============ CONTRATS ============
+  // Contrat 1: Assurance vie (lié à l'actif)
+  await prisma.contrat.create({
     data: {
-      name: 'Cabinet ALFI Test',
-      slug: 'cabinet-alfi-test',
-      email: 'contact@alfi-test.fr',
+      cabinetId,
+      clientId: client.id,
+      type: 'ASSURANCE_VIE',
+      name: `Assurance Vie ${['Axa', 'Generali', 'Allianz', 'Swiss Life', 'CNP'][index % 5]}`,
+      provider: ['Axa', 'Generali', 'Allianz', 'Swiss Life', 'CNP'][index % 5],
+      contractNumber: `AV${100000 + index}`,
+      startDate: getDate(-5 + (index % 4), (index * 2) % 12, 15),
+      premium: 300 + (index * 50),
+      value: 50000 + (index * 15000),
+      beneficiaries: {
+        primary: ['Conjoint 100%'],
+        secondary: ['Enfants à parts égales']
+      },
+      nextRenewalDate: getDate(1, (index * 2) % 12, 15),
+      status: 'ACTIF'
+    }
+  });
+
+  // Contrat 2: Mutuelle ou assurance pro
+  await prisma.contrat.create({
+    data: {
+      cabinetId,
+      clientId: client.id,
+      type: isParticulier ? 'MUTUELLE' : 'ASSURANCE_PRO',
+      name: isParticulier ? 'Mutuelle Santé' : 'RC Professionnelle',
+      provider: ['Harmonie', 'MGEN', 'Malakoff', 'AG2R', 'April'][index % 5],
+      contractNumber: `${isParticulier ? 'MUT' : 'RCP'}${300000 + index}`,
+      startDate: getDate(-3 + (index % 3), 0, 1),
+      premium: isParticulier ? 120 + (index * 20) : 350 + (index * 50),
+      coverage: isParticulier ? 30000 : 500000,
+      nextRenewalDate: getDate(1, 0, 1),
+      status: 'ACTIF'
+    }
+  });
+
+  // Contrat 3: Prévoyance
+  await prisma.contrat.create({
+    data: {
+      cabinetId,
+      clientId: client.id,
+      type: 'PREVOYANCE',
+      name: 'Prévoyance décès/invalidité',
+      provider: ['Swiss Life', 'Generali', 'AXA', 'Allianz', 'Groupama'][index % 5],
+      contractNumber: `PREV${400000 + index}`,
+      startDate: getDate(-4 + (index % 4), 6, 1),
+      premium: 80 + (index * 15),
+      coverage: 200000 + (index * 50000),
+      nextRenewalDate: getDate(1, 6, 1),
+      status: 'ACTIF'
+    }
+  });
+
+  // ============ DOCUMENTS ============
+  const documentTypes: Array<{ type: 'CARTE_IDENTITE' | 'JUSTIFICATIF_DOMICILE' | 'AVIS_IMPOSITION' | 'RELEVE_BANCAIRE' | 'AUTRE'; category: 'IDENTITE' | 'FISCAL' | 'PATRIMOINE' | 'AUTRE'; name: string }> = [
+    { type: 'CARTE_IDENTITE', category: 'IDENTITE', name: `CNI ${client.firstName} ${client.lastName}` },
+    { type: 'JUSTIFICATIF_DOMICILE', category: 'IDENTITE', name: 'Justificatif domicile' },
+    { type: 'AVIS_IMPOSITION', category: 'FISCAL', name: `Avis imposition ${CURRENT_YEAR - 1}` },
+    { type: 'RELEVE_BANCAIRE', category: 'PATRIMOINE', name: 'Relevé bancaire récent' },
+    { type: 'AUTRE', category: 'AUTRE', name: `Bulletin salaire ${new Date().toLocaleString('fr-FR', { month: 'long' })}` }
+  ];
+
+  for (let i = 0; i < documentTypes.length; i++) {
+    const doc = await prisma.document.create({
+      data: {
+        cabinetId,
+        name: documentTypes[i].name,
+        description: `Document ${documentTypes[i].type.toLowerCase().replace('_', ' ')}`,
+        fileUrl: `/uploads/documents/${client.lastName.toLowerCase()}-${documentTypes[i].type.toLowerCase()}.pdf`,
+        fileSize: 150000 + (i * 30000),
+        mimeType: 'application/pdf',
+        type: documentTypes[i].type,
+        category: documentTypes[i].category,
+        uploadedById: conseillerId,
+        uploadedAt: getDate(0, index % 12, 1 + i)
+      }
+    });
+
+    await prisma.clientDocument.create({
+      data: {
+        clientId: client.id,
+        documentId: doc.id
+      }
+    });
+  }
+
+  // ============ OBJECTIFS ============
+  const objectifTypes: Array<{ type: 'RETRAITE' | 'PROTECTION_CAPITAL' | 'ACHAT_IMMOBILIER'; name: string; target: number; priority: 'HAUTE' | 'MOYENNE' }> = [
+    { type: 'RETRAITE', name: 'Préparation retraite', target: 400000, priority: 'HAUTE' },
+    { type: 'PROTECTION_CAPITAL', name: 'Épargne de précaution', target: 30000, priority: 'HAUTE' },
+    { type: 'ACHAT_IMMOBILIER', name: 'Projet immobilier', target: 100000, priority: 'MOYENNE' }
+  ];
+
+  for (let i = 0; i < (index % 3) + 1; i++) {
+    const obj = objectifTypes[i];
+    const targetAmount = obj.target + (index * 10000);
+    const currentAmount = Math.floor(targetAmount * (0.2 + (index % 5) * 0.1));
+
+    await prisma.objectif.create({
+      data: {
+        cabinetId,
+        clientId: client.id,
+        type: obj.type,
+        name: obj.name,
+        description: `${obj.name} pour ${client.firstName} ${client.lastName}`,
+        targetAmount,
+        currentAmount,
+        progress: Math.floor((currentAmount / targetAmount) * 100),
+        targetDate: getDate(3 + i, 11, 31),
+        priority: obj.priority as 'HAUTE' | 'MOYENNE' | 'BASSE',
+        monthlyContribution: Math.floor(targetAmount / 120),
+        status: 'ACTIF'
+      }
+    });
+  }
+
+  // ============ PROJETS avec TACHES ============
+  const projetTypes: Array<{ type: 'OPTIMISATION_FISCALE' | 'RESTRUCTURATION_PATRIMOINE'; name: string }> = [
+    { type: 'OPTIMISATION_FISCALE', name: `Optimisation fiscale ${CURRENT_YEAR}` },
+    { type: 'RESTRUCTURATION_PATRIMOINE', name: 'Restructuration patrimoine' }
+  ];
+
+  const projet = await prisma.projet.create({
+    data: {
+      cabinetId,
+      clientId: client.id,
+      name: projetTypes[index % 2].name,
+      description: `Projet ${projetTypes[index % 2].type.toLowerCase().replace('_', ' ')} pour ${client.firstName} ${client.lastName}`,
+      type: projetTypes[index % 2].type,
+      estimatedBudget: baseIncome * 0.5,
+      actualBudget: baseIncome * 0.3,
+      startDate: getDate(0, index % 12, 1),
+      targetDate: getDate(1, (index + 6) % 12, 30),
+      progress: 30 + (index * 5) % 50,
+      status: 'EN_COURS'
+    }
+  });
+
+  // Tâches liées au projet
+  const tacheStatuses = ['TERMINE', 'EN_COURS', 'A_FAIRE'];
+  for (let i = 0; i < 3; i++) {
+    await prisma.tache.create({
+      data: {
+        cabinetId,
+        assignedToId: conseillerId,
+        clientId: client.id,
+        projetId: projet.id,
+        createdById: conseillerId,
+        title: [`Analyse initiale`, `Proposition stratégie`, `Mise en œuvre`][i],
+        description: `Étape ${i + 1} du projet`,
+        type: (['REVUE_DOCUMENTS', 'REUNION', 'ADMINISTRATIF'] as const)[i],
+        priority: ['HAUTE', 'HAUTE', 'MOYENNE'][i] as 'HAUTE' | 'MOYENNE' | 'BASSE' | 'URGENTE',
+        status: tacheStatuses[i] as 'TERMINE' | 'EN_COURS' | 'A_FAIRE',
+        dueDate: getDate(0, (index + i) % 12, 15 + i * 5),
+        completedAt: i === 0 ? getDate(0, (index + i) % 12, 14 + i * 5) : undefined
+      }
+    });
+  }
+
+  // ============ RENDEZ-VOUS ============
+  const rdvTypes: Array<'BILAN_ANNUEL' | 'SUIVI' | 'PREMIER_RDV' | 'SIGNATURE'> = ['BILAN_ANNUEL', 'SUIVI', 'PREMIER_RDV', 'SIGNATURE'];
+  // Create appointments around NOW (some before, some after)
+  await prisma.rendezVous.create({
+    data: {
+      cabinetId,
+      conseillerId,
+      clientId: client.id,
+      title: `${['Bilan annuel', 'Point de suivi', 'Découverte', 'Signature documents'][index % 4]} - ${client.lastName}`,
+      description: `Rendez-vous avec ${client.firstName} ${client.lastName}`,
+      type: rdvTypes[index % 4],
+      startDate: getDate(0, 11, 10 + index, 9 + index), // Dec 2025
+      endDate: getDate(0, 11, 10 + index, 10 + index),
+      location: index % 2 === 0 ? 'Bureau' : 'Visioconférence',
+      isVirtual: index % 2 !== 0,
+      meetingUrl: index % 2 !== 0 ? `https://meet.google.com/rdv-${index}` : undefined,
+      status: (['PLANIFIE', 'CONFIRME'] as const)[index % 2]
+    }
+  });
+
+  // ============ OPPORTUNITÉS ============
+  const oppoTypes: Array<{ type: 'EPARGNE_RETRAITE' | 'INVESTISSEMENT_IMMOBILIER' | 'OPTIMISATION_FISCALE' | 'TRANSMISSION_PATRIMOINE' | 'AUDIT_ASSURANCES'; name: string }> = [
+    { type: 'EPARGNE_RETRAITE', name: 'Augmentation PER' },
+    { type: 'INVESTISSEMENT_IMMOBILIER', name: 'Investissement SCPI' },
+    { type: 'OPTIMISATION_FISCALE', name: 'Défiscalisation' },
+    { type: 'TRANSMISSION_PATRIMOINE', name: 'Donation enfants' },
+    { type: 'AUDIT_ASSURANCES', name: 'Révision assurances' }
+  ];
+
+  const oppo = oppoTypes[index % 5];
+  const oppoStatuses: Array<'DETECTEE' | 'QUALIFIEE' | 'CONTACTEE' | 'PRESENTEE' | 'ACCEPTEE'> = ['DETECTEE', 'QUALIFIEE', 'CONTACTEE', 'PRESENTEE', 'ACCEPTEE'];
+
+  await prisma.opportunite.create({
+    data: {
+      cabinetId,
+      conseillerId,
+      clientId: client.id,
+      type: oppo.type,
+      name: oppo.name,
+      description: `${oppo.name} pour ${client.firstName} ${client.lastName}`,
+      estimatedValue: 30000 + (index * 15000),
+      score: 60 + (index * 5) % 35,
+      confidence: 0.6 + (index * 0.05) % 0.35,
+      priority: ['BASSE', 'MOYENNE', 'HAUTE'][index % 3] as 'BASSE' | 'MOYENNE' | 'HAUTE',
+      status: oppoStatuses[index % 5],
+      detectedAt: getDate(0, 9, 1 + index),
+      qualifiedAt: index % 5 >= 1 ? getDate(0, 9, 5 + index) : undefined,
+      contactedAt: index % 5 >= 2 ? getDate(0, 9, 10 + index) : undefined,
+      presentedAt: index % 5 >= 3 ? getDate(0, 10, 1 + index) : undefined,
+      acceptedAt: index % 5 >= 4 ? getDate(0, 10, 15 + index) : undefined,
+      actionDeadline: getDate(1, (index + 2) % 12, 28)
+    }
+  });
+
+  // ============ KYC DOCUMENTS ============
+  const kycTypes: Array<'IDENTITE' | 'JUSTIFICATIF_DOMICILE' | 'AVIS_IMPOSITION' | 'RIB_BANCAIRE'> = ['IDENTITE', 'JUSTIFICATIF_DOMICILE', 'AVIS_IMPOSITION', 'RIB_BANCAIRE'];
+  for (const kycType of kycTypes) {
+    await prisma.kYCDocument.create({
+      data: {
+        cabinet: { connect: { id: cabinetId } },
+        client: { connect: { id: client.id } },
+        type: kycType,
+        status: index % 3 === 2 ? 'EN_ATTENTE' : 'VALIDE',
+        validatedAt: index % 3 !== 2 ? getDate(0, index % 12, 1) : undefined,
+        validatedBy: index % 3 !== 2 ? { connect: { id: conseillerId } } : undefined,
+        expiresAt: kycType === 'IDENTITE' ? getDate(10, index % 12, 1) :
+          kycType === 'JUSTIFICATIF_DOMICILE' ? getDate(1, (index + 6) % 12, 1) :
+            undefined
+      }
+    });
+  }
+
+  // ============ TIMELINE EVENTS ============
+  const events: Array<{ type: 'CLIENT_CREATED' | 'KYC_UPDATED' | 'ASSET_ADDED' | 'CONTRACT_SIGNED'; title: string; description: string }> = [
+    { type: 'CLIENT_CREATED', title: 'Client créé', description: 'Nouveau client ajouté au portefeuille' },
+    { type: 'KYC_UPDATED', title: 'KYC mis à jour', description: 'Dossier KYC complété' },
+    { type: 'ASSET_ADDED', title: 'Actif ajouté', description: 'Nouvel actif ajouté au patrimoine' },
+    { type: 'CONTRACT_SIGNED', title: 'Contrat signé', description: 'Signature nouveau contrat' }
+  ];
+
+  for (let i = 0; i < events.length; i++) {
+    await prisma.timelineEvent.create({
+      data: {
+        cabinetId,
+        clientId: client.id,
+        type: events[i].type,
+        title: events[i].title,
+        description: events[i].description,
+        createdAt: getDate(0, index % 12, 1 + i * 5),
+        createdBy: conseillerId
+      }
+    });
+  }
+
+  // ============ SIMULATIONS ============
+  const simTypes: Array<{ type: 'RETRAITE' | 'CREDIT_IMMOBILIER' | 'OPTIMISATION_FISCALE'; name: string }> = [
+    { type: 'RETRAITE', name: 'Simulation retraite' },
+    { type: 'CREDIT_IMMOBILIER', name: 'Simulation prêt immobilier' },
+    { type: 'OPTIMISATION_FISCALE', name: 'Simulation défiscalisation' }
+  ];
+
+  const simType = simTypes[index % 3];
+  await prisma.simulation.create({
+    data: {
+      cabinetId,
+      clientId: client.id,
+      createdById: conseillerId,
+      type: simType.type,
+      name: `${simType.name} - ${client.lastName}`,
+      description: `${simType.name} pour ${client.firstName} ${client.lastName}`,
+      parameters: {
+        income: baseIncome,
+        age: 30 + (index * 3),
+        horizon: 15 + (index % 10)
+      },
+      results: {
+        projectedAmount: baseIncome * (5 + index),
+        monthlyPayment: Math.floor(baseIncome / 12),
+        feasibility: 'Réalisable'
+      },
+      feasibilityScore: 70 + (index * 3) % 25,
+      status: index % 2 === 0 ? 'TERMINE' : 'BROUILLON',
+      sharedWithClient: index % 2 === 0,
+      sharedAt: index % 2 === 0 ? getDate(0, 10, 15) : undefined
+    }
+  });
+
+  // ============ REVENUS ============
+  const revenueCategories: Array<'SALAIRE' | 'PRIME' | 'REVENUS_FONCIERS' | 'DIVIDENDES'> = ['SALAIRE', 'PRIME', 'REVENUS_FONCIERS', 'DIVIDENDES'];
+  for (let i = 0; i < 2 + (index % 2); i++) {
+    const montantMensuel = i === 0 ? baseIncome / 12 : baseIncome / 24;
+    const freq = i === 0 ? 'MENSUEL' : 'ANNUEL';
+    const montantAnnuel = freq === 'MENSUEL' ? montantMensuel * 12 : montantMensuel;
+    await prisma.revenue.create({
+      data: {
+        cabinetId,
+        clientId: client.id,
+        categorie: revenueCategories[i],
+        libelle: `${revenueCategories[i].charAt(0) + revenueCategories[i].slice(1).toLowerCase().replace('_', ' ')}`,
+        montant: montantMensuel,
+        frequence: freq,
+        montantAnnuel,
+        dateDebut: getDate(0, 0, 1),
+        isActive: true
+      }
+    });
+  }
+
+  // ============ DEPENSES ============
+  const expenseCategories: Array<'LOYER' | 'ELECTRICITE_GAZ' | 'MUTUELLE' | 'ASSURANCE_HABITATION' | 'ALIMENTATION'> = ['LOYER', 'ELECTRICITE_GAZ', 'MUTUELLE', 'ASSURANCE_HABITATION', 'ALIMENTATION'];
+  for (let i = 0; i < 4; i++) {
+    const montant = [1200, 150, 120, 80, 600][i] + (index * 10);
+    await prisma.expense.create({
+      data: {
+        cabinetId,
+        clientId: client.id,
+        categorie: expenseCategories[i],
+        libelle: `${expenseCategories[i].charAt(0) + expenseCategories[i].slice(1).toLowerCase().replace('_', ' ')}`,
+        montant,
+        frequence: 'MENSUEL',
+        montantAnnuel: montant * 12,
+        dateDebut: getDate(0, 0, 1),
+        isActive: true
+      }
+    });
+  }
+
+  // ============ FISCALITE ============
+  const taxShares = (client.maritalStatus as string) === 'MARIE' ? 2 : 1 + (Number(client.numberOfChildren) || 0) * 0.5;
+  const taxableIncome = baseIncome * 0.9; // 10% standard deduction
+  const estimatedTax = taxableIncome * (parseFloat(client.taxBracket || '30') / 100);
+
+  await prisma.clientTaxation.create({
+    data: {
+      clientId: client.id,
+      anneeFiscale: CURRENT_YEAR,
+      incomeTax: {
+        fiscalReferenceIncome: taxableIncome,
+        taxShares,
+        quotientFamilial: taxableIncome / taxShares,
+        taxBracket: parseFloat(client.taxBracket || '30'),
+        annualAmount: estimatedTax,
+        grossTax: estimatedTax,
+        netTax: estimatedTax,
+        monthlyPayment: estimatedTax / 12,
+        taxCredits: 0,
+        taxReductions: 0
+      },
+      ifi: client.ifiSubject ? {
+        taxableRealEstateAssets: 2000000,
+        deductibleLiabilities: 500000,
+        netTaxableIFI: 1500000,
+        ifiAmount: Number(client.ifiAmount) || 0,
+        bracket: '0.7%',
+        threshold: 1300000
+      } : undefined
+    }
+  });
+
+  // ============ OPTIMISATIONS FISCALES ============
+  if (baseIncome > 60000) {
+    await prisma.taxOptimization.create({
+      data: {
+        clientId: client.id,
+        priority: 'HAUTE',
+        category: 'RETIREMENT',
+        title: 'Ouverture PER',
+        description: 'Réduction impôt via déductibilité versements PER',
+        potentialSavings: 3000,
+        recommendation: 'Verser 10k sur un PER pour réduire le revenu imposable.',
+        status: 'DETECTEE'
+      }
+    });
+  }
+
+  console.log(`   ✓ Données créées pour ${client.firstName} ${client.lastName}`);
+}
+
+async function main() {
+  console.log('🌱 Starting COMPLETE database seed...');
+  console.log(`📅 Base year: ${CURRENT_YEAR}`);
+  console.log('═══════════════════════════════════════\n');
+
+  console.log('🧹 Cleaning up database...');
+  await prisma.cabinet.deleteMany();
+  await prisma.superAdmin.deleteMany();
+  console.log('✅ Database cleaned\n');
+
+  // ============ SUPERADMIN ============
+  console.log('👑 Creating SuperAdmin...');
+  const superAdminPassword = await bcrypt.hash('Password123!', 10);
+  await prisma.superAdmin.create({
+    data: {
+      email: 'superadmin@aura.fr',
+      password: superAdminPassword,
+      firstName: 'Super',
+      lastName: 'Admin',
+      role: 'OWNER',
+      isActive: true
+    }
+  });
+  console.log('✅ SuperAdmin created\n');
+
+  const hashedPassword = await bcrypt.hash('Password123!', 10);
+
+  // ============ CABINET 1: Aura Test ============
+  console.log('📦 Creating Cabinet Aura Test...');
+  const cabinet1 = await prisma.cabinet.create({
+    data: {
+      name: 'Cabinet Aura Test',
+      slug: 'cabinet-aura-test',
+      email: 'contact@aura-test.fr',
       phone: '+33 1 23 45 67 89',
       address: {
         street: '123 Avenue des Champs-Élysées',
@@ -32,1585 +602,354 @@ async function main() {
       },
       plan: 'BUSINESS',
       status: 'ACTIVE',
-      subscriptionStart: new Date('2024-01-01'),
-      subscriptionEnd: new Date('2025-12-31'),
-      quotas: {
-        maxUsers: 10,
-        maxClients: 500,
-        maxStorage: 10737418240 // 10GB
-      },
-      usage: {
-        users: 2,
-        clients: 5,
-        storage: 0
-      },
-      features: {
-        advancedReporting: true,
-        apiAccess: true,
-        customBranding: true
-      }
+      subscriptionStart: getDate(0, 0, 1),
+      subscriptionEnd: getDate(1, 11, 31),
+      quotas: { maxUsers: 10, maxClients: 500, maxStorage: 10737418240 },
+      usage: { users: 2, clients: 10, storage: 0 },
+      features: { advancedReporting: true, apiAccess: true, customBranding: true }
     }
   });
 
-  console.log(`✅ Cabinet created: ${cabinet.name}`);
-
-  // 2. Create Users
-  console.log('👥 Creating users...');
-  const hashedPassword = await bcrypt.hash('Password123!', 10);
-
-  const admin = await prisma.user.create({
+  const admin1 = await prisma.user.create({
     data: {
-      cabinetId: cabinet.id,
-      email: 'admin@alfi.fr',
+      cabinetId: cabinet1.id,
+      email: 'admin@aura.fr',
       password: hashedPassword,
       firstName: 'Sophie',
       lastName: 'Administrateur',
       phone: '+33 6 12 34 56 78',
       role: 'ADMIN',
-      permissions: {
-        canManageUsers: true,
-        canManageSettings: true,
-        canViewAuditLogs: true,
-        canExportData: true
-      },
+      permissions: { canManageUsers: true, canManageSettings: true, canViewAuditLogs: true, canExportData: true },
       isActive: true
     }
   });
 
-  const conseiller = await prisma.user.create({
+  const conseiller1 = await prisma.user.create({
     data: {
-      cabinetId: cabinet.id,
-      email: 'conseiller@alfi.fr',
+      cabinetId: cabinet1.id,
+      email: 'conseiller@aura.fr',
       password: hashedPassword,
       firstName: 'Marc',
       lastName: 'Conseiller',
       phone: '+33 6 23 45 67 89',
       role: 'ADVISOR',
-      permissions: {
-        canManageClients: true,
-        canViewReports: true
-      },
+      permissions: { canManageClients: true, canViewReports: true },
       isActive: true
     }
   });
 
-  console.log(`✅ Users created: ${admin.email}, ${conseiller.email}`);
+  console.log('✅ Cabinet Aura Test created\n');
 
-  // 3. Create Clients
-  console.log('👤 Creating clients...');
+  // Clients Cabinet 1
+  console.log('👤 Creating 10 clients for Cabinet Aura Test...');
+  const clientsData1 = [
+    { firstName: 'Jean', lastName: 'Dupont', type: 'PARTICULIER', email: 'jean.dupont@email.fr', birthDate: new Date('1975-05-15'), birthPlace: 'Paris', maritalStatus: 'MARIE', marriageRegime: 'Communauté réduite aux acquêts', numberOfChildren: 2, profession: 'Directeur Commercial', employerName: 'TechCorp France', professionalStatus: 'Cadre', annualIncome: 85000, taxBracket: '41%', riskProfile: 'EQUILIBRE' },
+    { firstName: 'Marie', lastName: 'Martin', type: 'PARTICULIER', email: 'marie.martin@email.fr', birthDate: new Date('1982-08-22'), birthPlace: 'Marseille', maritalStatus: 'CELIBATAIRE', numberOfChildren: 0, profession: 'Médecin', employerName: 'Hôpital Saint-Louis', professionalStatus: 'Libéral', annualIncome: 120000, taxBracket: '45%', ifiSubject: true, ifiAmount: 8500, riskProfile: 'DYNAMIQUE' },
+    { firstName: 'Pierre', lastName: 'Durand', type: 'PARTICULIER', email: 'pierre.durand@email.fr', birthDate: new Date('1968-03-10'), birthPlace: 'Bordeaux', maritalStatus: 'DIVORCE', numberOfChildren: 1, profession: 'Entrepreneur', professionalStatus: 'Indépendant', annualIncome: 95000, taxBracket: '41%', riskProfile: 'OFFENSIF' },
+    { firstName: 'François', lastName: 'Leblanc', type: 'PROFESSIONNEL', email: 'f.leblanc@leblanc-sarl.fr', birthDate: new Date('1970-11-25'), birthPlace: 'Lille', companyName: 'Leblanc Consulting SARL', siret: '80795315300015', legalForm: 'SARL', activitySector: 'Conseil en gestion', numberOfEmployees: 8, annualRevenue: 850000, profession: 'Gérant', annualIncome: 150000, taxBracket: '45%', ifiSubject: true, ifiAmount: 12000, riskProfile: 'PRUDENT' },
+    { firstName: 'Isabelle', lastName: 'Rousseau', type: 'PROFESSIONNEL', email: 'i.rousseau@rousseau-tech.fr', birthDate: new Date('1978-07-18'), birthPlace: 'Nice', companyName: 'Rousseau Technologies SAS', siret: '79219798000019', legalForm: 'SAS', activitySector: 'Développement logiciel', numberOfEmployees: 25, annualRevenue: 2500000, profession: 'Présidente', annualIncome: 180000, taxBracket: '45%', ifiSubject: true, ifiAmount: 18500, riskProfile: 'DYNAMIQUE' },
+    { firstName: 'Michel', lastName: 'Bernard', type: 'PARTICULIER', email: 'michel.bernard@email.fr', birthDate: new Date('1955-02-14'), birthPlace: 'Lyon', maritalStatus: 'VEUF', numberOfChildren: 3, profession: 'Retraité (Ancien Ingénieur)', annualIncome: 45000, taxBracket: '30%', riskProfile: 'PRUDENT' },
+    { firstName: 'Sophie', lastName: 'Leroy', type: 'PARTICULIER', email: 'sophie.leroy@email.fr', birthDate: new Date('1995-06-30'), maritalStatus: 'CELIBATAIRE', profession: 'Consultante Marketing', annualIncome: 52000, taxBracket: '30%', riskProfile: 'DYNAMIQUE' },
+    { firstName: 'Thomas', lastName: 'Petit', type: 'PARTICULIER', email: 'thomas.petit@email.fr', birthDate: new Date('1980-09-12'), maritalStatus: 'MARIE', numberOfChildren: 2, profession: 'Architecte', annualIncome: 75000, taxBracket: '30%', riskProfile: 'EQUILIBRE' },
+    { firstName: 'Philippe', lastName: 'Moreau', type: 'PROFESSIONNEL', email: 'dr.moreau@clinique.fr', birthDate: new Date('1972-11-05'), profession: 'Chirurgien Dentiste', professionalStatus: 'Libéral', companyName: 'Cabinet Dentaire Moreau', siret: '93352902600017', annualIncome: 250000, taxBracket: '45%', ifiSubject: true, riskProfile: 'DYNAMIQUE' },
+    { firstName: 'Alexandre', lastName: 'Dumas', type: 'PARTICULIER', email: 'alex.dumas@invest.fr', birthDate: new Date('1985-04-01'), profession: 'Trader', annualIncome: 150000, taxBracket: '45%', riskProfile: 'OFFENSIF' }
+  ];
 
-  // Client 1: Particulier - Jean Dupont
-  const clientDupont = await prisma.client.create({
+  for (let i = 0; i < clientsData1.length; i++) {
+    const c = clientsData1[i];
+    const client = await prisma.client.create({
+      data: {
+        cabinetId: cabinet1.id,
+        conseillerId: conseiller1.id,
+        clientType: c.type as 'PARTICULIER' | 'PROFESSIONNEL',
+        firstName: c.firstName,
+        lastName: c.lastName,
+        email: c.email,
+        phone: `+33 6 ${String(10 + i).padStart(2, '0')} ${String(20 + i).padStart(2, '0')} ${String(30 + i).padStart(2, '0')} ${String(40 + i).padStart(2, '0')}`,
+        mobile: `+33 6 ${String(10 + i).padStart(2, '0')} ${String(20 + i).padStart(2, '0')} ${String(30 + i).padStart(2, '0')} ${String(40 + i).padStart(2, '0')}`,
+        birthDate: c.birthDate,
+        birthPlace: c.birthPlace || 'France',
+        nationality: 'Française',
+        address: { street: `${10 + i * 5} Rue de la Paix`, city: ['Paris', 'Lyon', 'Marseille', 'Bordeaux', 'Nice', 'Annecy', 'Lille', 'Nantes', 'Strasbourg', 'Toulouse'][i], postalCode: `${75000 + i * 1000}`, country: 'France' },
+        maritalStatus: c.maritalStatus as any || 'CELIBATAIRE',
+        marriageRegime: c.marriageRegime,
+        numberOfChildren: c.numberOfChildren || 0,
+        profession: c.profession,
+        employerName: c.employerName,
+        professionalStatus: c.professionalStatus,
+        annualIncome: c.annualIncome,
+        taxBracket: c.taxBracket,
+        fiscalResidence: 'France',
+        irTaxRate: parseInt(c.taxBracket || '30'),
+        ifiSubject: c.ifiSubject || false,
+        ifiAmount: c.ifiAmount,
+        companyName: c.companyName,
+        siret: c.siret,
+        legalForm: c.legalForm,
+        activitySector: c.activitySector,
+        numberOfEmployees: c.numberOfEmployees,
+        annualRevenue: c.annualRevenue,
+        riskProfile: c.riskProfile as any || 'EQUILIBRE',
+        investmentHorizon: ['COURT', 'MOYEN', 'LONG'][i % 3] as any,
+        investmentGoals: ['Retraite', 'Transmission', 'Croissance'][i % 3] ? [['Retraite', 'Transmission', 'Croissance'][i % 3]] : [],
+        investmentKnowledge: ['Débutant', 'Intermédiaire', 'Avancé', 'Expert'][i % 4],
+        managedByFirm: i % 3 !== 2,
+        managementStartDate: i % 3 !== 2 ? getDate(-5 + (i % 4), i % 12, 1) : undefined,
+        managementFees: i % 3 !== 2 ? 1.5 + (i % 3) * 0.3 : undefined,
+        kycStatus: i % 3 === 2 ? 'EN_COURS' : 'COMPLET',
+        kycCompletedAt: i % 3 !== 2 ? getDate(0, i % 12, 15) : undefined,
+        kycNextReviewDate: getDate(1, (i + 6) % 12, 15),
+        status: 'ACTIF',
+        portalAccess: i <= 2 ? true : i % 4 !== 3,
+        portalPassword: i <= 2 ? hashedPassword : undefined,
+        lastContactDate: getDate(0, 10, 1 + i)
+      }
+    });
+
+    await createClientAssociatedData(cabinet1.id, conseiller1.id, {
+      id: client.id,
+      firstName: c.firstName,
+      lastName: c.lastName,
+      clientType: c.type as 'PARTICULIER' | 'PROFESSIONNEL',
+      profession: c.profession,
+      annualIncome: c.annualIncome,
+      maritalStatus: c.maritalStatus,
+      numberOfChildren: c.numberOfChildren,
+      taxBracket: c.taxBracket,
+      ifiSubject: c.ifiSubject,
+      ifiAmount: c.ifiAmount
+    }, i);
+  }
+
+  console.log('✅ 10 clients with complete data created for Cabinet Aura Test\n');
+
+  // ============ CABINET 2: Wealth Partners ============
+  console.log('📦 Creating Cabinet Wealth Partners...');
+  const cabinet2 = await prisma.cabinet.create({
     data: {
-      cabinetId: cabinet.id,
-      conseillerId: conseiller.id,
-      clientType: 'PARTICULIER',
-      firstName: 'Jean',
-      lastName: 'Dupont',
-      email: 'jean.dupont@email.fr',
-      phone: '+33 6 34 56 78 90',
-      mobile: '+33 6 34 56 78 90',
-      birthDate: new Date('1975-05-15'),
-      birthPlace: 'Paris',
-      nationality: 'Française',
-      address: {
-        street: '45 Rue de la République',
-        city: 'Lyon',
-        postalCode: '69002',
-        country: 'France'
-      },
-      maritalStatus: 'MARRIED',
-      marriageRegime: 'Communauté réduite aux acquêts',
-      numberOfChildren: 2,
-      profession: 'Directeur Commercial',
-      employerName: 'TechCorp France',
-      professionalStatus: 'Cadre',
-      annualIncome: 85000,
-      taxBracket: '41%',
-      fiscalResidence: 'France',
-      irTaxRate: 41,
-      ifiSubject: false,
-      riskProfile: 'EQUILIBRE',
-      investmentHorizon: 'LONG',
-      investmentGoals: ['Retraite', 'Transmission'],
-      investmentKnowledge: 'Intermédiaire',
-      investmentExperience: '5-10 ans',
-      managedByFirm: true,
-      managementStartDate: new Date('2023-01-15'),
-      managementFees: 1.5,
-      managementType: 'Gestion conseillée',
-      kycStatus: 'COMPLETED',
-      kycCompletedAt: new Date('2023-02-01'),
-      kycNextReviewDate: new Date('2025-02-01'),
+      name: 'Cabinet Wealth Partners',
+      slug: 'wealth-partners',
+      email: 'contact@wealth-partners.com',
+      phone: '+33 1 98 76 54 32',
+      address: { street: '50 Avenue Montaigne', city: 'Paris', postalCode: '75008', country: 'France' },
+      plan: 'PREMIUM',
       status: 'ACTIVE',
-      portalAccess: true,
-      lastContactDate: new Date('2024-11-01')
+      subscriptionStart: getDate(0, 0, 1),
+      subscriptionEnd: getDate(2, 11, 31),
+      quotas: { maxUsers: 20, maxClients: 1000, maxStorage: 21474836480 },
+      usage: { users: 1, clients: 4, storage: 0 },
+      features: { advancedReporting: true, apiAccess: true, customBranding: true }
     }
   });
 
-  // Client 2: Particulier - Marie Martin
-  const clientMartin = await prisma.client.create({
+  const conseiller2 = await prisma.user.create({
     data: {
-      cabinetId: cabinet.id,
-      conseillerId: conseiller.id,
-      clientType: 'PARTICULIER',
-      firstName: 'Marie',
-      lastName: 'Martin',
-      email: 'marie.martin@email.fr',
-      phone: '+33 6 45 67 89 01',
-      mobile: '+33 6 45 67 89 01',
-      birthDate: new Date('1982-08-22'),
-      birthPlace: 'Marseille',
-      nationality: 'Française',
-      address: {
-        street: '78 Boulevard Haussmann',
-        city: 'Paris',
-        postalCode: '75008',
-        country: 'France'
-      },
-      maritalStatus: 'SINGLE',
-      numberOfChildren: 0,
-      profession: 'Médecin',
-      employerName: 'Hôpital Saint-Louis',
-      professionalStatus: 'Libéral',
-      annualIncome: 120000,
-      taxBracket: '45%',
-      fiscalResidence: 'France',
-      irTaxRate: 45,
-      ifiSubject: true,
-      ifiAmount: 8500,
-      riskProfile: 'DYNAMIQUE',
-      investmentHorizon: 'MEDIUM',
-      investmentGoals: ['Croissance du capital', 'Optimisation fiscale'],
-      investmentKnowledge: 'Avancé',
-      investmentExperience: '10+ ans',
-      managedByFirm: true,
-      managementStartDate: new Date('2022-06-01'),
-      managementFees: 1.8,
-      managementType: 'Gestion pilotée',
-      kycStatus: 'COMPLETED',
-      kycCompletedAt: new Date('2022-07-15'),
-      kycNextReviewDate: new Date('2024-07-15'),
-      status: 'ACTIVE',
-      portalAccess: true,
-      lastContactDate: new Date('2024-10-20')
+      cabinetId: cabinet2.id,
+      email: 'advisor@wealth-partners.com',
+      password: hashedPassword,
+      firstName: 'Sarah',
+      lastName: 'Wealth',
+      phone: '+33 6 98 76 54 32',
+      role: 'ADVISOR',
+      permissions: { canManageClients: true, canViewReports: true },
+      isActive: true
     }
   });
 
-  // Client 3: Particulier - Pierre Durand
-  const clientDurand = await prisma.client.create({
-    data: {
-      cabinetId: cabinet.id,
-      conseillerId: conseiller.id,
-      clientType: 'PARTICULIER',
-      firstName: 'Pierre',
-      lastName: 'Durand',
-      email: 'pierre.durand@email.fr',
-      phone: '+33 6 56 78 90 12',
-      mobile: '+33 6 56 78 90 12',
-      birthDate: new Date('1968-03-10'),
-      birthPlace: 'Bordeaux',
-      nationality: 'Française',
-      address: {
-        street: '12 Cours de l\'Intendance',
-        city: 'Bordeaux',
-        postalCode: '33000',
-        country: 'France'
-      },
-      maritalStatus: 'DIVORCED',
-      numberOfChildren: 1,
-      profession: 'Entrepreneur',
-      employerName: 'Auto-entrepreneur',
-      professionalStatus: 'Indépendant',
-      annualIncome: 95000,
-      taxBracket: '41%',
-      fiscalResidence: 'France',
-      irTaxRate: 41,
-      ifiSubject: false,
-      riskProfile: 'OFFENSIF',
-      investmentHorizon: 'LONG',
-      investmentGoals: ['Croissance agressive', 'Diversification'],
-      investmentKnowledge: 'Expert',
-      investmentExperience: '15+ ans',
-      managedByFirm: false,
-      kycStatus: 'IN_PROGRESS',
-      status: 'ACTIVE',
-      portalAccess: false,
-      lastContactDate: new Date('2024-11-10')
-    }
-  });
+  console.log('✅ Cabinet Wealth Partners created\n');
 
-  // Client 4: Professionnel - Entreprise Leblanc SARL
-  const clientLeblanc = await prisma.client.create({
-    data: {
-      cabinetId: cabinet.id,
-      conseillerId: conseiller.id,
-      clientType: 'PROFESSIONNEL',
-      firstName: 'François',
-      lastName: 'Leblanc',
-      email: 'f.leblanc@leblanc-sarl.fr',
-      phone: '+33 4 78 90 12 34',
-      mobile: '+33 6 67 89 01 23',
-      birthDate: new Date('1970-11-25'),
-      birthPlace: 'Lille',
-      nationality: 'Française',
-      address: {
-        street: '89 Rue Nationale',
-        city: 'Lille',
-        postalCode: '59000',
-        country: 'France'
-      },
-      companyName: 'Leblanc Consulting SARL',
-      siret: '12345678901234',
-      legalForm: 'SARL',
-      activitySector: 'Conseil en gestion',
-      companyCreationDate: new Date('2010-03-15'),
-      numberOfEmployees: 8,
-      annualRevenue: 850000,
-      profession: 'Gérant',
-      annualIncome: 150000,
-      taxBracket: '45%',
-      fiscalResidence: 'France',
-      irTaxRate: 45,
-      ifiSubject: true,
-      ifiAmount: 12000,
-      riskProfile: 'PRUDENT',
-      investmentHorizon: 'MEDIUM',
-      investmentGoals: ['Sécurité', 'Revenus réguliers'],
-      investmentKnowledge: 'Intermédiaire',
-      investmentExperience: '5-10 ans',
-      managedByFirm: true,
-      managementStartDate: new Date('2020-09-01'),
-      managementFees: 2.0,
-      managementType: 'Gestion conseillée',
-      kycStatus: 'COMPLETED',
-      kycCompletedAt: new Date('2020-10-15'),
-      kycNextReviewDate: new Date('2024-10-15'),
-      status: 'ACTIVE',
-      portalAccess: true,
-      lastContactDate: new Date('2024-11-05')
-    }
-  });
+  // Clients Cabinet 2
+  console.log('👤 Creating 4 clients for Cabinet Wealth Partners...');
+  const clientsData2 = [
+    { firstName: 'Robert', lastName: 'Kiyosaki', type: 'PARTICULIER', email: 'r.kiyosaki@email.com', birthDate: new Date('1965-04-08'), profession: 'Investisseur', annualIncome: 500000, taxBracket: '45%', riskProfile: 'OFFENSIF' },
+    { firstName: 'Elon', lastName: 'Musk', type: 'PROFESSIONNEL', email: 'elon@tesla.com', birthDate: new Date('1971-06-28'), profession: 'CEO', companyName: 'SpaceX', siret: '44306184100047', annualIncome: 1000000, taxBracket: '45%', riskProfile: 'OFFENSIF' },
+    { firstName: 'Warren', lastName: 'Buffett', type: 'PARTICULIER', email: 'warren@berkshire.com', birthDate: new Date('1930-08-30'), profession: 'Investisseur', annualIncome: 800000, taxBracket: '45%', riskProfile: 'EQUILIBRE' },
+    { firstName: 'Christine', lastName: 'Lagarde', type: 'PARTICULIER', email: 'c.lagarde@email.fr', birthDate: new Date('1956-01-01'), profession: 'Économiste', annualIncome: 350000, taxBracket: '45%', riskProfile: 'PRUDENT' }
+  ];
 
-  // Client 5: Professionnel - Entreprise Rousseau SAS
-  const clientRousseau = await prisma.client.create({
+  for (let i = 0; i < clientsData2.length; i++) {
+    const c = clientsData2[i];
+    const client = await prisma.client.create({
+      data: {
+        cabinetId: cabinet2.id,
+        conseillerId: conseiller2.id,
+        clientType: c.type as 'PARTICULIER' | 'PROFESSIONNEL',
+        firstName: c.firstName,
+        lastName: c.lastName,
+        email: c.email,
+        phone: `+33 6 ${String(50 + i).padStart(2, '0')} ${String(60 + i).padStart(2, '0')} ${String(70 + i).padStart(2, '0')} ${String(80 + i).padStart(2, '0')}`,
+        birthDate: c.birthDate,
+        nationality: 'Française',
+        address: { street: `${100 + i * 10} Avenue Foch`, city: 'Paris', postalCode: '75016', country: 'France' },
+        profession: c.profession,
+        annualIncome: c.annualIncome,
+        taxBracket: c.taxBracket,
+        companyName: c.companyName,
+        siret: c.siret,
+        riskProfile: c.riskProfile as any,
+        status: 'ACTIF',
+        portalAccess: true
+      }
+    });
+
+    await createClientAssociatedData(cabinet2.id, conseiller2.id, {
+      id: client.id,
+      firstName: c.firstName,
+      lastName: c.lastName,
+      clientType: c.type as 'PARTICULIER' | 'PROFESSIONNEL',
+      profession: c.profession,
+      annualIncome: c.annualIncome
+    }, 10 + i);
+  }
+
+  console.log('✅ 4 clients with complete data created for Cabinet Wealth Partners\n');
+
+  // ============ CABINET 3: Patrimoine Sud ============
+  console.log('📦 Creating Cabinet Patrimoine Sud...');
+  const cabinet3 = await prisma.cabinet.create({
     data: {
-      cabinetId: cabinet.id,
-      conseillerId: conseiller.id,
-      clientType: 'PROFESSIONNEL',
-      firstName: 'Isabelle',
-      lastName: 'Rousseau',
-      email: 'i.rousseau@rousseau-tech.fr',
+      name: 'Cabinet Patrimoine Sud',
+      slug: 'patrimoine-sud',
+      email: 'contact@patrimoine-sud.fr',
       phone: '+33 4 91 23 45 67',
-      mobile: '+33 6 78 90 12 34',
-      birthDate: new Date('1978-07-18'),
-      birthPlace: 'Nice',
-      nationality: 'Française',
-      address: {
-        street: '56 Promenade des Anglais',
-        city: 'Nice',
-        postalCode: '06000',
-        country: 'France'
-      },
-      companyName: 'Rousseau Technologies SAS',
-      siret: '98765432109876',
-      legalForm: 'SAS',
-      activitySector: 'Développement logiciel',
-      companyCreationDate: new Date('2015-06-01'),
-      numberOfEmployees: 25,
-      annualRevenue: 2500000,
-      profession: 'Présidente',
-      annualIncome: 180000,
-      taxBracket: '45%',
-      fiscalResidence: 'France',
-      irTaxRate: 45,
-      ifiSubject: true,
-      ifiAmount: 18500,
-      riskProfile: 'DYNAMIQUE',
-      investmentHorizon: 'LONG',
-      investmentGoals: ['Croissance', 'Innovation'],
-      investmentKnowledge: 'Avancé',
-      investmentExperience: '10+ ans',
-      managedByFirm: true,
-      managementStartDate: new Date('2021-01-10'),
-      managementFees: 1.5,
-      managementType: 'Gestion pilotée',
-      kycStatus: 'COMPLETED',
-      kycCompletedAt: new Date('2021-02-20'),
-      kycNextReviewDate: new Date('2025-02-20'),
+      address: { street: '25 Quai du Port', city: 'Marseille', postalCode: '13002', country: 'France' },
+      plan: 'STARTER',
       status: 'ACTIVE',
-      portalAccess: true,
-      lastContactDate: new Date('2024-11-12')
+      subscriptionStart: getDate(0, 0, 1),
+      subscriptionEnd: getDate(1, 11, 31),
+      quotas: { maxUsers: 3, maxClients: 100, maxStorage: 5368709120 },
+      usage: { users: 1, clients: 3, storage: 0 },
+      features: { advancedReporting: false, apiAccess: false, customBranding: false }
     }
   });
 
-  console.log(`✅ Clients created: 5 clients (3 particuliers, 2 professionnels)`);
-
-  // 4. Create Actifs for each client
-  console.log('💰 Creating actifs...');
-
-  // Actifs for Jean Dupont
-  const actifDupontMaison = await prisma.actif.create({
+  const conseiller3 = await prisma.user.create({
     data: {
-      cabinetId: cabinet.id,
-      type: 'REAL_ESTATE_MAIN',
-      category: 'IMMOBILIER',
-      name: 'Résidence principale - Lyon',
-      description: 'Appartement 120m² centre-ville Lyon',
-      value: 450000,
-      acquisitionDate: new Date('2010-06-15'),
-      acquisitionValue: 280000,
-      details: {
-        surface: 120,
-        rooms: 4,
-        floor: 3,
-        elevator: true
-      },
-      managedByFirm: false,
+      cabinetId: cabinet3.id,
+      email: 'conseil@patrimoine-sud.fr',
+      password: hashedPassword,
+      firstName: 'Julien',
+      lastName: 'Sud',
+      phone: '+33 6 11 22 33 44',
+      role: 'ADVISOR',
+      permissions: { canManageClients: true, canViewReports: true },
       isActive: true
     }
   });
 
-  await prisma.clientActif.create({
-    data: {
-      clientId: clientDupont.id,
-      actifId: actifDupontMaison.id,
-      ownershipPercentage: 100,
-      ownershipType: 'Pleine propriété'
-    }
-  });
-
-  const actifDupontAV = await prisma.actif.create({
-    data: {
-      cabinetId: cabinet.id,
-      type: 'LIFE_INSURANCE',
-      category: 'FINANCIER',
-      name: 'Assurance Vie Axa',
-      description: 'Contrat multisupport',
-      value: 185000,
-      acquisitionDate: new Date('2015-03-01'),
-      acquisitionValue: 100000,
-      details: {
-        provider: 'Axa',
-        contractNumber: 'AV123456',
-        fonds: ['Fonds euros 60%', 'UC actions 30%', 'UC obligations 10%']
-      },
-      annualIncome: 3500,
-      managedByFirm: true,
-      managementFees: 1.5,
-      isActive: true
-    }
-  });
-
-  await prisma.clientActif.create({
-    data: {
-      clientId: clientDupont.id,
-      actifId: actifDupontAV.id,
-      ownershipPercentage: 100
-    }
-  });
-
-  const actifDupontPEA = await prisma.actif.create({
-    data: {
-      cabinetId: cabinet.id,
-      type: 'PEA',
-      category: 'FINANCIER',
-      name: 'PEA Boursorama',
-      description: 'Plan Épargne Actions',
-      value: 75000,
-      acquisitionDate: new Date('2018-01-15'),
-      acquisitionValue: 50000,
-      details: {
-        provider: 'Boursorama',
-        accountNumber: 'PEA789012'
-      },
-      annualIncome: 2800,
-      managedByFirm: false,
-      isActive: true
-    }
-  });
-
-  await prisma.clientActif.create({
-    data: {
-      clientId: clientDupont.id,
-      actifId: actifDupontPEA.id,
-      ownershipPercentage: 100
-    }
-  });
-
-  // Actifs for Marie Martin
-  const actifMartinAppart = await prisma.actif.create({
-    data: {
-      cabinetId: cabinet.id,
-      type: 'REAL_ESTATE_MAIN',
-      category: 'IMMOBILIER',
-      name: 'Appartement Paris 8ème',
-      description: 'Appartement 95m² Haussmannien',
-      value: 850000,
-      acquisitionDate: new Date('2019-09-20'),
-      acquisitionValue: 720000,
-      details: {
-        surface: 95,
-        rooms: 3,
-        floor: 4,
-        elevator: true,
-        balcony: true
-      },
-      managedByFirm: false,
-      isActive: true
-    }
-  });
-
-  await prisma.clientActif.create({
-    data: {
-      clientId: clientMartin.id,
-      actifId: actifMartinAppart.id,
-      ownershipPercentage: 100
-    }
-  });
-
-  const actifMartinSCPI = await prisma.actif.create({
-    data: {
-      cabinetId: cabinet.id,
-      type: 'SCPI',
-      category: 'IMMOBILIER',
-      name: 'SCPI Corum Origin',
-      description: 'Parts de SCPI diversifiée',
-      value: 120000,
-      acquisitionDate: new Date('2020-05-10'),
-      acquisitionValue: 100000,
-      details: {
-        provider: 'Corum',
-        numberOfShares: 500,
-        pricePerShare: 240
-      },
-      annualIncome: 5400,
-      managedByFirm: true,
-      managementFees: 1.2,
-      isActive: true
-    }
-  });
-
-  await prisma.clientActif.create({
-    data: {
-      clientId: clientMartin.id,
-      actifId: actifMartinSCPI.id,
-      ownershipPercentage: 100
-    }
-  });
-
-  const actifMartinPER = await prisma.actif.create({
-    data: {
-      cabinetId: cabinet.id,
-      type: 'PER',
-      category: 'FINANCIER',
-      name: 'PER Generali',
-      description: 'Plan Épargne Retraite',
-      value: 95000,
-      acquisitionDate: new Date('2021-01-01'),
-      acquisitionValue: 60000,
-      details: {
-        provider: 'Generali',
-        contractNumber: 'PER456789'
-      },
-      managedByFirm: true,
-      managementFees: 1.8,
-      isActive: true
-    }
-  });
-
-  await prisma.clientActif.create({
-    data: {
-      clientId: clientMartin.id,
-      actifId: actifMartinPER.id,
-      ownershipPercentage: 100
-    }
-  });
-
-  // Actifs for Pierre Durand
-  const actifDurandMaison = await prisma.actif.create({
-    data: {
-      cabinetId: cabinet.id,
-      type: 'REAL_ESTATE_MAIN',
-      category: 'IMMOBILIER',
-      name: 'Maison Bordeaux',
-      description: 'Maison 180m² avec jardin',
-      value: 620000,
-      acquisitionDate: new Date('2012-04-10'),
-      acquisitionValue: 450000,
-      details: {
-        surface: 180,
-        rooms: 6,
-        land: 500,
-        garage: true
-      },
-      managedByFirm: false,
-      isActive: true
-    }
-  });
-
-  await prisma.clientActif.create({
-    data: {
-      clientId: clientDurand.id,
-      actifId: actifDurandMaison.id,
-      ownershipPercentage: 100
-    }
-  });
-
-  const actifDurandCrypto = await prisma.actif.create({
-    data: {
-      cabinetId: cabinet.id,
-      type: 'CRYPTO',
-      category: 'FINANCIER',
-      name: 'Portefeuille Crypto',
-      description: 'Bitcoin et Ethereum',
-      value: 45000,
-      acquisitionDate: new Date('2020-11-01'),
-      acquisitionValue: 15000,
-      details: {
-        assets: ['Bitcoin 0.8 BTC', 'Ethereum 12 ETH']
-      },
-      managedByFirm: false,
-      isActive: true
-    }
-  });
-
-  await prisma.clientActif.create({
-    data: {
-      clientId: clientDurand.id,
-      actifId: actifDurandCrypto.id,
-      ownershipPercentage: 100
-    }
-  });
-
-  console.log(`✅ Actifs created for all clients`);
-
-  // 5. Create Passifs
-  console.log('💳 Creating passifs...');
-
-  await prisma.passif.create({
-    data: {
-      cabinetId: cabinet.id,
-      clientId: clientDupont.id,
-      type: 'MORTGAGE',
-      name: 'Prêt immobilier résidence principale',
-      description: 'Crédit Agricole - 20 ans',
-      initialAmount: 200000,
-      remainingAmount: 125000,
-      interestRate: 1.8,
-      monthlyPayment: 1150,
-      startDate: new Date('2015-06-01'),
-      endDate: new Date('2035-06-01'),
-      linkedActifId: actifDupontMaison.id,
-      insurance: {
-        provider: 'CNP Assurances',
-        monthlyPremium: 45
-      },
-      isActive: true
-    }
-  });
-
-  await prisma.passif.create({
-    data: {
-      cabinetId: cabinet.id,
-      clientId: clientMartin.id,
-      type: 'MORTGAGE',
-      name: 'Prêt immobilier Paris',
-      description: 'BNP Paribas - 25 ans',
-      initialAmount: 600000,
-      remainingAmount: 480000,
-      interestRate: 1.5,
-      monthlyPayment: 2800,
-      startDate: new Date('2019-09-01'),
-      endDate: new Date('2044-09-01'),
-      linkedActifId: actifMartinAppart.id,
-      insurance: {
-        provider: 'Cardif',
-        monthlyPremium: 85
-      },
-      isActive: true
-    }
-  });
-
-  await prisma.passif.create({
-    data: {
-      cabinetId: cabinet.id,
-      clientId: clientDurand.id,
-      type: 'CONSUMER_LOAN',
-      name: 'Crédit auto',
-      description: 'Financement véhicule',
-      initialAmount: 35000,
-      remainingAmount: 12000,
-      interestRate: 3.2,
-      monthlyPayment: 650,
-      startDate: new Date('2022-03-01'),
-      endDate: new Date('2027-03-01'),
-      isActive: true
-    }
-  });
-
-  console.log(`✅ Passifs created`);
-
-  // 6. Create Contrats
-  console.log('📄 Creating contrats...');
-
-  await prisma.contrat.create({
-    data: {
-      cabinetId: cabinet.id,
-      clientId: clientDupont.id,
-      type: 'LIFE_INSURANCE',
-      name: 'Assurance Vie Axa',
-      provider: 'Axa',
-      contractNumber: 'AV123456',
-      startDate: new Date('2015-03-01'),
-      premium: 500,
-      value: 185000,
-      beneficiaries: {
-        primary: ['Épouse 100%'],
-        secondary: ['Enfants à parts égales']
-      },
-      nextRenewalDate: new Date('2025-03-01'),
-      status: 'ACTIVE'
-    }
-  });
-
-  await prisma.contrat.create({
-    data: {
-      cabinetId: cabinet.id,
-      clientId: clientMartin.id,
-      type: 'HEALTH_INSURANCE',
-      name: 'Mutuelle Santé',
-      provider: 'Harmonie Mutuelle',
-      contractNumber: 'MUT789012',
-      startDate: new Date('2022-01-01'),
-      premium: 180,
-      coverage: 50000,
-      nextRenewalDate: new Date('2025-01-01'),
-      status: 'ACTIVE'
-    }
-  });
-
-  await prisma.contrat.create({
-    data: {
-      cabinetId: cabinet.id,
-      clientId: clientLeblanc.id,
-      type: 'PROFESSIONAL_INSURANCE',
-      name: 'RC Professionnelle',
-      provider: 'Allianz',
-      contractNumber: 'RCP345678',
-      startDate: new Date('2020-09-01'),
-      premium: 450,
-      coverage: 1000000,
-      nextRenewalDate: new Date('2025-09-01'),
-      status: 'ACTIVE'
-    }
-  });
-
-  console.log(`✅ Contrats created`);
-
-  // 7. Create Documents
-  console.log('📁 Creating documents...');
-
-  const docDupontID = await prisma.document.create({
-    data: {
-      cabinetId: cabinet.id,
-      name: 'Carte identité Jean Dupont',
-      description: 'CNI recto-verso',
-      fileUrl: '/uploads/documents/dupont-cni.pdf',
-      fileSize: 245000,
-      mimeType: 'application/pdf',
-      type: 'ID_CARD',
-      category: 'IDENTITE',
-      uploadedById: conseiller.id,
-      uploadedAt: new Date('2023-01-15')
-    }
-  });
-
-  await prisma.clientDocument.create({
-    data: {
-      clientId: clientDupont.id,
-      documentId: docDupontID.id
-    }
-  });
-
-  const docDupontTax = await prisma.document.create({
-    data: {
-      cabinetId: cabinet.id,
-      name: 'Avis imposition 2023',
-      description: 'Avis d\'imposition sur les revenus 2023',
-      fileUrl: '/uploads/documents/dupont-tax-2023.pdf',
-      fileSize: 180000,
-      mimeType: 'application/pdf',
-      type: 'TAX_NOTICE',
-      category: 'FISCAL',
-      uploadedById: conseiller.id,
-      uploadedAt: new Date('2023-09-10')
-    }
-  });
-
-  await prisma.clientDocument.create({
-    data: {
-      clientId: clientDupont.id,
-      documentId: docDupontTax.id
-    }
-  });
-
-  const docDupontBank = await prisma.document.create({
-    data: {
-      cabinetId: cabinet.id,
-      name: 'Relevé bancaire Crédit Agricole',
-      description: 'Relevé compte courant octobre 2024',
-      fileUrl: '/uploads/documents/dupont-bank-oct2024.pdf',
-      fileSize: 95000,
-      mimeType: 'application/pdf',
-      type: 'BANK_STATEMENT',
-      category: 'PATRIMOINE',
-      uploadedById: conseiller.id,
-      uploadedAt: new Date('2024-11-01')
-    }
-  });
-
-  await prisma.clientDocument.create({
-    data: {
-      clientId: clientDupont.id,
-      documentId: docDupontBank.id
-    }
-  });
-
-  const docMartinID = await prisma.document.create({
-    data: {
-      cabinetId: cabinet.id,
-      name: 'Passeport Marie Martin',
-      description: 'Passeport valide jusqu\'en 2028',
-      fileUrl: '/uploads/documents/martin-passport.pdf',
-      fileSize: 320000,
-      mimeType: 'application/pdf',
-      type: 'PASSPORT',
-      category: 'IDENTITE',
-      uploadedById: conseiller.id,
-      uploadedAt: new Date('2022-06-15')
-    }
-  });
-
-  await prisma.clientDocument.create({
-    data: {
-      clientId: clientMartin.id,
-      documentId: docMartinID.id
-    }
-  });
-
-  const docMartinAddress = await prisma.document.create({
-    data: {
-      cabinetId: cabinet.id,
-      name: 'Justificatif domicile',
-      description: 'Facture EDF',
-      fileUrl: '/uploads/documents/martin-address.pdf',
-      fileSize: 125000,
-      mimeType: 'application/pdf',
-      type: 'PROOF_OF_ADDRESS',
-      category: 'IDENTITE',
-      uploadedById: conseiller.id,
-      uploadedAt: new Date('2024-10-05')
-    }
-  });
-
-  await prisma.clientDocument.create({
-    data: {
-      clientId: clientMartin.id,
-      documentId: docMartinAddress.id
-    }
-  });
-
-  console.log(`✅ Documents created`);
-
-  // 8. Create Objectifs
-  console.log('🎯 Creating objectifs...');
-
-  await prisma.objectif.create({
-    data: {
-      cabinetId: cabinet.id,
-      clientId: clientDupont.id,
-      type: 'RETIREMENT',
-      name: 'Préparation retraite',
-      description: 'Constituer un capital retraite de 500k€',
-      targetAmount: 500000,
-      currentAmount: 260000,
-      progress: 52,
-      targetDate: new Date('2035-12-31'),
-      priority: 'HIGH',
-      monthlyContribution: 1200,
-      recommendations: {
-        suggestions: [
-          'Augmenter versements PER',
-          'Diversifier avec SCPI'
-        ]
-      },
-      status: 'ACTIVE'
-    }
-  });
-
-  await prisma.objectif.create({
-    data: {
-      cabinetId: cabinet.id,
-      clientId: clientDupont.id,
-      type: 'EDUCATION',
-      name: 'Études supérieures enfants',
-      description: 'Financer les études des 2 enfants',
-      targetAmount: 100000,
-      currentAmount: 35000,
-      progress: 35,
-      targetDate: new Date('2030-09-01'),
-      priority: 'MEDIUM',
-      monthlyContribution: 500,
-      status: 'ACTIVE'
-    }
-  });
-
-  await prisma.objectif.create({
-    data: {
-      cabinetId: cabinet.id,
-      clientId: clientMartin.id,
-      type: 'REAL_ESTATE_PURCHASE',
-      name: 'Achat résidence secondaire',
-      description: 'Maison en bord de mer',
-      targetAmount: 400000,
-      currentAmount: 150000,
-      progress: 37,
-      targetDate: new Date('2027-06-30'),
-      priority: 'MEDIUM',
-      monthlyContribution: 2000,
-      status: 'ACTIVE'
-    }
-  });
-
-  console.log(`✅ Objectifs created`);
-
-  // 9. Create Projets with Taches
-  console.log('📋 Creating projets and taches...');
-
-  const projetDupont = await prisma.projet.create({
-    data: {
-      cabinetId: cabinet.id,
-      clientId: clientDupont.id,
-      name: 'Optimisation fiscale 2024',
-      description: 'Réduction IR via investissements défiscalisants',
-      type: 'TAX_OPTIMIZATION',
-      estimatedBudget: 50000,
-      actualBudget: 35000,
-      startDate: new Date('2024-01-15'),
-      targetDate: new Date('2024-12-31'),
-      progress: 70,
-      status: 'IN_PROGRESS'
-    }
-  });
-
-  await prisma.tache.create({
-    data: {
-      cabinetId: cabinet.id,
-      assignedToId: conseiller.id,
-      clientId: clientDupont.id,
-      projetId: projetDupont.id,
-      createdById: conseiller.id,
-      title: 'Analyser opportunités Pinel',
-      description: 'Étudier les programmes immobiliers éligibles Pinel',
-      type: 'DOCUMENT_REVIEW',
-      priority: 'HIGH',
-      status: 'COMPLETED',
-      dueDate: new Date('2024-03-01'),
-      completedAt: new Date('2024-02-28')
-    }
-  });
-
-  await prisma.tache.create({
-    data: {
-      cabinetId: cabinet.id,
-      assignedToId: conseiller.id,
-      clientId: clientDupont.id,
-      projetId: projetDupont.id,
-      createdById: conseiller.id,
-      title: 'Présenter simulation Pinel',
-      description: 'RDV client pour présenter les simulations',
-      type: 'MEETING',
-      priority: 'HIGH',
-      status: 'COMPLETED',
-      dueDate: new Date('2024-04-15'),
-      completedAt: new Date('2024-04-12')
-    }
-  });
-
-  await prisma.tache.create({
-    data: {
-      cabinetId: cabinet.id,
-      assignedToId: conseiller.id,
-      clientId: clientDupont.id,
-      projetId: projetDupont.id,
-      createdById: conseiller.id,
-      title: 'Finaliser souscription',
-      description: 'Signature documents et versement',
-      type: 'ADMINISTRATIVE',
-      priority: 'MEDIUM',
-      status: 'IN_PROGRESS',
-      dueDate: new Date('2024-12-15')
-    }
-  });
-
-  const projetMartin = await prisma.projet.create({
-    data: {
-      cabinetId: cabinet.id,
-      clientId: clientMartin.id,
-      name: 'Restructuration patrimoine',
-      description: 'Optimiser allocation actifs',
-      type: 'WEALTH_RESTRUCTURING',
-      estimatedBudget: 1000000,
-      startDate: new Date('2024-09-01'),
-      targetDate: new Date('2025-03-31'),
-      progress: 30,
-      status: 'IN_PROGRESS'
-    }
-  });
-
-  await prisma.tache.create({
-    data: {
-      cabinetId: cabinet.id,
-      assignedToId: conseiller.id,
-      clientId: clientMartin.id,
-      projetId: projetMartin.id,
-      createdById: conseiller.id,
-      title: 'Audit patrimoine complet',
-      description: 'Analyse détaillée de tous les actifs',
-      type: 'DOCUMENT_REVIEW',
-      priority: 'HIGH',
-      status: 'COMPLETED',
-      dueDate: new Date('2024-09-30'),
-      completedAt: new Date('2024-09-28')
-    }
-  });
-
-  await prisma.tache.create({
-    data: {
-      cabinetId: cabinet.id,
-      assignedToId: conseiller.id,
-      clientId: clientMartin.id,
-      projetId: projetMartin.id,
-      createdById: conseiller.id,
-      title: 'Proposer nouvelle allocation',
-      description: 'Présenter stratégie de réallocation',
-      type: 'MEETING',
-      priority: 'HIGH',
-      status: 'IN_PROGRESS',
-      dueDate: new Date('2024-11-30')
-    }
-  });
-
-  console.log(`✅ Projets and related taches created`);
-
-  // 10. Create global Taches
-  console.log('✅ Creating global taches...');
-
-  await prisma.tache.create({
-    data: {
-      cabinetId: cabinet.id,
-      assignedToId: conseiller.id,
-      createdById: admin.id,
-      title: 'Préparer revue annuelle clients',
-      description: 'Planifier les RDV de revue annuelle Q1 2025',
-      type: 'ADMINISTRATIVE',
-      priority: 'MEDIUM',
-      status: 'TODO',
-      dueDate: new Date('2024-12-20')
-    }
-  });
-
-  await prisma.tache.create({
-    data: {
-      cabinetId: cabinet.id,
-      assignedToId: conseiller.id,
-      createdById: conseiller.id,
-      title: 'Appeler prospect Bertrand',
-      description: 'Relance suite à demande de contact',
-      type: 'CALL',
-      priority: 'HIGH',
-      status: 'TODO',
-      dueDate: new Date('2024-11-18')
-    }
-  });
-
-  await prisma.tache.create({
-    data: {
-      cabinetId: cabinet.id,
-      assignedToId: conseiller.id,
-      createdById: conseiller.id,
-      title: 'Mettre à jour KYC clients',
-      description: 'Vérifier et mettre à jour les KYC expirés',
-      type: 'KYC_UPDATE',
-      priority: 'URGENT',
-      status: 'IN_PROGRESS',
-      dueDate: new Date('2024-11-20')
-    }
-  });
-
-  await prisma.tache.create({
-    data: {
-      cabinetId: cabinet.id,
-      assignedToId: conseiller.id,
-      createdById: conseiller.id,
-      title: 'Envoyer newsletter novembre',
-      description: 'Newsletter mensuelle aux clients',
-      type: 'EMAIL',
-      priority: 'LOW',
-      status: 'COMPLETED',
-      dueDate: new Date('2024-11-05'),
-      completedAt: new Date('2024-11-04')
-    }
-  });
-
-  await prisma.tache.create({
-    data: {
-      cabinetId: cabinet.id,
-      assignedToId: conseiller.id,
-      createdById: conseiller.id,
-      title: 'Renouvellement contrat Axa',
-      description: 'Préparer documents renouvellement',
-      type: 'CONTRACT_RENEWAL',
-      priority: 'MEDIUM',
-      status: 'TODO',
-      dueDate: new Date('2024-12-01')
-    }
-  });
-
-  await prisma.tache.create({
-    data: {
-      cabinetId: cabinet.id,
-      assignedToId: conseiller.id,
-      createdById: admin.id,
-      title: 'Formation nouvelle réglementation',
-      description: 'Participer à la formation MIF II',
-      type: 'OTHER',
-      priority: 'MEDIUM',
-      status: 'TODO',
-      dueDate: new Date('2024-12-10')
-    }
-  });
-
-  await prisma.tache.create({
-    data: {
-      cabinetId: cabinet.id,
-      assignedToId: conseiller.id,
-      createdById: conseiller.id,
-      title: 'Analyser opportunités marché',
-      description: 'Étude des opportunités Q4 2024',
-      type: 'DOCUMENT_REVIEW',
-      priority: 'LOW',
-      status: 'COMPLETED',
-      dueDate: new Date('2024-10-31'),
-      completedAt: new Date('2024-10-30')
-    }
-  });
-
-  await prisma.tache.create({
-    data: {
-      cabinetId: cabinet.id,
-      assignedToId: conseiller.id,
-      createdById: conseiller.id,
-      title: 'Suivi portefeuille Durand',
-      description: 'Point trimestriel sur performance',
-      type: 'FOLLOW_UP',
-      priority: 'MEDIUM',
-      status: 'TODO',
-      dueDate: new Date('2024-11-25')
-    }
-  });
-
-  await prisma.tache.create({
-    data: {
-      cabinetId: cabinet.id,
-      assignedToId: conseiller.id,
-      createdById: conseiller.id,
-      title: 'Préparer rapport annuel',
-      description: 'Rapport activité 2024',
-      type: 'ADMINISTRATIVE',
-      priority: 'HIGH',
-      status: 'IN_PROGRESS',
-      dueDate: new Date('2024-12-31')
-    }
-  });
-
-  await prisma.tache.create({
-    data: {
-      cabinetId: cabinet.id,
-      assignedToId: conseiller.id,
-      createdById: conseiller.id,
-      title: 'Organiser événement clients',
-      description: 'Soirée networking janvier 2025',
-      type: 'OTHER',
-      priority: 'LOW',
-      status: 'TODO',
-      dueDate: new Date('2024-12-15')
-    }
-  });
-
-  console.log(`✅ Global taches created (10 total)`);
-
-  // 11. Create RendezVous
-  console.log('📅 Creating rendez-vous...');
-
-  await prisma.rendezVous.create({
-    data: {
-      cabinetId: cabinet.id,
-      conseillerId: conseiller.id,
-      clientId: clientDupont.id,
-      title: 'Revue annuelle patrimoine',
-      description: 'Bilan annuel et perspectives 2025',
-      type: 'ANNUAL_REVIEW',
-      startDate: new Date('2024-12-05T10:00:00'),
-      endDate: new Date('2024-12-05T11:30:00'),
-      location: 'Bureau Lyon',
-      isVirtual: false,
-      status: 'SCHEDULED'
-    }
-  });
-
-  await prisma.rendezVous.create({
-    data: {
-      cabinetId: cabinet.id,
-      conseillerId: conseiller.id,
-      clientId: clientMartin.id,
-      title: 'Point stratégie investissement',
-      description: 'Discussion allocation actifs',
-      type: 'FOLLOW_UP',
-      startDate: new Date('2024-11-22T14:00:00'),
-      endDate: new Date('2024-11-22T15:00:00'),
-      location: 'Visioconférence',
-      isVirtual: true,
-      meetingUrl: 'https://meet.google.com/abc-defg-hij',
-      status: 'CONFIRMED'
-    }
-  });
-
-  await prisma.rendezVous.create({
-    data: {
-      cabinetId: cabinet.id,
-      conseillerId: conseiller.id,
-      clientId: clientDurand.id,
-      title: 'Signature documents',
-      description: 'Signature contrat assurance vie',
-      type: 'SIGNING',
-      startDate: new Date('2024-11-28T16:00:00'),
-      endDate: new Date('2024-11-28T16:30:00'),
-      location: 'Bureau Bordeaux',
-      isVirtual: false,
-      status: 'SCHEDULED'
-    }
-  });
-
-  await prisma.rendezVous.create({
-    data: {
-      cabinetId: cabinet.id,
-      conseillerId: conseiller.id,
-      clientId: clientLeblanc.id,
-      title: 'Appel téléphonique suivi',
-      description: 'Point rapide sur dossier en cours',
-      type: 'PHONE_CALL',
-      startDate: new Date('2024-11-20T11:00:00'),
-      endDate: new Date('2024-11-20T11:30:00'),
-      isVirtual: true,
-      status: 'SCHEDULED'
-    }
-  });
-
-  await prisma.rendezVous.create({
-    data: {
-      cabinetId: cabinet.id,
-      conseillerId: conseiller.id,
-      clientId: clientRousseau.id,
-      title: 'Premier rendez-vous découverte',
-      description: 'Présentation services et analyse besoins',
-      type: 'FIRST_MEETING',
-      startDate: new Date('2024-12-10T09:30:00'),
-      endDate: new Date('2024-12-10T11:00:00'),
-      location: 'Bureau Nice',
-      isVirtual: false,
-      status: 'SCHEDULED'
-    }
-  });
-
-  console.log(`✅ RendezVous created (5 appointments)`);
-
-  // 12. Create Opportunites
-  console.log('💡 Creating opportunites...');
-
-  await prisma.opportunite.create({
-    data: {
-      cabinetId: cabinet.id,
-      conseillerId: conseiller.id,
-      clientId: clientDupont.id,
-      type: 'RETIREMENT_SAVINGS',
-      name: 'Augmentation PER',
-      description: 'Client intéressé par augmentation versements PER',
-      estimatedValue: 50000,
-      score: 85,
-      confidence: 0.85,
-      priority: 'HIGH',
-      status: 'QUALIFIED',
-      detectedAt: new Date('2024-10-15'),
-      qualifiedAt: new Date('2024-10-20'),
-      actionDeadline: new Date('2024-12-31'),
-      actions: {
-        nextSteps: ['Préparer simulation', 'Planifier RDV']
+  console.log('✅ Cabinet Patrimoine Sud created\n');
+
+  // Clients Cabinet 3
+  console.log('👤 Creating 3 clients for Cabinet Patrimoine Sud...');
+  const clientsData3 = [
+    { firstName: 'Marius', lastName: 'Pagnol', type: 'PARTICULIER', email: 'marius@marseille.fr', birthDate: new Date('1970-03-15'), profession: 'Restaurateur', annualIncome: 65000, taxBracket: '30%', riskProfile: 'PRUDENT' },
+    { firstName: 'Fanny', lastName: 'César', type: 'PARTICULIER', email: 'fanny@provence.fr', birthDate: new Date('1975-07-20'), profession: 'Commerçante', annualIncome: 55000, taxBracket: '30%', riskProfile: 'EQUILIBRE' },
+    { firstName: 'César', lastName: 'Panisse', type: 'PROFESSIONNEL', email: 'cesar@bar-marine.fr', birthDate: new Date('1960-12-01'), profession: 'Gérant', companyName: 'Bar de la Marine SARL', siret: '35248953800017', annualIncome: 80000, taxBracket: '30%', riskProfile: 'PRUDENT' }
+  ];
+
+  for (let i = 0; i < clientsData3.length; i++) {
+    const c = clientsData3[i];
+    const client = await prisma.client.create({
+      data: {
+        cabinetId: cabinet3.id,
+        conseillerId: conseiller3.id,
+        clientType: c.type as 'PARTICULIER' | 'PROFESSIONNEL',
+        firstName: c.firstName,
+        lastName: c.lastName,
+        email: c.email,
+        phone: `+33 6 ${String(20 + i).padStart(2, '0')} ${String(30 + i).padStart(2, '0')} ${String(40 + i).padStart(2, '0')} ${String(50 + i).padStart(2, '0')}`,
+        birthDate: c.birthDate,
+        nationality: 'Française',
+        address: { street: `${5 + i * 3} Rue de la Canebière`, city: 'Marseille', postalCode: '13001', country: 'France' },
+        profession: c.profession,
+        annualIncome: c.annualIncome,
+        taxBracket: c.taxBracket,
+        companyName: c.companyName,
+        siret: c.siret,
+        riskProfile: c.riskProfile as any,
+        status: 'ACTIF',
+        portalAccess: true
       }
-    }
-  });
+    });
 
-  await prisma.opportunite.create({
-    data: {
-      cabinetId: cabinet.id,
-      conseillerId: conseiller.id,
-      clientId: clientMartin.id,
-      type: 'REAL_ESTATE_INVESTMENT',
-      name: 'Investissement SCPI',
-      description: 'Diversification via SCPI rendement',
-      estimatedValue: 100000,
-      score: 75,
-      confidence: 0.75,
-      priority: 'MEDIUM',
-      status: 'PRESENTED',
-      detectedAt: new Date('2024-09-01'),
-      qualifiedAt: new Date('2024-09-10'),
-      contactedAt: new Date('2024-09-15'),
-      presentedAt: new Date('2024-10-05'),
-      actionDeadline: new Date('2024-11-30'),
-      actions: {
-        nextSteps: ['Attendre décision client']
+    await createClientAssociatedData(cabinet3.id, conseiller3.id, {
+      id: client.id,
+      firstName: c.firstName,
+      lastName: c.lastName,
+      clientType: c.type as 'PARTICULIER' | 'PROFESSIONNEL',
+      profession: c.profession,
+      annualIncome: c.annualIncome
+    }, 14 + i);
+  }
+
+  console.log('✅ 3 clients with complete data created for Cabinet Patrimoine Sud\n');
+
+  // ============ TACHES GLOBALES ============
+  console.log('📋 Creating global tasks...');
+  const globalTasks = [
+    { title: 'Préparer revue annuelle clients', type: 'ADMINISTRATIF', priority: 'MOYENNE', status: 'A_FAIRE' },
+    { title: 'Appeler prospect Bertrand', type: 'APPEL', priority: 'HAUTE', status: 'A_FAIRE' },
+    { title: 'Mettre à jour KYC expirés', type: 'MISE_A_JOUR_KYC', priority: 'URGENTE', status: 'EN_COURS' },
+    { title: 'Newsletter décembre', type: 'EMAIL', priority: 'BASSE', status: 'TERMINE' },
+    { title: 'Formation réglementation', type: 'AUTRE', priority: 'MOYENNE', status: 'A_FAIRE' }
+  ];
+
+  for (let i = 0; i < globalTasks.length; i++) {
+    const t = globalTasks[i];
+    await prisma.tache.create({
+      data: {
+        cabinetId: cabinet1.id,
+        assignedToId: conseiller1.id,
+        createdById: i % 2 === 0 ? admin1.id : conseiller1.id,
+        title: t.title,
+        type: t.type as 'APPEL' | 'EMAIL' | 'REUNION' | 'REVUE_DOCUMENTS' | 'MISE_A_JOUR_KYC' | 'RENOUVELLEMENT_CONTRAT' | 'SUIVI' | 'ADMINISTRATIF' | 'AUTRE',
+        priority: t.priority as any,
+        status: t.status as any,
+        dueDate: getDate(0, 11, 15 + i),
+        completedAt: t.status === 'TERMINE' ? getDate(0, 11, 14 + i) : undefined
       }
-    }
-  });
+    });
+  }
+  console.log('✅ Global tasks created\n');
 
-  await prisma.opportunite.create({
-    data: {
-      cabinetId: cabinet.id,
-      conseillerId: conseiller.id,
-      clientId: clientDurand.id,
-      type: 'TAX_OPTIMIZATION',
-      name: 'Défiscalisation Pinel',
-      description: 'Réduction IR via investissement Pinel',
-      estimatedValue: 80000,
-      score: 70,
-      confidence: 0.70,
-      priority: 'MEDIUM',
-      status: 'CONTACTED',
-      detectedAt: new Date('2024-10-01'),
-      qualifiedAt: new Date('2024-10-08'),
-      contactedAt: new Date('2024-10-15'),
-      actionDeadline: new Date('2024-12-15')
-    }
-  });
-
-  await prisma.opportunite.create({
-    data: {
-      cabinetId: cabinet.id,
-      conseillerId: conseiller.id,
-      clientId: clientLeblanc.id,
-      type: 'WEALTH_TRANSMISSION',
-      name: 'Donation enfants',
-      description: 'Optimisation transmission patrimoine',
-      estimatedValue: 150000,
-      score: 90,
-      confidence: 0.90,
-      priority: 'HIGH',
-      status: 'ACCEPTED',
-      detectedAt: new Date('2024-08-01'),
-      qualifiedAt: new Date('2024-08-10'),
-      contactedAt: new Date('2024-08-15'),
-      presentedAt: new Date('2024-09-01'),
-      acceptedAt: new Date('2024-09-20'),
-      actionDeadline: new Date('2024-12-01')
-    }
-  });
-
-  await prisma.opportunite.create({
-    data: {
-      cabinetId: cabinet.id,
-      conseillerId: conseiller.id,
-      clientId: clientRousseau.id,
-      type: 'INSURANCE_REVIEW',
-      name: 'Révision couvertures assurance',
-      description: 'Audit et optimisation contrats assurance',
-      estimatedValue: 30000,
-      score: 60,
-      confidence: 0.60,
-      priority: 'LOW',
-      status: 'DETECTED',
-      detectedAt: new Date('2024-11-01'),
-      actionDeadline: new Date('2025-01-31')
-    }
-  });
-
-  console.log(`✅ Opportunites created (5 opportunities)`);
-
-  // 13. Create KYC Documents for 2 clients
-  console.log('📋 Creating KYC documents...');
-
-  // KYC for Jean Dupont (completed)
-  await prisma.kYCDocument.create({
-    data: {
-      clientId: clientDupont.id,
-      type: 'IDENTITY',
-      status: 'VALIDATED',
-      validatedAt: new Date('2023-02-01'),
-      validatedBy: conseiller.id,
-      expiresAt: new Date('2033-05-15')
-    }
-  });
-
-  await prisma.kYCDocument.create({
-    data: {
-      clientId: clientDupont.id,
-      type: 'PROOF_OF_ADDRESS',
-      status: 'VALIDATED',
-      validatedAt: new Date('2023-02-01'),
-      validatedBy: conseiller.id,
-      expiresAt: new Date('2025-02-01')
-    }
-  });
-
-  await prisma.kYCDocument.create({
-    data: {
-      clientId: clientDupont.id,
-      type: 'TAX_NOTICE',
-      status: 'VALIDATED',
-      validatedAt: new Date('2023-09-10'),
-      validatedBy: conseiller.id,
-      expiresAt: new Date('2025-09-10')
-    }
-  });
-
-  await prisma.kYCDocument.create({
-    data: {
-      clientId: clientDupont.id,
-      type: 'BANK_RIB',
-      status: 'VALIDATED',
-      validatedAt: new Date('2023-02-01'),
-      validatedBy: conseiller.id
-    }
-  });
-
-  // KYC for Marie Martin (completed)
-  await prisma.kYCDocument.create({
-    data: {
-      clientId: clientMartin.id,
-      type: 'IDENTITY',
-      status: 'VALIDATED',
-      validatedAt: new Date('2022-07-15'),
-      validatedBy: conseiller.id,
-      expiresAt: new Date('2028-08-22')
-    }
-  });
-
-  await prisma.kYCDocument.create({
-    data: {
-      clientId: clientMartin.id,
-      type: 'PROOF_OF_ADDRESS',
-      status: 'VALIDATED',
-      validatedAt: new Date('2024-10-05'),
-      validatedBy: conseiller.id,
-      expiresAt: new Date('2025-10-05')
-    }
-  });
-
-  await prisma.kYCDocument.create({
-    data: {
-      clientId: clientMartin.id,
-      type: 'TAX_NOTICE',
-      status: 'VALIDATED',
-      validatedAt: new Date('2022-09-01'),
-      validatedBy: conseiller.id,
-      expiresAt: new Date('2024-09-01')
-    }
-  });
-
-  await prisma.kYCDocument.create({
-    data: {
-      clientId: clientMartin.id,
-      type: 'WEALTH_JUSTIFICATION',
-      status: 'VALIDATED',
-      validatedAt: new Date('2022-07-20'),
-      validatedBy: conseiller.id
-    }
-  });
-
-  console.log(`✅ KYC documents created for 2 clients`);
-
-  // 14. Create Timeline Events
-  console.log('📅 Creating timeline events...');
-
-  await prisma.timelineEvent.create({
-    data: {
-      clientId: clientDupont.id,
-      type: 'CLIENT_CREATED',
-      title: 'Client créé',
-      description: 'Nouveau client ajouté au portefeuille',
-      createdAt: new Date('2023-01-15'),
-      createdBy: conseiller.id
-    }
-  });
-
-  await prisma.timelineEvent.create({
-    data: {
-      clientId: clientDupont.id,
-      type: 'KYC_UPDATED',
-      title: 'KYC complété',
-      description: 'Dossier KYC validé et complet',
-      createdAt: new Date('2023-02-01'),
-      createdBy: conseiller.id
-    }
-  });
-
-  await prisma.timelineEvent.create({
-    data: {
-      clientId: clientDupont.id,
-      type: 'CONTRACT_SIGNED',
-      title: 'Contrat assurance vie signé',
-      description: 'Signature contrat Axa',
-      createdAt: new Date('2023-03-15'),
-      createdBy: conseiller.id
-    }
-  });
-
-  await prisma.timelineEvent.create({
-    data: {
-      clientId: clientMartin.id,
-      type: 'CLIENT_CREATED',
-      title: 'Client créé',
-      description: 'Nouveau client ajouté au portefeuille',
-      createdAt: new Date('2022-06-01'),
-      createdBy: conseiller.id
-    }
-  });
-
-  await prisma.timelineEvent.create({
-    data: {
-      clientId: clientMartin.id,
-      type: 'MEETING_HELD',
-      title: 'Revue annuelle 2023',
-      description: 'Bilan patrimoine et perspectives',
-      createdAt: new Date('2023-12-15'),
-      createdBy: conseiller.id
-    }
-  });
-
-  console.log(`✅ Timeline events created`);
-
-  // 15. Create Simulations
-  console.log('🧮 Creating simulations...');
-
-  await prisma.simulation.create({
-    data: {
-      cabinetId: cabinet.id,
-      clientId: clientDupont.id,
-      createdById: conseiller.id,
-      type: 'RETIREMENT',
-      name: 'Simulation retraite 2035',
-      description: 'Projection revenus retraite',
-      parameters: {
-        currentAge: 49,
-        retirementAge: 65,
-        currentSavings: 260000,
-        monthlyContribution: 1200,
-        expectedReturn: 4.5
-      },
-      results: {
-        projectedCapital: 520000,
-        monthlyIncome: 2800,
-        replacementRate: 65
-      },
-      recommendations: {
-        suggestions: [
-          'Augmenter versements mensuels de 300€',
-          'Diversifier avec SCPI pour revenus complémentaires'
-        ]
-      },
-      feasibilityScore: 85,
-      status: 'COMPLETED',
-      sharedWithClient: true,
-      sharedAt: new Date('2024-10-15')
-    }
-  });
-
-  await prisma.simulation.create({
-    data: {
-      cabinetId: cabinet.id,
-      clientId: clientMartin.id,
-      createdById: conseiller.id,
-      type: 'REAL_ESTATE_LOAN',
-      name: 'Simulation prêt résidence secondaire',
-      description: 'Capacité emprunt maison bord de mer',
-      parameters: {
-        purchasePrice: 400000,
-        downPayment: 150000,
-        loanAmount: 250000,
-        interestRate: 3.5,
-        duration: 20
-      },
-      results: {
-        monthlyPayment: 1450,
-        totalInterest: 98000,
-        totalCost: 348000,
-        debtRatio: 28
-      },
-      feasibilityScore: 90,
-      status: 'COMPLETED',
-      sharedWithClient: true,
-      sharedAt: new Date('2024-09-20')
-    }
-  });
-
-  await prisma.simulation.create({
-    data: {
-      cabinetId: cabinet.id,
-      clientId: clientDurand.id,
-      createdById: conseiller.id,
-      type: 'TAX_OPTIMIZATION',
-      name: 'Simulation Pinel Bordeaux',
-      description: 'Réduction IR via Pinel',
-      parameters: {
-        investmentAmount: 250000,
-        duration: 12,
-        location: 'Bordeaux',
-        expectedRent: 1200
-      },
-      results: {
-        taxReduction: 42000,
-        netYield: 3.2,
-        totalReturn: 4.8
-      },
-      feasibilityScore: 75,
-      status: 'DRAFT'
-    }
-  });
-
-  console.log(`✅ Simulations created`);
-
-  // Summary
-  console.log('\n🎉 Database seed completed successfully!');
+  // ============ SUMMARY ============
   console.log('═══════════════════════════════════════');
-  console.log('📦 Cabinet: Cabinet ALFI Test');
-  console.log('👥 Users: 2 (1 admin, 1 conseiller)');
-  console.log('👤 Clients: 5 (3 particuliers, 2 professionnels)');
-  console.log('💰 Actifs: Multiple per client');
-  console.log('💳 Passifs: 3 loans');
-  console.log('📄 Contrats: 3 contracts');
-  console.log('📁 Documents: Multiple per client');
-  console.log('🎯 Objectifs: 3 objectives');
-  console.log('📋 Projets: 2 projects with tasks');
-  console.log('✅ Tâches: 10 global tasks');
-  console.log('📅 RendezVous: 5 appointments');
-  console.log('💡 Opportunités: 5 opportunities');
-  console.log('📋 KYC Documents: Complete for 2 clients');
-  console.log('🧮 Simulations: 3 simulations');
+  console.log('🎉 Database seed completed successfully!');
   console.log('═══════════════════════════════════════');
-  console.log('\n✨ You can now login with:');
-  console.log('   Admin: admin@alfi.fr / Password123!');
-  console.log('   Conseiller: conseiller@alfi.fr / Password123!');
+  console.log('');
+  console.log('📦 Cabinets: 3');
+  console.log('   - Cabinet Aura Test (BUSINESS) - 10 clients');
+  console.log('   - Cabinet Wealth Partners (PREMIUM) - 4 clients');
+  console.log('   - Cabinet Patrimoine Sud (STARTER) - 3 clients');
+  console.log('');
+  console.log('👤 Total Clients: 17');
+  console.log('   Chaque client a:');
+  console.log('   ✓ 3 actifs (immobilier + assurance vie + PEA/PER)');
+  console.log('   ✓ 1-2 passifs (crédit immobilier + crédit conso)');
+  console.log('   ✓ 3 contrats (AV + mutuelle/RC Pro + prévoyance)');
+  console.log('   ✓ 5 documents (CNI, domicile, impôts, bancaire, salaire)');
+  console.log('   ✓ 1-3 objectifs (retraite, épargne, immobilier)');
+  console.log('   ✓ 1 projet avec 3 tâches');
+  console.log('   ✓ 1 rendez-vous');
+  console.log('   ✓ 1 opportunité');
+  console.log('   ✓ 4 documents KYC');
+  console.log('   ✓ 4 événements timeline');
+  console.log('   ✓ 1 simulation');
+  console.log('   ✓ 2-3 revenus');
+  console.log('   ✓ 4 dépenses');
+  console.log('');
+  console.log('✨ Credentials:');
+  console.log('   SuperAdmin: superadmin@aura.fr / Password123!');
+  console.log('   Aura Admin: admin@aura.fr / Password123!');
+  console.log('   Aura Conseiller: conseiller@aura.fr / Password123!');
+  console.log('   Wealth Partners: advisor@wealth-partners.com / Password123!');
+  console.log('   Patrimoine Sud: conseil@patrimoine-sud.fr / Password123!');
+  console.log('');
+  console.log('👤 Client Portal:');
+  console.log('   Client 1: jean.dupont@email.fr / Password123!');
+  console.log('   Client 2: marie.martin@email.fr / Password123!');
+  console.log('   Client 3: pierre.durand@email.fr / Password123!');
+  console.log('═══════════════════════════════════════');
 }
 
 main()

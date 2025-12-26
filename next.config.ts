@@ -1,11 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Ignore TypeScript errors during build (temporary - to fix progressively)
+  // TypeScript errors will be checked
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+
   // Performance optimizations
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
-  
+
   // Image optimization
   images: {
     formats: ['image/avif', 'image/webp'],
