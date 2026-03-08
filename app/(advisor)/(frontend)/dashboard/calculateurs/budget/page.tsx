@@ -36,7 +36,7 @@ import {
 } from 'lucide-react'
 import {
   ENDETTEMENT_2025,
-} from './parameters-budget-2025'
+} from './parameters-budget'
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TYPES

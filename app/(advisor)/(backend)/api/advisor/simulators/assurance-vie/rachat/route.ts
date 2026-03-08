@@ -6,19 +6,14 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
+import { logger } from '@/app/_common/lib/logger'
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
 
-// Barème IR 2025
-const BAREME_IR = [
-  { min: 0, max: 11497, taux: 0 },
-  { min: 11497, max: 29315, taux: 0.11 },
-  { min: 29315, max: 83823, taux: 0.30 },
-  { min: 83823, max: 180294, taux: 0.41 },
-  { min: 180294, max: Infinity, taux: 0.45 },
-]
-
-const PRELEVEMENTS_SOCIAUX = 0.172 // 17.2%
-const ABATTEMENT_SEUL = 4600
-const ABATTEMENT_COUPLE = 9200
+// Constantes fiscales — Source : RULES
+const BAREME_IR = RULES.ir.bareme
+const PRELEVEMENTS_SOCIAUX = RULES.ps.total
+const ABATTEMENT_SEUL = RULES.assurance_vie.rachat.abattement_celibataire_8ans
+const ABATTEMENT_COUPLE = RULES.assurance_vie.rachat.abattement_couple_8ans
 
 const rachatInputSchema = z.object({
   valeur_contrat: z.number().min(0).default(50000),
@@ -231,7 +226,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return createErrorResponse(`Données invalides: ${error.issues.map(e => e.message).join(', ')}`, 400)
     }
-    console.error('Erreur simulateur rachat AV:', error)
+    logger.error('Erreur simulateur rachat AV:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la simulation', 500)
   }
 }

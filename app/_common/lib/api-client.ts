@@ -142,16 +142,17 @@ export async function apiCall<T = unknown>(
           )
 
         case 429:
-          // Too many requests - retry with exponential backoff
-          if (retry && attempt < retryAttempts - 1) {
-            await sleep(retryDelay * Math.pow(2, attempt))
-            attempt++
-            continue
-          }
+          // Too many requests - do not retry automatically to avoid retry storms.
+          const retryAfterHeader = response.headers.get('retry-after')
+          const retryAfterSeconds = retryAfterHeader ? Number.parseInt(retryAfterHeader, 10) : undefined
           throw new ApiError(
             (errorData.message as string) || 'Trop de requêtes',
             429,
-            'RATE_LIMIT'
+            'RATE_LIMIT',
+            {
+              ...errorData,
+              retryAfterSeconds: Number.isFinite(retryAfterSeconds) ? retryAfterSeconds : undefined,
+            }
           )
 
         case 500:

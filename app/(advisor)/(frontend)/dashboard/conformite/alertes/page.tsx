@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from 'react'
+import { Suspense, useState, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { 
   useComplianceAlerts,
@@ -37,6 +37,7 @@ import {
   Shield,
   RefreshCw,
 } from 'lucide-react'
+import { ClientLink } from '@/app/_common/components/ClientLink'
 import {
   ALERT_SEVERITY,
   ALERT_TYPES,
@@ -186,6 +187,14 @@ function FilterDropdown<T extends string>({
   )
 }
 
+export default function AlertesPage() {
+  return (
+    <Suspense fallback={null}>
+      <AlertesPageInner />
+    </Suspense>
+  )
+}
+
 // ============================================================================
 // Alert Card Component
 // ============================================================================
@@ -254,7 +263,11 @@ function AlertCard({
                   </span>
                   <span>{ALERT_TYPE_LABELS[alert.type]}</span>
                   {alert.clientId && (
-                    <span>Client #{alert.clientId.slice(0, 8)}</span>
+                    <ClientLink
+                      clientId={alert.clientId}
+                      showAvatar={false}
+                      className="text-xs"
+                    />
                   )}
                 </div>
               </div>
@@ -429,7 +442,7 @@ function AlertStats({ alerts }: { alerts: ComplianceAlert[] }) {
 // Main Page Component
 // ============================================================================
 
-export default function AlertesPage() {
+function AlertesPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   

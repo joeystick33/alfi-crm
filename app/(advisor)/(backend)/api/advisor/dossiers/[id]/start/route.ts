@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { DossierService } from '@/app/_common/lib/services/dossier-service'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * POST /api/advisor/dossiers/[id]/start
  * Démarrer un dossier (ACTIF → EN_COURS)
@@ -25,7 +25,7 @@ export async function POST(
 
     return createSuccessResponse({ ...dossier, message: 'Dossier démarré' })
   } catch (error) {
-    console.error('Error in POST /api/advisor/dossiers/[id]/start:', error)
+    logger.error('Error in POST /api/advisor/dossiers/[id]/start:', { error: error instanceof Error ? error.message : String(error) })
     if (error instanceof Error) {
       return createErrorResponse(error.message, error.message === 'Unauthorized' ? 401 : 400)
     }

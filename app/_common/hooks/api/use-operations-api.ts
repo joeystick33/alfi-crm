@@ -192,7 +192,12 @@ export function useAffaire(
 ) {
   return useQuery({
     queryKey: operationsQueryKeys.affaire(id),
-    queryFn: () => api.get<AffaireNouvelle>(`/v1/operations/affaires/${id}`),
+    queryFn: async (): Promise<AffaireNouvelle> => {
+      const response = await api.get<{ data?: AffaireNouvelle } | AffaireNouvelle>(
+        `/v1/operations/affaires/${id}`
+      )
+      return (response as { data?: AffaireNouvelle })?.data || (response as AffaireNouvelle)
+    },
     enabled: !!id,
     ...options,
   })
@@ -432,7 +437,12 @@ export function useOperationGestion(
 ) {
   return useQuery({
     queryKey: operationsQueryKeys.operationGestion(id),
-    queryFn: () => api.get<OperationGestion>(`/v1/operations/gestion/${id}`),
+    queryFn: async (): Promise<OperationGestion> => {
+      const response = await api.get<{ data?: OperationGestion } | OperationGestion>(
+        `/v1/operations/gestion/${id}`
+      )
+      return (response as { data?: OperationGestion })?.data || (response as OperationGestion)
+    },
     enabled: !!id,
     ...options,
   })
@@ -559,7 +569,10 @@ export function useOperationsStats(
 ) {
   return useQuery({
     queryKey: operationsQueryKeys.operationsStats,
-    queryFn: () => api.get<OperationsStats>('/v1/operations/stats'),
+    queryFn: async (): Promise<OperationsStats> => {
+      const response = await api.get<{ data?: OperationsStats } | OperationsStats>('/v1/operations/stats')
+      return (response as { data?: OperationsStats })?.data || (response as OperationsStats)
+    },
     staleTime: 1000 * 60 * 2, // 2 minutes
     ...options,
   })

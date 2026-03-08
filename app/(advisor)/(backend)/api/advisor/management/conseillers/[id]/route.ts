@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
-
+import { logger } from '@/app/_common/lib/logger'
 interface RouteParams {
   params: Promise<{ id: string }>
 }
@@ -257,7 +257,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       history,
     })
   } catch (error) {
-    console.error('Error in GET /api/advisor/management/conseillers/[id]:', error)
+    logger.error('Error in GET /api/advisor/management/conseillers/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

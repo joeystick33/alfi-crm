@@ -45,8 +45,19 @@ export default function ConseillersPage() {
   const { data, isLoading, error, refetch } = useConseillers(apiFilters)
   const deleteMutation = useDeleteConseiller()
 
-  const conseillers = (data?.data || []) as unknown as ConseillerData[]
+  // Gérer les différentes structures de réponse API
+  const conseillers = useMemo(() => {
+    if (!data) return []
+    // L'API peut retourner { data: [...] } ou { conseillers: [...] } ou directement [...]
+    const apiData = data as Record<string, unknown>
+    const rawData = apiData.data || apiData.conseillers || data
+    return Array.isArray(rawData) ? rawData : []
+  }, [data]) as ConseillerData[]
+
   const stats = useMemo(() => {
+    if (!Array.isArray(conseillers)) {
+      return { total: 0, advisors: 0, assistants: 0, active: 0 }
+    }
     const total = conseillers.length
     const advisors = conseillers.filter((c: ConseillerData) => c.role === 'ADVISOR').length
     const assistants = conseillers.filter((c: ConseillerData) => c.role === 'ASSISTANT').length

@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ScenarioService } from '@/app/_common/lib/services/scenario-service'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * POST /api/advisor/scenarios/[id]/activate
  * Activer un scénario (INACTIF → ACTIF)
@@ -29,7 +29,7 @@ export async function POST(
 
     return NextResponse.json(scenario)
   } catch (error: any) {
-    console.error(`Erreur POST /api/advisor/scenarios/${scenarioId}/activate:`, error)
+    logger.error(`Erreur POST /api/advisor/scenarios/${scenarioId}/activate:`, { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Scénario non trouvé') {
       return NextResponse.json(

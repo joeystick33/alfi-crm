@@ -907,7 +907,7 @@ export function TabBudgetComplet({ clientId, client }: TabBudgetCompletProps) {
       )}
 
       {/* Onglets CGP */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="synthese">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="bg-gray-100 p-1 h-auto flex-wrap">
           <TabsTrigger value="synthese" className="data-[state=active]:bg-white">
             <BarChart3 className="h-4 w-4 mr-2 text-indigo-600" />Synthèse

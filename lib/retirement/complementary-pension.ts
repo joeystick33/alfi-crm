@@ -13,14 +13,14 @@
  * - CRPCEN (notaires)
  * 
  * ⚠️ MAINTENANCE : Les paramètres sont centralisés dans :
- *    /lib/retirement/config/parameters-2025.ts
+ *    /lib/retirement/config/parameters.ts
  */
 
 import {
   PLAFONDS,
   AGIRC_ARRCO,
   PRELEVEMENTS,
-} from './config/parameters-2025'
+} from './config/parameters'
 
 // Constante locale pour compatibilité
 const PASS_2025 = PLAFONDS.PASS

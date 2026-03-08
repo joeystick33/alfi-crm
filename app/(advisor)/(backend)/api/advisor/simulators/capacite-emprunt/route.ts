@@ -16,7 +16,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 // ══════════════════════════════════════════════════════════════════════════════
 // CONSTANTES 2025
 // ══════════════════════════════════════════════════════════════════════════════
@@ -504,7 +504,7 @@ export async function POST(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('Erreur API simulateur capacité emprunt:', error)
+    logger.error('Erreur API simulateur capacité emprunt:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { 
         success: false, 

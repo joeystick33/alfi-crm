@@ -7,7 +7,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
-
+import { logger } from '@/app/_common/lib/logger'
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -57,7 +57,7 @@ export async function PUT(
       message: 'Données LCB-FT mises à jour',
     })
   } catch (error: any) {
-    console.error('Error updating LCB-FT data:', error)
+    logger.error('Error updating LCB-FT data:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -101,7 +101,7 @@ export async function GET(
 
     return createSuccessResponse({ lcbft: client })
   } catch (error: any) {
-    console.error('Error getting LCB-FT data:', error)
+    logger.error('Error getting LCB-FT data:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

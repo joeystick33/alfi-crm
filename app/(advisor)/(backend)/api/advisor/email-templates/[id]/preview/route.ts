@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { EmailTemplateService } from '@/app/_common/lib/services/email-template-service'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
-
+import { logger } from '@/app/_common/lib/logger'
 // Schéma validation preview
 const PreviewTemplateSchema = z.object({
   testData: z.record(z.string(), z.any()).optional(),
@@ -38,7 +38,7 @@ export async function POST(
 
     return NextResponse.json(preview)
   } catch (error: any) {
-    console.error(`Erreur POST /api/advisor/email-templates/${templateId}/preview:`, error)
+    logger.error(`Erreur POST /api/advisor/email-templates/${templateId}/preview:`, { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

@@ -1,8 +1,9 @@
  
 /**
  * ══════════════════════════════════════════════════════════════════════════════
- * API Route - Simulateur Plus-Values 2025
- * Calculs sécurisés côté serveur
+ * API Route - Simulateur Plus-Values 2026
+ * LF2026 : PV immo INCHANGÉ (22 ans IR / 30 ans PS, PS 17,2%)
+ * LFSS 2026 : PV mobilières PS 18,6%, PFU 31,4%
  * 
  * POST /api/advisor/simulators/plus-values
  * ══════════════════════════════════════════════════════════════════════════════
@@ -11,29 +12,29 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
+import { logger } from '@/app/_common/lib/logger'
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
 
 // ══════════════════════════════════════════════════════════════════════════════
-// CONSTANTES FISCALES 2025
+// CONSTANTES FISCALES — Source : RULES (fiscal-rules.ts)
 // ══════════════════════════════════════════════════════════════════════════════
 
 const PFU = {
-  TAUX_IR: 12.8,
-  TAUX_PS: 17.2,
-  TAUX_GLOBAL: 30,
+  TAUX_IR: RULES.ps.pfu_ir * 100,
+  TAUX_PS: RULES.ps.pfu_per_2026 * 100,
+  TAUX_GLOBAL: (RULES.ps.pfu_ir + RULES.ps.pfu_per_2026) * 100,
 }
 
 const PS = {
-  TAUX_GLOBAL: 17.2,
-  CSG_DEDUCTIBLE: 6.8,
+  TAUX_GLOBAL: RULES.ps.pfu_per_2026 * 100,
+  CSG_DEDUCTIBLE: RULES.ps.csg_deductible * 100,
 }
 
-const BAREME_IR = [
-  { min: 0, max: 11497, taux: 0 },
-  { min: 11497, max: 29315, taux: 11 },
-  { min: 29315, max: 83823, taux: 30 },
-  { min: 83823, max: 180294, taux: 41 },
-  { min: 180294, max: Infinity, taux: 45 },
-]
+const BAREME_IR = RULES.ir.bareme.map(t => ({
+  min: t.min,
+  max: t.max,
+  taux: t.taux * 100,
+}))
 
 const ABATTEMENT_MOBILIER = {
   DROIT_COMMUN: [
@@ -50,19 +51,19 @@ const ABATTEMENT_MOBILIER = {
 }
 
 const IMMO = {
-  TAUX_IR: 19,
-  TAUX_PS: 17.2,
+  TAUX_IR: RULES.immobilier.plus_value.taux_ir * 100,
+  TAUX_PS: RULES.immobilier.plus_value.taux_ps * 100,
 }
 
 const OBJETS = {
   OR: { TAUX_FORFAITAIRE: 11.5 },
   BIJOUX: { TAUX_FORFAITAIRE: 6.5 },
-  PV_REELLES: { TAUX_IR: 19, TAUX_PS: 17.2, ABATTEMENT_ANNUEL: 5 },
+  PV_REELLES: { TAUX_IR: 19, TAUX_PS: RULES.ps.total * 100, ABATTEMENT_ANNUEL: 5 },
 }
 
 const CRYPTO = {
-  TAUX_IR: 12.8,
-  TAUX_PS: 17.2,
+  TAUX_IR: RULES.ps.pfu_ir * 100,
+  TAUX_PS: RULES.ps.pfu_per_2026 * 100,
   FRANCHISE: 305,
 }
 
@@ -110,9 +111,11 @@ function getAbattementMobilier(duree: number, type: 'droit_commun' | 'pme'): num
 }
 
 function getAbattementImmoIR(annees: number): number {
+  // Exonération IR à 22 ans (INCHANGÉ — amendement Le Fur NON RETENU)
+  // 6% par an de l'année 6 à 21, 4% la 22e année
   if (annees <= 5) return 0
-  if (annees <= 21) return (annees - 5) * 6
-  if (annees === 22) return 100
+  if (annees <= 21) return (annees - 5) * 6  // 6% × (annees - 5)
+  if (annees >= 22) return 100               // Exonération totale
   return 100
 }
 
@@ -294,7 +297,7 @@ function simulerPVImmobiliere(input: PVInput) {
   // Timeline exonérations
   const exonereIR = abattementIR >= 100
   const exonerePS = abattementPS >= 100
-  const anneesRestantesIR = exonereIR ? 0 : Math.max(0, 22 - dureeDetention)
+  const anneesRestantesIR = exonereIR ? 0 : Math.max(0, 22 - Math.floor(dureeDetention))
   const anneesRestantesPS = exonerePS ? 0 : Math.max(0, 30 - dureeDetention)
   
   return {
@@ -496,7 +499,7 @@ export async function POST(request: NextRequest) {
 
     return createSuccessResponse(result)
   } catch (error: any) {
-    console.error('Erreur simulation PV:', error)
+    logger.error('Erreur simulation PV:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la simulation: ' + (error.message || 'Erreur inconnue'), 500)
   }
 }

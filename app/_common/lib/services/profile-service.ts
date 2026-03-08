@@ -7,6 +7,7 @@
  */
 
 import type { PrismaClient } from '@prisma/client'
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
 import type { 
   ProfileData, 
   ProfileIdentity, 
@@ -158,20 +159,16 @@ export function validateIFITaxableBase(
  * - Above 10,000,000€: 1.50%
  */
 export function calculateIFIAmount(taxableBase: number): number {
-  const IFI_THRESHOLD = 1300000
+  const IFI_THRESHOLD = RULES.ifi.seuil_assujettissement
   
   if (taxableBase < IFI_THRESHOLD) {
     return 0
   }
   
-  const brackets = [
-    { max: 800000, rate: 0 },
-    { max: 1300000, rate: 0.005 },
-    { max: 2570000, rate: 0.007 },
-    { max: 5000000, rate: 0.01 },
-    { max: 10000000, rate: 0.0125 },
-    { max: Infinity, rate: 0.015 }
-  ]
+  const brackets = RULES.ifi.bareme.map(t => ({
+    max: t.max,
+    rate: t.taux,
+  }))
   
   let tax = 0
   let remainingBase = taxableBase

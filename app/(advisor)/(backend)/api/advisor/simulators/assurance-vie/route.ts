@@ -6,7 +6,7 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
-
+import { logger } from '@/app/_common/lib/logger'
 // Schéma de validation des entrées
 const assuranceVieInputSchema = z.object({
   // Capital initial
@@ -191,18 +191,18 @@ function simulerAssuranceVie(input: z.infer<typeof assuranceVieInputSchema>): Re
   if (anciennete >= 8) {
     // Après 8 ans : PFL 7.5% ou barème avec abattement
     regimeFiscal = 'Après 8 ans - PFL 7.5% + PS'
-    tauxPrelevements = 17.2
+    tauxPrelevements = 17.2 // 17,2% INCHANGÉ (AV exclue hausse LFSS 2026)
     tauxImpot = 7.5
     abattement = 4600 // abattement annuel (doublé pour couple)
   } else if (anciennete >= 4) {
     // Entre 4 et 8 ans : PFU 12.8%
     regimeFiscal = '4-8 ans - PFU 12.8% + PS'
-    tauxPrelevements = 17.2
+    tauxPrelevements = 17.2 // 17,2% INCHANGÉ (AV exclue hausse LFSS 2026)
     tauxImpot = 12.8
   } else {
     // Moins de 4 ans : PFU 12.8%
     regimeFiscal = 'Moins de 4 ans - PFU 12.8% + PS'
-    tauxPrelevements = 17.2
+    tauxPrelevements = 17.2 // 17,2% INCHANGÉ (AV exclue hausse LFSS 2026)
     tauxImpot = 12.8
   }
   
@@ -295,7 +295,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return createErrorResponse(`Données invalides: ${error.issues.map(e => e.message).join(', ')}`, 400)
     }
-    console.error('Erreur simulateur assurance-vie:', error)
+    logger.error('Erreur simulateur assurance-vie:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la simulation', 500)
   }
 }
@@ -348,7 +348,7 @@ export async function GET(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('Erreur GET simulateur assurance-vie:', error)
+    logger.error('Erreur GET simulateur assurance-vie:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la récupération des paramètres', 500)
   }
 }

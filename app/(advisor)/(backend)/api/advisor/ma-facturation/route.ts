@@ -1,8 +1,10 @@
 import { NextRequest } from 'next/server'
+import { z } from 'zod'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
-
+import { logger } from '@/app/_common/lib/logger'
+import { InvoiceStatus } from '@prisma/client'
 /**
  * GET /api/advisor/ma-facturation
  * Récupère les factures personnelles du conseiller connecté
@@ -112,7 +114,7 @@ export async function GET(request: NextRequest) {
       })),
     })
   } catch (error) {
-    console.error('Error in GET /api/advisor/ma-facturation:', error)
+    logger.error('Error in GET /api/advisor/ma-facturation:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -192,7 +194,96 @@ export async function POST(request: NextRequest) {
       dateCreation: invoice.createdAt.toISOString().split('T')[0],
     }, 201)
   } catch (error) {
-    console.error('Error in POST /api/advisor/ma-facturation:', error)
+    logger.error('Error in POST /api/advisor/ma-facturation:', { error: error instanceof Error ? error.message : String(error) })
+
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return createErrorResponse('Unauthorized', 401)
+    }
+
+    return createErrorResponse('Internal server error', 500)
+  }
+}
+
+const patchSchema = z.object({
+  factureId: z.string().min(1),
+  action: z.enum(['submit', 'cancel']),
+})
+
+/**
+ * PATCH /api/advisor/ma-facturation
+ * Soumettre ou annuler une facture personnelle
+ */
+export async function PATCH(request: NextRequest) {
+  try {
+    const context = await requireAuth(request)
+    const { user } = context
+
+    if (!isRegularUser(user)) {
+      return createErrorResponse('Invalid user type', 400)
+    }
+
+    const body = await request.json()
+    const parsed = patchSchema.safeParse(body)
+    if (!parsed.success) {
+      return createErrorResponse(
+        'Données invalides: ' + parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', '),
+        400
+      )
+    }
+
+    const { factureId, action } = parsed.data
+    const prisma = getPrismaClient(context.cabinetId, context.isSuperAdmin)
+
+    // Verify invoice belongs to this user
+    const invoice = await prisma.invoice.findFirst({
+      where: {
+        id: factureId,
+        conseillerId: user.id,
+        cabinetId: context.cabinetId,
+      },
+    })
+
+    if (!invoice) {
+      return createErrorResponse('Facture non trouvée', 404)
+    }
+
+    if (action === 'submit') {
+      if (invoice.status !== InvoiceStatus.BROUILLON) {
+        return createErrorResponse('Seules les factures en brouillon peuvent être soumises', 400)
+      }
+
+      const updated = await prisma.invoice.update({
+        where: { id: factureId },
+        data: { status: InvoiceStatus.ENVOYEE },
+      })
+
+      return createSuccessResponse({
+        id: updated.id,
+        status: updated.status,
+        message: 'Facture soumise avec succès',
+      })
+    }
+
+    if (action === 'cancel') {
+      if (invoice.status === InvoiceStatus.PAYEE) {
+        return createErrorResponse('Impossible d\'annuler une facture payée', 400)
+      }
+
+      const updated = await prisma.invoice.update({
+        where: { id: factureId },
+        data: { status: InvoiceStatus.ANNULEE },
+      })
+
+      return createSuccessResponse({
+        id: updated.id,
+        status: updated.status,
+        message: 'Facture annulée',
+      })
+    }
+
+    return createErrorResponse('Action inconnue', 400)
+  } catch (error) {
+    logger.error('Error in PATCH /api/advisor/ma-facturation:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

@@ -1,6 +1,6 @@
  
 import { NextRequest, NextResponse } from 'next/server'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * API Simulateur Épargne Flexible
  * Migration du backend Java vers Next.js
@@ -550,7 +550,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error: any) {
-    console.error('Erreur simulateur épargne:', error)
+    logger.error('Erreur simulateur épargne:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({
       success: false,
       error: 'Erreur interne du serveur lors du calcul'

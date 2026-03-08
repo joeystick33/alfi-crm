@@ -1,5 +1,5 @@
 import { Client } from '@microsoft/microsoft-graph-client'
-
+import { logger } from '@/app/_common/lib/logger'
 export interface OutlookTokens {
   accessToken: string
   refreshToken?: string
@@ -204,7 +204,7 @@ export class OutlookService {
       })
       return true
     } catch (error: unknown) {
-      console.error('Error marking email as read:', error)
+      logger.error('Error marking email as read:', { error: error instanceof Error ? error.message : String(error) })
       return false
     }
   }

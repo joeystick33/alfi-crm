@@ -9,9 +9,10 @@ import {
   REGIME_PARAMS_2025,
   calculerCoefficientSolidariteAgircArrco
 } from '@/lib/retirement/complementary-pension'
+import { logger } from '@/app/_common/lib/logger'
 import {
   PLAFONDS
-} from '@/lib/retirement/config/parameters-2025'
+} from '@/lib/retirement/config/parameters'
 
 /**
  * Estimateur de Pension de Retraite Française
@@ -162,7 +163,7 @@ const LEGAL_AGE_MAP: { [year: number]: number } = {
   // Après 1965 : 64 ans
 }
 
-// Plafond Annuel Sécurité Sociale - Centralisé dans /lib/retirement/config/parameters-2025.ts
+// Plafond Annuel Sécurité Sociale - Centralisé dans /lib/retirement/config/parameters.ts
 const PASS_2024 = PLAFONDS.PASS  // 47100€ en 2025
 
 // =====================================================
@@ -1042,7 +1043,7 @@ export async function POST(request: NextRequest) {
       }
     })
   } catch (error: any) {
-    console.error('Error in pension estimation:', error)
+    logger.error('Error in pension estimation:', { error: error instanceof Error ? error.message : String(error) })
     if (error instanceof z.ZodError) {
       return NextResponse.json({ success: false, error: 'Validation error: ' + error.message }, { status: 400 })
     }

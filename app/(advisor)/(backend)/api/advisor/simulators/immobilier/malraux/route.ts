@@ -30,7 +30,7 @@ import {
   PRELEVEMENTS_SOCIAUX,
 } from '../_shared/constants'
 import { malrauxInputSchema, type MalrauxInput } from '../_shared/validators'
-
+import { logger } from '@/app/_common/lib/logger'
 // ══════════════════════════════════════════════════════════════════════════════
 // FONCTION DE SIMULATION MALRAUX
 // ══════════════════════════════════════════════════════════════════════════════
@@ -155,7 +155,7 @@ function simulerMalraux(input: MalrauxInput) {
 
     // IR et PS sur revenus fonciers (après travaux)
     const ir = revenuFoncier > 0 ? revenuFoncier * (tmi / 100) : 0
-    const ps = revenuFoncier > 0 ? revenuFoncier * PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL : 0
+    const ps = revenuFoncier > 0 ? revenuFoncier * PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL : 0
 
     // Réduction Malraux (pendant les travaux)
     const reductionMalraux = phaseTravaux ? reductionParAn : 0
@@ -371,7 +371,7 @@ export async function POST(request: NextRequest) {
         400
       )
     }
-    console.error('Erreur simulateur Malraux:', error)
+    logger.error('Erreur simulateur Malraux:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la simulation', 500)
   }
 }

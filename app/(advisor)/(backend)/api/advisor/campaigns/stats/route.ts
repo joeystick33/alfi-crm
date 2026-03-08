@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CampaignService } from '@/app/_common/lib/services/campaign-service'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/campaigns/stats
  * Obtenir les statistiques globales des campagnes
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(stats)
   } catch (error: any) {
-    console.error('Erreur GET /api/advisor/campaigns/stats:', error)
+    logger.error('Erreur GET /api/advisor/campaigns/stats:', { error: error instanceof Error ? error.message : String(error) })
 
     return NextResponse.json(
       { error: error.message || 'Erreur serveur' },

@@ -5,7 +5,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { ObjectifService } from '@/app/_common/lib/services/objectif-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { ObjectifType, ObjectifPriority } from '@prisma/client'
-
+import { logger } from '@/app/_common/lib/logger'
 // Schéma de validation Zod pour création d'objectif
 const createObjectifSchema = z.object({
   type: z.nativeEnum(ObjectifType),
@@ -46,7 +46,7 @@ export async function GET(
 
     return createSuccessResponse(objectifs)
   } catch (error: any) {
-    console.error('Get objectifs error:', error)
+    logger.error('Get objectifs error:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -97,7 +97,7 @@ export async function POST(
 
     return createSuccessResponse(objectif, 201)
   } catch (error: any) {
-    console.error('Create objectif error:', error)
+    logger.error('Create objectif error:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof z.ZodError) {
       return createErrorResponse('Données invalides: ' + error.issues.map(e => e.message).join(', '), 400)

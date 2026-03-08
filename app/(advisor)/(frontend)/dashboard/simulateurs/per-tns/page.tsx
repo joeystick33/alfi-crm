@@ -2,13 +2,20 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
-import Script from 'next/script'
+import { usePlotlyReady } from '../immobilier/_hooks/usePlotlyReady'
+import { ExportSimulationActions } from '@/app/(advisor)/(frontend)/components/simulateurs/ExportSimulationActions'
+import {
+  Lightbulb, Calendar, Wallet, BarChart3, AlertTriangle, CheckCircle,
+  Target, Info, Gem, Briefcase, FileText, Scale, ArrowLeft, ChevronRight,
+  ChevronLeft, Loader2,
+} from 'lucide-react'
 import { 
   BAREME_IR_2025, 
   PLAFONDS_EPARGNE_RETRAITE, 
   PRELEVEMENTS_SOCIAUX,
   PER_TNS
-} from '../parameters-2025'
+} from '../parameters'
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
 
 // =============================================================================
 // PARAMÈTRES LOCAUX DÉRIVÉS (pour compatibilité)
@@ -23,7 +30,7 @@ const PARAMS = {
   BAREME_IR: BAREME_IR_2025.map(t => ({ ...t, label: `${t.taux * 100}%` })),
   RENDEMENT_AV: { prudent: 0.025, equilibre: 0.04, dynamique: 0.06 },
   RENDEMENT_PER: { prudent: 0.025, equilibre: 0.045, dynamique: 0.065 },
-  PFU: 0.30,
+  PFU: RULES.ps.pfu_total,
   PS_RENTE: PRELEVEMENTS_SOCIAUX.TOTAL,
 }
 
@@ -179,6 +186,7 @@ const eur = (n: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', c
 // COMPOSANT
 // =============================================================================
 export default function SimulateurPERTNSPage() {
+  usePlotlyReady()
   const [step, setStep] = useState(1)
   const [form, setForm] = useState({ benefice: 80000, modeVers: 'periodique' as 'ponctuel' | 'periodique', versPonctuel: 15000, versMensuel: 1000, versInitial: 0, usePl: false, plRep: 0 })
   const [proj, setProj] = useState({ age: 45, ageR: 65, cap: 0, profil: 'equilibre' })
@@ -236,7 +244,6 @@ export default function SimulateurPERTNSPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: styles }} />
-      <Script src="https://cdn.plot.ly/plotly-2.27.0.min.js" strategy="afterInteractive" />
       <main className="pw">
         <div className="ph">
           <Link href="/dashboard/simulateurs" style={{ fontSize: '11px', color: '#64748b', textDecoration: 'none' }}>← Retour</Link>
@@ -259,13 +266,13 @@ export default function SimulateurPERTNSPage() {
           <div className="card card-tns">
             <h2 className="card-t">Étape 1 : Économie d'impôt TNS</h2>
             <div className="narr">
-              <div className="narr-t">💡 Avantage TNS : plafond majoré !</div>
+              <div className="narr-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Lightbulb style={{ width: 16, height: 16 }} /> Avantage TNS : plafond majoré !</div>
               <div className="narr-x">En tant que TNS, vous bénéficiez d'un plafond <strong>bien supérieur</strong> aux salariés :<br/>• <strong>10%</strong> du bénéfice (max 8 PASS) + <strong>15%</strong> entre 1 et 8 PASS<br/>• Plafond max : <strong>{eur(PARAMS.PLAFOND_MAX)}</strong> vs ~37 000€ pour un salarié</div>
             </div>
             <h3 style={{ fontSize: '.9rem', fontWeight: 600, marginBottom: '.75rem' }}>Type de versement</h3>
             <div className="mode-opts">
-              <div className={`mode-opt ${form.modeVers === 'periodique' ? 'active' : ''}`} onClick={() => setForm({ ...form, modeVers: 'periodique' })}><h5>📅 Versements périodiques</h5><p>Versements mensuels réguliers pour constituer un capital</p></div>
-              <div className={`mode-opt ${form.modeVers === 'ponctuel' ? 'active' : ''}`} onClick={() => setForm({ ...form, modeVers: 'ponctuel' })}><h5>💰 Versement ponctuel</h5><p>Un versement unique cette année (bénéfice exceptionnel...)</p></div>
+              <div className={`mode-opt ${form.modeVers === 'periodique' ? 'active' : ''}`} onClick={() => setForm({ ...form, modeVers: 'periodique' })}><h5 style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}><Calendar style={{ width: 16, height: 16 }} /> Versements périodiques</h5><p>Versements mensuels réguliers pour constituer un capital</p></div>
+              <div className={`mode-opt ${form.modeVers === 'ponctuel' ? 'active' : ''}`} onClick={() => setForm({ ...form, modeVers: 'ponctuel' })}><h5 style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}><Wallet style={{ width: 16, height: 16 }} /> Versement ponctuel</h5><p>Un versement unique cette année (bénéfice exceptionnel...)</p></div>
             </div>
             <div className="fg">
               <div className="fgrp"><label className="flbl">Bénéfice imposable (BIC/BNC)</label><div className="iw"><input type="number" className="finp" value={form.benefice} onChange={e => setForm({ ...form, benefice: +e.target.value })} /><span className="sfx">€</span></div><span className="fh">Bénéfice fiscal après déductions</span></div>
@@ -279,7 +286,7 @@ export default function SimulateurPERTNSPage() {
             </div>
             {form.benefice > 0 && c1.versAnnuel > 0 && (<>
               <div className="plafond-detail">
-                <h5>📊 Détail du plafond TNS (Article 154 bis)</h5>
+                <h5 style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}><BarChart3 style={{ width: 16, height: 16 }} /> Détail du plafond TNS (Article 154 bis)</h5>
                 <div className="plafond-row"><span>Plafond de base (10% × {eur(Math.min(form.benefice, PARAMS.PASS * 8))})</span><span>{eur(c1.pl.plBase)}</span></div>
                 {c1.pl.plComp > 0 && <div className="plafond-row"><span>Plafond complémentaire (15% entre 1 et 8 PASS)</span><span>+ {eur(c1.pl.plComp)}</span></div>}
                 {form.usePl && form.plRep > 0 && <div className="plafond-row"><span>Report plafonds non utilisés</span><span>+ {eur(form.plRep)}</span></div>}
@@ -293,8 +300,8 @@ export default function SimulateurPERTNSPage() {
               </div>
               <div className="gauge"><div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '.8rem', marginBottom: '.25rem' }}><span>Utilisation plafond</span><span style={{ color: c1.imp.depasse ? '#d97706' : '#1e40af', fontWeight: 600 }}>{Math.round(c1.imp.util)}%</span></div><div className="gauge-bar"><div className="gauge-fill" style={{ width: `${Math.min(100, c1.imp.util)}%` }} /></div><div className="gauge-labels"><span>0€</span><span>{eur(c1.pl.plAvecRep)}</span></div></div>
               <div className="compare"><div className="compare-box tns"><div className="compare-v">{eur(c1.versAnnuel)}</div><div className="compare-l">Versement</div></div><div className="compare-op">−</div><div className="compare-box suc"><div className="compare-v">{eur(c1.imp.eco)}</div><div className="compare-l">Économie</div></div><div className="compare-op">=</div><div className="compare-box"><div className="compare-v">{eur(c1.imp.net)}</div><div className="compare-l">Coût réel</div></div></div>
-              {c1.imp.depasse && <div className="wbox">⚠️ {eur(c1.versAnnuel - c1.pl.plAvecRep)} dépassent le plafond.</div>}
-              <div className="tbox">✅ Économie de <strong>{eur(c1.imp.eco)}</strong> soit <strong>{(c1.imp.eco / c1.versAnnuel * 100).toFixed(0)}%</strong> du versement.</div>
+              {c1.imp.depasse && <div className="wbox" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><AlertTriangle style={{ width: 16, height: 16, flexShrink: 0 }} /> {eur(c1.versAnnuel - c1.pl.plAvecRep)} dépassent le plafond.</div>}
+              <div className="tbox" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><CheckCircle style={{ width: 16, height: 16, flexShrink: 0 }} /> Économie de <strong>{eur(c1.imp.eco)}</strong> soit <strong>{(c1.imp.eco / c1.versAnnuel * 100).toFixed(0)}%</strong> du versement.</div>
             </>)}
             <div className="btns"><button className="btn" onClick={v1} disabled={!form.benefice || c1.versAnnuel <= 0}>Continuer →</button></div>
           </div>
@@ -303,9 +310,9 @@ export default function SimulateurPERTNSPage() {
         {step === 2 && res1 && (
           <div className="card card-tns">
             <h2 className="card-t">Étape 2 : Projection du capital PER</h2>
-            <div className="narr"><div className="narr-t">💡 Les intérêts composés</div><div className="narr-x">Vos gains génèrent des gains. Sur 20 ans, l'effet peut doubler votre mise !</div></div>
-            {res1.modeVers === 'ponctuel' && <div className="ibox" style={{ marginBottom: '1rem' }}>💰 <strong>Mode ponctuel</strong> : {eur(form.versPonctuel)} capitalisera jusqu'à la retraite.</div>}
-            {res1.modeVers === 'periodique' && <div className="ibox" style={{ marginBottom: '1rem' }}>📅 <strong>Mode périodique</strong> : {eur(form.versMensuel)}/mois{form.versInitial > 0 ? ` + ${eur(form.versInitial)} initial` : ''} s'accumuleront.</div>}
+            <div className="narr"><div className="narr-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Lightbulb style={{ width: 16, height: 16 }} /> Les intérêts composés</div><div className="narr-x">Vos gains génèrent des gains. Sur 20 ans, l'effet peut doubler votre mise !</div></div>
+            {res1.modeVers === 'ponctuel' && <div className="ibox" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '.5rem' }}><Wallet style={{ width: 16, height: 16, flexShrink: 0 }} /> <strong>Mode ponctuel</strong> : {eur(form.versPonctuel)} capitalisera jusqu'à la retraite.</div>}
+            {res1.modeVers === 'periodique' && <div className="ibox" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '.5rem' }}><Calendar style={{ width: 16, height: 16, flexShrink: 0 }} /> <strong>Mode périodique</strong> : {eur(form.versMensuel)}/mois{form.versInitial > 0 ? ` + ${eur(form.versInitial)} initial` : ''} s'accumuleront.</div>}
             <div className="fg">
               <div className="fgrp"><label className="flbl">Âge actuel</label><div className="iw"><input type="number" className="finp" value={proj.age} onChange={e => setProj({ ...proj, age: +e.target.value })} /><span className="sfx">ans</span></div></div>
               <div className="fgrp"><label className="flbl">Âge retraite</label><div className="iw"><input type="number" className="finp" value={proj.ageR} onChange={e => setProj({ ...proj, ageR: +e.target.value })} /><span className="sfx">ans</span></div></div>
@@ -315,7 +322,7 @@ export default function SimulateurPERTNSPage() {
             {c2 && (<>
               <div className="kpis"><div className="kpi"><div className="kpi-v">{proj.ageR - proj.age} ans</div><div className="kpi-l">Durée</div></div><div className="kpi"><div className="kpi-v">{eur(c2.cap)}</div><div className="kpi-l">Capital final</div></div><div className="kpi suc"><div className="kpi-v">{eur(c2.pv)}</div><div className="kpi-l">Plus-values</div></div><div className="kpi"><div className="kpi-v">{eur(c2.eco)}</div><div className="kpi-l">Éco. impôt total</div></div></div>
               <div className="chart-box"><div id="ch1" className="chart" /></div>
-              <div className="tbox">{res1.modeVers === 'periodique' ? <>✅ <strong>{eur(form.versMensuel)}/mois</strong>{form.versInitial > 0 ? <> + <strong>{eur(form.versInitial)}</strong> initial</> : ''} pendant <strong>{proj.ageR - proj.age} ans</strong> = <strong>{eur(c2.cap)}</strong></> : <>✅ <strong>{eur(form.versPonctuel)}</strong> capitalisé = <strong>{eur(c2.cap)}</strong></>}</div>
+              <div className="tbox" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>{res1.modeVers === 'periodique' ? <><CheckCircle style={{ width: 16, height: 16, flexShrink: 0 }} /> <strong>{eur(form.versMensuel)}/mois</strong>{form.versInitial > 0 ? <> + <strong>{eur(form.versInitial)}</strong> initial</> : ''} pendant <strong>{proj.ageR - proj.age} ans</strong> = <strong>{eur(c2.cap)}</strong></> : <><CheckCircle style={{ width: 16, height: 16, flexShrink: 0 }} /> <strong>{eur(form.versPonctuel)}</strong> capitalisé = <strong>{eur(c2.cap)}</strong></>}</div>
             </>)}
             <div className="btns"><button className="btn btn-o" onClick={() => setStep(1)}>← Retour</button><button className="btn" onClick={v2} disabled={!c2}>Continuer →</button></div>
           </div>
@@ -324,7 +331,7 @@ export default function SimulateurPERTNSPage() {
         {step === 3 && res2 && (
           <div className="card card-s">
             <h2 className="card-t">Étape 3 : Remployer l'économie en AV</h2>
-            <div className="narr" style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', borderColor: '#a7f3d0' }}><div className="narr-t" style={{ color: '#059669' }}>💡 Double effet PER TNS</div><div className="narr-x" style={{ color: '#065f46' }}>Votre économie de <strong>{eur(res1.eco)}/an</strong> peut constituer un second capital en AV.</div></div>
+            <div className="narr" style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', borderColor: '#a7f3d0' }}><div className="narr-t" style={{ color: '#059669', display: 'flex', alignItems: 'center', gap: '.5rem' }}><Lightbulb style={{ width: 16, height: 16 }} /> Double effet PER TNS</div><div className="narr-x" style={{ color: '#065f46' }}>Votre économie de <strong>{eur(res1.eco)}/an</strong> peut constituer un second capital en AV.</div></div>
             <div className="fg">
               <div className="fgrp"><label className="flbl"><input type="checkbox" checked={av.use} onChange={e => setAv({ ...av, use: e.target.checked })} /> Remployer en AV</label><span className="fh">{eur(res1.eco)}/an</span></div>
               {av.use && <div className="fgrp"><label className="flbl">Profil AV</label><select className="fsel" value={av.profil} onChange={e => setAv({ ...av, profil: e.target.value })}><option value="prudent">Prudent (2.5%)</option><option value="equilibre">Équilibré (4%)</option><option value="dynamique">Dynamique (6%)</option></select></div>}
@@ -332,9 +339,9 @@ export default function SimulateurPERTNSPage() {
             {av.use && c3 && (<>
               <div className="kpis"><div className="kpi"><div className="kpi-v">{eur(res1.eco)}</div><div className="kpi-l">Versement/an</div></div><div className="kpi suc"><div className="kpi-v">{eur(c3.cap)}</div><div className="kpi-l">Capital AV</div></div><div className="kpi suc"><div className="kpi-v">{eur(c3.pv)}</div><div className="kpi-l">Plus-values AV</div></div></div>
               <div className="chart-box"><div id="ch2" className="chart" /></div>
-              <div className="tbox">🎯 <strong>{eur(c3.cap)}</strong> supplémentaires sans effort d'épargne !</div>
+              <div className="tbox" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Target style={{ width: 16, height: 16, flexShrink: 0 }} /> <strong>{eur(c3.cap)}</strong> supplémentaires sans effort d'épargne !</div>
             </>)}
-            {!av.use && <div className="ibox">ℹ️ Vous manquez l'opportunité de faire fructifier {eur(res1.eco)}/an.</div>}
+            {!av.use && <div className="ibox" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Info style={{ width: 16, height: 16, flexShrink: 0 }} /> Vous manquez l'opportunité de faire fructifier {eur(res1.eco)}/an.</div>}
             <div className="btns"><button className="btn btn-o" onClick={() => setStep(2)}>← Retour</button><button className="btn btn-s" onClick={v3}>Continuer →</button></div>
           </div>
         )}
@@ -342,10 +349,10 @@ export default function SimulateurPERTNSPage() {
         {step === 4 && res2 && (
           <div className="card card-w">
             <h2 className="card-t">Étape 4 : Fiscalité à la sortie</h2>
-            <div className="narr" style={{ background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)', borderColor: '#fde68a' }}><div className="narr-t" style={{ color: '#d97706' }}>💡 Options de sortie</div><div className="narr-x" style={{ color: '#92400e' }}>Capital (IR + PFU 30%), Rente (partiellement imposée), ou Mix.</div></div>
+            <div className="narr" style={{ background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)', borderColor: '#fde68a' }}><div className="narr-t" style={{ color: '#d97706', display: 'flex', alignItems: 'center', gap: '.5rem' }}><Lightbulb style={{ width: 16, height: 16 }} /> Options de sortie</div><div className="narr-x" style={{ color: '#92400e' }}>Capital (IR + PFU 30%), Rente (partiellement imposée), ou Mix.</div></div>
             <div className="fg"><div className="fgrp"><label className="flbl">TMI retraite estimé</label><select className="fsel" value={sortie.tmiR} onChange={e => setSortie({ ...sortie, tmiR: +e.target.value })}><option value={0}>0%</option><option value={0.11}>11%</option><option value={0.30}>30%</option></select></div></div>
             <div className="sortie-opts">
-              {[{ t: 'capital', l: '💰 Capital', d: '100% en une fois' }, { t: 'rente', l: '📅 Rente', d: 'Revenus à vie' }, { t: 'mixte', l: '⚖️ Mixte', d: '50% + 50%' }].map(o => (
+              {[{ t: 'capital', l: 'Capital', d: '100% en une fois' }, { t: 'rente', l: 'Rente', d: 'Revenus à vie' }, { t: 'mixte', l: 'Mixte', d: '50% + 50%' }].map(o => (
                 <div key={o.t} className={`sortie-opt ${sortie.type === o.t ? 'active' : ''}`} onClick={() => setSortie({ ...sortie, type: o.t })}><h5>{o.l}</h5><p>{o.d}</p></div>
               ))}
             </div>
@@ -355,7 +362,7 @@ export default function SimulateurPERTNSPage() {
                 {c4.type === 'rente' && <><tr><td>Rente brute annuelle</td><td className="num tns">{eur(c4.rBrut)}</td></tr><tr><td>Part imposable</td><td className="num">{c4.part}%</td></tr><tr><td><strong>Rente nette/mois</strong></td><td className="num suc"><strong>{eur(c4.rNetM)}</strong></td></tr></>}
                 {c4.type === 'mixte' && <><tr><td>Capital net perçu</td><td className="num suc">{eur(c4.netC)}</td></tr><tr><td>+ Rente nette/mois</td><td className="num suc">{eur(c4.rNetM)}</td></tr></>}
               </tbody></table>
-              <div className="tbox">✅ {c4.type === 'capital' ? `Vous récupérez ${eur(c4.net)} net.` : c4.type === 'rente' ? `Rente de ${eur(c4.rNetM)}/mois à vie.` : `${eur(c4.netC)} + ${eur(c4.rNetM)}/mois.`}</div>
+              <div className="tbox" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><CheckCircle style={{ width: 16, height: 16, flexShrink: 0 }} /> {c4.type === 'capital' ? `Vous récupérez ${eur(c4.net)} net.` : c4.type === 'rente' ? `Rente de ${eur(c4.rNetM)}/mois à vie.` : `${eur(c4.netC)} + ${eur(c4.rNetM)}/mois.`}</div>
             </>)}
             <div className="btns"><button className="btn btn-o" onClick={() => setStep(3)}>← Retour</button><button className="btn" onClick={v4} disabled={!c4}>Voir synthèse →</button></div>
           </div>
@@ -365,19 +372,43 @@ export default function SimulateurPERTNSPage() {
           <div className="card" style={{ borderLeft: '4px solid #1e40af' }}>
             <h2 className="card-t">Synthèse de votre stratégie PER TNS</h2>
             <div className="synth">
-              <div className="synth-card"><h4>📊 Capital PER</h4><div className="synth-v">{eur(res2.cap)}</div><div className="synth-l">Dont {eur(res2.pv)} de plus-values<br/>Économies totales : {eur(res2.eco)}</div></div>
-              {res3 && <div className="synth-card green"><h4>💎 Assurance-Vie</h4><div className="synth-v">{eur(res3.cap)}</div><div className="synth-l">Capital bonus via remploi<br/>Fiscalité avantageuse après 8 ans</div></div>}
-              <div className="synth-card gold"><h4>💰 Total Patrimoine Retraite</h4><div className="synth-v">{eur(res2.cap + (res3?.cap || 0))}</div><div className="synth-l">PER + AV combinés</div></div>
+              <div className="synth-card"><h4 style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}><BarChart3 style={{ width: 14, height: 14 }} /> Capital PER</h4><div className="synth-v">{eur(res2.cap)}</div><div className="synth-l">Dont {eur(res2.pv)} de plus-values<br/>Économies totales : {eur(res2.eco)}</div></div>
+              {res3 && <div className="synth-card green"><h4 style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}><Gem style={{ width: 14, height: 14 }} /> Assurance-Vie</h4><div className="synth-v">{eur(res3.cap)}</div><div className="synth-l">Capital bonus via remploi<br/>Fiscalité avantageuse après 8 ans</div></div>}
+              <div className="synth-card gold"><h4 style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}><Wallet style={{ width: 14, height: 14 }} /> Total Patrimoine Retraite</h4><div className="synth-v">{eur(res2.cap + (res3?.cap || 0))}</div><div className="synth-l">PER + AV combinés</div></div>
             </div>
             <h3 style={{ fontSize: '.95rem', fontWeight: 600, margin: '1.5rem 0 .75rem' }}>Recommandations TNS</h3>
             <div className="recs">
-              {c1.imp.util < 80 && <div className="rec m">⚠️ Vous n'utilisez que {Math.round(c1.imp.util)}% de votre plafond TNS. Potentiel d'économie supplémentaire !</div>}
-              {res3 && <div className="rec b">✅ Excellent ! Le remploi AV vous apporte {eur(res3.cap)} supplémentaires.</div>}
-              {!res3 && av.use === false && <div className="rec m">💡 Activez le remploi pour faire fructifier votre économie.</div>}
-              <div className="rec i">📅 Vérifiez vos plafonds non utilisés (3 dernières années) sur impots.gouv.fr.</div>
-              <div className="rec i">💼 En tant que TNS, pensez aussi aux contrats Madelin Prévoyance et Santé.</div>
+              {c1.imp.util < 80 && <div className="rec m" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><AlertTriangle style={{ width: 14, height: 14, flexShrink: 0 }} /> Vous n'utilisez que {Math.round(c1.imp.util)}% de votre plafond TNS. Potentiel d'économie supplémentaire !</div>}
+              {res3 && <div className="rec b" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><CheckCircle style={{ width: 14, height: 14, flexShrink: 0 }} /> Excellent ! Le remploi AV vous apporte {eur(res3.cap)} supplémentaires.</div>}
+              {!res3 && av.use === false && <div className="rec m" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Lightbulb style={{ width: 14, height: 14, flexShrink: 0 }} /> Activez le remploi pour faire fructifier votre économie.</div>}
+              <div className="rec i" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Calendar style={{ width: 14, height: 14, flexShrink: 0 }} /> Vérifiez vos plafonds non utilisés (3 dernières années) sur impots.gouv.fr.</div>
+              <div className="rec i" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Briefcase style={{ width: 14, height: 14, flexShrink: 0 }} /> En tant que TNS, pensez aussi aux contrats Madelin Prévoyance et Santé.</div>
             </div>
-            <div className="btns"><button className="btn btn-o" onClick={() => setStep(1)}>← Modifier</button><button className="btn" onClick={() => window.print()}>📄 Exporter</button></div>
+            <div className="btns"><button className="btn btn-o" onClick={() => setStep(1)}>← Modifier</button></div>
+            <div style={{ marginTop: '1.5rem' }}>
+              <ExportSimulationActions
+                simulateurTitre="PER TNS"
+                simulationType="PER_TNS"
+                parametres={[
+                  { label: 'Bénéfice imposable', valeur: form.benefice, unite: '€' },
+                  { label: 'Mode versement', valeur: form.modeVers === 'periodique' ? 'Périodique' : 'Ponctuel' },
+                  { label: 'Versement annuel', valeur: c1.versAnnuel, unite: '€' },
+                  { label: 'Âge actuel', valeur: proj.age, unite: 'ans' },
+                  { label: 'Âge retraite', valeur: proj.ageR, unite: 'ans' },
+                  { label: 'Profil', valeur: proj.profil },
+                ]}
+                resultats={[
+                  { label: 'Plafond TNS', valeur: c1.pl.plAvecRep, unite: '€' },
+                  { label: 'TMI', valeur: c1.tmi.label },
+                  { label: 'Économie impôt/an', valeur: Math.round(c1.imp.eco), unite: '€', important: true },
+                  ...(res2 ? [{ label: 'Capital PER final', valeur: res2.cap, unite: '€', important: true }] : []),
+                  ...(res2 ? [{ label: 'Plus-values PER', valeur: res2.pv, unite: '€' }] : []),
+                  ...(res3 ? [{ label: 'Capital AV bonus', valeur: res3.cap, unite: '€' }] : []),
+                  { label: 'Total patrimoine retraite', valeur: (res2?.cap || 0) + (res3?.cap || 0), unite: '€', important: true },
+                ]}
+                notes={`Simulation PER TNS — Bénéfice ${eur(form.benefice)}, TMI ${c1.tmi.label}, ${proj.ageR - proj.age} ans de capitalisation`}
+              />
+            </div>
           </div>
         )}
       </main>

@@ -2,7 +2,13 @@
 
 import { useState, useRef, useMemo } from 'react'
 import Link from 'next/link'
-import Script from 'next/script'
+import { usePlotlyReady } from '../immobilier/_hooks/usePlotlyReady'
+import {
+  Search, Baby, FileText, Wallet, PersonStanding, Accessibility,
+  Building2, Briefcase, CheckCircle, Lightbulb, BarChart3, Calendar,
+  AlertTriangle, Target, TrendingUp, Trophy, Scale, RefreshCw, CircleDot,
+  Gift, FileEdit, Coins, Clock,
+} from 'lucide-react'
 
 // Types
 
@@ -285,6 +291,7 @@ const styles = `
 `
 
 export default function SimulateurRetraitePage() {
+  usePlotlyReady()
   // Current step
   const [step, setStep] = useState(1)
   
@@ -556,20 +563,11 @@ export default function SimulateurRetraitePage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: styles }} />
-      <Script 
-        src="https://cdn.plot.ly/plotly-2.27.0.min.js" 
-        strategy="afterInteractive" 
-        onLoad={() => {
-          if (projectionResult?.projection) {
-            drawChart('projection-chart', projectionResult.projection)
-          }
-        }}
-      />
       
       <main className="pw">
         <div className="ph">
           <Link href="/dashboard/simulateurs" style={{ fontSize: '11px', color: '#64748b' }}>← Retour aux simulateurs</Link>
-          <h1>🏖️ Simulateur Retraite Complet</h1>
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Clock style={{ width: 24, height: 24 }} /> Simulateur Retraite Complet</h1>
           <p>Estimez votre pension, analysez le gap, et planifiez votre épargne en 4 étapes</p>
         </div>
         
@@ -613,9 +611,9 @@ export default function SimulateurRetraitePage() {
         {step === 1 && (
           <div className="fi">
             <div className="card card-p">
-              <h2 className="card-t">📋 Étape 1 : Estimer ma pension de retraite</h2>
+              <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><FileText style={{ width: 18, height: 18 }} /> Étape 1 : Estimer ma pension de retraite</h2>
               <div className="narr mb">
-                <div className="narr-t">💡 Qu'est-ce que je vais toucher à la retraite ?</div>
+                <div className="narr-t">Qu'est-ce que je vais toucher à la retraite ?</div>
                 <div className="narr-x">
                   Avant de planifier votre épargne, il faut savoir combien vous toucherez de la part des régimes obligatoires 
                   (base + complémentaire). Cette estimation dépend de votre régime, vos années cotisées, et votre salaire moyen.
@@ -722,7 +720,7 @@ export default function SimulateurRetraitePage() {
                   style={{ width: '100%', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                   onClick={() => setShowDetailedQuarters(!showDetailedQuarters)}
                 >
-                  <span>🔍 Affiner mes trimestres (enfants, chômage, études, handicap...)</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}><Search style={{ width: 14, height: 14 }} /> Affiner mes trimestres (enfants, chômage, études, handicap...)</span>
                   <span>{showDetailedQuarters ? '▲' : '▼'}</span>
                 </button>
                 
@@ -731,7 +729,7 @@ export default function SimulateurRetraitePage() {
                     <p className="fh mb">Ces informations permettent un calcul plus précis de vos trimestres et des majorations possibles.</p>
                     
                     {/* Enfants */}
-                    <h4 style={{ fontSize: '.9rem', fontWeight: 600, marginBottom: '.5rem' }}>👶 Enfants</h4>
+                    <h4 style={{ fontSize: '.9rem', fontWeight: 600, marginBottom: '.5rem', display: 'flex', alignItems: 'center', gap: '.4rem' }}><Baby style={{ width: 15, height: 15 }} /> Enfants</h4>
                     <div className="fg mb">
                       <div className="fgrp">
                         <label className="flbl">Nombre d'enfants</label>
@@ -757,7 +755,7 @@ export default function SimulateurRetraitePage() {
                     </div>
                     
                     {/* Périodes assimilées */}
-                    <h4 style={{ fontSize: '.9rem', fontWeight: 600, marginBottom: '.5rem' }}>📋 Périodes assimilées</h4>
+                    <h4 style={{ fontSize: '.9rem', fontWeight: 600, marginBottom: '.5rem', display: 'flex', alignItems: 'center', gap: '.4rem' }}><FileText style={{ width: 15, height: 15 }} /> Périodes assimilées</h4>
                     <div className="fg mb">
                       <div className="fgrp">
                         <label className="flbl">Chômage indemnisé (trimestres)</label>
@@ -803,7 +801,7 @@ export default function SimulateurRetraitePage() {
                     </div>
                     
                     {/* Rachat possible */}
-                    <h4 style={{ fontSize: '.9rem', fontWeight: 600, marginBottom: '.5rem' }}>💰 Trimestres rachetables</h4>
+                    <h4 style={{ fontSize: '.9rem', fontWeight: 600, marginBottom: '.5rem', display: 'flex', alignItems: 'center', gap: '.4rem' }}><Wallet style={{ width: 15, height: 15 }} /> Trimestres rachetables</h4>
                     <div className="fg mb">
                       <div className="fgrp">
                         <label className="flbl">Années d'études supérieures</label>
@@ -829,7 +827,7 @@ export default function SimulateurRetraitePage() {
                     </div>
                     
                     {/* Carrière longue */}
-                    <h4 style={{ fontSize: '.9rem', fontWeight: 600, marginBottom: '.5rem' }}>🏃 Carrière longue</h4>
+                    <h4 style={{ fontSize: '.9rem', fontWeight: 600, marginBottom: '.5rem', display: 'flex', alignItems: 'center', gap: '.4rem' }}><PersonStanding style={{ width: 15, height: 15 }} /> Carrière longue</h4>
                     <div className="fg mb">
                       <div className="fgrp">
                         <label className="flbl" style={{display:'flex', alignItems:'center', gap:'.5rem'}}>
@@ -857,7 +855,7 @@ export default function SimulateurRetraitePage() {
                     </div>
                     
                     {/* Handicap / Aidant */}
-                    <h4 style={{ fontSize: '.9rem', fontWeight: 600, marginBottom: '.5rem' }}>♿ Handicap / Aidant</h4>
+                    <h4 style={{ fontSize: '.9rem', fontWeight: 600, marginBottom: '.5rem', display: 'flex', alignItems: 'center', gap: '.4rem' }}><Accessibility style={{ width: 15, height: 15 }} /> Handicap / Aidant</h4>
                     <div className="fg">
                       <div className="fgrp">
                         <label className="flbl">Taux d'incapacité (%)</label>
@@ -905,7 +903,7 @@ export default function SimulateurRetraitePage() {
                   style={{ width: '100%', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                   onClick={() => setShowComplementary(!showComplementary)}
                 >
-                  <span>🏛️ Affiner ma retraite complémentaire</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}><Building2 style={{ width: 14, height: 14 }} /> Affiner ma retraite complémentaire</span>
                   <span>{showComplementary ? '▲' : '▼'}</span>
                 </button>
                 
@@ -913,7 +911,7 @@ export default function SimulateurRetraitePage() {
                   <div className="card mt" style={{ background: '#f8fafc' }}>
                     
                     {/* Sélection du métier - PRIORITAIRE */}
-                    <h4 style={{ fontSize: '.9rem', fontWeight: 600, marginBottom: '.5rem' }}>👔 Quelle est votre profession ?</h4>
+                    <h4 style={{ fontSize: '.9rem', fontWeight: 600, marginBottom: '.5rem', display: 'flex', alignItems: 'center', gap: '.4rem' }}><Briefcase style={{ width: 15, height: 15 }} /> Quelle est votre profession ?</h4>
                     <div className="fg mb">
                       <div className="fgrp" style={{gridColumn:'span 2'}}>
                         <select 
@@ -963,7 +961,7 @@ export default function SimulateurRetraitePage() {
                     {/* Affichage de la caisse détectée */}
                     {complementary.profession && PROFESSION_REGIME_MAP[complementary.profession] && (
                       <div className="sbox mb" style={{fontSize:'.9rem'}}>
-                        ✅ <strong>Caisse complémentaire :</strong> {complementary.regime === 'AGIRC_ARRCO' ? 'AGIRC-ARRCO' : complementary.regime === 'RAFP' ? 'RAFP' : complementary.regime === 'IRCANTEC' ? 'IRCANTEC' : complementary.regime === 'SSI' ? 'SSI (ex-RSI)' : complementary.regime?.replace('_COMPLEMENTAIRE', '') || complementary.regime}
+                        <CheckCircle style={{ width: 14, height: 14, display: 'inline', color: '#059669' }} /> <strong>Caisse complémentaire :</strong> {complementary.regime === 'AGIRC_ARRCO' ? 'AGIRC-ARRCO' : complementary.regime === 'RAFP' ? 'RAFP' : complementary.regime === 'IRCANTEC' ? 'IRCANTEC' : complementary.regime === 'SSI' ? 'SSI (ex-RSI)' : complementary.regime?.replace('_COMPLEMENTAIRE', '') || complementary.regime}
                       </div>
                     )}
                     
@@ -1056,7 +1054,7 @@ export default function SimulateurRetraitePage() {
                     {/* Info AGIRC-ARRCO pour salariés */}
                     {['salarie_prive', 'cadre'].includes(complementary.profession) && (
                       <div className="ibox mt" style={{fontSize:'.8rem'}}>
-                        💡 <strong>Bon à savoir :</strong> Si vous partez 1 an après le taux plein, vous gagnez +10% à vie sur votre complémentaire.
+                        <Lightbulb style={{ width: 14, height: 14, display: 'inline', color: '#2563eb' }} /> <strong>Bon à savoir :</strong> Si vous partez 1 an après le taux plein, vous gagnez +10% à vie sur votre complémentaire.
                       </div>
                     )}
                   </div>
@@ -1065,7 +1063,7 @@ export default function SimulateurRetraitePage() {
               
               <div className="btns">
                 <button className="btn" onClick={estimatePension} disabled={loading}>
-                  {loading ? '⏳ Calcul...' : '📊 Estimer ma pension'}
+                  {loading ? 'Calcul...' : 'Estimer ma pension'}
                 </button>
               </div>
               {error && <div className="abox mt">{error}</div>}
@@ -1077,7 +1075,7 @@ export default function SimulateurRetraitePage() {
         {step === 2 && pensionResult && (
           <div className="fi" ref={resultRef}>
             <div className="card card-s">
-              <h2 className="card-t">✅ Votre pension estimée</h2>
+              <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><CheckCircle style={{ width: 18, height: 18, color: '#059669' }} /> Votre pension estimée</h2>
               
               <div className="kpis">
                 <div className="kpi">
@@ -1100,7 +1098,7 @@ export default function SimulateurRetraitePage() {
               
               {/* Trimestres */}
               <div className="ibox mt">
-                <strong>📅 Trimestres à {pensionForm.retirementAge} ans :</strong><br/>
+                <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '.3rem' }}><Calendar style={{ width: 14, height: 14 }} /> Trimestres à {pensionForm.retirementAge} ans :</strong><br/>
                 <span style={{display:'inline-block', marginTop:'.5rem'}}>
                   {pensionResult.quartersAlreadyValidated || 0} déjà validés + {pensionResult.futureQuarters || 0} futurs = <strong>{pensionResult.quartersValidated} trimestres</strong> / {pensionResult.quartersRequired} requis
                 </span>
@@ -1121,7 +1119,7 @@ export default function SimulateurRetraitePage() {
                 )}
                 {pensionResult.missingQuarters === 0 && (
                   <span className="bdg bdg-s" style={{marginLeft:'.5rem'}}>
-                    ✅ Taux plein atteint
+                    Taux plein atteint
                   </span>
                 )}
               </div>
@@ -1130,7 +1128,7 @@ export default function SimulateurRetraitePage() {
             {/* Retraite complémentaire - Vue simplifiée */}
             {pensionResult.complementaryDetails && (
               <div className="card">
-                <h2 className="card-t">🏛️ Retraite complémentaire</h2>
+                <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Building2 style={{ width: 18, height: 18 }} /> Retraite complémentaire</h2>
                 
                 {/* Montants principaux - PRIORITÉ */}
                 <div className="kpis">
@@ -1159,7 +1157,7 @@ export default function SimulateurRetraitePage() {
                 {/* Alertes importantes (malus/bonus) - affichées directement */}
                 {pensionResult.complementaryDetails.coefficients.solidarite.valeur !== 1 && (
                   <div className={`mt ${pensionResult.complementaryDetails.coefficients.solidarite.valeur < 1 ? 'wbox' : 'sbox'}`} style={{fontSize:'.9rem'}}>
-                    {pensionResult.complementaryDetails.coefficients.solidarite.valeur < 1 ? '⚠️' : '✅'} 
+                    {pensionResult.complementaryDetails.coefficients.solidarite.valeur < 1 ? <AlertTriangle style={{ width: 14, height: 14, display: 'inline', color: '#f59e0b' }} /> : <CheckCircle style={{ width: 14, height: 14, display: 'inline', color: '#059669' }} />} 
                     <strong> Coefficient solidarité :</strong> ×{pensionResult.complementaryDetails.coefficients.solidarite.valeur.toFixed(2)}
                     <span style={{marginLeft:'.5rem', opacity:0.8}}>
                       ({pensionResult.complementaryDetails.coefficients.solidarite.explication})
@@ -1168,7 +1166,7 @@ export default function SimulateurRetraitePage() {
                 )}
                 {pensionResult.complementaryDetails.coefficients.majorationFamille > 1 && (
                   <div className="sbox mt" style={{fontSize:'.9rem'}}>
-                    ✅ <strong>Majoration famille :</strong> +10% appliqué (3 enfants ou plus)
+                    <CheckCircle style={{ width: 14, height: 14, display: 'inline', color: '#059669' }} /> <strong>Majoration famille :</strong> +10% appliqué (3 enfants ou plus)
                   </div>
                 )}
                 
@@ -1218,7 +1216,7 @@ export default function SimulateurRetraitePage() {
                     
                     {/* Lien info-retraite */}
                     <div style={{ marginTop: '1rem', fontSize: '.8rem', color: '#64748b' }}>
-                      📄 Consultez votre relevé sur <a href="https://info-retraite.fr" target="_blank" rel="noopener noreferrer" style={{color:'#2563eb'}}>info-retraite.fr</a>
+                      Consultez votre relevé sur <a href="https://info-retraite.fr" target="_blank" rel="noopener noreferrer" style={{color:'#2563eb'}}>info-retraite.fr</a>
                     </div>
                   </div>
                 )}
@@ -1228,7 +1226,7 @@ export default function SimulateurRetraitePage() {
             {/* Projection par âge de départ */}
             {pensionResult.projectionByAge && (
               <div className="card">
-                <h2 className="card-t">📊 Évolution de la pension selon l'âge de départ</h2>
+                <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><BarChart3 style={{ width: 18, height: 18 }} /> Évolution de la pension selon l'âge de départ</h2>
                 <div className="narr mb">
                   <div className="narr-x">
                     Ce tableau montre comment votre pension évolue si vous partez entre 62 et 70 ans. 
@@ -1284,7 +1282,7 @@ export default function SimulateurRetraitePage() {
                   </table>
                 </div>
                 <div className="tbox mt">
-                  <strong>💡 Conseil :</strong> En partant à {pensionResult.optimalAge || 67} ans au lieu de {pensionForm.retirementAge} ans, 
+                  <strong>Conseil :</strong> En partant à {pensionResult.optimalAge || 67} ans au lieu de {pensionForm.retirementAge} ans, 
                   vous gagneriez {eur(Math.abs((pensionResult.projectionByAge?.find((p) => p.age === (pensionResult.optimalAge || 67))?.monthlyPension || 0) - pensionResult.monthlyPension))} €/mois.
                 </div>
               </div>
@@ -1293,12 +1291,12 @@ export default function SimulateurRetraitePage() {
             {/* Analyse détaillée des trimestres (si données fournies) */}
             {pensionResult.detailedQuartersAnalysis && showDetailedQuarters && (
               <div className="card">
-                <h2 className="card-t">📊 Analyse détaillée de vos trimestres</h2>
+                <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><BarChart3 style={{ width: 18, height: 18 }} /> Analyse détaillée de vos trimestres</h2>
                 
                 {/* Section 1: Trimestres validés */}
                 <div className="mb">
                   <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#059669', marginBottom: '.75rem' }}>
-                    ✅ 1. Trimestres déjà validés : {pensionResult.detailedQuartersAnalysis?.validated.totalValides}
+                    1. Trimestres déjà validés : {pensionResult.detailedQuartersAnalysis?.validated.totalValides}
                   </h3>
                   
                   {(pensionResult.detailedQuartersAnalysis?.validated.cotises.detail.length ?? 0) > 0 && (
@@ -1345,13 +1343,13 @@ export default function SimulateurRetraitePage() {
                 {(pensionResult.detailedQuartersAnalysis?.supplementairesGratuits.detail.length ?? 0) > 0 && (
                   <div className="mb">
                     <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#0ea5e9', marginBottom: '.75rem' }}>
-                      🎁 2. Trimestres supplémentaires gratuits possibles : {pensionResult.detailedQuartersAnalysis?.supplementairesGratuits.total}
+                      2. Trimestres supplémentaires gratuits possibles : {pensionResult.detailedQuartersAnalysis?.supplementairesGratuits.total}
                     </h3>
                     {pensionResult.detailedQuartersAnalysis?.supplementairesGratuits.detail.map((d, i) => (
                       <div key={i} className="ibox mb" style={{ fontSize: '.85rem' }}>
                         <strong>{d.source}</strong> : {d.trimestres > 0 ? `+${d.trimestres} trimestres` : d.conditions}
                         <br/>
-                        <span style={{ color: '#64748b' }}>📝 Démarche : {d.demarche}</span>
+                        <span style={{ color: '#64748b' }}>Démarche : {d.demarche}</span>
                       </div>
                     ))}
                   </div>
@@ -1361,14 +1359,14 @@ export default function SimulateurRetraitePage() {
                 {(pensionResult.detailedQuartersAnalysis?.rachetables.detail.length ?? 0) > 0 && (
                   <div className="mb">
                     <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#f59e0b', marginBottom: '.75rem' }}>
-                      💰 3. Trimestres rachetables : {pensionResult.detailedQuartersAnalysis?.rachetables.total}
+                      3. Trimestres rachetables : {pensionResult.detailedQuartersAnalysis?.rachetables.total}
                     </h3>
                     {pensionResult.detailedQuartersAnalysis?.rachetables.detail.map((d, i) => (
                       <div key={i} className="wbox mb" style={{ fontSize: '.85rem' }}>
                         <strong>{d.source}</strong> : {d.trimestres} trimestres
-                        {d.coutEstime && <><br/>💶 Coût estimé : {d.coutEstime}</>}
+                        {d.coutEstime && <><br/>Coût estimé : {d.coutEstime}</>}
                         <br/>
-                        <span style={{ color: '#92400e' }}>📌 Intérêt : {d.interet}</span>
+                        <span style={{ color: '#92400e' }}>Intérêt : {d.interet}</span>
                       </div>
                     ))}
                   </div>
@@ -1378,7 +1376,7 @@ export default function SimulateurRetraitePage() {
                 {pensionResult.detailedQuartersAnalysis?.carriereLongue.eligible && (
                   <div className="mb">
                     <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#8b5cf6', marginBottom: '.75rem' }}>
-                      🏃 4. Carrière longue : Éligible !
+                      4. Carrière longue : Éligible !
                     </h3>
                     <div className="tbox" style={{ fontSize: '.85rem' }}>
                       <strong>Départ anticipé possible à {pensionResult.detailedQuartersAnalysis?.carriereLongue.ageDepart} ans</strong>
@@ -1393,14 +1391,14 @@ export default function SimulateurRetraitePage() {
                 
                 {/* Synthèse */}
                 <div className="narr">
-                  <div className="narr-t">📋 Synthèse personnalisée</div>
+                  <div className="narr-t">Synthèse personnalisée</div>
                   <div className="narr-x">
                     <p><strong>Total actuel :</strong> {pensionResult.detailedQuartersAnalysis?.synthese.totalActuel} trimestres</p>
                     <p><strong>Potentiel (avec rachats) :</strong> {pensionResult.detailedQuartersAnalysis?.synthese.totalPotentiel} trimestres</p>
                     {(pensionResult.detailedQuartersAnalysis?.synthese.manquantsTauxPlein ?? 0) > 0 ? (
                       <p><strong style={{ color: '#dc2626' }}>Manquants pour taux plein :</strong> {pensionResult.detailedQuartersAnalysis?.synthese.manquantsTauxPlein} trimestres</p>
                     ) : (
-                      <p style={{ color: '#059669' }}>✅ Taux plein atteint !</p>
+                      <p style={{ color: '#059669' }}>Taux plein atteint !</p>
                     )}
                     <hr style={{ margin: '.75rem 0', borderColor: '#e2e8f0' }} />
                     <strong>Conseils prioritaires :</strong>
@@ -1416,9 +1414,9 @@ export default function SimulateurRetraitePage() {
             
             {/* Gap Analysis Card */}
             <div className="card card-p">
-              <h2 className="card-t">📋 Étape 2 : Analyser le gap (écart)</h2>
+              <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><FileText style={{ width: 18, height: 18 }} /> Étape 2 : Analyser le gap (écart)</h2>
               <div className="narr mb">
-                <div className="narr-t">💡 Quel revenu souhaitez-vous à la retraite ?</div>
+                <div className="narr-t">Quel revenu souhaitez-vous à la retraite ?</div>
                 <div className="narr-x">
                   Comparez votre pension estimée avec le revenu mensuel que vous souhaitez maintenir. 
                   L'écart représente ce que vous devrez financer avec votre épargne personnelle.
@@ -1461,7 +1459,7 @@ export default function SimulateurRetraitePage() {
               
               {gap && !gap.isPositive && (
                 <div className="wbox mt">
-                  <strong>⚠️ Gap annuel à combler :</strong> {eur(gap.annualGap)} €/an
+                  <strong>Gap annuel à combler :</strong> {eur(gap.annualGap)} €/an
                   <br/>
                   <small>Avec la règle des 4%, il vous faut un capital de <strong>{eur(gap.annualGap / 0.04)} €</strong> pour générer ce revenu.</small>
                 </div>
@@ -1469,7 +1467,7 @@ export default function SimulateurRetraitePage() {
               
               {gap && gap.isPositive && (
                 <div className="tbox mt">
-                  <strong>✅ Bonne nouvelle !</strong> Votre pension couvre votre objectif. Vous pouvez tout de même épargner pour plus de confort.
+                  <strong>Bonne nouvelle !</strong> Votre pension couvre votre objectif. Vous pouvez tout de même épargner pour plus de confort.
                 </div>
               )}
               
@@ -1482,11 +1480,11 @@ export default function SimulateurRetraitePage() {
             {/* Pension Recommendations */}
             {pensionResult.recommendations?.length > 0 && (
               <div className="card">
-                <h3 className="card-t">💡 Recommandations sur votre pension</h3>
+                <h3 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Lightbulb style={{ width: 18, height: 18 }} /> Recommandations sur votre pension</h3>
                 <div className="recs">
                   {pensionResult.recommendations.map((r, i) => (
                     <div key={i} className={`rec ${r.priorite === 'haute' ? 'h' : r.priorite === 'moyenne' ? 'm' : 'b'}`}>
-                      <span>{r.priorite === 'haute' ? '🔴' : r.priorite === 'moyenne' ? '🟡' : '🟢'}</span>
+                      <span><CircleDot style={{ width: 12, height: 12, display: 'inline', color: r.priorite === 'haute' ? '#ef4444' : r.priorite === 'moyenne' ? '#eab308' : '#22c55e' }} /></span>
                       <span>{r.description}</span>
                     </div>
                   ))}
@@ -1500,9 +1498,9 @@ export default function SimulateurRetraitePage() {
         {step === 3 && gap && (
           <div className="fi" ref={resultRef}>
             <div className="card card-p">
-              <h2 className="card-t">📋 Étape 3 : Projeter mon épargne retraite</h2>
+              <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><FileText style={{ width: 18, height: 18 }} /> Étape 3 : Projeter mon épargne retraite</h2>
               <div className="narr mb">
-                <div className="narr-t">💡 Comment combler le gap avec mon épargne ?</div>
+                <div className="narr-t">Comment combler le gap avec mon épargne ?</div>
                 <div className="narr-x">
                   En épargnant régulièrement avec un rendement approprié, vous pouvez constituer un capital 
                   qui générera un revenu complémentaire à votre pension. Voyons combien vous devez épargner.
@@ -1512,7 +1510,7 @@ export default function SimulateurRetraitePage() {
               {/* Rappel du gap */}
               {!gap.isPositive && (
                 <div className="ibox mb">
-                  <strong>🎯 Rappel :</strong> Vous devez combler un gap de <strong>{eur(gap.gap)} €/mois</strong> 
+                  <strong>Rappel :</strong> Vous devez combler un gap de <strong>{eur(gap.gap)} €/mois</strong> 
                   ({eur(gap.annualGap)} €/an). Capital cible : <strong>{eur(gap.annualGap / 0.04)} €</strong>
                 </div>
               )}
@@ -1582,7 +1580,7 @@ export default function SimulateurRetraitePage() {
               <div className="btns">
                 <button className="btn btn-o" onClick={() => setStep(2)}>← Modifier le gap</button>
                 <button className="btn" onClick={projectSavings} disabled={loading}>
-                  {loading ? '⏳ Calcul...' : '📈 Projeter mon épargne'}
+                  {loading ? 'Calcul...' : 'Projeter mon épargne'}
                 </button>
               </div>
               {error && <div className="abox mt">{error}</div>}
@@ -1595,7 +1593,7 @@ export default function SimulateurRetraitePage() {
           <div className="fi" ref={resultRef}>
             {/* Projection Results */}
             <div className="card card-s">
-              <h2 className="card-t">📊 Résultat de la projection</h2>
+              <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><BarChart3 style={{ width: 18, height: 18 }} /> Résultat de la projection</h2>
               
               <div className="narr mb">
                 <div className="narr-x">
@@ -1621,7 +1619,7 @@ export default function SimulateurRetraitePage() {
                   <div className="kpi-l">Revenu mensuel (4%)</div>
                 </div>
                 <div className={`kpi ${projectionResult.isRetirementFeasible ? 'suc' : 'err'}`}>
-                  <div className="kpi-v">{projectionResult.isRetirementFeasible ? '✅' : '⚠️'}</div>
+                  <div className="kpi-v">{projectionResult.isRetirementFeasible ? <CheckCircle style={{ width: 24, height: 24, color: '#059669' }} /> : <AlertTriangle style={{ width: 24, height: 24, color: '#f59e0b' }} />}</div>
                   <div className="kpi-l">{projectionResult.isRetirementFeasible ? 'Objectif atteint' : 'Déficit'}</div>
                 </div>
               </div>
@@ -1632,7 +1630,7 @@ export default function SimulateurRetraitePage() {
               {/* Total Income at Retirement */}
               {pensionResult && (
                 <div className="tbox mt">
-                  <strong>💰 Revenu total à la retraite :</strong>{' '}
+                  <strong>Revenu total à la retraite :</strong>{' '}
                   {eur(pensionResult.monthlyPension + projectionResult.sustainableMonthlyIncome)} €/mois
                   <br/>
                   <small>
@@ -1646,7 +1644,7 @@ export default function SimulateurRetraitePage() {
               
               {!projectionResult.isRetirementFeasible && projectionResult.incomeShortfall > 0 && (
                 <div className="abox mt">
-                  <strong>⚠️ Déficit mensuel :</strong> {eur(projectionResult.incomeShortfall / 12)} €/mois
+                  <strong>Déficit mensuel :</strong> {eur(projectionResult.incomeShortfall / 12)} €/mois
                   <br/>
                   <small>Augmentez votre épargne mensuelle ou révisez votre objectif de revenu.</small>
                 </div>
@@ -1655,9 +1653,9 @@ export default function SimulateurRetraitePage() {
             
             {/* Scenario Comparison */}
             <div className="card card-p">
-              <h2 className="card-t">📋 Étape 4 : Comparer des scénarios</h2>
+              <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><FileText style={{ width: 18, height: 18 }} /> Étape 4 : Comparer des scénarios</h2>
               <div className="narr mb">
-                <div className="narr-t">💡 Quel scénario choisir ?</div>
+                <div className="narr-t">Quel scénario choisir ?</div>
                 <div className="narr-x">
                   Modifiez les paramètres de chaque scénario puis comparez-les pour voir l'impact sur votre capital et vos revenus.
                 </div>
@@ -1669,7 +1667,7 @@ export default function SimulateurRetraitePage() {
                     <div className="scen-h">
                       <span className="scen-t">{s.nom}</span>
                       {scenariosResult?.bestScenario?.name === s.nom && (
-                        <span className="bdg bdg-s">🏆 Meilleur</span>
+                        <span className="bdg bdg-s" style={{ display: 'inline-flex', alignItems: 'center', gap: '.3rem' }}><Trophy style={{ width: 12, height: 12 }} /> Meilleur</span>
                       )}
                     </div>
                     <div className="fg" style={{gridTemplateColumns:'1fr 1fr'}}>
@@ -1714,7 +1712,7 @@ export default function SimulateurRetraitePage() {
               
               <div className="btns">
                 <button className="btn" onClick={compareScenarios} disabled={loading}>
-                  {loading ? '⏳ Comparaison...' : '⚖️ Comparer les scénarios'}
+                  {loading ? 'Comparaison...' : 'Comparer les scénarios'}
                 </button>
               </div>
               
@@ -1740,9 +1738,9 @@ export default function SimulateurRetraitePage() {
                           <td>{eur(s.sustainableMonthlyIncome)} €</td>
                           <td>
                             {s.isRetirementFeasible ? (
-                              <span className="bdg bdg-s">✅ Viable</span>
+                              <span className="bdg bdg-s">Viable</span>
                             ) : (
-                              <span className="bdg bdg-e">⚠️ Déficit</span>
+                              <span className="bdg bdg-e">Déficit</span>
                             )}
                           </td>
                         </tr>
@@ -1751,7 +1749,7 @@ export default function SimulateurRetraitePage() {
                   </table>
                   
                   <div className="ibox mt">
-                    <strong>📊 Résumé :</strong> {scenariosResult.summary}
+                    <strong>Résumé :</strong> {scenariosResult.summary}
                   </div>
                 </div>
               )}
@@ -1760,11 +1758,11 @@ export default function SimulateurRetraitePage() {
             {/* Recommendations */}
             {projectionResult.recommendations?.length > 0 && (
               <div className="card">
-                <h3 className="card-t">💡 Recommandations</h3>
+                <h3 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Lightbulb style={{ width: 18, height: 18 }} /> Recommandations</h3>
                 <div className="recs">
                   {projectionResult.recommendations.map((r, i) => (
                     <div key={i} className={`rec ${r.priorite === 'haute' ? 'h' : r.priorite === 'moyenne' ? 'm' : 'b'}`}>
-                      <span>{r.priorite === 'haute' ? '🔴' : r.priorite === 'moyenne' ? '🟡' : '🟢'}</span>
+                      <span><CircleDot style={{ width: 12, height: 12, display: 'inline', color: r.priorite === 'haute' ? '#ef4444' : r.priorite === 'moyenne' ? '#eab308' : '#22c55e' }} /></span>
                       <span>{r.description}</span>
                     </div>
                   ))}
@@ -1775,7 +1773,7 @@ export default function SimulateurRetraitePage() {
             {/* Navigation */}
             <div className="btns">
               <button className="btn btn-o" onClick={() => setStep(3)}>← Modifier l'épargne</button>
-              <button className="btn btn-o" onClick={() => setStep(1)}>🔄 Recommencer</button>
+              <button className="btn btn-o" onClick={() => setStep(1)} style={{ display: 'inline-flex', alignItems: 'center', gap: '.4rem' }}><RefreshCw style={{ width: 14, height: 14 }} /> Recommencer</button>
             </div>
           </div>
         )}

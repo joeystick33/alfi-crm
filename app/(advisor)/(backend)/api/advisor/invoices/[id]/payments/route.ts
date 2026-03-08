@@ -3,7 +3,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { InvoiceService } from '@/app/_common/lib/services/invoice-service'
 import { normalizeAddPaymentPayload } from '../../utils'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * POST /api/advisor/invoices/[id]/payments
  * Add payment to invoice
@@ -38,7 +38,7 @@ export async function POST(
 
     return createSuccessResponse(payment, 201)
   } catch (error) {
-    console.error('Error in POST /api/advisor/invoices/[id]/payments:', error)
+    logger.error('Error in POST /api/advisor/invoices/[id]/payments:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

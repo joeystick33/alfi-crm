@@ -32,17 +32,47 @@ import { Card, CardContent } from '@/app/_common/components/ui/Card'
 import { Badge } from '@/app/_common/components/ui/Badge'
 import { cn } from '@/app/_common/lib/utils'
 import { Avatar } from '@/app/_common/components/ui/Avatar'
-import TodayWidget from '@/app/(advisor)/(frontend)/components/dashboard/TodayWidget'
-import TasksWidget from '@/app/(advisor)/(frontend)/components/dashboard/TasksWidget'
-import OpportunitiesWidget from '@/app/(advisor)/(frontend)/components/dashboard/OpportunitiesWidget'
-import AlertsWidget from '@/app/(advisor)/(frontend)/components/dashboard/AlertsWidget'
-import CelebrationsWidget from '@/app/(advisor)/(frontend)/components/dashboard/CelebrationsWidget'
-import AgendaMiniCalendar from '@/app/(advisor)/(frontend)/components/dashboard/AgendaMiniCalendar'
-
+const TodayWidget = dynamic(
+  () => import('@/app/(advisor)/(frontend)/components/dashboard/TodayWidget'),
+  { ssr: false, loading: () => <WidgetSkeleton /> }
+)
+const TasksWidget = dynamic(
+  () => import('@/app/(advisor)/(frontend)/components/dashboard/TasksWidget'),
+  { ssr: false, loading: () => <WidgetSkeleton /> }
+)
+const OpportunitiesWidget = dynamic(
+  () => import('@/app/(advisor)/(frontend)/components/dashboard/OpportunitiesWidget'),
+  { ssr: false, loading: () => <WidgetSkeleton /> }
+)
+const AlertsWidget = dynamic(
+  () => import('@/app/(advisor)/(frontend)/components/dashboard/AlertsWidget'),
+  { ssr: false, loading: () => <WidgetSkeleton /> }
+)
+const CelebrationsWidget = dynamic(
+  () => import('@/app/(advisor)/(frontend)/components/dashboard/CelebrationsWidget'),
+  { ssr: false, loading: () => <WidgetSkeleton /> }
+)
+const AgendaMiniCalendar = dynamic(
+  () => import('@/app/(advisor)/(frontend)/components/dashboard/AgendaMiniCalendar'),
+  { ssr: false, loading: () => <WidgetSkeleton /> }
+)
 const EmailsWidget = dynamic(
   () => import('@/app/(advisor)/(frontend)/components/dashboard/EmailsWidget'),
-  { ssr: false }
+  { ssr: false, loading: () => <WidgetSkeleton /> }
 )
+
+function WidgetSkeleton() {
+  return (
+    <div className="animate-pulse rounded-xl border border-gray-100 bg-white p-5">
+      <div className="h-4 w-32 bg-gray-200 rounded mb-4" />
+      <div className="space-y-3">
+        <div className="h-3 bg-gray-100 rounded w-full" />
+        <div className="h-3 bg-gray-100 rounded w-3/4" />
+        <div className="h-3 bg-gray-100 rounded w-1/2" />
+      </div>
+    </div>
+  )
+}
 
 type DashboardView = 'personal' | 'team'
 

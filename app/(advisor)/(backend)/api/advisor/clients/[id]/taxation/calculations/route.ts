@@ -15,7 +15,7 @@ import {
   detectTaxOptimizations,
 } from '@/app/_common/lib/services/tax-service'
 import { z } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 // ============================================================================
 // Schema validation pour le POST
 // ============================================================================
@@ -184,7 +184,7 @@ export async function POST(
       { status: 200 }
     )
   } catch (error) {
-    console.error(
+    logger.error(
       'POST /api/advisor/clients/[id]/taxation/calculations error:',
       error
     )

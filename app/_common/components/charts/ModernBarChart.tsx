@@ -56,8 +56,8 @@ export function ModernBarChart({ data, dataKeys, title, formatValue, stacked = f
         </h3>
       )}
       
-      <div className="h-80 animate-in fade-in-0">
-        <ResponsiveContainer width="100%" height="100%">
+      <div style={{ width: '100%', height: 320 }} className="animate-in fade-in-0">
+        <ResponsiveContainer width="100%" height={320}>
           <BarChart
             data={data}
             margin={{ top: 20, right: 30, left: 20, bottom: 5 }}

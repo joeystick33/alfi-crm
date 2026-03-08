@@ -35,7 +35,7 @@ import {
   PLAFOND_NICHES,
 } from '../_shared/constants'
 import { pinelInputSchema, type PinelInput } from '../_shared/validators'
-
+import { logger } from '@/app/_common/lib/logger'
 // ══════════════════════════════════════════════════════════════════════════════
 // FONCTION DE SIMULATION PINEL
 // ══════════════════════════════════════════════════════════════════════════════
@@ -171,7 +171,7 @@ function simulerPinel(input: PinelInput) {
 
     // IR et PS sur revenus fonciers
     const ir = revenuFoncier > 0 ? revenuFoncier * (tmi / 100) : 0
-    const ps = revenuFoncier > 0 ? revenuFoncier * PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL : 0
+    const ps = revenuFoncier > 0 ? revenuFoncier * PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL : 0
 
     // Réduction Pinel (si engagement actif)
     const reductionPinel = engagementActif ? reductionAnnuelle : 0
@@ -446,7 +446,7 @@ export async function POST(request: NextRequest) {
         400
       )
     }
-    console.error('Erreur simulateur Pinel:', error)
+    logger.error('Erreur simulateur Pinel:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la simulation', 500)
   }
 }

@@ -11,6 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
+import { logger } from '@/app/_common/lib/logger'
 import {
   searchEntreprises,
   getEntreprise,
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
     )
     
   } catch (error) {
-    console.error('[API Entreprise] Erreur GET:', error)
+    logger.error('[API Entreprise] Erreur GET:', { error: error instanceof Error ? error.message : String(error) })
     
     const message = error instanceof Error ? error.message : 'Erreur inconnue'
     
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('[API Entreprise] Erreur POST:', error)
+    logger.error('[API Entreprise] Erreur POST:', { error: error instanceof Error ? error.message : String(error) })
     
     const message = error instanceof Error ? error.message : 'Erreur inconnue'
     

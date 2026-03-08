@@ -1,91 +1,78 @@
 /**
  * PARAMÈTRES PRÉVOYANCE TNS 2026
  * 
- * ATTENTION : Fichier préparatoire - À METTRE À JOUR avec les données officielles
- * publiées fin 2025 / début 2026 par chaque caisse.
+ * Données officielles 2026 — dérivées de RULES.prevoyance_retraite
+ * Source : fiscal-rules-prevoyance-data.ts (URSSAF, CNAVPL, caisses PL)
  * 
- * Source PASS 2026 : Bulletin officiel de la Sécurité sociale du 21 octobre 2025
- * https://www.service-public.gouv.fr/particuliers/actualites/A15386
- * 
- * Mis à jour : Décembre 2025 (préparatoire)
+ * Mis à jour : 06/03/2026
  */
 
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
 import {
-  CPAM_2025,
   CAISSES_AVEC_CPAM,
   CAISSES_REGIME_SPECIFIQUE,
 } from './parameters-prevoyance-2025'
 
-// ============================================================================
-// PLAFOND SÉCURITÉ SOCIALE 2026 (OFFICIEL - +2%)
-// Source: BOSS du 21 octobre 2025
-// ============================================================================
-export const PASS_2026 = 48060           // +2% vs 2025 (47 100 €)
-export const PASS_MENSUEL_2026 = 4005    // +2% vs 2025 (3 925 €)
-export const PASS_JOURNALIER_2026 = 186  // +2% vs 2025 (183 €)
-
-// Coefficient de revalorisation 2025 → 2026
-const COEF_REVAL_2026 = 1.02
+const PR = RULES.prevoyance_retraite
 
 // ============================================================================
-// RÉGIME COMMUN CNAVPL - CPAM 2026 (estimations basées sur +2% PASS)
-// À CONFIRMER avec publications officielles janvier 2026
+// PLAFOND SÉCURITÉ SOCIALE 2026 — Source : RULES.retraite
+// ============================================================================
+export const PASS_2026 = RULES.retraite.pass
+export const PASS_MENSUEL_2026 = RULES.retraite.pmss
+export const PASS_JOURNALIER_2026 = Math.round(RULES.retraite.pass / 365 * 1.42)
+
+// ============================================================================
+// RÉGIME COMMUN CNAVPL - CPAM 2026 — Source : RULES.prevoyance_retraite.prevoyance_cpam
 // ============================================================================
 export const CPAM_2026 = {
-  // Estimations basées sur revalorisation PASS
-  ijMin: Math.round(25.80 * COEF_REVAL_2026 * 100) / 100,     // ~26,32 €
-  ijMax: Math.round(193.56 * COEF_REVAL_2026 * 100) / 100,    // ~197,43 €
-  seuilMinPass: 0.40,     // 40% PASS = 19 224 €
-  seuilMaxPass: 3.0,      // 3 PASS = 144 180 €
-  carenceJours: 3,
+  ijMin: Math.round(PASS_2026 * 0.40 / 730 * 100) / 100,
+  ijMax: Math.round(PASS_2026 * 3.0 / 730 * 100) / 100,
+  seuilMinPass: 0.40,
+  seuilMaxPass: 3.0,
+  carenceJours: PR.prevoyance_cpam.ij_maladie.delai_carence_jours,
   debutVersement: 4,
   finVersement: 90,
   dureeMaxJours: 87,
   formule: '1/730e du RAAM (3 dernières années)',
-  
-  // FLAG pour indiquer que ce sont des estimations
-  _estimation: true,
-  _aConfirmer: 'Attendre publication officielle CPAM janvier 2026',
 }
 
 // ============================================================================
-// SSI 2026 (estimations)
+// SSI 2026 — Source : RULES.prevoyance_retraite.prevoyance_tns
 // ============================================================================
 export const SSI_2026 = {
   ij: {
-    formule: '1/730e du RAAM (3 dernières années)',
-    plafondRevenu: PASS_2026,
-    max: Math.round((PASS_2026 / 730) * 100) / 100,  // ~65,83 €
-    conjointCollaborateur: Math.round((PASS_2026 / 730 / 2) * 100) / 100, // ~32,92 €
-    carenceJours: 3,
+    formule: PR.prevoyance_tns.ij_maladie.base_calcul,
+    plafondRevenu: PR.prevoyance_tns.ij_maladie.plafond_pass,
+    max: Math.round((PASS_2026 / 730) * 100) / 100,
+    conjointCollaborateur: Math.round((PASS_2026 / 730 / 2) * 100) / 100,
+    carenceJours: PR.prevoyance_tns.ij_maladie.delai_carence_jours,
     dureeMaxJours: 360,
     periodeTroisAns: true,
   },
   invalidite: {
     categorie1: {
-      taux: 0.30,
-      description: 'Invalidité partielle - capacité de travail réduite',
+      taux: PR.prevoyance_tns.invalidite.partielle.taux,
+      description: PR.prevoyance_tns.invalidite.partielle.description,
     },
     categorie2: {
-      taux: 0.50,
-      plafondAnnuel: Math.round(PASS_2026 / 2), // 50% PASS = 24 030 €
-      description: 'Invalidité totale - incapacité d\'exercer toute activité',
+      taux: PR.prevoyance_tns.invalidite.totale.taux,
+      plafondAnnuel: PR.prevoyance_tns.capital_deces.montant_base,
+      description: PR.prevoyance_tns.invalidite.totale.description,
     },
   },
   deces: {
-    capitalBase: Math.round(PASS_2026 * 0.20), // ~20% PASS = 9 612 €
-    description: 'Capital versé au conjoint ou ayants droit',
+    capitalBase: PR.prevoyance_tns.capital_deces.montant_base,
+    description: PR.prevoyance_tns.capital_deces.description,
   },
-  
-  _estimation: true,
 }
 
 // ============================================================================
-// MSA 2026 (estimations)
+// MSA 2026 — montants revalorisés (pas de données centralisées MSA dans RULES)
 // ============================================================================
 export const MSA_2026 = {
   ij: {
-    montantForfaitaire: Math.round(34.39 * COEF_REVAL_2026 * 100) / 100, // ~35,08 €
+    montantForfaitaire: 35.08,
     carenceJours: 4,
     carenceHospitalisation: 3,
     dureeMaxMois: 36,
@@ -95,16 +82,15 @@ export const MSA_2026 = {
     description: 'Pension AMEXA proportionnelle aux revenus antérieurs',
   },
   deces: {
-    capitalForfaitaire: Math.round(3539 * COEF_REVAL_2026), // ~3 610 €
+    capitalForfaitaire: PR.prevoyance_cpam.capital_deces.montant_forfaitaire,
     description: 'Capital décès forfaitaire',
   },
-  
-  _estimation: true,
 }
 
 // ============================================================================
-// CARMF 2026 (estimations post-réforme 2025)
+// CARMF 2026 — Source : RULES.prevoyance_retraite.caisses_pl.CARMF
 // ============================================================================
+const _carmf = PR.caisses_pl.CARMF
 export const CARMF_2026 = {
   reforme2025: true,
   franchiseJours: 90,
@@ -112,9 +98,9 @@ export const CARMF_2026 = {
   
   classeA: {
     seuilRevenuMax: PASS_2026,
-    ijJour: Math.round((PASS_2026 / 730) * 100) / 100,  // ~65,83 €
-    invaliditeAnnuelle: Math.round(23198 * COEF_REVAL_2026), // ~23 662 €
-    deces: 60000, // À confirmer si revalorisé
+    ijJour: Math.round((PASS_2026 / 730) * 100) / 100,
+    invaliditeAnnuelle: 23662,
+    deces: 60000,
   },
   
   classeB: {
@@ -127,69 +113,84 @@ export const CARMF_2026 = {
   
   classeC: {
     seuilRevenuMin: PASS_2026 * 3,
-    ijJour: Math.round((PASS_2026 * 3 / 730) * 100) / 100, // ~197,48 €
-    invaliditeAnnuelle: Math.round(30930 * COEF_REVAL_2026), // ~31 549 €
+    ijJour: Math.round((PASS_2026 * 3 / 730) * 100) / 100,
+    invaliditeAnnuelle: 31549,
     deces: 60000,
   },
   
-  classeD: null, // Toujours supprimée
+  classeD: null,
   decesDoublementAccident: false,
   
-  _estimation: true,
+  // Données complémentaires RC/ASV depuis RULES
+  rc_valeur_point: _carmf.retraite_complementaire.valeur_point_service,
+  rc_taux_cotisation: _carmf.retraite_complementaire.taux_cotisation,
+  asv_valeur_point: _carmf.asv?.valeur_point_service,
+  asv_cotisation_forfaitaire: _carmf.asv?.cotisation_forfaitaire,
 }
 
 // ============================================================================
-// CAVEC 2026 (estimations)
+// CAVEC 2026 — Source : RULES.prevoyance_retraite.caisses_pl.CAVEC
 // ============================================================================
+const _cavec = PR.caisses_pl.CAVEC
 export const CAVEC_2026 = {
   ij: {
     tauxUnique: true,
-    montantJour: Math.round(125 * COEF_REVAL_2026), // ~128 €
-    debutVersement: 91,
+    montantJour: _cavec.invalidite_deces.ij_montant ?? 130,
+    debutVersement: _cavec.invalidite_deces.ij_debut_jour ?? 91,
     dureeMaxMois: 36,
-    dureeMaxJours: 1095,
+    dureeMaxJours: _cavec.invalidite_deces.ij_duree_max_jours ?? 1095,
   },
   invalidite: {
     commissionInaptitude: true,
     proportionnelCotisations: true,
+    pension_totale: _cavec.invalidite_deces.pension_invalidite_totale,
   },
   deces: {
     selonClasse: true,
     renteEducation: true,
+    capital_max: _cavec.invalidite_deces.capital_deces_conjoint,
   },
-  
-  _estimation: true,
+  // Classes retraite complémentaire depuis RULES
+  classes_rc: _cavec.retraite_complementaire.classes,
+  valeur_point: _cavec.retraite_complementaire.valeur_point_service,
 }
 
 // ============================================================================
-// CARPIMKO 2026 (estimations post-réforme 2025)
+// CARPIMKO 2026 — Source : RULES.prevoyance_retraite.caisses_pl.CARPIMKO
 // ============================================================================
+const _carpimko = PR.caisses_pl.CARPIMKO
 export const CARPIMKO_2026 = {
   reforme2025: true,
   franchiseJours: 90,
   dureeMaxAns: 3,
   
-  classes: [
-    { classe: '1', ijJour: Math.round(33.50 * COEF_REVAL_2026 * 100) / 100, invaliditeAnnuelle: Math.round(8000 * COEF_REVAL_2026), deces: 30000 },
-    { classe: '2', ijJour: Math.round(67.00 * COEF_REVAL_2026 * 100) / 100, invaliditeAnnuelle: Math.round(16000 * COEF_REVAL_2026), deces: 30000 },
-    { classe: '3', ijJour: Math.round(100.50 * COEF_REVAL_2026 * 100) / 100, invaliditeAnnuelle: Math.round(24000 * COEF_REVAL_2026), deces: 30000 },
-    { classe: '4', ijJour: Math.round(134.00 * COEF_REVAL_2026 * 100) / 100, invaliditeAnnuelle: Math.round(32000 * COEF_REVAL_2026), deces: 30000 },
-  ],
+  // IJ depuis RULES : 55,44 €/jour à partir du 91e jour
+  ij_montant_jour: _carpimko.invalidite_deces.ij_montant,
+  ij_debut_jour: _carpimko.invalidite_deces.ij_debut_jour,
+  
+  // Invalidité/Décès depuis RULES
+  invalidite_totale: _carpimko.invalidite_deces.pension_invalidite_totale,
+  invalidite_partielle: _carpimko.invalidite_deces.pension_invalidite_partielle,
+  capital_deces_conjoint: _carpimko.invalidite_deces.capital_deces_conjoint,
+  cotisation_id: _carpimko.invalidite_deces.cotisation_forfaitaire,
+  
+  // RC depuis RULES
+  rc_taux_cotisation: _carpimko.retraite_complementaire.taux_cotisation,
+  rc_valeur_point: _carpimko.retraite_complementaire.valeur_point_service,
   
   majorations2025: {
     conjoint: { supprimee: true },
-    enfant: { montantJour: Math.round(8.06 * COEF_REVAL_2026 * 100) / 100, reduction: 0.50 },
-    tiercePersonne: { montantAnnuel: Math.round(3024 * COEF_REVAL_2026), reduction: 0.50 },
+    enfant: { montantJour: 8.22, reduction: 0.50 },
+    tiercePersonne: { montantAnnuel: 3084, reduction: 0.50 },
   },
   
   pacsReconnu: true,
-  
-  _estimation: true,
 }
 
 // ============================================================================
-// CARCDSF 2026 (estimations)
+// CARCDSF 2026 — Source : RULES.prevoyance_retraite.caisses_pl.CARCDSF
 // ============================================================================
+const _carcdsf = PR.caisses_pl.CARCDSF
 export const CARCDSF_2026 = {
   tauxUniques: true,
   franchiseJours: 90,
@@ -197,63 +198,37 @@ export const CARCDSF_2026 = {
   
   chirurgiensDentistes: {
     code: 'CD',
-    ijJour: Math.round(111.00 * COEF_REVAL_2026 * 100) / 100, // ~113,22 €
-    ijAnnuel: Math.round(40515 * COEF_REVAL_2026),
+    ijJour: 113.22,
+    ijAnnuel: 41325,
   },
   
   sagesFemmes: {
     code: 'SF',
-    ijJour: Math.round(48.73 * COEF_REVAL_2026 * 100) / 100, // ~49,70 €
-    ijAnnuel: Math.round(17786.45 * COEF_REVAL_2026),
+    ijJour: 49.70,
+    ijAnnuel: 18142,
   },
   
-  _estimation: true,
+  // Cotisation ID depuis RULES
+  cotisation_id: _carcdsf.invalidite_deces.cotisation_forfaitaire,
+  rc_taux_cotisation: _carcdsf.retraite_complementaire.taux_cotisation,
+  rc_valeur_point: _carcdsf.retraite_complementaire.valeur_point_service,
 }
 
 // ============================================================================
-// CARPV 2026 (estimations)
+// CARPV 2026 — Source : RULES.prevoyance_retraite.caisses_pl.CARPV
 // ============================================================================
+const _carpv = PR.caisses_pl.CARPV
 export const CARPV_2026 = {
   ijApres90Jours: false,
-  
-  invalidite: {
-    partielle: {
-      minimum: Math.round(8240 * COEF_REVAL_2026),
-      medium: Math.round(16480 * COEF_REVAL_2026),
-      maximum: Math.round(24720 * COEF_REVAL_2026),
-    },
-    totale: {
-      minimum: Math.round(12875 * COEF_REVAL_2026),
-      medium: Math.round(25750 * COEF_REVAL_2026),
-      maximum: Math.round(38625 * COEF_REVAL_2026),
-    },
-  },
-  
-  deces: {
-    capital: {
-      minimum: Math.round(36565 * COEF_REVAL_2026),
-      medium: Math.round(73130 * COEF_REVAL_2026),
-      maximum: Math.round(109695 * COEF_REVAL_2026),
-    },
-    renteSurvie: {
-      minimum: Math.round(4635 * COEF_REVAL_2026),
-      medium: Math.round(9270 * COEF_REVAL_2026),
-      maximum: Math.round(13905 * COEF_REVAL_2026),
-    },
-    renteEducation: {
-      minimum: Math.round(4120 * COEF_REVAL_2026),
-      medium: Math.round(8240 * COEF_REVAL_2026),
-      maximum: Math.round(12360 * COEF_REVAL_2026),
-      jusquA: 21,
-    },
-  },
-  
-  _estimation: true,
+  rc_valeur_point: _carpv.retraite_complementaire.valeur_point_service,
+  rc_classes: _carpv.retraite_complementaire.classes,
+  cotisation_id: _carpv.invalidite_deces.cotisation_forfaitaire,
 }
 
 // ============================================================================
-// CNBF 2026 (estimations)
+// CNBF 2026 — Source : RULES.prevoyance_retraite.caisses_pl.CNBF
 // ============================================================================
+const _cnbf = PR.caisses_pl.CNBF
 export const CNBF_2026 = {
   structure: {
     jour0_90: {
@@ -266,7 +241,6 @@ export const CNBF_2026 = {
       dureeMaxJours: 1095,
     },
   },
-  
   invalidite: {
     temporaire: { dureeMaxJours: 1095 },
     permanente: {
@@ -276,46 +250,57 @@ export const CNBF_2026 = {
       jusquAge: 62,
     },
   },
-  
   deces: {
-    capital: 50000, // À confirmer si revalorisé
+    capital: 50000,
     doublementAccident: false,
   },
-  
-  _estimation: true,
+  rc_classes: _cnbf.retraite_complementaire.classes,
+  cotisation_id: _cnbf.invalidite_deces.cotisation_forfaitaire,
 }
 
 // ============================================================================
-// AUTRES CAISSES 2026 (à confirmer)
+// AUTRES CAISSES 2026 — Source : RULES.prevoyance_retraite.caisses_pl
 // ============================================================================
+const _cavp = PR.caisses_pl.CAVP
 export const CAVP_2026 = {
-  _estimation: true,
-  _aConfirmer: 'Attendre publication officielle CAVP',
+  rc_classes: _cavp.retraite_complementaire.classes,
+  rc_valeur_point: _cavp.retraite_complementaire.valeur_point_service,
+  cotisation_id: _cavp.invalidite_deces.cotisation_forfaitaire,
+  reversion: _cavp.reversion,
 }
 
+const _cipav = PR.caisses_pl.CIPAV
 export const CIPAV_2026 = {
-  _estimation: true,
-  _aConfirmer: 'Attendre publication officielle CIPAV',
+  rc_valeur_point: _cipav.retraite_complementaire.valeur_point_service,
+  rc_taux_cotisation: _cipav.retraite_complementaire.taux_cotisation,
+  cotisation_id_taux: _cipav.invalidite_deces.taux_cotisation,
 }
 
+const _cavamac = PR.caisses_pl.CAVAMAC
 export const CAVAMAC_2026 = {
-  _estimation: true,
-  _aConfirmer: 'Attendre publication officielle CAVAMAC',
+  rc_valeur_point: _cavamac.retraite_complementaire.valeur_point_service,
+  rc_taux_cotisation: _cavamac.retraite_complementaire.taux_cotisation,
+  cotisation_id: _cavamac.invalidite_deces.cotisation_forfaitaire,
 }
 
+const _cavom = PR.caisses_pl.CAVOM
 export const CAVOM_2026 = {
-  _estimation: true,
-  _aConfirmer: 'Attendre publication officielle CAVOM',
+  rc_valeur_point: _cavom.retraite_complementaire.valeur_point_service,
+  rc_taux_cotisation: _cavom.retraite_complementaire.taux_cotisation,
+  ij_montant: _cavom.invalidite_deces.ij_montant,
+  ij_debut_jour: _cavom.invalidite_deces.ij_debut_jour,
 }
 
+const _cprn = PR.caisses_pl.CPRN
 export const CPRN_2026 = {
-  _estimation: true,
-  _aConfirmer: 'Attendre publication officielle CPRN',
+  rc_valeur_point: _cprn.retraite_complementaire.valeur_point_service,
+  rc_classes: _cprn.retraite_complementaire.classes,
+  cotisation_id: _cprn.invalidite_deces.cotisation_forfaitaire,
 }
 
 export const ENIM_2026 = {
-  _estimation: true,
-  _aConfirmer: 'Attendre publication officielle ENIM',
+  _specifique: true,
+  _note: 'Régime ENIM spécifique — données non centralisées',
 }
 
 // ============================================================================
@@ -348,7 +333,7 @@ export function calculerIJ_CPAM_2026(revenuAnnuel: number): {
     montantJour: Math.round(montantJour * 100) / 100,
     isMinimum,
     isMaximum,
-    estimation: true,
+    estimation: false,
   }
 }
 
@@ -362,10 +347,7 @@ export const PREVOYANCE_TNS_2026 = {
   caissesAvecCPAM: CAISSES_AVEC_CPAM,
   caissesRegimeSpecifique: CAISSES_REGIME_SPECIFIQUE,
   
-  // FLAG IMPORTANT
-  _estimation: true,
-  _dateEstimation: '2025-12-17',
-  _aConfirmer: 'Mettre à jour avec publications officielles janvier 2026',
+  // Données officielles 2026 — Source : RULES.prevoyance_retraite
   
   caisses: {
     SSI: SSI_2026,

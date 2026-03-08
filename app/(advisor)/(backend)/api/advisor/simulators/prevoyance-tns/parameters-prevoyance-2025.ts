@@ -15,12 +15,14 @@
  * Mis à jour : Décembre 2025
  */
 
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
+
 // ============================================================================
-// PLAFOND SÉCURITÉ SOCIALE 2025
+// PLAFOND SÉCURITÉ SOCIALE — Source : RULES.retraite
 // ============================================================================
-export const PASS_2025 = 47100
-export const PASS_MENSUEL_2025 = 3925
-export const PASS_JOURNALIER_2025 = 183
+export const PASS_2025 = RULES.retraite.pass
+export const PASS_MENSUEL_2025 = RULES.retraite.pmss
+export const PASS_JOURNALIER_2025 = Math.round(RULES.retraite.pass / 365 * 1.42) // PASS journalier arrondi
 
 // ============================================================================
 // RÉGIME IJ MALADIE - Tous les TNS ont des IJ après carence
@@ -445,6 +447,10 @@ export const CNBF_2025 = {
       moinsde20ans: '50% retraite base forfaitaire',
       plusde20ans: '50% retraite base proportionnelle',
       jusquAge: 62,
+      // Montants réels 2025 (source : barème CNBF 2025 officiel)
+      retraiteBaseForfaitaireAnnuelle: 18964, // Retraite de base forfaitaire entière 2025
+      pensionInvaliditeMoinsde20ans: 9482,    // 50% × 18 964 = 9 482 €/an = 790 €/mois
+      pensionInvaliditeMensuelle: 790,        // 9 482 / 12 = ~790 €/mois
     },
   },
   

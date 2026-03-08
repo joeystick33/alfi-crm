@@ -4,7 +4,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { KYCService } from '@/app/_common/lib/services/kyc-service'
 import { z } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 // Schéma de validation
 const createKYCCheckSchema = z.object({
   clientId: z.string().cuid(),
@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
     const checks = await service.listKYCChecks(filters)
     return createSuccessResponse(checks)
   } catch (error: any) {
-    console.error('Error fetching KYC checks:', error)
+    logger.error('Error fetching KYC checks:', { error: error instanceof Error ? error.message : String(error) })
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
 
     return createSuccessResponse(check, 201)
   } catch (error: any) {
-    console.error('Error creating KYC check:', error)
+    logger.error('Error creating KYC check:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof z.ZodError) {
       return createErrorResponse(`Validation error: ${JSON.stringify(error.issues)}`, 400)

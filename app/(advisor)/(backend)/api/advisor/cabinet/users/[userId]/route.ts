@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { prisma } from '@/app/_common/lib/prisma'
 import { UserService } from '@/app/_common/lib/services/user-service'
-
+import { logger } from '@/app/_common/lib/logger'
 // GET - Récupérer un utilisateur
 export async function GET(
   request: NextRequest,
@@ -41,7 +41,7 @@ export async function GET(
 
     return NextResponse.json(user)
   } catch (error: any) {
-    console.error('Get user error:', error)
+    logger.error('Get user error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Unauthorized') {
       return NextResponse.json(
@@ -161,7 +161,7 @@ export async function PATCH(
       user: updatedUser
     })
   } catch (error: any) {
-    console.error('Update user error:', error)
+    logger.error('Update user error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Unauthorized') {
       return NextResponse.json(
@@ -266,7 +266,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error: any) {
-    console.error('Delete user error:', error)
+    logger.error('Delete user error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Unauthorized') {
       return NextResponse.json(

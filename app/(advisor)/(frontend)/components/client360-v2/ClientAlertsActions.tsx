@@ -60,6 +60,14 @@ interface ClientAlertsActionsProps {
   onDismissAlert?: (id: string) => void
   showAllAlerts?: boolean
   className?: string
+  // Callbacks pour les actions rapides
+  clientId?: string
+  onNewRdv?: () => void
+  onAddNote?: () => void
+  onSendEmail?: () => void
+  onCall?: () => void
+  onSimulate?: () => void
+  onGenerateReport?: () => void
 }
 
 // =============================================================================
@@ -98,14 +106,67 @@ const severityConfig = {
   },
 }
 
-const defaultQuickActions: QuickAction[] = [
-  { id: 'rdv', label: 'Nouveau RDV', icon: Calendar, variant: 'default', shortcut: 'R', onClick: () => {} },
-  { id: 'note', label: 'Ajouter note', icon: FileEdit, variant: 'default', shortcut: 'N', onClick: () => {} },
-  { id: 'email', label: 'Envoyer email', icon: Mail, variant: 'default', shortcut: 'E', onClick: () => {} },
-  { id: 'appel', label: 'Appeler', icon: Phone, variant: 'default', onClick: () => {} },
-  { id: 'simulation', label: 'Simuler', icon: Calculator, variant: 'primary', shortcut: 'S', onClick: () => {} },
-  { id: 'rapport', label: 'Rapport', icon: Download, variant: 'default', onClick: () => {} },
-]
+// Fonction pour créer les actions rapides avec les callbacks
+function createQuickActions(callbacks: {
+  onNewRdv?: () => void
+  onAddNote?: () => void
+  onSendEmail?: () => void
+  onCall?: () => void
+  onSimulate?: () => void
+  onGenerateReport?: () => void
+}): QuickAction[] {
+  return [
+    { 
+      id: 'rdv', 
+      label: 'Nouveau RDV', 
+      icon: Calendar, 
+      variant: 'default', 
+      shortcut: 'R', 
+      onClick: callbacks.onNewRdv || (() => console.warn('Action "Nouveau RDV" non configurée')) 
+    },
+    { 
+      id: 'note', 
+      label: 'Ajouter note', 
+      icon: FileEdit, 
+      variant: 'default', 
+      shortcut: 'N', 
+      onClick: callbacks.onAddNote || (() => console.warn('Action "Ajouter note" non configurée')) 
+    },
+    { 
+      id: 'email', 
+      label: 'Envoyer email', 
+      icon: Mail, 
+      variant: 'default', 
+      shortcut: 'E', 
+      onClick: callbacks.onSendEmail || (() => console.warn('Action "Envoyer email" non configurée')) 
+    },
+    { 
+      id: 'appel', 
+      label: 'Appeler', 
+      icon: Phone, 
+      variant: 'default', 
+      onClick: callbacks.onCall || (() => console.warn('Action "Appeler" non configurée')) 
+    },
+    { 
+      id: 'simulation', 
+      label: 'Simuler', 
+      icon: Calculator, 
+      variant: 'primary', 
+      shortcut: 'S', 
+      onClick: callbacks.onSimulate || (() => console.warn('Action "Simuler" non configurée')) 
+    },
+    { 
+      id: 'rapport', 
+      label: 'Rapport', 
+      icon: Download, 
+      variant: 'default', 
+      onClick: callbacks.onGenerateReport || (() => console.warn('Action "Rapport" non configurée')) 
+    },
+  ]
+}
+
+// Actions par défaut (pour rétrocompatibilité)
+const defaultQuickActions: QuickAction[] = createQuickActions({})
 
 // =============================================================================
 // Composants internes
@@ -230,12 +291,29 @@ function QuickActionButton({ action }: { action: QuickAction }) {
 
 export function ClientAlertsActions({
   alerts,
-  quickActions = defaultQuickActions,
+  quickActions,
   onDismissAlert,
   showAllAlerts = false,
   className,
+  clientId,
+  onNewRdv,
+  onAddNote,
+  onSendEmail,
+  onCall,
+  onSimulate,
+  onGenerateReport,
 }: ClientAlertsActionsProps) {
   const [expanded, setExpanded] = useState(showAllAlerts)
+  
+  // Créer les actions avec les callbacks fournis ou utiliser les défauts
+  const effectiveQuickActions = quickActions || createQuickActions({
+    onNewRdv,
+    onAddNote,
+    onSendEmail,
+    onCall,
+    onSimulate,
+    onGenerateReport,
+  })
   
   // Trier les alertes par sévérité
   const sortedAlerts = [...alerts].sort((a, b) => {
@@ -247,7 +325,7 @@ export function ClientAlertsActions({
   const displayedAlerts = expanded ? sortedAlerts : sortedAlerts.slice(0, 3)
   const hasMoreAlerts = sortedAlerts.length > 3
 
-  if (alerts.length === 0 && quickActions.length === 0) {
+  if (alerts.length === 0 && effectiveQuickActions.length === 0) {
     return null
   }
 
@@ -298,15 +376,15 @@ export function ClientAlertsActions({
         )}
         
         {/* Séparateur */}
-        {alerts.length > 0 && quickActions.length > 0 && (
+        {alerts.length > 0 && effectiveQuickActions.length > 0 && (
           <div className="hidden lg:block w-px h-6 bg-gray-200" />
         )}
         
         {/* Actions rapides */}
-        {quickActions.length > 0 && (
+        {effectiveQuickActions.length > 0 && (
           <div className="flex items-center gap-1.5 shrink-0 overflow-x-auto scrollbar-hide">
             <Zap className="h-4 w-4 text-gray-400 shrink-0" />
-            {quickActions.map((action) => (
+            {effectiveQuickActions.map((action) => (
               <QuickActionButton key={action.id} action={action} />
             ))}
           </div>

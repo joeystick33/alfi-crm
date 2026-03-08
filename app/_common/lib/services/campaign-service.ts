@@ -571,11 +571,12 @@ export class CampaignService {
       },
     })
 
-    // TODO: Intégration provider email
-    // Pour chaque recipient, créer EmailMessage et envoyer via provider
-    // Pour l'instant, on simule l'envoi en marquant les destinataires comme envoyés
+    // ⚠️ SIMULATION: L'envoi d'emails n'est pas connecté à un provider réel (SendGrid, Mailjet, etc.)
+    // Les destinataires sont marqués comme envoyés mais aucun email n'est réellement transmis.
+    // Pour connecter un provider: implémenter EmailProvider interface + injecter ici.
+    // Ref audit S12: campagnes simulées — pas d'envoi réel.
 
-    // Marquer tous comme envoyés (simulation)
+    // Marquer tous comme envoyés (simulation — aucun email réellement envoyé)
     await this.prisma.campaignRecipient.updateMany({
       where: { campaignId: id },
       data: {

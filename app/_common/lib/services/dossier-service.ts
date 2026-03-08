@@ -1,5 +1,5 @@
  
-import { PrismaClient, DossierStatus, DossierType, DossierPriorite } from '@prisma/client'
+import { PrismaClient, DossierStatus, DossierType, DossierPriorite, DossierCategorie } from '@prisma/client'
 import { prisma } from '@/app/_common/lib/prisma'
 
 export interface CreateDossierInput {
@@ -7,7 +7,9 @@ export interface CreateDossierInput {
   conseillerId: string
   nom: string
   description?: string
+  categorie: DossierCategorie
   type: DossierType
+  status?: DossierStatus
   priorite?: DossierPriorite
   dateCloturePrevu?: Date
   montantEstime?: number
@@ -16,6 +18,7 @@ export interface CreateDossierInput {
   risques?: string
   recommandations?: string
   tags?: string[]
+  notes?: string
 }
 
 export interface UpdateDossierInput {
@@ -126,6 +129,7 @@ export class DossierService {
         reference,
         nom: input.nom,
         description: input.description,
+        categorie: input.categorie,
         type: input.type,
         priorite: input.priorite || 'NORMALE',
         clientId: input.clientId,
@@ -138,7 +142,8 @@ export class DossierService {
         risques: input.risques,
         recommandations: input.recommandations,
         tags: input.tags || [],
-        status: 'BROUILLON',
+        notes: input.notes,
+        status: input.status || 'BROUILLON',
         progressionPct: 0,
       },
       include: {
@@ -330,12 +335,24 @@ export class DossierService {
             status: true,
           },
         },
+        simulations: {
+          orderBy: { ordre: 'asc' },
+        },
+        preconisations: {
+          orderBy: { ordre: 'asc' },
+        },
+        documentsGeneres: {
+          orderBy: { createdAt: 'desc' },
+        },
         _count: {
           select: {
             projets: true,
             opportunites: true,
             taches: true,
             rendezvous: true,
+            simulations: true,
+            preconisations: true,
+            documentsGeneres: true,
           },
         },
       },

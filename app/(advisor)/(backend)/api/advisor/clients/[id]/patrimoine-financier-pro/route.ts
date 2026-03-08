@@ -10,7 +10,7 @@ import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
 import { z } from 'zod'
 import { TypePlacementPro } from '@prisma/client'
-
+import { logger } from '@/app/_common/lib/logger'
 const createSchema = z.object({
   type: z.nativeEnum(TypePlacementPro),
   libelle: z.string().min(1),
@@ -81,7 +81,7 @@ export async function GET(
       },
     })
   } catch (error: any) {
-    console.error('Error getting patrimoine financier pro:', error)
+    logger.error('Error getting patrimoine financier pro:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -140,7 +140,7 @@ export async function POST(
 
     return createSuccessResponse({ patrimoineFinancierPro: placement, message: 'Placement créé avec succès' }, 201)
   } catch (error: any) {
-    console.error('Error creating patrimoine financier pro:', error)
+    logger.error('Error creating patrimoine financier pro:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof z.ZodError) {
       return createErrorResponse('Validation error: ' + error.message, 400)

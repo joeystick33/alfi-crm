@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { DocumentTemplateService } from '@/app/_common/lib/services/document-template-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 const UpdateTemplateSchema = z.object({
   name: z.string().min(1).optional(),
   description: z.string().optional(),
@@ -43,7 +43,7 @@ export async function GET(
 
     return createSuccessResponse(template)
   } catch (error: any) {
-    console.error('Error in GET /api/advisor/documents/templates/[id]:', error)
+    logger.error('Error in GET /api/advisor/documents/templates/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -96,7 +96,7 @@ export async function PATCH(
 
     return createSuccessResponse(template)
   } catch (error: any) {
-    console.error('Error in PATCH /api/advisor/documents/templates/[id]:', error)
+    logger.error('Error in PATCH /api/advisor/documents/templates/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof z.ZodError) {
       const details = error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', ')
@@ -142,7 +142,7 @@ export async function DELETE(
 
     return createSuccessResponse({ success: true })
   } catch (error: any) {
-    console.error('Error in DELETE /api/advisor/documents/templates/[id]:', error)
+    logger.error('Error in DELETE /api/advisor/documents/templates/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

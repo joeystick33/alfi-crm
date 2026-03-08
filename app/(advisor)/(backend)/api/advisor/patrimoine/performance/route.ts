@@ -4,7 +4,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { PerformanceService } from '@/app/_common/lib/services/performance-service'
 import type { PerformanceFilters } from '@/app/_common/lib/api-types'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/patrimoine/performance
  * Récupère les métriques de performance patrimoniale consolidée
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse(performance)
   } catch (error: any) {
-    console.error('Erreur GET /api/advisor/patrimoine/performance:', error)
+    logger.error('Erreur GET /api/advisor/patrimoine/performance:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse(
       error.message || 'Erreur lors du calcul de la performance',
       error.status || 500

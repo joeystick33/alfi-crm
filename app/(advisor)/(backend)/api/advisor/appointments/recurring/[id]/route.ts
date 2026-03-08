@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { RendezVousService } from '@/app/_common/lib/services/rendez-vous-service'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * DELETE /api/advisor/appointments/recurring/[id]
  * Supprimer toute une série récurrente (parent + toutes instances modifiées)
@@ -44,7 +44,7 @@ export async function DELETE(
       deletedSeriesId: seriesId,
     })
   } catch (error) {
-    console.error('Error deleting recurrence series:', error)
+    logger.error('Error deleting recurrence series:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

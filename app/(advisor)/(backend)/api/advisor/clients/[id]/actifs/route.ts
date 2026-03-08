@@ -4,7 +4,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { ActifService } from '@/app/_common/lib/services/actif-service';
 import { isRegularUser } from '@/app/_common/lib/auth-types';
 import { z } from 'zod';
-
+import { logger } from '@/app/_common/lib/logger'
 // === MAPPING TYPES SIMPLIFIÉS → PRISMA ActifType (FR uniforme) ===
 // Migration 2024-12-10: Valeurs Prisma maintenant en FR
 const mapActifType = (type: string, category?: string): string => {
@@ -170,7 +170,7 @@ export async function GET(
             count: actifs.length,
         });
     } catch (error: any) {
-        console.error('Error fetching assets:', error);
+        logger.error('Error fetching assets:', { error: error instanceof Error ? error.message : String(error) });
         if (error instanceof Error && error.message === 'Unauthorized') {
             return createErrorResponse('Unauthorized', 401);
         }
@@ -272,10 +272,10 @@ export async function POST(
             message: 'Actif créé avec succès',
         }, 201);
     } catch (error: any) {
-        console.error('Error creating asset:', error);
+        logger.error('Error creating asset:', { error: error instanceof Error ? error.message : String(error) });
         if (error instanceof z.ZodError) {
             const issues = error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ');
-            console.error('Zod validation errors:', issues);
+            logger.error('Zod validation errors: ' + issues);
             return NextResponse.json(
                 { error: 'Données invalides', message: `Validation: ${issues}`, details: error.issues },
                 { status: 400 }

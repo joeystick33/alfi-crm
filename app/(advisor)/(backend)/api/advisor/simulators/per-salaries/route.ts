@@ -1,7 +1,7 @@
  
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * Simulateur PER Salariés
  * 
@@ -10,43 +10,41 @@ import { z } from 'zod'
  * - Barème IR 2025 (revenus 2024)
  * - Report des plafonds non utilisés sur 3 ans
  * 
- * ⚠️ MAINTENANCE : Paramètres dans /lib/retirement/config/parameters-2025.ts
+ * ⚠️ MAINTENANCE : Paramètres dans /lib/retirement/config/parameters.ts
  */
 
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
+
 // =============================================================================
-// PARAMÈTRES 2025 - CENTRALISÉS
+// PARAMÈTRES — Source : RULES (fiscal-rules.ts)
 // =============================================================================
 const PARAMS_2025 = {
-  // PASS
-  PASS: 47100,
-  PASS_N_MOINS_1: 46368,
+  // PASS — Source : RULES.retraite
+  PASS: RULES.retraite.pass,
+  PASS_N_MOINS_1: RULES.retraite.pass_n_moins_1,
   
-  // Plafonds PER
-  PLAFOND_MIN_PER: 4636.8,  // 10% du PASS N-1
-  PLAFOND_MAX_PER: 37094.4, // 10% de 8 PASS N-1
-  TAUX_DEDUCTION: 0.10,
+  // Plafonds PER — Source : RULES.per
+  PLAFOND_MIN_PER: RULES.per.plancher_salarie,
+  PLAFOND_MAX_PER: RULES.per.plafond_max_salarie,
+  TAUX_DEDUCTION: RULES.per.plafond_taux,
   
-  // Charges sociales salariés
-  TAUX_CHARGES_SALARIE: 0.23,
-  TAUX_FRAIS_PRO: 0.10,
-  PLAFOND_FRAIS_PRO: 14171,
+  // Charges sociales salariés — Source : RULES.social
+  TAUX_CHARGES_SALARIE: RULES.social.charges_salariales_moyen,
+  TAUX_FRAIS_PRO: RULES.ir.abattement_10pct_salaires.taux,
+  PLAFOND_FRAIS_PRO: RULES.ir.abattement_10pct_salaires.plafond,
   
-  // Barème IR 2025 (revenus 2024)
-  BAREME_IR: [
-    { min: 0, max: 11294, taux: 0.00 },
-    { min: 11294, max: 28797, taux: 0.11 },
-    { min: 28797, max: 82341, taux: 0.30 },
-    { min: 82341, max: 177106, taux: 0.41 },
-    { min: 177106, max: Infinity, taux: 0.45 },
-  ],
+  // Barème IR — Source : RULES.ir.bareme
+  BAREME_IR: RULES.ir.bareme,
   
-  // Prélèvements sociaux
-  PS_PLUS_VALUES: 0.172,
-  PFU: 0.30,
+  // Prélèvements sociaux — Source : RULES.ps
+  // PER bancaire : 18,6% (revenus financiers) | PER assurance : 17,2% (AV exclue)
+  PS_FINANCIER: RULES.ps.pfu_per_2026,
+  PS_FONCIER_AV: RULES.ps.total,
+  PFU: RULES.ps.pfu_ir + RULES.ps.pfu_per_2026,
   
-  // Rendements de référence
+  // Rendements de référence — Source : RULES.placements
   RENDEMENTS: {
-    prudent: 0.025,
+    prudent: RULES.placements.fonds_euros_moyen / 100,
     equilibre: 0.04,
     dynamique: 0.06,
   },
@@ -255,7 +253,7 @@ function calculerSortie(
     const renteBrute = (capital + plusValues) * tauxConversion
     const baseImposable = renteBrute * fractionImposable
     const impotRente = baseImposable * tmi
-    const ps = renteBrute * PARAMS_2025.PS_PLUS_VALUES
+    const ps = renteBrute * PARAMS_2025.PS_FINANCIER
     
     results.sortieRente = {
       mensuelle: Math.round(renteBrute / 12),
@@ -264,7 +262,7 @@ function calculerSortie(
       impotAnnuel: Math.round(impotRente),
       psAnnuel: Math.round(ps),
       netMensuel: Math.round((renteBrute - impotRente - ps) / 12),
-      detail: `${(fractionImposable * 100).toFixed(0)}% imposable (âge ${age} ans), PS ${(PARAMS_2025.PS_PLUS_VALUES * 100).toFixed(1)}%`
+      detail: `${(fractionImposable * 100).toFixed(0)}% imposable (âge ${age} ans), PS ${(PARAMS_2025.PS_FINANCIER * 100).toFixed(1)}%`
     }
   }
   
@@ -428,7 +426,7 @@ export async function POST(request: NextRequest) {
     })
     
   } catch (error: any) {
-    console.error('Error in PER simulation:', error)
+    logger.error('Error in PER simulation:', { error: error instanceof Error ? error.message : String(error) })
     if (error instanceof z.ZodError) {
       return NextResponse.json({ 
         success: false, 

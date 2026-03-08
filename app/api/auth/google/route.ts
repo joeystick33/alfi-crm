@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 import { prisma, setRLSContext } from "@/app/_common/lib/prisma";
 import { requireAuth } from "@/app/_common/lib/auth-helpers";
+import { createOAuthState } from "@/app/_common/lib/oauth-state";
 
 export async function GET(req: NextRequest) {
     try {
@@ -39,11 +40,17 @@ export async function GET(req: NextRequest) {
             'https://www.googleapis.com/auth/userinfo.email'
         ];
 
+        const state = createOAuthState({
+            userId: authUser.id,
+            provider: 'google',
+            type: 'calendar',
+        })
+
         const url = oauth2Client.generateAuthUrl({
             access_type: 'offline',
             scope: scopes,
             prompt: 'consent',
-            state: authUser.id // Pass user ID to callback to associate tokens
+            state,
         });
 
         return NextResponse.redirect(url);

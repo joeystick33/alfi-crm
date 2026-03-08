@@ -11,7 +11,7 @@ import { EmailList } from "./_components/EmailList";
 import { EmailDetail } from "./_components/EmailDetail";
 import { EmailCompose } from "./_components/EmailCompose";
 import { EmailSidebar } from "./_components/EmailSidebar";
-import { MailSyncModal } from "../agenda/_components/MailSyncModal";
+import { MailSyncModal } from "./_components/MailSyncModal";
 
 interface Email {
   id: string;

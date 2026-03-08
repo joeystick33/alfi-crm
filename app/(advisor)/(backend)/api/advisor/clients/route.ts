@@ -4,7 +4,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { ClientService } from '@/app/_common/lib/services/client-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { parseClientFilters } from './utils'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/clients
  * Liste les clients avec filtres
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse(clients)
   } catch (error: any) {
-    console.error('List clients error:', error)
+    logger.error('List clients error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     return createSuccessResponse(client, 201)
   } catch (error: any) {
-    console.error('Create client error:', error)
+    logger.error('Create client error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error) {
       if (error.message === 'Unauthorized') {

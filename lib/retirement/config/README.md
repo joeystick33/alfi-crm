@@ -12,7 +12,7 @@ Ce dossier centralise **tous les paramètres actuariels** qui changent chaque an
 
 ```
 /lib/retirement/config/
-├── parameters-2025.ts    ← FICHIER PRINCIPAL À METTRE À JOUR
+├── parameters.ts         ← FICHIER PRINCIPAL À METTRE À JOUR
 ├── README.md             ← Ce fichier
 └── (archives/            ← Optionnel : anciens fichiers pour historique)
 ```
@@ -33,7 +33,7 @@ Ce dossier centralise **tous les paramètres actuariels** qui changent chaque an
 
 ### Comment mettre à jour ?
 
-1. **Ouvrir** `/lib/retirement/config/parameters-2025.ts`
+1. **Ouvrir** `/lib/retirement/config/parameters.ts`
 2. **Modifier** les valeurs concernées
 3. **Mettre à jour** la date en haut du fichier
 4. **Tester** avec le simulateur

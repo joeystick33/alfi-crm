@@ -16,7 +16,7 @@ import {
 } from '../_shared/calculations'
 import { LMNP, PRELEVEMENTS_SOCIAUX } from '../_shared/constants'
 import { lmnpInputSchema, type LMNPInput } from '../_shared/validators'
-
+import { logger } from '@/app/_common/lib/logger'
 // ══════════════════════════════════════════════════════════════════════════════
 // SCHÉMA DE VALIDATION (Zod)
 // ══════════════════════════════════════════════════════════════════════════════
@@ -169,7 +169,7 @@ function simulerLMNP(input: LMNPInput) {
       // Abattement selon type de meublé (LF 2024)
       baseImposable = loyerActuel * (1 - microBICParams.abattement / 100)
       ir = baseImposable * (tmi / 100)
-      ps = baseImposable * PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL
+      ps = baseImposable * PRELEVEMENTS_SOCIAUX.FINANCIER.TAUX_GLOBAL
       resultatAvantAmort = baseImposable // Pour affichage
     } else {
       // ═══════════════════════════════════════════════════════════════════════════
@@ -227,7 +227,7 @@ function simulerLMNP(input: LMNPInput) {
       }
       
       ir = baseImposable * (tmi / 100)
-      ps = baseImposable * PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL
+      ps = baseImposable * PRELEVEMENTS_SOCIAUX.FINANCIER.TAUX_GLOBAL
       amortCumule += amortUtilise
     }
 
@@ -344,7 +344,7 @@ function simulerLMNP(input: LMNPInput) {
   
   const pvImposableIR = Math.max(0, plusValueBrute) * (1 - abattementIR / 100)
   const pvImposablePS = Math.max(0, plusValueBrute) * (1 - abattementPS / 100)
-  const impotPV = Math.round(pvImposableIR * 0.19 + pvImposablePS * 0.172)
+  const impotPV = Math.round(pvImposableIR * 0.19 + pvImposablePS * PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL)
   const fraisReventeEur = valeurRevente * (input.fraisRevente / 100)
   
   // Capital restant dû à la revente
@@ -400,7 +400,7 @@ function simulerLMNP(input: LMNPInput) {
 
   // Impôt PV détaillé
   const impotIR_PV = Math.round(pvImposableIR * 0.19)
-  const impotPS_PV = Math.round(pvImposablePS * 0.172)
+  const impotPS_PV = Math.round(pvImposablePS * PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL)
 
   return {
     success: true,
@@ -555,7 +555,7 @@ export async function POST(request: NextRequest) {
         400
       )
     }
-    console.error('Erreur simulateur LMNP:', error)
+    logger.error('Erreur simulateur LMNP:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la simulation', 500)
   }
 }

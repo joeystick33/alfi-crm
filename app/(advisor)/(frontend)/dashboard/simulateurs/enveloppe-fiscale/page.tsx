@@ -10,6 +10,7 @@ import { Label } from '@/app/_common/components/ui/Label'
 import { useToast } from '@/app/_common/hooks/use-toast'
 import { generatePDFContent, downloadReport } from '@/app/_common/lib/services/simulation-export-service'
 import { ArrowLeft, Percent, Calculator, FileDown, RefreshCw, Euro, CheckCircle } from 'lucide-react'
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
 
 export default function EnveloppeFiscalePage() {
   const { toast } = useToast()
@@ -38,9 +39,9 @@ export default function EnveloppeFiscalePage() {
         setResult(data.data)
       } else {
         // Calcul local
-        const plafondPER = Math.min(form.beneficeAnnuel * 0.10, 35194)
-        const plafondMadelin = Math.min(form.beneficeAnnuel * 0.10 + 15000, 85780)
-        const plafondAV = 4600 + (form.beneficeAnnuel > 100000 ? 4600 : 0)
+        const plafondPER = Math.min(form.beneficeAnnuel * RULES.per.plafond_taux, RULES.per.plafond_max_salarie)
+        const plafondMadelin = Math.min(form.beneficeAnnuel * RULES.per.tns.taux_base + RULES.per.tns.plafond_additionnel, RULES.per.tns.plafond_max)
+        const plafondAV = RULES.assurance_vie.rachat.abattement_celibataire_8ans + (form.beneficeAnnuel > 100000 ? RULES.assurance_vie.rachat.abattement_celibataire_8ans : 0)
         
         const utilisePER = Math.min(form.cotisationsPER, plafondPER)
         const utiliseMadelin = Math.min(form.cotisationsMadelin, plafondMadelin)

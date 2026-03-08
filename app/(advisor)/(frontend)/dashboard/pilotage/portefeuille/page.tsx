@@ -8,9 +8,10 @@
  * Permet au conseiller de piloter son activité patrimoniale
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
+import { useToast } from '@/app/_common/hooks/use-toast'
 import { cn } from '@/app/_common/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/_common/components/ui/Card'
 import { Button } from '@/app/_common/components/ui/Button'
@@ -544,10 +545,75 @@ export default function SuiviPortefeuillePage() {
     router.push(`/dashboard/clients/${clientId}`)
   }
 
-  const handleExport = () => {
-    // TODO: Implement export
-    alert('Export en cours de développement')
-  }
+  const { toast } = useToast()
+
+  const handleExport = useCallback(() => {
+    try {
+      toast({
+        title: 'Export en cours...',
+        description: 'Génération du rapport portefeuille.',
+      })
+
+      // Préparer les données pour l'export CSV
+      const csvLines: string[] = []
+      csvLines.push('Rapport Suivi Portefeuilles')
+      csvLines.push(`Période: ${period}`)
+      csvLines.push(`Date: ${new Date().toLocaleDateString('fr-FR')}`)
+      csvLines.push('')
+      
+      // KPIs
+      csvLines.push('=== INDICATEURS CLÉS ===')
+      csvLines.push(`Encours total (AUM): ${stats?.totalAUM || 0} €`)
+      csvLines.push(`Patrimoine net: ${stats?.netWorth || 0} €`)
+      csvLines.push(`Total actifs: ${stats?.totalActifs || 0} €`)
+      csvLines.push(`Total passifs: ${stats?.totalPassifs || 0} €`)
+      csvLines.push(`Nombre de clients: ${stats?.totalClients || 0}`)
+      csvLines.push(`Croissance YTD: ${stats?.growthYTD || 0}%`)
+      csvLines.push('')
+      
+      // Allocation
+      if (allocation && allocation.length > 0) {
+        csvLines.push('=== ALLOCATION D\'ACTIFS ===')
+        csvLines.push('Catégorie,Valeur,Pourcentage,Nombre')
+        allocation.forEach((a: AssetAllocation) => {
+          csvLines.push(`${a.category},${a.value},${a.percentage}%,${a.count}`)
+        })
+        csvLines.push('')
+      }
+      
+      // Top clients
+      if (topClients && topClients.length > 0) {
+        csvLines.push('=== TOP CLIENTS ===')
+        csvLines.push('Nom,Patrimoine,Croissance,Profil de risque')
+        topClients.forEach((c: TopClient) => {
+          csvLines.push(`${c.name},${c.patrimoine},${c.growth}%,${c.riskProfile}`)
+        })
+      }
+
+      // Télécharger le CSV
+      const csvContent = csvLines.join('\n')
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `portefeuille-${period}-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      toast({
+        title: 'Export réussi',
+        description: 'Le fichier CSV a été téléchargé.',
+      })
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de générer l\'export.',
+        variant: 'destructive',
+      })
+    }
+  }, [period, stats, allocation, topClients, toast])
 
   // Ne pas bloquer tout l'affichage - montrer ce qui est disponible
 

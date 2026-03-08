@@ -10,7 +10,8 @@
  */
 
 import { prisma } from '../prisma'
-import { calculerEndettement } from '@/app/(advisor)/(frontend)/dashboard/calculateurs/capacite-emprunt/parameters-emprunt-2025'
+import { calculerEndettement } from '@/app/(advisor)/(frontend)/dashboard/calculateurs/capacite-emprunt/parameters-emprunt'
+import { logger } from '../logger'
 
 // =============================================================================
 // Types
@@ -174,7 +175,7 @@ export class SynthesisService {
     const expenses = await prisma.expense.findMany({
       where: { clientId, cabinetId: this.cabinetId, isActive: true },
     })
-    console.log('[SynthesisService] Loaded revenues:', revenues.length, 'expenses:', expenses.length)
+    logger.debug('Loaded budget data', { module: 'SynthesisService', metadata: { revenues: revenues.length, expenses: expenses.length } } as any)
     
     const budget = await prisma.clientBudget.findUnique({
       where: { clientId },
@@ -352,7 +353,7 @@ export class SynthesisService {
     let chargesMensuellesHorsCredits = 0
     let loyerActuel = 0
     if (client.expenses && Array.isArray(client.expenses)) {
-      console.log('[SynthesisService] Expenses count:', client.expenses.length)
+      logger.debug('Processing expenses', { module: 'SynthesisService', metadata: { count: client.expenses.length } } as any)
       client.expenses.forEach((e: Record<string, any>) => {
         const montant = Number(e.montant ?? e.amount ?? 0)
         const freq = String(e.frequence ?? e.frequency ?? 'MENSUEL')
@@ -361,14 +362,14 @@ export class SynthesisService {
         
         // Identifier le loyer (catégories logement) - inclure aussi 'LOGEMENT' comme groupe
         const cat = String(e.categorie ?? e.category ?? '').toUpperCase()
-        console.log('[SynthesisService] Expense:', e.libelle, 'cat:', cat, 'montant:', montantMensuel)
+        logger.debug('Expense detail', { module: 'SynthesisService', metadata: { libelle: e.libelle, cat, montantMensuel } } as any)
         if (LOGEMENT_CATEGORIES.includes(cat) || cat === 'LOGEMENT') {
           loyerActuel += montantMensuel
         }
       })
-      console.log('[SynthesisService] Total loyer détecté:', loyerActuel)
+      logger.debug('Loyer total detected', { module: 'SynthesisService', metadata: { loyerActuel } } as any)
     } else {
-      console.log('[SynthesisService] PAS D\'EXPENSES - client.expenses:', client.expenses)
+      logger.debug('No expenses found for client', { module: 'SynthesisService' })
     }
     
     // Mensualités des crédits
@@ -399,12 +400,7 @@ export class SynthesisService {
     const capaciteEpargneMensuelle = revenusMensuels - chargesMensuelles
     const tauxEpargne = revenusMensuels > 0 ? (capaciteEpargneMensuelle / revenusMensuels) * 100 : 0
 
-    console.log('[SynthesisService] CALCUL ENDETTEMENT:', {
-      revenusMensuels,
-      mensualitesCredits,
-      loyerActuel,
-      chargesMensuellesHorsCredits,
-    })
+    logger.debug('Computing debt ratio', { module: 'SynthesisService', metadata: { revenusMensuels, mensualitesCredits, loyerActuel, chargesMensuellesHorsCredits } } as any)
     const endettement = calculerEndettement({
       revenusMensuels,
       mensualitesCreditsEnCours: mensualitesCredits,
@@ -413,7 +409,7 @@ export class SynthesisService {
       nbEnfants,
     })
     const tauxEndettement = endettement.tauxAvecLoyer
-    console.log('[SynthesisService] RESULTAT:', { tauxEndettement, tauxActuel: endettement.tauxActuel })
+    logger.debug('Debt ratio result', { module: 'SynthesisService', metadata: { tauxEndettement, tauxActuel: endettement.tauxActuel } } as any)
     const resteAVivre = revenusMensuels - chargesMensuelles
     
     return {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TaxCalculator } from '@/app/_common/lib/services/calculators/tax-calculator';
-
+import { logger } from '@/app/_common/lib/logger'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       data: result
     });
   } catch (error) {
-    console.error('Inheritance tax calculation error:', error);
+    logger.error('Inheritance tax calculation error:', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { 
         error: 'Failed to calculate inheritance tax',

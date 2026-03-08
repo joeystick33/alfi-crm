@@ -5,7 +5,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { ActifService } from '@/app/_common/lib/services/actif-service'
 import { ActifType, ActifCategory } from '@prisma/client'
-
+import { logger } from '@/app/_common/lib/logger'
 const updateActifSchema = z.object({
     name: z.string().min(1).optional(),
     type: z.nativeEnum(ActifType).optional(),
@@ -43,7 +43,7 @@ export async function GET(
 
         return createSuccessResponse(data)
     } catch (error: any) {
-        console.error('Error getting actif:', error)
+        logger.error('Error getting actif:', { error: error instanceof Error ? error.message : String(error) })
         if (error instanceof Error && error.message === 'Unauthorized') {
             return createErrorResponse('Unauthorized', 401)
         }
@@ -78,7 +78,7 @@ export async function PUT(
 
         return createSuccessResponse(data)
     } catch (error: any) {
-        console.error('Error updating actif:', error)
+        logger.error('Error updating actif:', { error: error instanceof Error ? error.message : String(error) })
         if (error instanceof z.ZodError) {
             return createErrorResponse('Validation error: ' + error.message, 400)
         }
@@ -107,7 +107,7 @@ export async function DELETE(
 
         return createSuccessResponse({ success: true })
     } catch (error: any) {
-        console.error('Error deleting actif:', error)
+        logger.error('Error deleting actif:', { error: error instanceof Error ? error.message : String(error) })
         if (error instanceof Error && error.message === 'Unauthorized') {
             return createErrorResponse('Unauthorized', 401)
         }

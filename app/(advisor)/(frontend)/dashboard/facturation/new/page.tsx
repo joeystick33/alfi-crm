@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/_common/components/ui/Card'
 import { Button } from '@/app/_common/components/ui/Button'
@@ -39,12 +39,11 @@ export default function NewInvoicePage() {
     notes: '',
   })
 
-  const [items, setItems] = useState<InvoiceItem[]>([])
+  const generateId = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
 
-  // Initialiser les items côté client uniquement pour éviter mismatch hydratation
-  useState(() => {
-    setItems([{ id: crypto.randomUUID(), description: '', quantity: 1, unitPrice: 0, tva: 20 }])
-  })
+  const [items, setItems] = useState<InvoiceItem[]>(() => [
+    { id: generateId(), description: '', quantity: 1, unitPrice: 0, tva: 20 }
+  ])
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -60,7 +59,7 @@ export default function NewInvoicePage() {
   }, [items])
 
   const handleAddItem = () => {
-    setItems([...items, { id: crypto.randomUUID(), description: '', quantity: 1, unitPrice: 0, tva: 20 }])
+    setItems([...items, { id: generateId(), description: '', quantity: 1, unitPrice: 0, tva: 20 }])
   }
 
   const handleRemoveItem = (id: string) => {
@@ -113,8 +112,6 @@ export default function NewInvoicePage() {
       notes: formData.notes || undefined,
       items: validItems,
     }
-
-    console.log('Payload sent:', payload)
 
     try {
       await createMutation.mutateAsync(payload)

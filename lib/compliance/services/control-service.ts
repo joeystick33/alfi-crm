@@ -12,6 +12,7 @@
  */
 
 import { prisma } from '@/app/_common/lib/prisma'
+import { KYCCheckStatus } from '@prisma/client'
 import {
   calculateRiskLevel,
   isControlOverdue,
@@ -132,6 +133,12 @@ export async function createControl(
  * 
  * @requirements 4.3 - WHEN completing a control, THE Control_Manager SHALL require: findings, risk score (0-100), risk level
  * @requirements 4.4 - THE Control_Manager SHALL calculate risk level automatically based on score
+ * @requirements 5.5 - WHEN the CGP completes a control, THE Result_Validator SHALL:
+ *   - Update the control status to completed
+ *   - Calculate and save the risk score and level
+ *   - Record findings in the database
+ *   - Create a timeline event
+ *   - Update any related alerts
  */
 export async function completeControl(
   input: CompleteControlInput
@@ -143,6 +150,16 @@ export async function completeControl(
     // Check if control exists
     const existingControl = await prisma.kYCCheck.findUnique({
       where: { id: validatedInput.controlId },
+      include: {
+        client: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
     })
 
     if (!existingControl) {
@@ -163,40 +180,120 @@ export async function completeControl(
     // Calculate risk level from score (requirement 4.4)
     const riskLevel = calculateRiskLevel(validatedInput.score)
 
-    // Update control
-    const control = await prisma.kYCCheck.update({
-      where: { id: validatedInput.controlId },
-      data: {
-        status: 'TERMINE',
-        findings: validatedInput.findings,
-        recommendations: validatedInput.recommendations ?? null,
-        score: validatedInput.score,
-        riskLevel,
-        completedAt: new Date(),
-        completedById: validatedInput.completedById,
-      },
-      include: {
-        client: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
+    // Use a transaction to ensure all operations succeed or fail together
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Update control
+      const control = await tx.kYCCheck.update({
+        where: { id: validatedInput.controlId },
+        data: {
+          status: 'TERMINE',
+          findings: validatedInput.findings,
+          recommendations: validatedInput.recommendations ?? null,
+          score: validatedInput.score,
+          riskLevel,
+          completedAt: new Date(),
+          completedById: validatedInput.completedById,
+        },
+        include: {
+          client: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+          completedBy: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
           },
         },
-        completedBy: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
+      })
+
+      // 2. Create audit log entry
+      await tx.auditLog.create({
+        data: {
+          cabinetId: existingControl.cabinetId,
+          userId: validatedInput.completedById,
+          action: 'MODIFICATION',
+          entityType: 'KYCCheck',
+          entityId: validatedInput.controlId,
+          changes: {
+            previousStatus: existingControl.status,
+            newStatus: 'TERMINE',
+            completedAt: new Date().toISOString(),
+            completedById: validatedInput.completedById,
+            findings: validatedInput.findings,
+            recommendations: validatedInput.recommendations,
+            score: validatedInput.score,
+            riskLevel,
           },
         },
-      },
+      })
+
+      // 3. Create timeline event
+      await tx.complianceTimelineEvent.create({
+        data: {
+          cabinetId: existingControl.cabinetId,
+          clientId: existingControl.clientId,
+          type: 'CONTROL_COMPLETED',
+          title: `Contrôle terminé: ${CONTROL_TYPE_LABELS[existingControl.type as ControlType] || existingControl.type}`,
+          description: `Le contrôle de type "${CONTROL_TYPE_LABELS[existingControl.type as ControlType] || existingControl.type}" a été terminé. Score: ${validatedInput.score}/100, Niveau de risque: ${RISK_LEVEL_LABELS[riskLevel as RiskLevel] || riskLevel}`,
+          metadata: {
+            controlId: validatedInput.controlId,
+            controlType: existingControl.type,
+            score: validatedInput.score,
+            riskLevel,
+            findings: validatedInput.findings,
+            recommendations: validatedInput.recommendations,
+          },
+          userId: validatedInput.completedById,
+        },
+      })
+
+      // 4. Update related alerts (resolve alerts related to this control)
+      // Find alerts that reference this control and resolve them
+      await tx.complianceAlert.updateMany({
+        where: {
+          cabinetId: existingControl.cabinetId,
+          clientId: existingControl.clientId,
+          type: 'CONTROL_OVERDUE',
+          resolved: false,
+          description: {
+            contains: validatedInput.controlId,
+          },
+        },
+        data: {
+          resolved: true,
+          resolvedAt: new Date(),
+        },
+      })
+
+      // 5. If risk level is HIGH or CRITICAL, create a new alert
+      if (riskLevel === 'HIGH' || riskLevel === 'CRITICAL') {
+        await tx.complianceAlert.create({
+          data: {
+            cabinetId: existingControl.cabinetId,
+            clientId: existingControl.clientId,
+            type: 'OPERATION_BLOCKED', // Using closest available type for high risk
+            severity: riskLevel === 'CRITICAL' ? 'CRITICAL' : 'HIGH',
+            title: `Niveau de risque élevé détecté: ${CONTROL_TYPE_LABELS[existingControl.type as ControlType] || existingControl.type}`,
+            description: `Le contrôle "${CONTROL_TYPE_LABELS[existingControl.type as ControlType] || existingControl.type}" a révélé un niveau de risque ${RISK_LEVEL_LABELS[riskLevel as RiskLevel] || riskLevel}. Score: ${validatedInput.score}/100. Contrôle ID: ${validatedInput.controlId}`,
+            actionRequired: 'Examiner les conclusions du contrôle et prendre les mesures appropriées',
+            actionUrl: `/dashboard/conformite/controles/${validatedInput.controlId}`,
+          },
+        })
+      }
+
+      return control
     })
 
     return {
       success: true,
-      data: control as unknown as ComplianceControlWithRelations,
+      data: result as unknown as ComplianceControlWithRelations,
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erreur lors de la complétion du contrôle'
@@ -383,11 +480,11 @@ export async function updateOverdueControls(
     const result = await prisma.kYCCheck.updateMany({
       where: {
         cabinetId,
-        status: { in: ['EN_ATTENTE', 'EN_COURS'] },
+        status: { in: ['EN_ATTENTE', 'EN_COURS'] as KYCCheckStatus[] },
         dueDate: { lt: now },
       },
       data: {
-        status: 'EN_RETARD',
+        status: 'EN_RETARD' as KYCCheckStatus,
       },
     })
 
@@ -416,7 +513,7 @@ export async function getOverdueControls(
     const controls = await prisma.kYCCheck.findMany({
       where: {
         cabinetId,
-        status: { in: ['EN_ATTENTE', 'EN_COURS', 'EN_RETARD'] },
+        status: { in: ['EN_ATTENTE', 'EN_COURS', 'EN_RETARD'] as KYCCheckStatus[] },
         dueDate: { lt: now },
       },
       include: {

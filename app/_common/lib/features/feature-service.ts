@@ -82,8 +82,8 @@ export class FeatureService {
       }
     }
     
-    // Récupérer les features du cabinet
-    const features = this.parseFeatures(cabinet.features)
+    // Récupérer les features du cabinet (defaults du plan + overrides éventuels)
+    const features = this.parseFeatures(cabinet.features, cabinet.plan as SubscriptionPlan)
     
     // Déterminer la catégorie de la feature
     const featureDef = getFeatureByCode(featureCode)
@@ -138,7 +138,7 @@ export class FeatureService {
       return getDefaultFeaturesForPlan(cabinet.plan as SubscriptionPlan)
     }
     
-    return this.parseFeatures(cabinet.features)
+    return this.parseFeatures(cabinet.features, cabinet.plan as SubscriptionPlan)
   }
   
   /**
@@ -319,24 +319,26 @@ export class FeatureService {
   /**
    * Parse les features depuis le JSON stocké en base
    */
-  private parseFeatures(featuresJson: unknown): CabinetFeatures {
+  private parseFeatures(featuresJson: unknown, plan?: SubscriptionPlan): CabinetFeatures {
+    const base = plan ? getDefaultFeaturesForPlan(plan) : createEmptyFeatures()
+
     if (!featuresJson) {
-      return createEmptyFeatures()
+      return base
     }
     
     try {
       const parsed = typeof featuresJson === 'string' 
         ? JSON.parse(featuresJson) 
         : featuresJson
-      
+
       return {
-        simulators: parsed.simulators || {},
-        calculators: parsed.calculators || {},
-        modules: parsed.modules || {},
-        customLimits: parsed.customLimits,
+        simulators: { ...base.simulators, ...(parsed?.simulators || {}) },
+        calculators: { ...base.calculators, ...(parsed?.calculators || {}) },
+        modules: { ...base.modules, ...(parsed?.modules || {}) },
+        customLimits: parsed?.customLimits || base.customLimits,
       }
     } catch {
-      return createEmptyFeatures()
+      return base
     }
   }
   

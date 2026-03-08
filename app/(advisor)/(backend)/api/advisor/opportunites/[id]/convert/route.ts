@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse, checkPermission } from '@/app/_common/lib/auth-helpers'
 import { OpportuniteService } from '@/app/_common/lib/services/opportunite-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * POST /api/opportunites/[id]/convert
  * Convert an opportunité to a projet
@@ -46,7 +46,7 @@ export async function POST(
     // Return formatted response
     return createSuccessResponse(opportunite)
   } catch (error) {
-    console.error('Error in POST /api/opportunites/[id]/convert:', error)
+    logger.error('Error in POST /api/opportunites/[id]/convert:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

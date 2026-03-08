@@ -3,9 +3,13 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import Script from 'next/script'
 import { SimulatorGate } from '@/app/_common/components/FeatureGate'
 import { usePlotlyReady } from '../_hooks/usePlotlyReady'
+import {
+  Briefcase, AlertTriangle, BookOpen, User, Lightbulb, Calendar,
+  CreditCard, Wallet, BarChart3, FileText, CheckCircle, XCircle,
+  Building2, TrendingUp, Target, RefreshCw, Scale, Calculator,
+} from 'lucide-react'
 
 // ══════════════════════════════════════════════════════════════════════════════
 // CONSTANTES D'AFFICHAGE UNIQUEMENT (calculs côté serveur)
@@ -323,8 +327,8 @@ export default function LMPPage() {
 
       setAlertes(result.alertes || [])
       setConseils([
-        `💼 Statut ${result.statutLMP?.estLMP ? 'LMP' : 'LMNP'} confirmé.`,
-        `⚠️ LMP : la plus-value est professionnelle avec réintégration des amortissements.`,
+        `Statut ${result.statutLMP?.estLMP ? 'LMP' : 'LMNP'} confirmé.`,
+        `LMP : la plus-value est professionnelle avec réintégration des amortissements.`,
       ])
       setExplications([
         `═══ CALCUL LMP - SYNTHÈSE ═══`,
@@ -398,13 +402,12 @@ export default function LMPPage() {
 
   return (
     <SimulatorGate simulator="IMMOBILIER" showTeaser>
-      <Script src="https://cdn.plot.ly/plotly-2.27.0.min.js" strategy="afterInteractive" onLoad={handlePlotlyLoad} />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-sky-50">
         <main className="container mx-auto px-4 py-6 max-w-6xl">
           <Link href="/dashboard/simulateurs/immobilier" className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-flex items-center">← Simulateurs immobilier</Link>
           <div className="sim-card mb-6">
               <div className="flex items-center gap-4">
-                <span className="text-4xl">💼</span>
+                <Briefcase className="w-9 h-9 text-blue-700" />
                 <div>
                   <h1 className="text-2xl font-bold">Simulateur LMP</h1>
                   <p className="text-gray-600">Loueur Meublé Professionnel • Régime des indépendants</p>
@@ -416,7 +419,7 @@ export default function LMPPage() {
                 <span className="badge-green">Exo PV 5 ans</span>
               </div>
               <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h3 className="font-semibold text-blue-800 mb-2">📚 Qu'est-ce que le LMP ?</h3>
+                <h3 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><BookOpen className="w-4 h-4" /> Qu'est-ce que le LMP ?</h3>
                 <p className="text-sm text-blue-700">Le statut de <strong>Loueur Meublé Professionnel</strong> s'applique automatiquement si vos recettes locatives meublées dépassent 23 000 €/an ET représentent plus de 50% de vos revenus professionnels. Ce statut vous fait basculer dans le régime des travailleurs indépendants avec des cotisations SSI (35-45% progressif, min. 1 208 €/an), mais offre des avantages fiscaux significatifs : déficit imputable sur le revenu global sans limite et exonération de plus-value après 5 ans d'activité.</p>
               </div>
             </div>
@@ -427,7 +430,7 @@ export default function LMPPage() {
 
               {/* ÉTAPE 1 : PROFIL CLIENT COMPLET */}
               {step === 1 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">👤 Profil client</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><User className="w-5 h-5" /> Profil client</h2>
                 <p className="text-gray-600 mb-4">Pour calculer l'impact fiscal réel (IR, IFI, cotisations SSI), nous avons besoin de votre situation actuelle.</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="form-group"><label>Situation familiale</label><select value={situationFamiliale} onChange={e=>setSituationFamiliale(e.target.value as SituationFamiliale)}><option value="CELIBATAIRE">Célibataire</option><option value="MARIE_PACSE">Marié / Pacsé</option><option value="VEUF">Veuf</option></select></div>
@@ -444,7 +447,7 @@ export default function LMPPage() {
                   <div><span className="text-gray-500">Patrimoine net IFI</span><div className={`font-bold text-lg ${(patrimoineImmobilierExistant - dettesImmobilieres) > 1300000 ? 'text-orange-600' : 'text-green-600'}`}>{fmtEur(patrimoineImmobilierExistant - dettesImmobilieres)}</div></div>
                 </div>
                 <div className="pedagogy-box mt-4">
-                  <h4 className="font-semibold text-blue-800 mb-2">💡 Pourquoi ces informations sont cruciales ?</h4>
+                  <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><Lightbulb className="w-4 h-4" /> Pourquoi ces informations sont cruciales ?</h4>
                   <div className="text-sm text-blue-700 space-y-2">
                     <p>• <strong>Revenus d'activité</strong> : En LMP, vos recettes locatives doivent DÉPASSER vos autres revenus d'activité (salaires, BIC, BNC). C'est une condition cumulative avec le seuil de 23 000 €.</p>
                     <p>• <strong>Impact IR</strong> : Le bénéfice BIC après déduction des cotisations SSI sera imposé à votre TMI. Les cotisations SSI sont partiellement déductibles.</p>
@@ -455,15 +458,15 @@ export default function LMPPage() {
 
               {/* ÉTAPE 2 : BIEN DÉTAILLÉ */}
               {step === 2 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">💼 Bien meublé professionnel</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Briefcase className="w-5 h-5" /> Bien meublé professionnel</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="form-group col-span-2 md:col-span-1"><label>📅 Date d'acquisition</label><input type="date" value={dateAcquisition} onChange={e=>setDateAcquisition(e.target.value)} className="w-full"/><span className="form-hint">Pour calcul PV</span></div>
+                  <div className="form-group col-span-2 md:col-span-1"><label className="flex items-center gap-1"><Calendar className="w-3 h-3" /> Date d'acquisition</label><input type="date" value={dateAcquisition} onChange={e=>setDateAcquisition(e.target.value)} className="w-full"/><span className="form-hint">Pour calcul PV</span></div>
                   <div className="form-group"><label>Prix d'achat (€)</label><input type="number" value={prixAchat} onChange={e=>setPrixAchat(+e.target.value)}/></div>
                   <div className="form-group"><label>Frais notaire (€)</label><input type="number" value={fraisNotaire} onChange={e=>setFraisNotaire(+e.target.value)}/><span className="form-hint">~8% ancien</span></div>
                   <div className="form-group"><label>Travaux (€)</label><input type="number" value={travaux} onChange={e=>setTravaux(+e.target.value)}/></div>
                   <div className="form-group"><label>Mobilier (€)</label><input type="number" value={mobilier} onChange={e=>setMobilier(+e.target.value)}/><span className="form-hint">Amort. 5-10 ans</span></div>
                   <div className="form-group"><label>Part terrain (%)</label><input type="number" value={partTerrain} onChange={e=>setPartTerrain(+e.target.value)} min={5} max={40}/><span className="form-hint">Non amortissable</span></div>
-                  <div className="form-group"><label>DPE</label><select value={dpe} onChange={e=>setDpe(e.target.value as ClasseDPE)}><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F⚠️</option><option value="G">G🚨</option></select></div>
+                  <div className="form-group"><label>DPE</label><select value={dpe} onChange={e=>setDpe(e.target.value as ClasseDPE)}><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F (passoire)</option><option value="G">G (passoire)</option></select></div>
                 </div>
                 <div className="info-box mt-4 grid grid-cols-4 gap-4 text-sm">
                   <div><span className="text-gray-500">Investissement total</span><div className="font-bold text-lg">{fmtEur(investTotal)}</div></div>
@@ -472,7 +475,7 @@ export default function LMPPage() {
                   <div><span className="text-gray-500">Exonération PV LMP</span><div className="font-bold text-emerald-600">{anneeExonerationPV}</div></div>
                 </div>
                 <div className="pedagogy-box mt-4">
-                  <h4 className="font-semibold text-blue-800 mb-2">📚 L'amortissement en LMP : un levier fiscal majeur</h4>
+                  <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><BookOpen className="w-4 h-4" /> L'amortissement en LMP : un levier fiscal majeur</h4>
                   <div className="text-sm text-blue-700 space-y-2">
                     <p>• <strong>Principe</strong> : L'amortissement permet de déduire comptablement la perte de valeur théorique du bien. C'est une charge non décaissée qui réduit votre bénéfice imposable.</p>
                     <p>• <strong>Base amortissable</strong> : Prix d'achat + travaux, HORS terrain (le terrain ne perd pas de valeur). Ici, {fmtPct(partTerrain)} du prix est non amortissable.</p>
@@ -483,7 +486,7 @@ export default function LMPPage() {
 
               {/* ÉTAPE 3 : FINANCEMENT DÉTAILLÉ */}
               {step === 3 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">💳 Financement</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><CreditCard className="w-5 h-5" /> Financement</h2>
                 
                 {/* Option achat comptant */}
                 <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6">
@@ -500,7 +503,7 @@ export default function LMPPage() {
                       className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                     />
                     <div>
-                      <span className="font-semibold text-slate-800">💵 Achat au comptant (sans financement)</span>
+                      <span className="font-semibold text-slate-800 flex items-center gap-2"><Wallet className="w-4 h-4" /> Achat au comptant (sans financement)</span>
                       <p className="text-sm text-slate-500">Cochez cette case si le client ne passe pas par un crédit immobilier</p>
                     </div>
                   </label>
@@ -508,7 +511,7 @@ export default function LMPPage() {
                 
                 {sansFinancement ? (
                   <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6 text-center">
-                    <div className="text-4xl mb-3">💰</div>
+                    <Wallet className="w-9 h-9 text-emerald-600 mb-3" />
                     <h3 className="font-bold text-emerald-800 text-lg mb-2">Achat au comptant</h3>
                     <p className="text-emerald-700">Investissement total : <strong className="text-xl">{fmtEur(investTotal)}</strong></p>
                     <p className="text-sm text-emerald-600 mt-2">Pas de crédit, pas d'intérêts, pas de mensualités. Cash-flow simplifié.</p>
@@ -523,7 +526,7 @@ export default function LMPPage() {
                       <div className="form-group"><label>Type de garantie</label><select value={typeGarantie} onChange={e=>setTypeGarantie(e.target.value as any)}><option value="CAUTION">Caution (~1.2%)</option><option value="HYPOTHEQUE">Hypothèque (~2%)</option></select></div>
                     </div>
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-                      <h3 className="font-semibold text-blue-800 mb-3">📊 SYNTHÈSE DU CRÉDIT</h3>
+                      <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> SYNTHÈSE DU CRÉDIT</h3>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div className="bg-white p-3 rounded-lg"><div className="text-gray-500 text-xs">Montant emprunté</div><div className="font-bold text-lg">{fmtEur(montantEmprunte)}</div></div>
                         <div className="bg-white p-3 rounded-lg"><div className="text-gray-500 text-xs">Mensualité totale</div><div className="font-bold text-lg text-blue-600">{fmtEur(Math.round(mensualite))}</div><div className="text-xs text-gray-400">{fmtEur(Math.round(mensHorsAss))} + {fmtEur(Math.round(assMens))} ass.</div></div>
@@ -537,7 +540,7 @@ export default function LMPPage() {
                       </div>
                     </div>
                     <div className="pedagogy-box mt-4">
-                      <h4 className="font-semibold text-blue-800 mb-2">💡 L'effet de levier en LMP</h4>
+                      <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><Lightbulb className="w-4 h-4" /> L'effet de levier en LMP</h4>
                       <div className="text-sm text-blue-700 space-y-2">
                         <p>• <strong>LTV {fmtPct(montantEmprunte/investTotal*100)}</strong> : {montantEmprunte/investTotal > 0.9 ? 'Levier maximal. Les intérêts d\'emprunt sont déductibles du bénéfice BIC, ce qui optimise la fiscalité.' : montantEmprunte/investTotal > 0.7 ? 'Bon équilibre entre effet de levier et sécurité.' : 'Apport confortable, moins d\'intérêts déductibles mais risque maîtrisé.'}</p>
                         <p>• <strong>Intérêts déductibles</strong> : En LMP, les intérêts d'emprunt ({fmtEur(Math.round(interetsTotaux))} sur {dureeCredit} ans) sont intégralement déductibles du résultat BIC, réduisant d'autant les cotisations SSI et l'IR.</p>
@@ -550,7 +553,7 @@ export default function LMPPage() {
 
               {/* ÉTAPE 4 : REVENUS LOCATIFS */}
               {step === 4 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">💰 Revenus locatifs</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Wallet className="w-5 h-5" /> Revenus locatifs</h2>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="form-group"><label>Loyer mensuel (€)</label><input type="number" value={loyerMensuel} onChange={e=>setLoyerMensuel(+e.target.value)}/></div>
                   <div className="form-group"><label>Vacance locative (sem./an)</label><input type="number" value={vacanceSemaines} onChange={e=>setVacanceSemaines(+e.target.value)} min={0} max={52}/></div>
@@ -559,16 +562,16 @@ export default function LMPPage() {
                 <div className="info-box mt-4 grid grid-cols-3 gap-4 text-sm">
                   <div><span className="text-gray-500">Recettes annuelles</span><div className="font-bold text-lg text-green-600">{fmtEur(Math.round(loyerAnnuel))}</div></div>
                   <div><span className="text-gray-500">Rendement brut</span><div className="font-bold text-lg">{fmtPct(loyerMensuel*12/prixAchat*100)}</div></div>
-                  <div><span className="text-gray-500">Statut prévu</span><div className={`font-bold text-lg ${isLMP ? 'text-orange-600' : 'text-blue-600'}`}>{isLMP ? '💼 LMP' : '🛋️ LMNP'}</div></div>
+                  <div><span className="text-gray-500">Statut prévu</span><div className={`font-bold text-lg ${isLMP ? 'text-orange-600' : 'text-blue-600'}`}>{isLMP ? 'LMP' : 'LMNP'}</div></div>
                 </div>
                 <div className="pedagogy-box mt-4">
-                  <h4 className="font-semibold text-blue-800 mb-2">📋 Vérification conditions LMP (art. 155-IV CGI)</h4>
+                  <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><FileText className="w-4 h-4" /> Vérification conditions LMP (art. 155-IV CGI)</h4>
                   <div className="text-sm text-blue-700 space-y-3">
                     <p className="mb-3">Le statut LMP s'applique <strong>automatiquement</strong> si les deux conditions suivantes sont réunies :</p>
                     <div className="grid grid-cols-2 gap-4">
                       <div className={`p-3 rounded-lg ${loyerAnnuel > 23000 ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border border-red-200'}`}>
                         <div className="flex items-center gap-2 mb-1">
-                          {loyerAnnuel > 23000 ? <span className="text-emerald-600 text-xl">✅</span> : <span className="text-red-500 text-xl">❌</span>}
+                          {loyerAnnuel > 23000 ? <CheckCircle className="w-5 h-5 text-emerald-600" /> : <XCircle className="w-5 h-5 text-red-500" />}
                           <strong>Condition 1 : Seuil de recettes</strong>
                         </div>
                         <p>Recettes locatives meublées {">"} 23 000 €/an</p>
@@ -576,7 +579,7 @@ export default function LMPPage() {
                       </div>
                       <div className={`p-3 rounded-lg ${loyerAnnuel > revenusTotauxPro ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border border-red-200'}`}>
                         <div className="flex items-center gap-2 mb-1">
-                          {loyerAnnuel > revenusTotauxPro ? <span className="text-emerald-600 text-xl">✅</span> : <span className="text-red-500 text-xl">❌</span>}
+                          {loyerAnnuel > revenusTotauxPro ? <CheckCircle className="w-5 h-5 text-emerald-600" /> : <XCircle className="w-5 h-5 text-red-500" />}
                           <strong>Condition 2 : Revenus d'activité</strong>
                         </div>
                         <p>Recettes {">"} autres revenus d'activité du foyer</p>
@@ -584,7 +587,7 @@ export default function LMPPage() {
                       </div>
                     </div>
                     <div className={`mt-3 p-3 rounded-lg ${isLMP ? 'bg-blue-100 border border-blue-300' : 'bg-indigo-100 border border-indigo-300'}`}>
-                      <strong className={isLMP ? 'text-blue-800' : 'text-indigo-800'}>→ Statut applicable : {isLMP ? '💼 LMP - Affilié SSI avec cotisations 35-45% du bénéfice net (min. 1 208 €/an)' : '🛋️ LMNP - Pas de cotisations sociales sur les revenus locatifs'}</strong>
+                      <strong className={isLMP ? 'text-blue-800' : 'text-indigo-800'}>→ Statut applicable : {isLMP ? 'LMP - Affilié SSI avec cotisations 35-45% du bénéfice net (min. 1 208 €/an)' : 'LMNP - Pas de cotisations sociales sur les revenus locatifs'}</strong>
                     </div>
                   </div>
                 </div>
@@ -592,9 +595,9 @@ export default function LMPPage() {
 
               {/* ÉTAPE 5 : CHARGES DÉTAILLÉES */}
               {step === 5 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">📋 Charges détaillées</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><FileText className="w-5 h-5" /> Charges détaillées</h2>
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                  <h3 className="font-semibold text-green-800 mb-3">💚 CHARGES COURANTES ANNUELLES</h3>
+                  <h3 className="font-semibold text-green-800 mb-3">CHARGES COURANTES ANNUELLES</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="form-group"><label>Frais gestion (%)</label><input type="number" value={fraisGestionPct} onChange={e=>setFraisGestionPct(+e.target.value)} step={0.5} min={0} max={15}/><span className="form-hint">Si gestion déléguée</span></div>
                     <div className="form-group"><label>Taxe foncière (€)</label><input type="number" value={taxeFonciere} onChange={e=>setTaxeFonciere(+e.target.value)}/></div>
@@ -613,13 +616,13 @@ export default function LMPPage() {
 
               {/* ÉTAPE 6 : FISCALITÉ ET REPORTS */}
               {step === 6 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">🏛️ Reports et déficits</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Building2 className="w-5 h-5" /> Reports et déficits</h2>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="form-group"><label>Déficit BIC antérieur (€)</label><input type="number" value={deficitAnterieur} onChange={e=>setDeficitAnterieur(+e.target.value)}/><span className="form-hint">Report 10 ans</span></div>
                   <div className="form-group"><label>Amort. différé antérieur (€)</label><input type="number" value={amortDiffereAnt} onChange={e=>setAmortDiffereAnt(+e.target.value)}/><span className="form-hint">Sans limite</span></div>
                 </div>
                 <div className="pedagogy-box mt-4">
-                  <h4 className="font-semibold text-blue-800 mb-2">📚 Comprendre le mécanisme fiscal du LMP</h4>
+                  <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><BookOpen className="w-4 h-4" /> Comprendre le mécanisme fiscal du LMP</h4>
                   <div className="text-sm text-blue-700 space-y-3">
                     <p><strong>Le déficit BIC en LMP</strong> : Contrairement au LMNP où le déficit reste cantonné aux BIC, le LMP permet d'imputer le déficit sur le <strong>revenu global sans limitation</strong>. C'est un avantage considérable les premières années (charges + amortissement élevés).</p>
                     <p><strong>L'amortissement différé</strong> : Si vos charges (hors amortissement) excèdent vos loyers, l'amortissement est "mis en réserve" indéfiniment. Il pourra être utilisé les années suivantes pour annuler le bénéfice imposable.</p>
@@ -627,7 +630,7 @@ export default function LMPPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-emerald-800 mb-2">✅ Avantages du LMP</h4>
+                    <h4 className="font-semibold text-emerald-800 mb-2 flex items-center gap-2"><CheckCircle className="w-4 h-4" /> Avantages du LMP</h4>
                     <ul className="text-sm text-emerald-700 space-y-2">
                       <li>• <strong>Déficit sur RG</strong> : Imputation sans limite de montant ni de durée sur vos autres revenus</li>
                       <li>• <strong>Exonération PV totale</strong> : Si activité {">"} 5 ans ET CA {"<"} 90 000 € (art. 151 septies CGI)</li>
@@ -636,7 +639,7 @@ export default function LMPPage() {
                     </ul>
                   </div>
                   <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-red-800 mb-2">❌ Inconvénients du LMP</h4>
+                    <h4 className="font-semibold text-red-800 mb-2 flex items-center gap-2"><XCircle className="w-4 h-4" /> Inconvénients du LMP</h4>
                     <ul className="text-sm text-red-700 space-y-2">
                       <li>• <strong>Cotisations SSI 35-45%</strong> : Taux progressif sur le bénéfice net (maladie, retraite, allocations, CSG/CRDS)</li>
                       <li>• <strong>Plus-value professionnelle</strong> : Réintégration des amortissements en CT si pas d'exonération</li>
@@ -649,30 +652,30 @@ export default function LMPPage() {
 
               {/* ÉTAPE 7 : PROJECTION */}
               {step === 7 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">📈 Projection & Revente</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><TrendingUp className="w-5 h-5" /> Projection & Revente</h2>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="form-group"><label>Durée de détention (ans)</label><input type="number" value={dureeDetention} onChange={e=>setDureeDetention(+e.target.value)} min={1} max={40}/></div>
                   <div className="form-group"><label>Revalorisation bien (%/an)</label><input type="number" value={revalorisationBien} onChange={e=>setRevalorisationBien(+e.target.value)} step={0.1}/></div>
                   <div className="form-group"><label>Frais de revente (%)</label><input type="number" value={fraisRevente} onChange={e=>setFraisRevente(+e.target.value)} step={0.5}/></div>
                 </div>
                 <div className="pedagogy-box mt-4">
-                  <h4 className="font-semibold text-blue-800 mb-3">📚 La plus-value en LMP : un régime professionnel avantageux</h4>
+                  <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2"><BookOpen className="w-4 h-4" /> La plus-value en LMP : un régime professionnel avantageux</h4>
                   <div className="text-sm text-blue-700 space-y-3">
                     <p>En LMP, la plus-value relève du <strong>régime des plus-values professionnelles</strong> (et non des plus-values immobilières des particuliers). C'est un point crucial car les règles d'exonération sont très différentes.</p>
                     
                     <div className="bg-white/70 rounded-lg p-4 mt-3">
-                      <h5 className="font-semibold text-blue-800 mb-2">🎯 Conditions d'exonération (art. 151 septies CGI)</h5>
+                      <h5 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><Target className="w-4 h-4" /> Conditions d'exonération (art. 151 septies CGI)</h5>
                       <div className="space-y-2">
                         <div className="flex items-start gap-3">
-                          <span className="text-emerald-500 text-lg">✅</span>
+                          <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
                           <div><strong>Exonération TOTALE</strong> : Activité exercée depuis {">"} 5 ans ET chiffre d'affaires {"<"} 90 000 € sur les 2 dernières années</div>
                         </div>
                         <div className="flex items-start gap-3">
-                          <span className="text-amber-500 text-lg">⚠️</span>
+                          <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
                           <div><strong>Exonération PARTIELLE</strong> : CA entre 90 000 € et 126 000 € (prorata linéaire)</div>
                         </div>
                         <div className="flex items-start gap-3">
-                          <span className="text-red-500 text-lg">❌</span>
+                          <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
                           <div><strong>PAS d'exonération</strong> : CA {">"} 126 000 € → PV professionnelle avec réintégration des amortissements en court terme (imposée au TMI)</div>
                         </div>
                       </div>
@@ -681,13 +684,13 @@ export default function LMPPage() {
                     <div className="grid grid-cols-2 gap-4 mt-4">
                       <div className={`p-3 rounded-lg ${dureeDetention >= 5 ? 'bg-emerald-50 border border-emerald-200' : 'bg-amber-50 border border-amber-200'}`}>
                         <div className="text-xs text-gray-500">Durée d'activité prévue</div>
-                        <div className={`font-bold text-lg ${dureeDetention >= 5 ? 'text-emerald-600' : 'text-amber-600'}`}>{dureeDetention} ans {dureeDetention >= 5 ? '✅ > 5 ans' : '⚠️ < 5 ans'}</div>
+                        <div className={`font-bold text-lg ${dureeDetention >= 5 ? 'text-emerald-600' : 'text-amber-600'}`}>{dureeDetention} ans {dureeDetention >= 5 ? '> 5 ans' : '< 5 ans'}</div>
                         <div className="text-xs">Exonération possible à partir de {anneeExonerationPV}</div>
                       </div>
                       <div className={`p-3 rounded-lg ${loyerAnnuel < 90000 ? 'bg-emerald-50 border border-emerald-200' : loyerAnnuel < 126000 ? 'bg-amber-50 border border-amber-200' : 'bg-red-50 border border-red-200'}`}>
                         <div className="text-xs text-gray-500">Chiffre d'affaires annuel</div>
                         <div className={`font-bold text-lg ${loyerAnnuel < 90000 ? 'text-emerald-600' : loyerAnnuel < 126000 ? 'text-amber-600' : 'text-red-600'}`}>{fmtEur(Math.round(loyerAnnuel))}</div>
-                        <div className="text-xs">{loyerAnnuel < 90000 ? '✅ Exonération totale possible' : loyerAnnuel < 126000 ? '⚠️ Exonération partielle' : '❌ Pas d\'exonération'}</div>
+                        <div className="text-xs">{loyerAnnuel < 90000 ? 'Exonération totale possible' : loyerAnnuel < 126000 ? 'Exonération partielle' : 'Pas d\'exonération'}</div>
                       </div>
                     </div>
                   </div>
@@ -696,7 +699,7 @@ export default function LMPPage() {
 
               <div className="flex justify-between mt-8">
                 <button onClick={()=>setStep(Math.max(1,step-1))} disabled={step===1} className="btn-secondary disabled:opacity-50">← Précédent</button>
-                {step < 7 ? <button onClick={()=>setStep(step+1)} className="btn-primary">Suivant →</button> : <button onClick={lancerSimulation} disabled={loading} className="btn-primary">{loading?'⏳':'🧮 Analyser'}</button>}
+                {step < 7 ? <button onClick={()=>setStep(step+1)} className="btn-primary">Suivant →</button> : <button onClick={lancerSimulation} disabled={loading} className="btn-primary">{loading?'Calcul...':'Analyser'}</button>}
               </div>
             </div>
           ) : synthese && (
@@ -733,7 +736,7 @@ export default function LMPPage() {
                 </div>
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold text-blue-800">📊 Comprendre votre fiscalité LMP</h4>
+                    <h4 className="font-semibold text-blue-800 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Comprendre votre fiscalité LMP</h4>
                     {synthese.statutLMP?.cotisationsSSI?.apiDisponible && (
                       <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">✓ API URSSAF</span>
                     )}
@@ -914,7 +917,7 @@ export default function LMPPage() {
                         <span>{fmtEur(synthese.ssiDetail.cotisationsTotal || 0)}</span>
                       </div>
                       {synthese.ssiDetail.minimumApplied && (
-                        <div className="text-xs text-pink-600 mt-1">⚠️ Cotisations minimales appliquées (1 208 €/an)</div>
+                        <div className="text-xs text-pink-600 mt-1">Cotisations minimales appliquées (1 208 €/an)</div>
                       )}
                     </div>
                     
@@ -927,7 +930,7 @@ export default function LMPPage() {
                   </div>
                   ) : (
                     <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-700">
-                      <p><strong>⚠️ Détail non disponible</strong></p>
+                      <p><strong>Détail non disponible</strong></p>
                       <p className="mt-1">Relancez la simulation pour obtenir le détail des composantes SSI.</p>
                     </div>
                   )
@@ -981,7 +984,7 @@ export default function LMPPage() {
                 {/* Statut exonération */}
                 <div className={`${synthese.pvDetail?.exoneration?.tauxExoneration === 100 ? 'bg-emerald-50 border-emerald-200' : synthese.pvDetail?.exoneration?.tauxExoneration > 0 ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200'} border rounded-lg p-4 mb-4`}>
                   <h4 className={`font-semibold ${synthese.pvDetail?.exoneration?.tauxExoneration === 100 ? 'text-emerald-800' : synthese.pvDetail?.exoneration?.tauxExoneration > 0 ? 'text-amber-800' : 'text-red-800'} mb-2`}>
-                    {synthese.pvDetail?.exoneration?.tauxExoneration === 100 ? '✅ Exonération totale applicable' : synthese.pvDetail?.exoneration?.tauxExoneration > 0 ? `⚠️ Exonération partielle (${synthese.pvDetail.exoneration.tauxExoneration}%)` : '❌ Pas d\'exonération'}
+                    {synthese.pvDetail?.exoneration?.tauxExoneration === 100 ? 'Exonération totale applicable' : synthese.pvDetail?.exoneration?.tauxExoneration > 0 ? `Exonération partielle (${synthese.pvDetail.exoneration.tauxExoneration}%)` : 'Pas d\'exonération'}
                   </h4>
                   <p className={`text-sm ${synthese.pvDetail?.exoneration?.tauxExoneration === 100 ? 'text-emerald-700' : synthese.pvDetail?.exoneration?.tauxExoneration > 0 ? 'text-amber-700' : 'text-red-700'}`}>
                     {synthese.pvDetail?.exoneration?.type || 'Exonération non applicable'}
@@ -1027,7 +1030,7 @@ export default function LMPPage() {
                       </div>
                       <div className="flex justify-between">
                         <span>Recettes moyennes</span>
-                        <span className={loyerAnnuel < 90000 ? 'text-emerald-600' : loyerAnnuel < 126000 ? 'text-amber-600' : 'text-red-600'}>{fmtEur(Math.round(loyerAnnuel))} {loyerAnnuel < 90000 ? '✓ < 90k' : loyerAnnuel < 126000 ? '⚠️ 90k-126k' : '✗ ≥ 126k'}</span>
+                        <span className={loyerAnnuel < 90000 ? 'text-emerald-600' : loyerAnnuel < 126000 ? 'text-amber-600' : 'text-red-600'}>{fmtEur(Math.round(loyerAnnuel))} {loyerAnnuel < 90000 ? '✓ < 90k' : loyerAnnuel < 126000 ? '~ 90k-126k' : '✗ ≥ 126k'}</span>
                       </div>
                       <div className="flex justify-between font-semibold border-t border-blue-200 pt-2">
                         <span>Taux d'exonération</span>
@@ -1057,7 +1060,7 @@ export default function LMPPage() {
                 
                 {/* Comparaison avec LMNP */}
                 <div className="mt-4 bg-slate-50 border border-slate-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-slate-700 mb-2">💡 Avantage LMP vs LMNP</h4>
+                  <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2"><Lightbulb className="w-4 h-4" /> Avantage LMP vs LMNP</h4>
                   <p className="text-sm text-slate-600">
                     En LMNP, la plus-value suit le régime des particuliers avec abattements progressifs (22 ans pour IR, 30 ans pour PS). 
                     <strong> En LMP avec exonération art. 151 septies, vous bénéficiez d'une exonération totale dès 5 ans</strong> si vos recettes restent inférieures à 90 000 €.
@@ -1129,7 +1132,7 @@ export default function LMPPage() {
               {/* AVIS PROFESSIONNEL AVEC SCORE GLOBAL */}
               {/* ═══════════════════════════════════════════════════════════════════════════ */}
               <div className="sim-card">
-                <h3 className="font-bold mb-6 text-xl text-slate-800">🎯 Synthèse et avis professionnel</h3>
+                <h3 className="font-bold mb-6 text-xl text-slate-800 flex items-center gap-2"><Target className="w-5 h-5" /> Synthèse et avis professionnel</h3>
                 
                 {(() => {
                   const levier = safeNumber(synthese.capFinal) / apport
@@ -1235,7 +1238,7 @@ export default function LMPPage() {
                         
                         {showScoreDetail && (
                           <div className="mt-3 bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm">
-                            <h5 className="font-bold text-slate-700 mb-3">📊 Méthode de calcul du score LMP</h5>
+                            <h5 className="font-bold text-slate-700 mb-3 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Méthode de calcul du score LMP</h5>
                             <p className="text-slate-600 mb-3">Score calculé sur 5 critères : TRI (3 pts), Cash-flow (2.5 pts), Exonération PV (2 pts), Levier (1.5 pts), Rendement (1.5 pts).</p>
                             <p className="text-slate-600">Le LMP permet l'exonération de plus-value après 5 ans si CA {"<"} 90k€, mais les cotisations SSI (~45%) impactent fortement le rendement.</p>
                           </div>
@@ -1246,21 +1249,21 @@ export default function LMPPage() {
                 })()}
                 
                 <div className="bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-200 rounded-xl p-4">
-                  <h4 className="font-bold text-blue-800 mb-3">💼 Avis professionnel</h4>
+                  <h4 className="font-bold text-blue-800 mb-3 flex items-center gap-2"><Briefcase className="w-4 h-4" /> Avis professionnel</h4>
                   <div className="text-sm text-blue-700 space-y-3">
                     {safeNumber(synthese.tri) > 6 && safeNumber(synthese.cfMoyMois) >= 0 ? (
                       <>
-                        <p><strong>✅ Opération intéressante</strong> : Malgré les cotisations SSI élevées (~45%), le TRI de {fmtPct(synthese.tri)} et le cash-flow positif de {fmtEur(synthese.cfMoyMois)}/mois rendent cette opération attractive.</p>
+                        <p><strong>Opération intéressante</strong> : Malgré les cotisations SSI élevées (~45%), le TRI de {fmtPct(synthese.tri)} et le cash-flow positif de {fmtEur(synthese.cfMoyMois)}/mois rendent cette opération attractive.</p>
                         <p>L'avantage majeur du LMP : exonération de plus-value après 5 ans d'activité (si CA {"<"} 90k€). Capital net final de {fmtEur(synthese.capFinal)}, soit ×{(safeNumber(synthese.capFinal) / apport).toFixed(1)} votre apport.</p>
                       </>
                     ) : safeNumber(synthese.tri) > 4 ? (
                       <>
-                        <p><strong>⚖️ Opération à évaluer</strong> : Le TRI de {fmtPct(synthese.tri)} est correct mais les cotisations SSI ({fmtEur(synthese.totSSI)} sur {dureeDetention} ans) impactent la rentabilité.</p>
+                        <p><strong>Opération à évaluer</strong> : Le TRI de {fmtPct(synthese.tri)} est correct mais les cotisations SSI ({fmtEur(synthese.totSSI)} sur {dureeDetention} ans) impactent la rentabilité.</p>
                         <p><strong>Alternative LMNP</strong> : En LMNP, pas de SSI mais PV taxée au régime des particuliers avec réintégration des amortissements (LF 2024). Comparez les deux scénarios.</p>
                       </>
                     ) : (
                       <>
-                        <p><strong>⚠️ Opération à reconsidérer</strong> : Le TRI de {fmtPct(synthese.tri)} est faible compte tenu des contraintes LMP (SSI ~45%, régime réel obligatoire, CFE...).</p>
+                        <p><strong>Opération à reconsidérer</strong> : Le TRI de {fmtPct(synthese.tri)} est faible compte tenu des contraintes LMP (SSI ~45%, régime réel obligatoire, CFE...).</p>
                         <p><strong>Conseil</strong> : Si possible, réduisez les recettes sous 23k€ ou augmentez vos autres revenus d'activité pour basculer en LMNP et éviter les SSI.</p>
                       </>
                     )}
@@ -1269,7 +1272,7 @@ export default function LMPPage() {
                 </div>
               </div>
 
-              <div className="flex justify-center gap-4"><button onClick={()=>setShowResults(false)} className="btn-primary">🔄 Nouvelle simulation</button></div>
+              <div className="flex justify-center gap-4"><button onClick={()=>setShowResults(false)} className="btn-primary">Nouvelle simulation</button></div>
             </div>
           )}
         </main>

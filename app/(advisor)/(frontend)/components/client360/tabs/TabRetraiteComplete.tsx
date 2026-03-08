@@ -842,8 +842,8 @@ export function TabRetraiteComplete({ clientId, client }: TabRetraiteCompletePro
                   </div>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  <div className="h-80 min-h-[320px]">
-                    <ResponsiveContainer width="100%" height="100%" minHeight={300}>
+                  <div style={{ width: '100%', height: 320 }}>
+                    <ResponsiveContainer width="100%" height={320}>
                       <BarChart data={pensionResult.projectionByAge}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                         <XAxis 

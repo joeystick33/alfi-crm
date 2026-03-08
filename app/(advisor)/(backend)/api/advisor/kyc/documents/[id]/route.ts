@@ -5,7 +5,7 @@ import { isRegularUser } from '@/app/_common/lib/auth-types'
 
 import { KYCService } from '@/app/_common/lib/services/kyc-service'
 import { z } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 // Schéma de validation pour mettre à jour un document KYC
 const updateKYCDocumentSchema = z.object({
   fileName: z.string().optional(),
@@ -46,7 +46,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error deleting KYC document:', error)
+    logger.error('Error deleting KYC document:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }

@@ -1,5 +1,7 @@
 import { getPrismaClient } from '@/app/_common/lib/prisma'
 import type { NotificationFilters, CreateNotificationPayload } from '@/app/_common/lib/api-types'
+import { EmailAdvancedService } from './email-advanced-service'
+import { logger } from '@/app/_common/lib/logger'
 
 // Email template data types
 type PlanChangedData = {
@@ -19,6 +21,19 @@ type QuotaExceededData = {
   quotaName: string
   current: number
   max: number
+}
+
+type AppointmentEmailData = {
+  clientNom: string
+  clientPrenom?: string
+  typeName: string
+  dateFormatted: string
+  heureDebut: string
+  heureFin: string
+  location?: string
+  videoLink?: string
+  conseillerNom: string
+  cabinetNom: string
 }
 
 // Email templates for notifications
@@ -62,6 +77,45 @@ const EMAIL_TEMPLATES = {
         <li><strong>Utilisation actuelle:</strong> ${data.current}</li>
       </ul>
       <p><strong>Impact:</strong> Certaines fonctionnalités peuvent être temporairement bloquées.</p>
+    `,
+  },
+  APPOINTMENT_CONFIRMATION: {
+    subject: (data: AppointmentEmailData) => `Confirmation RDV : ${data.typeName} le ${data.dateFormatted}`,
+    body: (data: AppointmentEmailData) => `
+      <h2>Votre rendez-vous est confirmé</h2>
+      <p>Bonjour ${data.clientPrenom || ''} ${data.clientNom},</p>
+      <p>Votre rendez-vous a bien été enregistré :</p>
+      <table style="border-collapse:collapse;width:100%;max-width:500px;">
+        <tr><td style="padding:8px;background:#f8fafc;font-weight:600;border:1px solid #e2e8f0;">Type</td><td style="padding:8px;border:1px solid #e2e8f0;">${data.typeName}</td></tr>
+        <tr><td style="padding:8px;background:#f8fafc;font-weight:600;border:1px solid #e2e8f0;">Date</td><td style="padding:8px;border:1px solid #e2e8f0;">${data.dateFormatted}</td></tr>
+        <tr><td style="padding:8px;background:#f8fafc;font-weight:600;border:1px solid #e2e8f0;">Heure</td><td style="padding:8px;border:1px solid #e2e8f0;">${data.heureDebut} — ${data.heureFin}</td></tr>
+        ${data.location ? `<tr><td style="padding:8px;background:#f8fafc;font-weight:600;border:1px solid #e2e8f0;">Lieu</td><td style="padding:8px;border:1px solid #e2e8f0;">${data.location}</td></tr>` : ''}
+        ${data.videoLink ? `<tr><td style="padding:8px;background:#f8fafc;font-weight:600;border:1px solid #e2e8f0;">Visio</td><td style="padding:8px;border:1px solid #e2e8f0;"><a href="${data.videoLink}">Rejoindre la visio</a></td></tr>` : ''}
+        <tr><td style="padding:8px;background:#f8fafc;font-weight:600;border:1px solid #e2e8f0;">Conseiller</td><td style="padding:8px;border:1px solid #e2e8f0;">${data.conseillerNom}</td></tr>
+      </table>
+      <p style="margin-top:16px;color:#64748b;font-size:12px;">Cabinet ${data.cabinetNom}</p>
+    `,
+  },
+  APPOINTMENT_REMINDER: {
+    subject: (data: AppointmentEmailData) => `Rappel : ${data.typeName} demain à ${data.heureDebut}`,
+    body: (data: AppointmentEmailData) => `
+      <h2>Rappel de votre rendez-vous</h2>
+      <p>Bonjour ${data.clientPrenom || ''} ${data.clientNom},</p>
+      <p>Nous vous rappelons votre rendez-vous <strong>${data.typeName}</strong> prévu :</p>
+      <p><strong>${data.dateFormatted} de ${data.heureDebut} à ${data.heureFin}</strong></p>
+      ${data.location ? `<p>Lieu : ${data.location}</p>` : ''}
+      ${data.videoLink ? `<p><a href="${data.videoLink}" style="color:#2B7A78;font-weight:600;">Rejoindre la visio</a></p>` : ''}
+      <p style="color:#64748b;font-size:12px;">Si vous devez annuler ou reporter, contactez-nous au plus vite.</p>
+    `,
+  },
+  APPOINTMENT_CANCELLED: {
+    subject: (data: AppointmentEmailData) => `Annulation RDV : ${data.typeName} du ${data.dateFormatted}`,
+    body: (data: AppointmentEmailData) => `
+      <h2>Rendez-vous annulé</h2>
+      <p>Bonjour ${data.clientPrenom || ''} ${data.clientNom},</p>
+      <p>Votre rendez-vous <strong>${data.typeName}</strong> du <strong>${data.dateFormatted}</strong> a été annulé.</p>
+      <p>Pour prendre un nouveau rendez-vous, rendez-vous sur notre page de réservation.</p>
+      <p style="color:#64748b;font-size:12px;">Cabinet ${data.cabinetNom}</p>
     `,
   },
 }
@@ -212,23 +266,41 @@ export class NotificationService {
       where.createdAt = createdAt
     }
 
-    const notifications = await this.prisma.notification.findMany({
-      where,
-      include: {
-        client: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
+    try {
+      const notifications = await this.prisma.notification.findMany({
+        where,
+        include: {
+          client: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: filters?.limit || 50,
-      skip: filters?.offset || 0,
-    })
+        orderBy: { createdAt: 'desc' },
+        take: filters?.limit || 50,
+        skip: filters?.offset || 0,
+      })
 
-    return notifications.map(n => this.formatNotification(n))
+      return notifications.map(n => this.formatNotification(n))
+    } catch (error) {
+      // Fallback defensif: si la jointure relationnelle échoue, on renvoie
+      // les notifications sans relation client pour éviter un 500 côté UI.
+      logger.warn('NotificationService.listNotifications include(client) failed, retrying without relation', { module: 'Notification', action: 'LIST', metadata: { error: String(error) } } as any)
+
+      const notifications = await this.prisma.notification.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: filters?.limit || 50,
+        skip: filters?.offset || 0,
+      })
+
+      return notifications.map(n => this.formatNotification({
+        ...n,
+        client: null,
+      }))
+    }
   }
 
   /**
@@ -426,8 +498,23 @@ export class NotificationService {
       html: template.body(data as never),
     }
 
-    // TODO: Integrate with email sending service
-    console.log('Email notification to send:', emailData)
+    // Envoi via EmailAdvancedService si un userId est configuré
+    try {
+      if (this.userId) {
+        const emailService = new EmailAdvancedService(this.cabinetId, this.userId, this.isSuperAdmin)
+        await emailService.sendEmail({
+          to: recipients,
+          subject: emailData.subject,
+          body: emailData.html,
+        })
+        logger.info('Email notification sent', { module: 'Notification', action: 'SEND_EMAIL', metadata: { type, recipientCount: recipients.length } } as any)
+      } else {
+        logger.warn('Email notification skipped — no userId configured for sending', { module: 'Notification', action: 'SEND_EMAIL', metadata: { type } } as any)
+      }
+    } catch (emailError: any) {
+      // Ne pas bloquer la notification in-app si l'envoi email échoue
+      logger.error('Email notification failed — falling back to in-app only', { module: 'Notification', action: 'SEND_EMAIL', metadata: { type, error: emailError.message } } as any)
+    }
 
     return emailData
   }

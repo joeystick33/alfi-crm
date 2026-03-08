@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
-
+import { logger } from '@/app/_common/lib/logger'
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
 const investmentVehiclesSchema = z.object({
     investmentAmount: z.number().positive('Le montant doit être positif'),
     holdingPeriod: z.number().int().min(1).max(50, 'La durée doit être entre 1 et 50 ans'),
@@ -35,8 +36,9 @@ function calculateInvestmentVehicles(
     const comparisons: VehicleComparison[] = []
 
     // 1. PEA (Plan d'Épargne en Actions)
-    // Exonération d'impôt sur les plus-values après 5 ans, prélèvements sociaux uniquement (17.2%)
-    const peaTaxRate = holdingPeriod >= 5 ? 0.172 : 0.172 + 0.128 // PS seuls après 5 ans, PS + IR avant
+    // Exonération d'impôt sur les plus-values après 5 ans, prélèvements sociaux uniquement
+    // PEA = revenus financiers → PS 18,6% (LFSS 2026)
+    const peaTaxRate = holdingPeriod >= 5 ? RULES.ps.pfu_per_2026 : RULES.ps.pfu_per_2026 + RULES.ps.pfu_ir // PS seuls après 5 ans, PS + IR avant
     const peaTax = grossReturn * peaTaxRate
     const peaNetReturn = grossReturn - peaTax
     comparisons.push({
@@ -63,13 +65,13 @@ function calculateInvestmentVehicles(
     // 2. Assurance-vie
     // Fiscalité dégressive : 35% < 4 ans, 15% 4-8 ans, 7.5% > 8 ans + PS 17.2%
     // Abattement de 4 600€ (célibataire) ou 9 200€ (couple) après 8 ans
-    let avIRRate = 0.35
-    if (holdingPeriod >= 8) avIRRate = 0.075
-    else if (holdingPeriod >= 4) avIRRate = 0.15
+    let avIRRate = RULES.assurance_vie.rachat.pfl_moins_4ans
+    if (holdingPeriod >= 8) avIRRate = RULES.assurance_vie.rachat.taux_reduit_8ans
+    else if (holdingPeriod >= 4) avIRRate = RULES.assurance_vie.rachat.pfl_4_8ans
     
-    const avAbatement = holdingPeriod >= 8 ? 4600 : 0 // Abattement célibataire
+    const avAbatement = holdingPeriod >= 8 ? RULES.assurance_vie.rachat.abattement_celibataire_8ans : 0
     const taxableReturn = Math.max(0, grossReturn - avAbatement)
-    const avTax = taxableReturn * (avIRRate + 0.172)
+    const avTax = taxableReturn * (avIRRate + RULES.ps.total) // PS sur AV
     const avNetReturn = grossReturn - avTax
     comparisons.push({
         name: 'Assurance-vie',
@@ -93,8 +95,8 @@ function calculateInvestmentVehicles(
     })
 
     // 3. Compte-titres ordinaire (CTO)
-    // Flat tax 30% (12.8% IR + 17.2% PS) ou barème progressif de l'IR
-    const ctoTaxRate = 0.30 // Flat tax
+    // Flat tax 31.4% (12.8% IR + 18.6% PS LFSS 2026) sur revenus financiers
+    const ctoTaxRate = RULES.ps.pfu_ir + RULES.ps.pfu_per_2026 // PFU (revenus financiers)
     const ctoTax = grossReturn * ctoTaxRate
     const ctoNetReturn = grossReturn - ctoTax
     comparisons.push({
@@ -121,7 +123,7 @@ function calculateInvestmentVehicles(
     // On suppose TMI 30% (hypothèse médiane)
     const perTMI = 0.30
     const perDeduction = investmentAmount * perTMI // Économie d'impôt à l'entrée
-    const perTaxOnExit = grossFinalValue * (perTMI + 0.172) // Taxation totale à la sortie sur le capital
+    const perTaxOnExit = grossFinalValue * (perTMI + RULES.ps.pfu_per_2026) // PS (PER = revenus financiers) // Taxation totale à la sortie sur le capital
     const perNetReturn = grossReturn + perDeduction - (perTaxOnExit - investmentAmount) // Net après économie d'impôt et taxation
     comparisons.push({
         name: 'PER (Plan Épargne Retraite)',
@@ -143,17 +145,17 @@ function calculateInvestmentVehicles(
     })
 
     // 5. SCPI (Société Civile de Placement Immobilier)
-    // Revenus fonciers taxés au TMI (hypothèse 30%) + PS 17.2%
+    // Revenus fonciers taxés au TMI (hypothèse 30%) + PS 17,2% INCHANGÉ (foncier exclu LFSS 2026)
     // Plus-value immobilière : abattement progressif jusqu'à exonération après 22 ans (IR) et 30 ans (PS)
     const scpiRentalYield = 0.045 // Rendement locatif moyen de 4.5%
     const scpiAnnualIncome = investmentAmount * scpiRentalYield
     const scpiTotalIncome = scpiAnnualIncome * holdingPeriod
-    const scpiIncomeTax = scpiTotalIncome * (perTMI + 0.172)
+    const scpiIncomeTax = scpiTotalIncome * (perTMI + RULES.ps.total) // PS foncier
     
     // Plus-value (différence entre valeur finale et investissement)
     const scpiCapitalGain = grossReturn - scpiTotalIncome
-    let scpiCapitalGainTaxRate = 0.192 + 0.172 // 19% IR + 17.2% PS
-    if (holdingPeriod >= 22) scpiCapitalGainTaxRate = 0.172 // Exonération IR après 22 ans
+    let scpiCapitalGainTaxRate = RULES.immobilier.plus_value.taux_ir + RULES.ps.total // IR + PS PV immo
+    if (holdingPeriod >= 22) scpiCapitalGainTaxRate = RULES.ps.total // Exonération IR après 22 ans
     if (holdingPeriod >= 30) scpiCapitalGainTaxRate = 0 // Exonération totale après 30 ans
     const scpiCapitalGainTax = scpiCapitalGain * scpiCapitalGainTaxRate
     
@@ -218,7 +220,7 @@ export async function POST(request: NextRequest) {
             },
         })
     } catch (error) {
-        console.error('Error in investment vehicles comparison:', error)
+        logger.error('Error in investment vehicles comparison:', { error: error instanceof Error ? error.message : String(error) })
         if (error instanceof z.ZodError) {
             return createErrorResponse('Validation error: ' + error.message, 400)
         }

@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { ClientService } from '@/app/_common/lib/services/client-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/clients/[id]/stats
  * Récupérer les statistiques d'un client
@@ -30,7 +30,7 @@ export async function GET(
 
     return createSuccessResponse(stats)
   } catch (error) {
-    console.error('Error in GET /api/clients/[id]/stats:', error)
+    logger.error('Error in GET /api/clients/[id]/stats:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

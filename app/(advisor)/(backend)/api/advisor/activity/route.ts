@@ -3,7 +3,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { TimelineService } from '@/app/_common/lib/services/timeline-service'
 import { TimelineEventType } from '@prisma/client'
-
+import { logger } from '@/app/_common/lib/logger'
 export async function GET(request: NextRequest) {
   try {
     const { user, cabinetId, isSuperAdmin } = await requireAuth(request)
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse(result)
   } catch (error) {
-    console.error('Error fetching advisor activity:', error)
+    logger.error('Error fetching advisor activity:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

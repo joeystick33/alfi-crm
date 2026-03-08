@@ -3,16 +3,14 @@
 
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
+import { BAREME_IR_2025 } from './parameters-ir'
 
 // ══════════════════════════════════════════════════════════════════════════════
-// CONSTANTES D'AFFICHAGE - Barème IR 2025 (CGI art. 197)
+// CONSTANTES D'AFFICHAGE - Barème IR (CGI art. 197) — Source : parameters-ir
 // ══════════════════════════════════════════════════════════════════════════════
-const BAREME_IR_2025 = [
-  { min: 0, max: 11497, taux: 0 },
-  { min: 11497, max: 29315, taux: 11 },
-  { min: 29315, max: 83823, taux: 30 },
-  { min: 83823, max: 180294, taux: 41 },
-  { min: 180294, max: Infinity, taux: 45 },
+const BAREME_IR_DISPLAY = [
+  ...BAREME_IR_2025,
 ]
 
 type Situation = 'CELIBATAIRE' | 'MARIE_PACSE' | 'DIVORCE' | 'VEUF'
@@ -85,9 +83,9 @@ export default function ImpotRevenuPage() {
   // Cotisations syndicales
   const [cotisationsSyndicales, setCotisationsSyndicales] = useState(0)
   
-  // Constantes des plafonds (à mettre à jour chaque année)
-  const PLAFOND_NICHES = 10000    // Plafond général
-  const PLAFOND_NICHES_MAJORE = 18000  // Avec SOFICA/Outre-mer
+  // Constantes des plafonds — Source : RULES.ir
+  const PLAFOND_NICHES = RULES.ir.plafond_niches_fiscales
+  const PLAFOND_NICHES_MAJORE = RULES.ir.plafond_niches_outremer
 
   const [resultat, setResultat] = useState<any>(null)
 
@@ -660,7 +658,7 @@ export default function ImpotRevenuPage() {
                 <div className="mt-6 pt-4 border-t border-gray-100">
                   <h4 className="font-semibold text-gray-900 mb-3">Barème IR 2025</h4>
                   <div className="space-y-1.5 text-sm">
-                    {BAREME_IR_2025.map((t, i) => (
+                    {BAREME_IR_DISPLAY.map((t, i) => (
                       <div key={i} className="flex justify-between p-2 rounded-lg bg-gray-50">
                         <span className="text-gray-600">{t.max === Infinity ? `> ${t.min.toLocaleString('fr-FR')}` : `${t.min.toLocaleString('fr-FR')} - ${t.max.toLocaleString('fr-FR')}`} €</span>
                         <span className="font-bold text-blue-600">{t.taux}%</span>

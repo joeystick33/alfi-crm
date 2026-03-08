@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { InvoiceService } from '@/app/_common/lib/services/invoice-service'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * POST /api/advisor/invoices/[id]/cancel
  * Cancel invoice
@@ -37,7 +37,7 @@ export async function POST(
       message: 'Facture annulée avec succès',
     })
   } catch (error) {
-    console.error('Error in POST /api/advisor/invoices/[id]/cancel:', error)
+    logger.error('Error in POST /api/advisor/invoices/[id]/cancel:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

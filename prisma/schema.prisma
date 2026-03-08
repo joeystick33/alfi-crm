@@ -102,7 +102,6 @@ model Cabinet {
   objectifs         Objectif[]
   projets           Projet[]
   opportunites      Opportunite[]
-  campagnes         Campagne[]
   emails            Email[]
   notifications     Notification[]
   templates         Template[]
@@ -124,6 +123,7 @@ model Cabinet {
   reclamations      Reclamation[]
   documentTemplates DocumentTemplate[]
   events            Event[]
+  appointmentTypes  AppointmentType[]
 
   // Relations SaaS
   userSessions UserSession[]
@@ -143,6 +143,25 @@ model Cabinet {
   // Relations Documents Refonte
   regulatoryDocumentTemplates  RegulatoryDocumentTemplate[]
   regulatoryGeneratedDocuments RegulatoryGeneratedDocument[]
+
+  // Relations Agent IA
+  agentMemories      AgentMemory[]
+  agentActions       AgentAction[]
+  agentConversations AgentConversation[]
+  aiChatThreads      AIChatThread[]
+
+  // Relations AURA V2 — Agent Autonome
+  aiConnections       AIConnection[]
+  assistantProfiles   AssistantProfile[]
+  aiSessions          AISession[]
+  aiToolPermissions   AIToolPermission[]
+  workflowStates      WorkflowState[]
+
+  // Relations Entretiens
+  entretiens Entretien[]
+
+  // Relations RGPD
+  dataProcessingRegistry DataProcessingRegistry[]
 
   @@index([slug])
   @@index([status])
@@ -184,7 +203,6 @@ model User {
   rendezvous               RendezVous[]          @relation("ConseillerRendezVous")
   rendezVousRescheduled    RendezVous[]          @relation("RescheduledBy")
   opportunites             Opportunite[]
-  campagnes                Campagne[]
   emails                   Email[]
   documents                Document[]            @relation("UploadedBy")
   apporteurs               ApporteurAffaires[]
@@ -210,6 +228,11 @@ model User {
   sessions UserSession[]
   events   Event[]
 
+  // Relations Calendrier/RDV
+  appointmentTypes AppointmentType[]
+  availabilities   Availability[]
+  blockedSlots     BlockedSlot[]
+
   // Relations Compliance Refonte
   alertsAcknowledged       ComplianceAlert[]         @relation("AlertAcknowledger")
   complianceTimelineEvents ComplianceTimelineEvent[] @relation("ComplianceTimelineUser")
@@ -223,6 +246,18 @@ model User {
   // Relations Documents Refonte
   regulatoryTemplatesCreated   RegulatoryDocumentTemplate[]  @relation("RegulatoryTemplateCreator")
   regulatoryDocumentsGenerated RegulatoryGeneratedDocument[] @relation("RegulatoryDocumentGenerator")
+
+  // Relations Agent IA
+  agentMemories      AgentMemory[]        @relation("AgentMemories")
+  agentActions       AgentAction[]        @relation("AgentActions")
+  agentConversations AgentConversation[]  @relation("AgentConversations")
+  aiChatThreads      AIChatThread[]       @relation("AIChatThreads")
+
+  // Relations AURA V2 — Agent Autonome
+  aiSessions         AISession[]          @relation("AISessionsUser")
+
+  // Relations Entretiens
+  entretiens Entretien[] @relation("ConseillerEntretiens")
 
   @@index([cabinetId])
   @@index([cabinetId, role])
@@ -504,6 +539,23 @@ model Client {
 
   // === RELATIONS DOCUMENTS REFONTE ===
   regulatoryGeneratedDocuments RegulatoryGeneratedDocument[]
+
+  // === RELATIONS AGENT IA ===
+  agentMemories      AgentMemory[]
+  agentActions       AgentAction[]
+  agentConversations AgentConversation[]
+  aiChatThreads      AIChatThread[]
+
+  // === RELATIONS AURA V2 — Agent Autonome ===
+  aiSessions         AISession[]
+
+  // === RELATIONS ENTRETIENS ===
+  entretiens Entretien[]
+
+  // === RELATIONS CONFORMITÉ AVANCÉE ===
+  mifidQuestionnaires    MiFIDQuestionnaire[]
+  lcbftRiskAssessments   LCBFTRiskAssessment[]
+  marketingConsents      MarketingConsent[]
 
   // === CHAMPS DÉNORMALISÉS POUR PERFORMANCE ===
   // Ces champs sont mis à jour par PatrimoineSnapshot
@@ -1911,12 +1963,21 @@ model Event {
   endDate     DateTime
   allDay      Boolean  @default(false)
   location    String?
-  type        String   @default("MEETING") // MEETING, CALL, REMINDER
+  type        String   @default("MEETING") // MEETING, CALL, REMINDER, APPOINTMENT
   status      String   @default("CONFIRMED") // CONFIRMED, TENTATIVE, CANCELLED
 
   // Relations
   clientId String?
   client   Client? @relation(fields: [clientId], references: [id])
+
+  // Appointment booking fields
+  isBookedByClient Boolean  @default(false)  // true si réservé via page publique
+  bookingNotes     String?  @db.Text         // Notes du client lors de la réservation
+  reminderSentAt   DateTime?                 // Date d'envoi du rappel
+  confirmationSentAt DateTime?               // Date d'envoi de la confirmation
+  videoLink        String?                   // Lien visio (Google Meet, Zoom, etc.)
+  appointmentTypeId String?
+  appointmentType   AppointmentType? @relation(fields: [appointmentTypeId], references: [id])
 
   // External Sync
   externalId       String? // ID from Google/Outlook
@@ -1929,7 +1990,79 @@ model Event {
   @@index([userId])
   @@index([clientId])
   @@index([startDate, endDate])
+  @@index([appointmentTypeId])
   @@map("events")
+}
+
+// Types de rendez-vous configurables par le conseiller
+model AppointmentType {
+  id        String  @id @default(cuid())
+  cabinetId String
+  cabinet   Cabinet @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String            // "Découverte", "Suivi annuel", "Bilan patrimonial"
+  slug        String            // URL-friendly slug
+  description String?  @db.Text
+  duration    Int               // Durée en minutes (30, 45, 60, 90, 120)
+  color       String  @default("#2B7A78")
+  location    String?           // Lieu par défaut (bureau, visio, domicile)
+  isActive    Boolean @default(true)
+  isPublic    Boolean @default(true) // Visible sur la page publique
+  price       Float?              // Honoraires éventuels
+  requiresApproval Boolean @default(false) // Nécessite validation du conseiller
+
+  // Paramètres de créneau
+  bufferBefore Int @default(0)  // Minutes de battement avant
+  bufferAfter  Int @default(15) // Minutes de battement après
+  maxPerDay    Int @default(8)  // Nombre max par jour
+
+  events Event[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, slug])
+  @@index([cabinetId])
+  @@index([userId])
+  @@map("appointment_types")
+}
+
+// Disponibilités hebdomadaires du conseiller
+model Availability {
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  dayOfWeek Int     // 0=Dimanche, 1=Lundi, ... 6=Samedi
+  startTime String  // Format "HH:mm" ex: "09:00"
+  endTime   String  // Format "HH:mm" ex: "18:00"
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("availabilities")
+}
+
+// Indisponibilités ponctuelles (vacances, formation, etc.)
+model BlockedSlot {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  startDate DateTime
+  endDate   DateTime
+  reason    String?
+  allDay    Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([startDate, endDate])
+  @@map("blocked_slots")
 }
 
 // ============================================
@@ -2189,6 +2322,10 @@ model Notification {
   title     String
   message   String
   actionUrl String?
+  priority  String           @default("NORMALE") // BASSE, NORMALE, HAUTE, URGENTE
+  metadata  Json?
+  channel   String?          // EMAIL, SMS, PUSH, IN_APP
+  sentAt    DateTime?        // Date d'envoi email/SMS
   isRead    Boolean          @default(false)
   readAt    DateTime?
   createdAt DateTime         @default(now())
@@ -2201,45 +2338,8 @@ model Notification {
   @@map("notifications")
 }
 
-enum CampagneType {
-  EMAIL // Email
-  SMS // SMS
-  POSTAL // Courrier postal
-  MIXTE // Mixte
-}
-
-enum CampagneStatus {
-  BROUILLON // Brouillon
-  PLANIFIEE // Planifiée
-  EN_ENVOI // En cours d'envoi
-  ENVOYEE // Envoyée
-  TERMINEE // Terminée
-  ANNULEE // Annulée
-}
-
-model Campagne {
-  id            String         @id @default(cuid())
-  cabinetId     String
-  cabinet       Cabinet        @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
-  createdById   String
-  createdBy     User           @relation(fields: [createdById], references: [id])
-  name          String
-  description   String?
-  type          CampagneType
-  targetSegment Json?
-  templateId    String?
-  scheduledAt   DateTime?
-  status        CampagneStatus @default(BROUILLON)
-  stats         Json?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  sentAt        DateTime?
-
-  @@index([cabinetId])
-  @@index([createdById])
-  @@index([status])
-  @@map("campagnes")
-}
+// NOTE: Legacy Campagne model removed — unified into Campaign (MODULE 13)
+// The "campagnes" table will be dropped on next migration.
 
 // ============================================
 // MODULE 9: Templates
@@ -2950,19 +3050,152 @@ enum DossierStatus {
   ACTIF
   EN_COURS
   EN_ATTENTE
+  A_VALIDER
+  VALIDE
+  REJETE
   TERMINE
   ARCHIVE
   ANNULE
 }
 
-enum DossierType {
+// Catégorie principale du dossier
+enum DossierCategorie {
   PATRIMOINE
   SUCCESSION
   RETRAITE
   INVESTISSEMENT
-  FISCAL
   IMMOBILIER
-  ASSURANCE
+  CREDIT
+  ASSURANCE_PERSONNES
+  ASSURANCE_BIENS
+  ASSURANCE_PRO
+  ENTREPRISE
+  AUTRE
+}
+
+enum DossierType {
+  // ========== PATRIMOINE ==========
+  BILAN_PATRIMONIAL
+  RESTRUCTURATION_PATRIMOINE
+  OPTIMISATION_FISCALE
+  AUDIT_FISCAL
+  CREATION_SCI
+  CREATION_HOLDING
+  DIVORCE_SEPARATION
+  DONATION
+  DEMEMBREMENT
+  PACTE_DUTREIL
+  
+  // ========== SUCCESSION ==========
+  PREPARATION_SUCCESSION
+  TESTAMENT
+  REGLEMENT_SUCCESSION
+  ASSURANCE_DECES
+  CLAUSE_BENEFICIAIRE
+  
+  // ========== RETRAITE ==========
+  BILAN_RETRAITE
+  OUVERTURE_PER
+  TRANSFERT_PER
+  VERSEMENT_PER
+  RACHAT_PER
+  SORTIE_CAPITAL
+  SORTIE_RENTE
+  
+  // ========== INVESTISSEMENT FINANCIER ==========
+  SOUSCRIPTION_AV
+  VERSEMENT_AV
+  ARBITRAGE_AV
+  RACHAT_AV
+  AVANCE_AV
+  SOUSCRIPTION_PEA
+  VERSEMENT_PEA
+  ARBITRAGE_PEA
+  SOUSCRIPTION_CTO
+  VERSEMENT_CTO
+  SOUSCRIPTION_SCPI
+  VERSEMENT_SCPI
+  ARBITRAGE_SCPI
+  SOUSCRIPTION_OPCI
+  PRIVATE_EQUITY
+  CROWDFUNDING
+  CRYPTO_ACTIFS
+  
+  // ========== IMMOBILIER ==========
+  ACQUISITION_RP
+  ACQUISITION_RS
+  ACQUISITION_LOCATIF
+  DEFISCALISATION_PINEL
+  DEFISCALISATION_DENORMANDIE
+  DEFISCALISATION_MALRAUX
+  DEFISCALISATION_MH
+  LMNP_LMP
+  VENTE_IMMOBILIER
+  TRAVAUX_RENOVATION
+  GESTION_LOCATIVE
+  
+  // ========== CREDIT (Courtier Immobilier) ==========
+  CREDIT_IMMOBILIER
+  RENEGOCIATION_CREDIT
+  RACHAT_CREDIT
+  PRET_RELAIS
+  PRET_TRAVAUX
+  CREDIT_CONSO
+  REGROUPEMENT_CREDITS
+  PRET_IN_FINE
+  
+  // ========== ASSURANCE PERSONNES ==========
+  PREVOYANCE_DECES
+  PREVOYANCE_INCAPACITE
+  PREVOYANCE_INVALIDITE
+  SANTE_MUTUELLE
+  DEPENDANCE
+  OBSEQUES
+  ASSURANCE_EMPRUNTEUR
+  GAV
+  SCOLAIRE
+  
+  // ========== ASSURANCE BIENS ==========
+  ASSURANCE_HABITATION
+  ASSURANCE_PNO
+  ASSURANCE_AUTO
+  ASSURANCE_MOTO
+  ASSURANCE_CAMPING_CAR
+  ASSURANCE_BATEAU
+  PROTECTION_JURIDIQUE
+  
+  // ========== ASSURANCE PRO ==========
+  RC_PRO
+  MULTIRISQUE_PRO
+  DECENNALE
+  HOMME_CLE
+  PREVOYANCE_TNS
+  SANTE_TNS
+  RETRAITE_TNS
+  SANTE_COLLECTIVE
+  PREVOYANCE_COLLECTIVE
+  EPARGNE_SALARIALE
+  
+  // ========== ENTREPRISE ==========
+  CREATION_ENTREPRISE
+  CESSION_ENTREPRISE
+  TRANSMISSION_ENTREPRISE
+  VALORISATION_ENTREPRISE
+  PACTE_ACTIONNAIRES
+  MANAGEMENT_PACKAGE
+  
+  // ========== OPERATIONS GENERIQUES ==========
+  SOUSCRIPTION
+  VERSEMENT
+  ARBITRAGE
+  RACHAT
+  RESILIATION
+  MODIFICATION
+  TRANSFERT
+  RENOUVELLEMENT
+  AVENANT
+  
+  // ========== AUTRES ==========
   CONSEIL
   AUDIT
   FORMATION
@@ -2991,9 +3224,10 @@ model Dossier {
   description String? @db.Text
 
   // Statut et typologie
-  status   DossierStatus   @default(BROUILLON)
-  type     DossierType     @default(PATRIMOINE)
-  priorite DossierPriorite @default(NORMALE)
+  status    DossierStatus    @default(BROUILLON)
+  categorie DossierCategorie @default(AUTRE)
+  type      DossierType      @default(AUTRE)
+  priorite  DossierPriorite  @default(NORMALE)
 
   // Client concerné
   clientId String
@@ -3034,6 +3268,15 @@ model Dossier {
   archivedAt DateTime?
   archivedBy String? // ID du conseiller qui a archivé
 
+  // Workflow intégré
+  etapeActuelle         DossierEtape  @default(COLLECTE)
+  clientDataSnapshot    Json?         // Copie des données client au moment création
+
+  // Relations dossier intégré
+  simulations           DossierSimulation[]
+  preconisations        DossierPreconisation[]
+  documentsGeneres      DossierDocument[]
+
   @@unique([cabinetId, reference])
   // INDEX EXISTANTS
   @@index([cabinetId, clientId])
@@ -3047,6 +3290,123 @@ model Dossier {
   @@index([cabinetId, status, priorite])
   @@index([dateCloturePrevu, status])
   @@map("dossiers")
+}
+
+// Étapes du workflow dossier
+enum DossierEtape {
+  COLLECTE      // Import données client
+  ANALYSE       // Simulations et étude
+  PRECONISATION // Rédaction recommandations
+  VALIDATION    // Validation client
+  CLOTURE       // Dossier finalisé
+}
+
+// Types de simulateurs
+enum SimulateurType {
+  FISCAL_IR
+  FISCAL_ENVELOPPE
+  FISCAL_STRATEGIE
+  RETRAITE
+  RETRAITE_COMPARATIF
+  PENSION
+  PER_SALARIES
+  PER_TNS
+  SUCCESSION
+  SUCCESSION_COMPARATIF
+  DONATION
+  CAPACITE_EMPRUNT
+  MENSUALITE
+  PTZ
+  IMMOBILIER_RENDEMENT
+  LMNP
+  EPARGNE
+  ASSURANCE_VIE
+  PREVOYANCE_TNS
+  AUTRE
+}
+
+// Simulations effectuées dans un dossier
+model DossierSimulation {
+  id            String         @id @default(cuid())
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  dossierId     String
+  dossier       Dossier        @relation(fields: [dossierId], references: [id], onDelete: Cascade)
+
+  simulateurType SimulateurType
+  nom            String         // Nom donné à la simulation
+  parametres     Json           // Paramètres d'entrée
+  resultats      Json           // Résultats calculés
+  selectionne    Boolean        @default(false) // Inclure dans le PDF
+  ordre          Int            @default(0)     // Ordre d'affichage
+
+  @@index([dossierId])
+  @@index([dossierId, simulateurType])
+  @@map("dossier_simulations")
+}
+
+// Types de documents générés pour dossiers
+enum DossierDocumentType {
+  BILAN_PATRIMONIAL
+  RAPPORT_CONSEIL
+  SIMULATION_DETAIL
+  RECUEIL_BESOINS
+  PROPOSITION_COMMERCIALE
+  LETTRE_MISSION
+  MANDAT
+  AUTRE
+}
+
+// Préconisations du conseiller
+model DossierPreconisation {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  dossierId     String
+  dossier       Dossier  @relation(fields: [dossierId], references: [id], onDelete: Cascade)
+
+  titre         String
+  description   String   @db.Text
+  argumentaire  String?  @db.Text  // Justification de la préconisation
+  produitId     String?            // Lien vers produit du catalogue (optionnel)
+  montant       Decimal? @db.Decimal(15, 2)
+  priorite      Int      @default(1)
+  ordre         Int      @default(0)
+  statut        PreconisationStatut @default(PROPOSEE)
+
+  @@index([dossierId])
+  @@index([dossierId, statut])
+  @@map("dossier_preconisations")
+}
+
+enum PreconisationStatut {
+  PROPOSEE
+  ACCEPTEE
+  REFUSEE
+  EN_COURS
+  REALISEE
+}
+
+// Documents générés (PDF, etc.)
+model DossierDocument {
+  id            String       @id @default(cuid())
+  createdAt     DateTime     @default(now())
+
+  dossierId     String
+  dossier       Dossier      @relation(fields: [dossierId], references: [id], onDelete: Cascade)
+
+  type          DossierDocumentType
+  nom           String
+  url           String       // URL du fichier stocké
+  taille        Int          // Taille en bytes
+  version       Int          @default(1)
+  genereParId   String?      // ID du conseiller qui a généré
+
+  @@index([dossierId])
+  @@index([dossierId, type])
+  @@map("dossier_documents")
 }
 
 // ============================================================================
@@ -5026,4 +5386,1198 @@ model RegulatoryGeneratedDocument {
   @@index([status])
   @@index([cabinetId, clientId, documentType])
   @@map("regulatory_generated_documents")
+}
+
+// ============================================
+// MODULE: Agent IA Autonome
+// ============================================
+
+enum AgentMemoryType {
+  INSTRUCTION    // Consigne utilisateur ("toujours rappeler les échéances KYC")
+  PREFERENCE     // Préférence ("préférer PER pour clients > 50 ans")
+  FACT           // Fait appris ("client Dupont a un projet immobilier")
+  CONVERSATION   // Résumé de conversation passée
+  CLIENT_CONTEXT // Contexte spécifique à un client
+  WORKFLOW       // Étape d'un workflow automatisé
+}
+
+enum AgentActionStatus {
+  PENDING    // En attente de confirmation
+  CONFIRMED  // Confirmé par l'utilisateur
+  EXECUTED   // Exécuté
+  FAILED     // Échoué
+  CANCELLED  // Annulé par l'utilisateur
+}
+
+model AgentMemory {
+  id         String          @id @default(cuid())
+  cabinetId  String
+  cabinet    Cabinet         @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User            @relation("AgentMemories", fields: [userId], references: [id], onDelete: Cascade)
+  clientId   String?
+  client     Client?         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  type       AgentMemoryType
+  title      String          // Titre court pour identification rapide
+  content    String          @db.Text // Contenu complet de la mémoire
+  metadata   Json?           // Données structurées additionnelles
+  tags       String[]        // Tags pour filtrage rapide
+  priority   Int             @default(0) // 0=normal, 1=important, 2=critique
+  isActive   Boolean         @default(true)
+  expiresAt  DateTime?       // Expiration optionnelle (pour conversations)
+
+  // Contexte de création
+  sourceQuery     String?    @db.Text // La requête qui a généré cette mémoire
+  sourceMessageId String?    // ID du message qui a déclenché
+
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@index([cabinetId, userId])
+  @@index([cabinetId, userId, type])
+  @@index([cabinetId, userId, isActive])
+  @@index([cabinetId, clientId])
+  @@index([type])
+  @@index([tags])
+  @@map("agent_memories")
+}
+
+model AgentAction {
+  id         String            @id @default(cuid())
+  cabinetId  String
+  cabinet    Cabinet           @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User              @relation("AgentActions", fields: [userId], references: [id], onDelete: Cascade)
+  clientId   String?
+  client     Client?           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Description de l'action
+  toolName   String            // Nom de l'outil ("create_task", "search_clients", etc.)
+  toolParams Json              // Paramètres passés à l'outil
+  status     AgentActionStatus @default(PENDING)
+  result     Json?             // Résultat de l'exécution
+  error      String?           // Message d'erreur si échoué
+
+  // Contexte
+  triggerQuery  String   @db.Text // La requête utilisateur qui a déclenché l'action
+  reasoning     String?  @db.Text // Raisonnement de l'agent pour choisir cette action
+  requiresConfirmation Boolean @default(true) // L'action nécessite-t-elle une confirmation ?
+
+  createdAt  DateTime          @default(now())
+  executedAt DateTime?
+  updatedAt  DateTime          @updatedAt
+
+  @@index([cabinetId, userId])
+  @@index([cabinetId, userId, status])
+  @@index([status])
+  @@map("agent_actions")
+}
+
+model AgentConversation {
+  id         String   @id @default(cuid())
+  cabinetId  String
+  cabinet    Cabinet  @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation("AgentConversations", fields: [userId], references: [id], onDelete: Cascade)
+  clientId   String?
+  client     Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Résumé compressé des échanges passés (pas les messages individuels)
+  summary    String   @db.Text
+  topics     String[] // Sujets abordés pour indexation
+  keyFacts   Json?    // Faits clés extraits de la conversation
+  turnCount  Int      @default(0) // Nombre d'échanges dans cette conversation
+
+  startedAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  lastActiveAt DateTime @default(now())
+
+  @@index([cabinetId, userId])
+  @@index([cabinetId, clientId])
+  @@index([lastActiveAt])
+  @@map("agent_conversations")
+}
+
+// ============================================================================
+// MODULE : Conversations IA persistées (historique style ChatGPT)
+// ============================================================================
+
+model AIChatThread {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  cabinetId  String
+  cabinet    Cabinet  @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation("AIChatThreads", fields: [userId], references: [id], onDelete: Cascade)
+  clientId   String?
+  client     Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  // Métadonnées
+  title      String   @default("Nouvelle conversation")
+  summary    String?  @db.Text
+  pinned     Boolean  @default(false)
+  archived   Boolean  @default(false)
+
+  // Messages
+  messages   AIChatMessage[]
+
+  @@index([cabinetId, userId, updatedAt])
+  @@index([cabinetId, userId, archived])
+  @@map("ai_chat_threads")
+}
+
+model AIChatMessage {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+
+  threadId   String
+  thread     AIChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  role       String   // 'user' | 'assistant'
+  content    String   @db.Text
+
+  // Métadonnées optionnelles
+  ragSources    Json?  // RAGSource[] sérialisées
+  agentActions  Json?  // AgentAction[] sérialisées
+  agentMeta     Json?  // { memoriesUsed, metrics, etc. }
+
+  @@index([threadId, createdAt])
+  @@map("ai_chat_messages")
+}
+
+// ============================================
+// MODULE : Entretiens Client (Speech-to-Text)
+// ============================================
+
+enum EntretienStatus {
+  EN_COURS
+  TRANSCRIT
+  TRAITE
+  FINALISE
+  ARCHIVE
+}
+
+enum EntretienType {
+  DECOUVERTE
+  SUIVI_PERIODIQUE
+  BILAN_PATRIMONIAL
+  CONSEIL_PONCTUEL
+  SIGNATURE
+  AUTRE
+}
+
+enum TraitementType {
+  RESUME
+  BILAN_PATRIMONIAL
+}
+
+model Entretien {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Multi-tenant
+  cabinetId String
+  cabinet   Cabinet @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+
+  // Conseiller qui mène l'entretien
+  conseillerId String
+  conseiller   User @relation("ConseillerEntretiens", fields: [conseillerId], references: [id], onDelete: Restrict)
+
+  // Client ou prospect (nullable si prospect pas encore créé)
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  // Métadonnées
+  titre         String
+  type          EntretienType   @default(DECOUVERTE)
+  status        EntretienStatus @default(EN_COURS)
+  duree         Int?            // Durée en secondes
+  dateEntretien DateTime        @default(now())
+
+  // Consentement RGPD
+  consentementRecueilli Boolean   @default(false)
+  consentementDate      DateTime?
+  consentementTexte     String?   @db.Text
+
+  // Prospect (si pas encore client)
+  prospectNom    String?
+  prospectPrenom String?
+  prospectEmail  String?
+  prospectTel    String?
+
+  // Transcription (seul élément sauvegardé — PAS l'audio)
+  // Array<{ id, speaker, text, timestamp, confidence, edited }>
+  transcription     Json?
+  transcriptionBrute String? @db.Text
+
+  // Résultat du traitement IA
+  traitementType     TraitementType?
+  traitementResultat Json?
+  traitementDate     DateTime?
+  traitementPrompt   String? @db.Text
+
+  // Données extraites (structurées par l'IA)
+  donneesExtraites Json?
+
+  // Synchronisation avec le dossier client
+  syncAvecClient Boolean   @default(false)
+  syncDate       DateTime?
+  champsModifies Json?
+
+  // Export PDF
+  pdfGenere     Boolean   @default(false)
+  pdfGenereDate DateTime?
+
+  // Notes du conseiller
+  notesConseiller String? @db.Text
+
+  // Tags
+  tags String[]
+
+  @@index([cabinetId, conseillerId])
+  @@index([cabinetId, clientId])
+  @@index([cabinetId, status])
+  @@index([cabinetId, dateEntretien])
+  @@map("entretiens")
+}
+
+// ============================================================================
+// MODULE 18: CONFORMITÉ AVANCÉE — MiFID II, LCB-FT, DDA, RGPD
+// ============================================================================
+
+// ── MiFID II : Questionnaire d'adéquation historisé (Art. L. 533-13 CMF) ──
+
+enum MiFIDQuestionnaireStatus {
+  BROUILLON
+  COMPLETE
+  VALIDE
+  EXPIRE
+}
+
+model MiFIDQuestionnaire {
+  id        String @id @default(cuid())
+  cabinetId String
+  clientId  String
+  client    Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Identification
+  version        Int                      @default(1)
+  status         MiFIDQuestionnaireStatus  @default(BROUILLON)
+  completedAt    DateTime?
+  validatedBy    String? // userId du conseiller validant
+  expiresAt      DateTime? // Recommandé : 2 ans
+
+  // Section 1 : Connaissances et expérience (Art. 314-44 RGAMF)
+  connaissanceActions         String? // AUCUNE, BASIQUE, INTERMEDIAIRE, AVANCEE
+  connaissanceObligations     String? // idem
+  connaissanceOPCVM           String? // idem
+  connaissanceProdStructures  String? // idem
+  connaissanceImmobilier      String? // idem
+  connaissanceCrypto          String? // idem
+  connaissancePrivateEquity   String? // idem
+  experienceNbOperations      Int?    // Nombre opérations 3 dernières années
+  experienceMontantMoyen      Decimal? @db.Decimal(15, 2)
+  experiencePertes            Boolean  @default(false)
+  formationFinanciere         String? // Aucune, Autodidacte, Formation pro, Diplôme
+
+  // Section 2 : Situation financière (Art. 314-45 RGAMF)
+  revenusAnnuels              Decimal? @db.Decimal(15, 2)
+  patrimoineFinancier         Decimal? @db.Decimal(15, 2)
+  patrimoineImmobilier        Decimal? @db.Decimal(15, 2)
+  chargesMensuelles           Decimal? @db.Decimal(12, 2)
+  capaciteEpargneMensuelle    Decimal? @db.Decimal(12, 2)
+  endettement                 Decimal? @db.Decimal(5, 2) // en %
+  epargnePrecaution           Decimal? @db.Decimal(15, 2)
+  epargnePrecautionMois       Int? // Nombre de mois de charges couvertes
+
+  // Section 3 : Objectifs d'investissement (Art. 314-46 RGAMF)
+  objectifPrincipal           String? // CAPITAL_GROWTH, INCOME, PRESERVATION, TAX_OPTIMIZATION, RETIREMENT, TRANSMISSION
+  horizonInvestissement       String? // COURT_TERME (<2 ans), MOYEN_TERME (2-5), LONG_TERME (5-10), TRES_LONG_TERME (>10)
+  toleranceRisque             String? // PRUDENT, MODERE, EQUILIBRE, DYNAMIQUE, OFFENSIF
+  pertesAcceptables           String? // AUCUNE, MOINS_5, MOINS_10, MOINS_20, MOINS_30, PLUS_30
+  besoinLiquidite             String? // IMMEDIAT, SOUS_1_AN, SOUS_5_ANS, PAS_DE_BESOIN
+  investissementResponsable   Boolean  @default(false) // Préférence ESG/ISR
+  preferencesESG              Json? // Critères ESG détaillés
+
+  // Section 4 : Résultat
+  profilCalcule               String? // PRUDENT, MODERE, EQUILIBRE, DYNAMIQUE, OFFENSIF
+  scoreRisque                 Int? // 0-100
+  recommandationAllocation    Json? // { obligations: 60, actions: 30, alternatifs: 10 }
+  commentaireConseiller       String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([cabinetId, clientId])
+  @@index([clientId, status])
+  @@index([expiresAt])
+  @@map("mifid_questionnaires")
+}
+
+// ── LCB-FT : Scoring de risque client automatisé (Art. L. 561-4-1 CMF) ──
+
+enum LCBFTRiskLevel {
+  FAIBLE
+  MOYEN
+  ELEVE
+  TRES_ELEVE
+}
+
+model LCBFTRiskAssessment {
+  id        String @id @default(cuid())
+  cabinetId String
+  clientId  String
+  client    Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Score global
+  scoreTotal        Int            // 0-100
+  riskLevel         LCBFTRiskLevel
+  assessedAt        DateTime       @default(now())
+  assessedBy        String? // userId ou 'SYSTEM'
+  nextReviewDate    DateTime?
+
+  // Facteurs de risque (chaque facteur a un score 0-25)
+  // Facteur 1 : Identité client
+  scorePPE          Int    @default(0) // Personne Politiquement Exposée
+  scoreNationalite  Int    @default(0) // Pays à risque (GAFI liste grise/noire)
+  scoreResidence    Int    @default(0) // Pays de résidence fiscale
+  scoreAge          Int    @default(0) // Âge atypique pour le profil
+
+  // Facteur 2 : Activité financière
+  scoreOriginesFonds   Int @default(0) // Cohérence origine des fonds
+  scoreMontantPatrimoine Int @default(0) // Patrimoine vs revenus déclarés
+  scoreOperationsAtypiques Int @default(0) // Opérations inhabituelles
+  scoreFrequenceOperations Int @default(0) // Volume d'opérations
+
+  // Facteur 3 : Comportement
+  scoreModificationFrequente Int @default(0) // Changements fréquents de bénéficiaire
+  scoreRefusDocuments        Int @default(0) // Réticence à fournir des documents
+  scoreInconsistances        Int @default(0) // Incohérences dans les déclarations
+
+  // Détail des flags
+  flags              Json? // [{ code: 'PPE', severity: 'HIGH', detail: '...' }]
+  paysRisqueDetectes Json? // [{ code: 'XX', type: 'grise'|'noire', organisme: 'GAFI' }]
+
+  // Actions requises
+  vigilanceRenforcee Boolean @default(false)
+  declarationSoupcon Boolean @default(false) // Si true, obligation TRACFIN
+  gelDesAvoirs       Boolean @default(false)
+  commentaire        String? @db.Text
+
+  // Historique
+  previousAssessmentId String?
+
+  createdAt DateTime @default(now())
+
+  @@index([cabinetId, clientId])
+  @@index([riskLevel])
+  @@index([nextReviewDate])
+  @@map("lcbft_risk_assessments")
+}
+
+// ── DDA : Formation continue (Recommandation ACPR 2022-R-01) ──
+
+enum FormationType {
+  PRESENTIEL
+  DISTANCIEL
+  E_LEARNING
+  CONFERENCE
+  WEBINAIRE
+  CERTIFICATION
+}
+
+model FormationDDA {
+  id        String @id @default(cuid())
+  cabinetId String
+  userId    String // Conseiller concerné
+  
+  // Formation
+  titre           String
+  organisme       String
+  type            FormationType @default(DISTANCIEL)
+  dateDebut       DateTime
+  dateFin         DateTime?
+  dureeHeures     Decimal       @db.Decimal(5, 2) // En heures (ex: 1.5)
+  
+  // Catégorie DDA (15h/an obligatoires réparties)
+  categorieDDA    String? // TECHNIQUE_PRODUIT, JURIDIQUE_FISCAL, COMMERCIAL, CONFORMITE, DIGITAL
+  
+  // Validation
+  attestation     Boolean  @default(false)
+  attestationUrl  String?
+  validePar       String? // userId du responsable
+
+  // Année de référence
+  anneeReference  Int // Ex: 2025
+
+  notes           String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([cabinetId, userId])
+  @@index([anneeReference])
+  @@map("formations_dda")
+}
+
+// ── Politiques de rétention des données ──
+
+// ── Registre des traitements RGPD (Art. 30) ──
+
+enum DataProcessingLegalBasis {
+  CONSENTEMENT          // Art. 6.1.a — Consentement explicite
+  EXECUTION_CONTRAT     // Art. 6.1.b — Exécution d'un contrat
+  OBLIGATION_LEGALE     // Art. 6.1.c — Obligation légale
+  INTERET_VITAL         // Art. 6.1.d — Intérêt vital
+  MISSION_PUBLIQUE      // Art. 6.1.e — Mission d'intérêt public
+  INTERET_LEGITIME      // Art. 6.1.f — Intérêt légitime
+}
+
+model DataProcessingRegistry {
+  id            String                    @id @default(cuid())
+  cabinetId     String
+  cabinet       Cabinet                   @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+
+  // Identification du traitement
+  code          String                    // T-001, T-002, etc.
+  purpose       String                    // Finalité du traitement
+  description   String?                   @db.Text
+
+  // Base juridique
+  legalBasis    DataProcessingLegalBasis
+  legalBasisDetail String?                // Article de loi précis
+
+  // Données
+  dataCategories    Json                  // String[] — catégories de données traitées
+  dataSensitive     Boolean @default(false) // Données sensibles Art. 9
+  dataSubjects      Json                  // String[] — catégories de personnes concernées
+
+  // Conservation
+  retentionDuration String                // Ex: "5 ans après fin relation"
+  retentionBasis    String?               // Base légale de la durée
+
+  // Destinataires & transferts
+  recipients        Json                  // String[] — destinataires
+  subProcessors     Json?                 // String[] — sous-traitants
+  transfers         Json                  // String[] — transferts hors UE
+  transferSafeguards String?              // Garanties pour transferts hors UE (CCT, BCR, etc.)
+
+  // Mesures de sécurité
+  securityMeasures  Json                  // String[] — mesures techniques et organisationnelles
+
+  // AIPD (Analyse d'Impact) — Art. 35
+  aipdRequired      Boolean @default(false)
+  aipdDate          DateTime?
+  aipdReference     String?               // Référence document AIPD
+
+  // Métadonnées
+  isActive      Boolean  @default(true)
+  lastReviewDate DateTime?
+  nextReviewDate DateTime?
+  createdBy     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([cabinetId, code])
+  @@index([cabinetId])
+  @@map("data_processing_registry")
+}
+
+enum RetentionPolicyType {
+  RGPD_GENERAL       // 3 ans après fin relation
+  LCB_FT             // 5 ans après fin relation (L. 561-12 CMF)
+  FISCAL             // 6 ans (prescription fiscale)
+  COMMERCIAL         // 3 ans (prescription commerciale)
+  ACPR_RECLAMATION   // 5 ans après clôture réclamation
+  DOCUMENT_COMPTABLE // 10 ans (Code de commerce)
+}
+
+model DataRetentionPolicy {
+  id          String              @id @default(cuid())
+  cabinetId   String
+  type        RetentionPolicyType
+  entityType  String // Nom du modèle Prisma concerné
+  description String
+  
+  // Durée de conservation
+  retentionYears  Int
+  retentionMonths Int @default(0)
+  
+  // Base juridique
+  baseJuridique   String // Article de loi
+  
+  // Automatisation
+  autoDelete      Boolean @default(false) // Suppression auto après expiration
+  autoAnonymize   Boolean @default(true) // Anonymisation auto après expiration
+  
+  // Notification
+  notifyDaysBefore Int @default(30) // Notification X jours avant expiration
+  
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cabinetId, type, entityType])
+  @@map("data_retention_policies")
+}
+
+// ── Consentement marketing granulaire (RGPD Art. 7) ──
+
+enum MarketingChannel {
+  EMAIL
+  SMS
+  TELEPHONE
+  COURRIER
+  PUSH_NOTIFICATION
+}
+
+model MarketingConsent {
+  id        String @id @default(cuid())
+  clientId  String
+  client    Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  channel       MarketingChannel
+  granted       Boolean
+  grantedAt     DateTime?
+  revokedAt     DateTime?
+  
+  // Preuve
+  ipAddress     String?
+  userAgent     String?
+  source        String? // FORMULAIRE_INSCRIPTION, PREFERENCES, API
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([clientId, channel])
+  @@index([clientId])
+  @@map("marketing_consents")
+}
+
+// ============================================
+// MODULE: AURA — AI Agent Token Budget Tracking
+// ============================================
+
+model AuraTokenUsage {
+  id        String   @id @default(cuid())
+  role      String   // 'orchestrator' | 'subagent' | 'stt'
+  cabinetId String
+  userId    String
+  period    String   // 'YYYY-MM'
+
+  tokensUsed     Int @default(0)
+  sttMinutesUsed Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([role, cabinetId, userId, period])
+  @@index([cabinetId, period])
+  @@index([userId, period])
+  @@map("aura_token_usage")
+}
+
+// ============================================================================
+// MODULE: AURA V2 — Agent Autonome Entreprise
+// Architecture : Orchestrateur → Planner → Executor → Critic
+// Connexions IA OAuth 2.1, Sessions, Runs, Steps, ToolCalls, Permissions
+// ============================================================================
+
+// ── Connexion IA Provider (OAuth 2.1 — pas de clés API manuelles) ──
+
+enum AIProviderType {
+  OPENAI
+  ANTHROPIC
+  MISTRAL
+  GROQ
+  DEEPSEEK
+  AZURE_OPENAI
+  GOOGLE_VERTEX
+  COHERE
+}
+
+enum AIConnectionStatus {
+  DISCONNECTED    // Pas encore connecté
+  PENDING_OAUTH   // Flux OAuth en cours
+  CONNECTED       // Connecté et opérationnel
+  EXPIRED         // Token expiré, refresh nécessaire
+  REVOKED         // Révoqué par l'utilisateur ou le provider
+  ERROR           // Erreur technique (rate limit, quota, etc.)
+  RESTRICTED      // Restreint par l'admin du cabinet
+}
+
+model AIConnection {
+  id          String             @id @default(cuid())
+  cabinetId   String
+  cabinet     Cabinet            @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+
+  provider    AIProviderType
+  status      AIConnectionStatus @default(DISCONNECTED)
+  label       String?            // Nom personnalisé ("Mon compte OpenAI")
+
+  // OAuth 2.1 tokens (chiffrés côté applicatif — AES-256-GCM)
+  accessTokenEnc   String?  @db.Text // Token d'accès chiffré
+  refreshTokenEnc  String?  @db.Text // Refresh token chiffré
+  tokenExpiresAt   DateTime?
+  scopes           String[] // Scopes accordés par le provider
+
+  // Métadonnées provider
+  providerAccountId String?  // ID du compte chez le provider
+  providerEmail     String?  // Email du compte provider
+  providerMetadata  Json?    // Limites, quotas, modèles disponibles
+
+  // Modèles autorisés pour ce cabinet
+  allowedModels     String[] // ["gpt-4o", "gpt-4o-mini", "o1-preview"]
+  defaultModel      String?  // Modèle par défaut pour ce provider
+
+  // Santé de la connexion
+  lastHealthCheck   DateTime?
+  lastError         String?
+  consecutiveErrors Int      @default(0)
+  totalTokensUsed   BigInt   @default(0)
+  totalCost         Decimal? @db.Decimal(10, 4)
+
+  // Limites par cabinet
+  monthlyTokenLimit BigInt?  // Limite mensuelle configurable
+  monthlySpendLimit Decimal? @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?  // userId qui a créé la connexion
+
+  // Relations
+  sessions  AISession[]
+  runs      AIRun[]
+  toolCalls AIToolCall[]
+
+  @@unique([cabinetId, provider])
+  @@index([cabinetId, status])
+  @@index([provider])
+  @@index([tokenExpiresAt])
+  @@map("ai_connections")
+}
+
+// ── Profil d'assistant configurable par cabinet ──
+
+enum AssistantTone {
+  PROFESSIONNEL
+  PEDAGOGIQUE
+  DIRECT
+  AMICAL
+}
+
+model AssistantProfile {
+  id          String        @id @default(cuid())
+  cabinetId   String
+  cabinet     Cabinet       @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+
+  name        String        @default("AURA") // Nom de l'assistant
+  description String?       @db.Text
+  tone        AssistantTone @default(PROFESSIONNEL)
+
+  // Prompt personnalisé (ajouté au system prompt platform)
+  customSystemPrompt String? @db.Text
+  // Domaines d'expertise activés
+  enabledDomains     String[] // ["fiscal", "patrimoine", "retraite", "prevoyance", "immobilier", "succession"]
+  // Fonctionnalités activées
+  enabledFeatures    Json?    // { backgroundMonitoring: true, voiceMode: false, ... }
+
+  // Limites
+  maxToolCallsPerRun Int     @default(10)
+  maxRunSteps        Int     @default(20)
+  requireConfirmForWrites Boolean @default(true)
+
+  isDefault   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  sessions AISession[]
+
+  @@index([cabinetId])
+  @@map("assistant_profiles")
+}
+
+// ── Session IA (conversation contextuelle) ──
+
+enum AISessionStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  EXPIRED
+  ARCHIVED
+}
+
+model AISession {
+  id            String          @id @default(cuid())
+  cabinetId     String
+  cabinet       Cabinet         @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User            @relation("AISessionsUser", fields: [userId], references: [id], onDelete: Cascade)
+  clientId      String?
+  client        Client?         @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  connectionId  String?
+  connection    AIConnection?   @relation(fields: [connectionId], references: [id], onDelete: SetNull)
+  profileId     String?
+  profile       AssistantProfile? @relation(fields: [profileId], references: [id], onDelete: SetNull)
+
+  status        AISessionStatus @default(ACTIVE)
+  title         String          @default("Nouvelle session")
+  summary       String?         @db.Text
+
+  // Contexte de session
+  context       Json?           // { pageContext, clientSnapshot, intent, ... }
+  mode          String          @default("conversation") // conversation | voice | background
+
+  // Métriques
+  totalRuns     Int             @default(0)
+  totalTokens   BigInt          @default(0)
+  totalToolCalls Int            @default(0)
+  totalDuration Int             @default(0) // ms cumulé
+
+  // Mémoire de session (contexte court terme)
+  sessionMemory Json?           // Faits extraits pendant la session
+
+  startedAt     DateTime        @default(now())
+  lastActiveAt  DateTime        @default(now())
+  completedAt   DateTime?
+  expiresAt     DateTime?       // Auto-expire après inactivité
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  // Relations
+  runs     AIRun[]
+  messages AISessionMessage[]
+
+  @@index([cabinetId, userId])
+  @@index([cabinetId, userId, status])
+  @@index([cabinetId, clientId])
+  @@index([lastActiveAt])
+  @@index([status])
+  @@map("ai_sessions")
+}
+
+model AISessionMessage {
+  id         String   @id @default(cuid())
+  sessionId  String
+  session    AISession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  role       String   // 'user' | 'assistant' | 'system' | 'tool'
+  content    String   @db.Text
+  metadata   Json?    // { ragSources, confidence, agentRole, ... }
+
+  // Lien vers le run qui a produit ce message
+  runId      String?
+  run        AIRun?   @relation(fields: [runId], references: [id], onDelete: SetNull)
+
+  createdAt  DateTime @default(now())
+
+  @@index([sessionId, createdAt])
+  @@index([runId])
+  @@map("ai_session_messages")
+}
+
+// ── Run IA (cycle Planner → Executor → Critic) ──
+
+enum AIRunStatus {
+  QUEUED        // En file d'attente
+  PLANNING      // Planner en cours
+  EXECUTING     // Executor en cours
+  CRITICIZING   // Critic en cours
+  AWAITING_CONFIRM // En attente de confirmation utilisateur
+  COMPLETED     // Terminé avec succès
+  FAILED        // Échoué
+  CANCELLED     // Annulé par l'utilisateur
+  TIMED_OUT     // Timeout
+}
+
+enum AIRunType {
+  CHAT          // Conversation standard
+  TOOL_CALL     // Exécution d'outil
+  ANALYSIS      // Analyse patrimoniale/fiscale
+  SIMULATION    // Orchestration de simulateur
+  WORKFLOW      // Workflow multi-étapes
+  BACKGROUND    // Tâche de fond (monitoring, détection)
+  VOICE         // Mode vocal
+  DRAFT         // Génération de brouillon
+}
+
+model AIRun {
+  id           String      @id @default(cuid())
+  sessionId    String
+  session      AISession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  connectionId String?
+  connection   AIConnection? @relation(fields: [connectionId], references: [id], onDelete: SetNull)
+  cabinetId    String
+  userId       String
+
+  status       AIRunStatus @default(QUEUED)
+  type         AIRunType   @default(CHAT)
+
+  // Input
+  userMessage  String      @db.Text
+  intent       String?     // Intent classifié (action, question, instruction, confirmation, ...)
+  intentConfidence Float?  // Score de confiance de la classification
+
+  // Plan (produit par le Planner)
+  plan         Json?       // { steps: [{ id, tool, params, reason }], strategy, fallback }
+
+  // Résultat
+  response     String?     @db.Text // Réponse finale à l'utilisateur
+  responseMetadata Json?   // { confidence, sources, warnings, ... }
+
+  // Critic
+  criticScore  Float?      // Score qualité (0-1)
+  criticNotes  String?     @db.Text // Notes du critic
+  criticPassed Boolean?    // Le critic a-t-il validé ?
+
+  // Métriques
+  tokensInput  Int         @default(0)
+  tokensOutput Int         @default(0)
+  totalTokens  Int         @default(0)
+  durationMs   Int         @default(0)
+  modelUsed    String?     // Modèle effectivement utilisé
+  providerUsed String?     // Provider effectivement utilisé
+
+  // Coût estimé
+  estimatedCost Decimal?   @db.Decimal(10, 6)
+
+  // Erreur
+  error        String?     @db.Text
+  errorCode    String?     // Code d'erreur structuré
+
+  // Traçabilité
+  correlationId String?    // Pour corréler les logs
+
+  startedAt    DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Relations
+  steps     RunStep[]
+  toolCalls AIToolCall[]
+  messages  AISessionMessage[]
+  validations ValidationRun[]
+
+  @@index([sessionId, createdAt])
+  @@index([cabinetId, userId])
+  @@index([cabinetId, status])
+  @@index([type])
+  @@index([correlationId])
+  @@map("ai_runs")
+}
+
+// ── Étape d'un Run (granularité fine) ──
+
+enum RunStepType {
+  INTENT_CLASSIFICATION
+  MEMORY_RETRIEVAL
+  RAG_ENRICHMENT
+  PLANNING
+  TOOL_EXECUTION
+  LLM_GENERATION
+  CRITIC_EVALUATION
+  VALIDATION
+  CONFIRMATION_REQUEST
+  RESPONSE_FORMATTING
+  ERROR_RECOVERY
+}
+
+enum RunStepStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  SKIPPED
+}
+
+model RunStep {
+  id        String        @id @default(cuid())
+  runId     String
+  run       AIRun         @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  stepNumber Int          // Ordre d'exécution (1, 2, 3, ...)
+  type       RunStepType
+  status     RunStepStatus @default(PENDING)
+  agentRole  String?      // 'planner' | 'executor' | 'critic' | 'memory' | 'workflow'
+
+  // Input/Output de l'étape
+  input      Json?        // Données d'entrée
+  output     Json?        // Données de sortie
+  error      String?      @db.Text
+
+  // Métriques
+  tokensUsed Int          @default(0)
+  durationMs Int          @default(0)
+  modelUsed  String?
+
+  startedAt  DateTime?
+  completedAt DateTime?
+  createdAt  DateTime     @default(now())
+
+  // Relations
+  toolCalls AIToolCall[]
+
+  @@index([runId, stepNumber])
+  @@index([type])
+  @@map("run_steps")
+}
+
+// ── Appel d'outil (audit détaillé) ──
+
+enum ToolCallStatus {
+  PENDING
+  AWAITING_CONFIRM
+  EXECUTING
+  COMPLETED
+  FAILED
+  DENIED       // Refusé par permissions
+  CANCELLED    // Annulé par l'utilisateur
+  TIMED_OUT
+}
+
+model AIToolCall {
+  id           String         @id @default(cuid())
+  runId        String?
+  run          AIRun?         @relation(fields: [runId], references: [id], onDelete: Cascade)
+  stepId       String?
+  step         RunStep?       @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  connectionId String?
+  connection   AIConnection?  @relation(fields: [connectionId], references: [id], onDelete: SetNull)
+  cabinetId    String
+  userId       String
+
+  // Outil
+  toolName     String
+  toolCategory String?       // 'read' | 'write' | 'navigate' | 'memory' | 'simulate' | 'export'
+  toolParams   Json          // Paramètres d'appel
+  toolParamsMasked Json?     // Paramètres avec données sensibles masquées (pour logs)
+
+  status       ToolCallStatus @default(PENDING)
+
+  // Résultat
+  result       Json?          // Résultat brut
+  resultSummary String?       @db.Text // Résumé lisible
+  error        String?        @db.Text
+
+  // Sécurité
+  requiresConfirmation Boolean @default(false)
+  confirmedBy    String?      // userId qui a confirmé
+  confirmedAt    DateTime?
+  permissionUsed String?      // Permission qui a autorisé l'appel
+
+  // Métriques
+  durationMs   Int            @default(0)
+  retryCount   Int            @default(0)
+  idempotencyKey String?      // Pour les opérations idempotentes
+
+  // Audit
+  reasoning    String?        @db.Text // Pourquoi l'agent a choisi cet outil
+  dataAccessed String[]       // Entités/champs accédés (pour RGPD)
+
+  createdAt    DateTime       @default(now())
+  executedAt   DateTime?
+  completedAt  DateTime?
+
+  @@index([cabinetId, userId])
+  @@index([runId])
+  @@index([stepId])
+  @@index([toolName])
+  @@index([status])
+  @@index([cabinetId, toolName, createdAt])
+  @@map("ai_tool_calls")
+}
+
+// ── Permissions d'outils par cabinet ──
+
+model AIToolPermission {
+  id          String  @id @default(cuid())
+  cabinetId   String
+  cabinet     Cabinet @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+
+  toolName    String  // Nom de l'outil
+  enabled     Boolean @default(true)
+  requiresConfirmation Boolean @default(true) // Override du défaut
+
+  // Restrictions par rôle
+  allowedRoles String[] // ['ADMIN', 'ADVISOR'] — vide = tous
+
+  // Limites
+  maxCallsPerHour   Int? // Limite horaire
+  maxCallsPerDay    Int? // Limite journalière
+
+  // Conditions
+  conditions  Json?   // Conditions personnalisées { maxAmount: 100000, onlyOwnClients: true }
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([cabinetId, toolName])
+  @@index([cabinetId])
+  @@map("ai_tool_permissions")
+}
+
+// ── Validation Backend (source de vérité) ──
+
+enum ValidationStatus {
+  PENDING
+  PASSED
+  FAILED
+  WARNING
+  SKIPPED
+}
+
+model ValidationRun {
+  id        String           @id @default(cuid())
+  runId     String
+  run       AIRun            @relation(fields: [runId], references: [id], onDelete: Cascade)
+  cabinetId String
+
+  // Type de validation
+  validationType String     // 'fiscal_calculation' | 'patrimoine_coherence' | 'regulatory_check' | 'data_integrity'
+  status         ValidationStatus @default(PENDING)
+
+  // Input/Output
+  inputData      Json?      // Données à valider
+  expectedOutput Json?      // Résultat attendu (du backend)
+  agentOutput    Json?      // Résultat proposé par l'agent
+  diff           Json?      // Différences détectées
+
+  // Résultat
+  passed         Boolean    @default(false)
+  score          Float?     // Score de conformité (0-1)
+  errors         Json?      // [{ field, expected, got, severity }]
+  warnings       Json?      // [{ field, message, severity }]
+
+  // Métadonnées
+  validatorVersion String?  // Version du validateur utilisé
+  durationMs       Int      @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([runId])
+  @@index([cabinetId, validationType])
+  @@index([status])
+  @@map("validation_runs")
+}
+
+// ── État de Workflow (orchestration multi-étapes) ──
+
+enum WorkflowStatus {
+  DRAFT
+  RUNNING
+  PAUSED
+  AWAITING_INPUT
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model WorkflowState {
+  id          String         @id @default(cuid())
+  cabinetId   String
+  cabinet     Cabinet        @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
+  userId      String
+  clientId    String?
+
+  // Définition du workflow
+  workflowType String       // 'post_meeting' | 'onboarding' | 'kyc_review' | 'bilan_patrimonial' | 'rebalancing'
+  status       WorkflowStatus @default(DRAFT)
+  title        String
+
+  // Étapes
+  steps        Json          // [{ id, label, status, role, runId?, result?, error? }]
+  currentStep  Int           @default(0)
+  totalSteps   Int           @default(0)
+
+  // Contexte persisté entre étapes
+  sharedContext Json?        // Données partagées entre les étapes
+  accumulator   Json?        // Résultats accumulés
+
+  // Résultat final
+  result       Json?
+  error        String?      @db.Text
+
+  // Métriques
+  totalDurationMs Int       @default(0)
+  totalTokens     BigInt    @default(0)
+
+  startedAt    DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([cabinetId, userId])
+  @@index([cabinetId, workflowType])
+  @@index([status])
+  @@map("workflow_states")
+}
+
+// ── Log d'accès aux données (RGPD Art. 30) ──
+
+model AIDataAccessLog {
+  id          String   @id @default(cuid())
+  cabinetId   String
+  userId      String
+  clientId    String?  // Client dont les données sont accédées
+
+  // Accès
+  entityType  String   // 'Client' | 'Contrat' | 'Actif' | 'Document' | ...
+  entityId    String
+  fields      String[] // Champs accédés
+  operation   String   // 'read' | 'write' | 'delete'
+
+  // Source
+  source      String   // 'agent_tool' | 'api' | 'background_job'
+  toolCallId  String?  // Lien vers l'appel d'outil
+  runId       String?  // Lien vers le run
+
+  // Contexte
+  purpose     String?  // Finalité du traitement (RGPD)
+  legalBasis  String?  // Base juridique
+
+  createdAt   DateTime @default(now())
+
+  @@index([cabinetId, clientId])
+  @@index([cabinetId, entityType, entityId])
+  @@index([createdAt])
+  @@index([userId])
+  @@map("ai_data_access_logs")
+}
+
+// ── Consentement IA (spécifique au traitement IA) ──
+
+model AIConsentLog {
+  id          String   @id @default(cuid())
+  cabinetId   String
+  clientId    String?
+
+  // Consentement
+  consentType String   // 'ai_processing' | 'ai_profiling' | 'ai_recommendation' | 'voice_recording'
+  granted     Boolean
+  grantedAt   DateTime?
+  revokedAt   DateTime?
+
+  // Preuve
+  grantedBy   String?  // userId du conseiller qui a recueilli le consentement
+  ipAddress   String?
+  source      String?  // 'client_portal' | 'advisor_crm' | 'email_link'
+
+  // Texte présenté au client
+  consentText String?  @db.Text
+  version     String?  // Version du texte de consentement
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([cabinetId, clientId])
+  @@index([consentType])
+  @@map("ai_consent_logs")
 }

@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/app/_common/lib/prisma'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 // GET /api/advisor/clients/[id]/biens-mobiliers/[bienMobilierId] - Récupérer un bien mobilier spécifique
 export async function GET(
   req: NextRequest,
@@ -33,7 +33,7 @@ export async function GET(
 
     return createSuccessResponse(bienMobilier)
   } catch (error: any) {
-    console.error('Error fetching bien mobilier:', error)
+    logger.error('Error fetching bien mobilier:', { error: error instanceof Error ? error.message : String(error) })
     if (error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }
@@ -139,7 +139,7 @@ export async function PUT(
 
     return createSuccessResponse(updatedBien)
   } catch (error: any) {
-    console.error('Error updating bien mobilier:', error)
+    logger.error('Error updating bien mobilier:', { error: error instanceof Error ? error.message : String(error) })
     if (error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }
@@ -183,7 +183,7 @@ export async function DELETE(
 
     return createSuccessResponse({ message: 'Bien mobilier deleted successfully', id: deletedBien.id })
   } catch (error: any) {
-    console.error('Error deleting bien mobilier:', error)
+    logger.error('Error deleting bien mobilier:', { error: error instanceof Error ? error.message : String(error) })
     if (error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }

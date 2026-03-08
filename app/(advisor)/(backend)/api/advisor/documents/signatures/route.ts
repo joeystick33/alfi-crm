@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { SignatureService } from '@/app/_common/lib/services/signature-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 const SignatureStepSchema = z.object({
   signerEmail: z.string().email(),
   signerName: z.string(),
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     return createSuccessResponse(workflow, 201)
   } catch (error: any) {
-    console.error('Error in POST /api/advisor/documents/signatures:', error)
+    logger.error('Error in POST /api/advisor/documents/signatures:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof z.ZodError) {
       const details = error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', ')
@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse(steps)
   } catch (error: any) {
-    console.error('Error in GET /api/advisor/documents/signatures:', error)
+    logger.error('Error in GET /api/advisor/documents/signatures:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

@@ -185,6 +185,41 @@ export function useDeleteClient(
 
 
 /**
+ * Restore archived client
+ */
+export function useRestoreClient(
+  options?: UseMutationOptions<void, Error, string>
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/advisor/clients/${id}/archive`)
+    },
+    onSuccess: (_, id) => {
+      // Invalidate clients list
+      queryClient.invalidateQueries({ queryKey: queryKeys.clients })
+      // Invalidate dashboard counters
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardCounters })
+
+      toast({
+        title: 'Client restauré',
+        description: 'Le client a été restauré avec succès.',
+        variant: 'success',
+      })
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erreur',
+        description: error.message || 'Impossible de restaurer le client.',
+        variant: 'destructive',
+      })
+    },
+    ...options,
+  })
+}
+
+/**
  * Fetch client wealth/patrimoine data
  */
 export function useClientWealth(

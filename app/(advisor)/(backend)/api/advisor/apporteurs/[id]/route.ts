@@ -4,7 +4,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { ApporteurService } from '@/app/_common/lib/services/apporteur-service'
 import { ApporteurType } from '@prisma/client'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/apporteurs/[id]
  * Récupérer un apporteur par ID
@@ -32,7 +32,7 @@ export async function GET(
 
     return createSuccessResponse(apporteur)
   } catch (error: any) {
-    console.error(`Erreur GET /api/advisor/apporteurs/${id}:`, error)
+    logger.error(`Erreur GET /api/advisor/apporteurs/${id}:`, { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Non autorisé', 401)
@@ -104,7 +104,7 @@ export async function PATCH(
 
     return createSuccessResponse(apporteur)
   } catch (error: any) {
-    console.error(`Erreur PATCH /api/advisor/apporteurs/${id}:`, error)
+    logger.error(`Erreur PATCH /api/advisor/apporteurs/${id}:`, { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Non autorisé', 401)
@@ -149,7 +149,7 @@ export async function DELETE(
 
     return createSuccessResponse(result)
   } catch (error: any) {
-    console.error(`Erreur DELETE /api/advisor/apporteurs/${id}:`, error)
+    logger.error(`Erreur DELETE /api/advisor/apporteurs/${id}:`, { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Non autorisé', 401)

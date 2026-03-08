@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { KYCService } from '@/app/_common/lib/services/kyc-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * PATCH /api/clients/[id]/kyc/documents/[docId]
  * Valider un document KYC
@@ -40,7 +40,7 @@ export async function PATCH(
 
     return createSuccessResponse(kycDocument)
   } catch (error) {
-    console.error('Error in PATCH /api/clients/[id]/kyc/documents/[docId]:', error)
+    logger.error('Error in PATCH /api/clients/[id]/kyc/documents/[docId]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

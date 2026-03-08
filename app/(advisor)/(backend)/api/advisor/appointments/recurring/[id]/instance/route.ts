@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { RendezVousService } from '@/app/_common/lib/services/rendez-vous-service'
-
+import { logger } from '@/app/_common/lib/logger'
 const updateInstanceSchema = z.object({
   occurrenceDate: z.string().transform(val => new Date(val)),
   updates: z.object({
@@ -82,7 +82,7 @@ export async function PUT(
       occurrenceDate: data.occurrenceDate.toISOString(),
     })
   } catch (error) {
-    console.error('Error updating recurrence instance:', error)
+    logger.error('Error updating recurrence instance:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof z.ZodError) {
       return createErrorResponse('Données invalides', 400)

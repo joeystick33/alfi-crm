@@ -4,7 +4,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { ApporteurService } from '@/app/_common/lib/services/apporteur-service'
 import { ApporteurType } from '@prisma/client'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/apporteurs
  * Liste des apporteurs d'affaires avec filtres
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse({ data: apporteurs })
   } catch (error: any) {
-    console.error('Erreur GET /api/advisor/apporteurs:', error)
+    logger.error('Erreur GET /api/advisor/apporteurs:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Non autorisé', 401)
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
 
     return createSuccessResponse(apporteur, 201)
   } catch (error: any) {
-    console.error('Erreur POST /api/advisor/apporteurs:', error)
+    logger.error('Erreur POST /api/advisor/apporteurs:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Non autorisé', 401)

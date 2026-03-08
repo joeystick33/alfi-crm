@@ -2,7 +2,8 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
-
+import { logger } from '@/app/_common/lib/logger'
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
 const taxProjectionSchema = z.object({
     currentIncome: z.number().positive('Le revenu doit être positif'),
     incomeGrowthRate: z.number().min(-0.1).max(0.2, 'Le taux de croissance doit être entre -10% et 20%'),
@@ -13,21 +14,21 @@ const taxProjectionSchema = z.object({
 })
 
 /**
- * Barème progressif de l'impôt sur le revenu 2024
- * Taux appliqué par tranche de revenu imposable (après quotient familial)
+ * Barème progressif de l'impôt sur le revenu 2026 (revenus 2025)
+ * LF2026 art. 2 ter — Revalorisation +0,9%
  */
-const TAX_BRACKETS_2024 = [
-    { limit: 11294, rate: 0 },      // 0% jusqu'à 11 294€
-    { limit: 28797, rate: 0.11 },   // 11% de 11 294€ à 28 797€
-    { limit: 82341, rate: 0.30 },   // 30% de 28 797€ à 82 341€
-    { limit: 177106, rate: 0.41 },  // 41% de 82 341€ à 177 106€
-    { limit: Infinity, rate: 0.45 } // 45% au-delà de 177 106€
-]
+const TAX_BRACKETS_2024 = RULES.ir.bareme.map(t => ({
+    limit: t.max,
+    rate: t.taux,
+}))
 
 /**
- * Taux des prélèvements sociaux sur les revenus d'activité
+ * Taux des prélèvements sociaux 2026 — LFSS 2026 : système dual
+ * 18,6% sur revenus financiers (dividendes, PV mobilières, LMNP/BIC, PEA)
+ * 17,2% INCHANGÉ sur revenus fonciers, PV immobilières, assurance-vie
+ * Ici : taux financier par défaut (projection patrimoine financier)
  */
-const SOCIAL_CONTRIBUTIONS_RATE = 0.172 // 17.2% (CSG + CRDS + autres)
+const SOCIAL_CONTRIBUTIONS_RATE = RULES.ps.pfu_per_2026 // PS revenus financiers
 
 interface YearProjection {
     year: number
@@ -193,7 +194,7 @@ export async function POST(request: NextRequest) {
 
         return createSuccessResponse(result)
     } catch (error: any) {
-        console.error('Error in tax projection:', error)
+        logger.error('Error in tax projection:', { error: error instanceof Error ? error.message : String(error) })
         if (error instanceof z.ZodError) {
             return createErrorResponse('Validation error: ' + error.message, 400)
         }

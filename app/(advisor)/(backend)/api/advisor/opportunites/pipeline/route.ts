@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { OpportuniteService } from '@/app/_common/lib/services/opportunite-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/opportunites/pipeline
  * Vue pipeline commercial (opportunités groupées par statut)
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse(pipeline)
   } catch (error) {
-    console.error('Error in GET /api/opportunites/pipeline:', error)
+    logger.error('Error in GET /api/opportunites/pipeline:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

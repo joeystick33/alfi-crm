@@ -4,7 +4,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { KYCService } from '@/app/_common/lib/services/kyc-service'
 import { z } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 // Schéma de validation pour créer un document KYC
 const createKYCDocumentSchema = z.object({
   clientId: z.string().cuid(),
@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
     // Sinon, retourner erreur demandant le clientId
     return createErrorResponse('clientId parameter is required', 400)
   } catch (error: any) {
-    console.error('Error fetching KYC documents:', error)
+    logger.error('Error fetching KYC documents:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof z.ZodError) {
       return createErrorResponse(`Validation error: ${JSON.stringify(error.issues)}`, 400)
@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
 
     return createSuccessResponse(document, 201)
   } catch (error: any) {
-    console.error('Error creating KYC document:', error)
+    logger.error('Error creating KYC document:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof z.ZodError) {
       return createErrorResponse(`Validation error: ${JSON.stringify(error.issues)}`, 400)

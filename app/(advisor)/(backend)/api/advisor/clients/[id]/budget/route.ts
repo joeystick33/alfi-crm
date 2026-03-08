@@ -11,7 +11,7 @@ import { getPrismaClient } from '@/app/_common/lib/prisma'
 import { clientBudgetSchema } from '@/app/_common/lib/validation-schemas'
 import { calculateBudgetMetrics } from '@/app/_common/lib/services/budget-service'
 import { ZodError } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 // ============================================================================
 // GET /api/advisor/clients/[id]/budget
 // Récupère le budget d'un client
@@ -55,7 +55,7 @@ export async function GET(
 
     return NextResponse.json({ data: budget }, { status: 200 })
   } catch (error: any) {
-    console.error('GET /api/advisor/clients/[id]/budget error:', error)
+    logger.error('GET /api/advisor/clients/[id]/budget error:', { error: error instanceof Error ? error.message : String(error) })
 
     return NextResponse.json(
       {
@@ -146,7 +146,7 @@ export async function POST(
 
     return NextResponse.json({ data: budget }, { status: 201 })
   } catch (error: any) {
-    console.error('POST /api/advisor/clients/[id]/budget error:', error)
+    logger.error('POST /api/advisor/clients/[id]/budget error:', { error: error instanceof Error ? error.message : String(error) })
 
     // Erreur de validation Zod
     if (error instanceof ZodError) {
@@ -247,7 +247,7 @@ export async function PATCH(
 
     return NextResponse.json({ data: budget }, { status: 200 })
   } catch (error: any) {
-    console.error('PATCH /api/advisor/clients/[id]/budget error:', error)
+    logger.error('PATCH /api/advisor/clients/[id]/budget error:', { error: error instanceof Error ? error.message : String(error) })
 
     // Erreur de validation Zod
     if (error instanceof ZodError) {
@@ -324,7 +324,7 @@ export async function DELETE(
       throw error
     }
   } catch (error: any) {
-    console.error('DELETE /api/advisor/clients/[id]/budget error:', error)
+    logger.error('DELETE /api/advisor/clients/[id]/budget error:', { error: error instanceof Error ? error.message : String(error) })
 
     return NextResponse.json(
       {

@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { prisma } from '@/app/_common/lib/prisma'
-
+import { logger } from '@/app/_common/lib/logger'
 // GET - Récupérer les informations de facturation
 export async function GET(request: NextRequest) {
   try {
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(billingInfo)
 
   } catch (error: any) {
-    console.error('Get billing info error:', error)
+    logger.error('Get billing info error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Unauthorized') {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })

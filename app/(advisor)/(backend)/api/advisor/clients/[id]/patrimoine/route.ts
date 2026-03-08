@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { PatrimoineDataService } from '@/app/_common/lib/services/patrimoine-data-service'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/clients/[id]/patrimoine
  * Returns complete patrimoine data for Client 360 TabPatrimoine
@@ -28,7 +28,7 @@ export async function GET(
 
     return createSuccessResponse(patrimoineData)
   } catch (error) {
-    console.error('Get client patrimoine error:', error)
+    logger.error('Get client patrimoine error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

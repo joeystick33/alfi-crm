@@ -3,7 +3,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { RendezVousService } from '@/app/_common/lib/services/rendez-vous-service';
 import { isRegularUser } from '@/app/_common/lib/auth-types';
 import { z } from 'zod';
-
+import { logger } from '@/app/_common/lib/logger'
 const appointmentQuerySchema = z.object({
   date: z.string().optional(),
   start: z.string().optional(),
@@ -201,7 +201,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error: unknown) {
-    console.error('Error fetching appointments:', error);
+    logger.error('Error fetching appointments:', { error: error instanceof Error ? error.message : String(error) });
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401);
     }
@@ -304,7 +304,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error: unknown) {
-    console.error('Error creating appointment:', error);
+    logger.error('Error creating appointment:', { error: error instanceof Error ? error.message : String(error) });
 
     if (error instanceof z.ZodError) {
       return createErrorResponse('Données invalides', 400);

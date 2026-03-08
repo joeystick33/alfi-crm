@@ -5,7 +5,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { PassifService } from '@/app/_common/lib/services/passif-service'
 import { PassifType } from '@prisma/client'
-
+import { logger } from '@/app/_common/lib/logger'
 const updatePassifSchema = z.object({
     name: z.string().min(1).optional(),
     type: z.nativeEnum(PassifType).optional(),
@@ -42,7 +42,7 @@ export async function GET(
 
         return createSuccessResponse(data)
     } catch (error: any) {
-        console.error('Error getting passif:', error)
+        logger.error('Error getting passif:', { error: error instanceof Error ? error.message : String(error) })
         if (error instanceof Error && error.message === 'Unauthorized') {
             return createErrorResponse('Unauthorized', 401)
         }
@@ -78,7 +78,7 @@ export async function PUT(
 
         return createSuccessResponse(data)
     } catch (error: any) {
-        console.error('Error updating passif:', error)
+        logger.error('Error updating passif:', { error: error instanceof Error ? error.message : String(error) })
         if (error instanceof z.ZodError) {
             return createErrorResponse('Validation error: ' + error.message, 400)
         }
@@ -107,7 +107,7 @@ export async function DELETE(
 
         return createSuccessResponse({ success: true })
     } catch (error: any) {
-        console.error('Error deleting passif:', error)
+        logger.error('Error deleting passif:', { error: error instanceof Error ? error.message : String(error) })
         if (error instanceof Error && error.message === 'Unauthorized') {
             return createErrorResponse('Unauthorized', 401)
         }

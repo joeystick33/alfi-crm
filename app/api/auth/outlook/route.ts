@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, setRLSContext } from "@/app/_common/lib/prisma";
 import { requireAuth } from "@/app/_common/lib/auth-helpers";
+import { createOAuthState } from "@/app/_common/lib/oauth-state";
 
 const MICROSOFT_AUTH_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
 
@@ -14,6 +15,7 @@ export async function GET(req: NextRequest) {
 
     const url = new URL(req.url);
     const type = url.searchParams.get("type") || "calendar"; // calendar or mail
+    const flowType = type === 'mail' ? 'mail' : 'calendar'
 
     // Get Microsoft credentials from cabinet
     const cabinet = await prisma.cabinet.findUnique({
@@ -53,9 +55,11 @@ export async function GET(req: NextRequest) {
           "https://graph.microsoft.com/User.Read"
         ];
 
-    // State contains userId and type
-    const state = JSON.stringify({ userId: authUser.id, type });
-    const encodedState = Buffer.from(state).toString("base64");
+    const encodedState = createOAuthState({
+      userId: authUser.id,
+      provider: 'outlook',
+      type: flowType,
+    })
 
     const authParams = new URLSearchParams({
       client_id: clientId,

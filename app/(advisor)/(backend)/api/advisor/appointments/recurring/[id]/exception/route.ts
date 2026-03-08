@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { RendezVousService } from '@/app/_common/lib/services/rendez-vous-service'
-
+import { logger } from '@/app/_common/lib/logger'
 const exceptionSchema = z.object({
   occurrenceDate: z.string().transform(val => new Date(val)),
 })
@@ -60,7 +60,7 @@ export async function POST(
       exceptionDate: data.occurrenceDate.toISOString(),
     })
   } catch (error) {
-    console.error('Error adding recurrence exception:', error)
+    logger.error('Error adding recurrence exception:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof z.ZodError) {
       return createErrorResponse('Données invalides', 400)

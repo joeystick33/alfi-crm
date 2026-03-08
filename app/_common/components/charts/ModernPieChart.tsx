@@ -89,8 +89,8 @@ export function ModernPieChart({ data, formatValue, title }: ModernPieChartProps
         </h3>
       )}
       
-      <div className="relative h-80 animate-in fade-in-0">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="relative animate-in fade-in-0" style={{ height: 320 }}>
+        <ResponsiveContainer width="100%" height={320}>
           <PieChart>
             <defs>
               {GRADIENT_COLORS.map((color, index) => (

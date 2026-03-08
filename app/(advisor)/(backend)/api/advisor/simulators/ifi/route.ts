@@ -1,8 +1,8 @@
  
 /**
  * ══════════════════════════════════════════════════════════════════════════════
- * API Route - Simulateur IFI 2025
- * Calculs sécurisés côté serveur - CGI art. 964-983
+ * API Route - Simulateur IFI 2026
+ * Calculs sécurisés côté serveur - CGI art. 964-983 (barème inchangé)
  * 
  * POST /api/advisor/simulators/ifi
  * ══════════════════════════════════════════════════════════════════════════════
@@ -11,7 +11,7 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
-
+import { logger } from '@/app/_common/lib/logger'
 // ══════════════════════════════════════════════════════════════════════════════
 // CONSTANTES FISCALES IFI 2025
 // ══════════════════════════════════════════════════════════════════════════════
@@ -395,7 +395,7 @@ export async function POST(request: NextRequest) {
 
     return createSuccessResponse(result)
   } catch (error: any) {
-    console.error('Erreur simulation IFI:', error)
+    logger.error('Erreur simulation IFI:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la simulation: ' + (error.message || 'Erreur inconnue'), 500)
   }
 }

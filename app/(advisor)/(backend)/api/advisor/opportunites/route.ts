@@ -4,7 +4,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { OpportuniteService } from '@/app/_common/lib/services/opportunite-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { parseOpportuniteFilters, normalizeOpportuniteCreatePayload } from './utils'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/opportunites
  * Liste des opportunités avec filtres
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     // Return formatted response
     return createSuccessResponse(opportunites)
   } catch (error: any) {
-    console.error('Error in GET /api/opportunites:', error)
+    logger.error('Error in GET /api/opportunites:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     // Return formatted response with 201 status
     return createSuccessResponse(opportunite, 201)
   } catch (error: any) {
-    console.error('Error in POST /api/opportunites:', error)
+    logger.error('Error in POST /api/opportunites:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

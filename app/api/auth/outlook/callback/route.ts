@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/app/_common/lib/prisma";
+import { verifyOAuthState } from "@/app/_common/lib/oauth-state";
 
 const MICROSOFT_TOKEN_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/token";
 const GRAPH_API_URL = "https://graph.microsoft.com/v1.0";
@@ -23,11 +24,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Missing code or state" }, { status: 400 });
     }
 
-    // Decode state
-    let state: { userId: string; type: string };
-    try {
-      state = JSON.parse(Buffer.from(encodedState, "base64").toString("utf-8"));
-    } catch {
+    const state = verifyOAuthState(encodedState)
+    if (!state || state.provider !== 'outlook') {
       return NextResponse.json({ error: "Invalid state" }, { status: 400 });
     }
 

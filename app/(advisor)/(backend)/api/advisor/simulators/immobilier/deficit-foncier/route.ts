@@ -35,7 +35,7 @@ import {
   PRELEVEMENTS_SOCIAUX,
 } from '../_shared/constants'
 import { deficitFoncierInputSchema, type DeficitFoncierInput } from '../_shared/validators'
-
+import { logger } from '@/app/_common/lib/logger'
 // ══════════════════════════════════════════════════════════════════════════════
 // FONCTION DE SIMULATION DÉFICIT FONCIER
 // ══════════════════════════════════════════════════════════════════════════════
@@ -199,7 +199,7 @@ function simulerDeficitFoncier(input: DeficitFoncierInput) {
       
       // IR et PS sur revenus fonciers nets
       const ir = revenuFoncierNet > 0 ? revenuFoncierNet * (tmi / 100) : 0
-      const ps = revenuFoncierNet > 0 ? revenuFoncierNet * PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL : 0
+      const ps = revenuFoncierNet > 0 ? revenuFoncierNet * PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL : 0
       
       irCumule += ir
       psCumule += ps
@@ -213,7 +213,7 @@ function simulerDeficitFoncier(input: DeficitFoncierInput) {
 
     // Cash-flow
     const cfAvantImpots = loyerAnnee - chargesRecurrentes - travauxAnnee - creditAnnuel
-    const cfApresImpots = cfAvantImpots + economieIR - (revenuFoncierBrut > 0 ? revenuFoncierBrut * (tmi / 100 + PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL) : 0)
+    const cfApresImpots = cfAvantImpots + economieIR - (revenuFoncierBrut > 0 ? revenuFoncierBrut * (tmi / 100 + PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL) : 0)
     cashFlowCumule += cfApresImpots
 
     projections.push({
@@ -230,7 +230,7 @@ function simulerDeficitFoncier(input: DeficitFoncierInput) {
       deficitReporte: Math.round(deficitReportable),
       economieIR: Math.round(economieIR),
       ir: Math.round(revenuFoncierBrut > 0 ? revenuFoncierBrut * (tmi / 100) : 0),
-      ps: Math.round(revenuFoncierBrut > 0 ? revenuFoncierBrut * PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL : 0),
+      ps: Math.round(revenuFoncierBrut > 0 ? revenuFoncierBrut * PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL : 0),
       creditAnnuel: Math.round(creditAnnuel),
       capitalRestant: Math.round(capitalRestant),
       cfAvantImpots: Math.round(cfAvantImpots),
@@ -418,7 +418,7 @@ export async function POST(request: NextRequest) {
         400
       )
     }
-    console.error('Erreur simulateur déficit foncier:', error)
+    logger.error('Erreur simulateur déficit foncier:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la simulation', 500)
   }
 }

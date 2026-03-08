@@ -2,13 +2,14 @@
  * Service d'export de documents réglementaires (PDF/DOCX)
  * 
  * Ce service gère l'export des documents générés:
- * - Export en PDF avec styling professionnel
- * - Export en DOCX pour édition
+ * - Export en PDF avec styling professionnel via @react-pdf/renderer
+ * - Export en DOCX pour édition via docx library
  * - Export batch de plusieurs documents
  * - Application du branding cabinet
+ * - Stockage réel dans Supabase Storage
  * 
  * @module lib/documents/services/export-service
- * @requirements 16.1-16.8
+ * @requirements 3.7, 3.8, 8.1-8.5, 16.1-16.8
  */
 
 import { prisma } from '@/app/_common/lib/prisma'
@@ -19,6 +20,7 @@ import {
   type DocumentStyles,
   type DocumentTemplateContent,
   type TemplateSection,
+  type RegulatoryDocumentType,
 } from '../types'
 import {
   documentExportOptionsSchema,
@@ -27,6 +29,29 @@ import {
   type BatchExportInput,
 } from '../schemas'
 import { getGeneratedDocumentById } from './document-generator-service'
+import {
+  generateDERPDF,
+  generateDeclarationAdequationPDF,
+  generateBulletinOperationPDF,
+  generateLettreMissionPDF,
+  generateRecueilInformationsPDF,
+  isValidPDF,
+  type ClientData as PDFClientData,
+  type CabinetData as PDFCabinetData,
+  type AdvisorData as PDFAdvisorData,
+  type ProductData,
+  type OperationData,
+} from './pdf-generator-service'
+import {
+  generateDERDOCX,
+  generateDeclarationAdequationDOCX,
+  generateBulletinOperationDOCX,
+  generateLettreMissionDOCX,
+  generateRecueilInformationsDOCX,
+  isValidDOCX,
+} from './docx-generator-service'
+import { uploadDocument, CONTENT_TYPES, getSignedUrl } from '@/lib/storage/file-storage-service'
+import crypto from 'crypto'
 
 // ============================================================================
 // Types
@@ -45,6 +70,8 @@ export interface ExportedDocument {
   format: DocumentFormat
   size: number
   exportedAt: Date
+  storagePath?: string
+  checksum?: string
 }
 
 export interface BatchExportResult {
@@ -74,6 +101,9 @@ export interface CabinetBranding {
 /**
  * Exporte un document en PDF
  * 
+ * @requirements 3.7 - THE Document_Generator_Real SHALL NOT return placeholder URLs or simulated content
+ * @requirements 3.8 - WHEN a document is generated, THE Document_Generator_Real SHALL save the file to storage
+ * @requirements 8.1 - WHEN the CGP clicks "Télécharger" on a document, THE Result_Validator SHALL initiate a real file download
  * @requirements 16.3 - WHEN exporting to PDF, THE Document_Export SHALL generate a professional document with embedded fonts and proper pagination
  * @requirements 16.4 - THE Document_Export SHALL include signature placeholders in exported documents
  * @requirements 16.8 - WHEN exporting, THE Document_Export SHALL apply the cabinet's branding
@@ -98,53 +128,215 @@ export async function exportToPDF(
     }
     const document = documentResult.data
 
-    // Get cabinet branding if needed
-    let branding: CabinetBranding | null = null
-    if (validatedOptions.applyBranding) {
-      branding = await getCabinetBranding(document.cabinetId)
-    }
-
-    // Get the template for styling
-    const template = await prisma.regulatoryDocumentTemplate.findUnique({
-      where: { id: document.templateId },
+    // Get client, cabinet, and advisor data for PDF generation
+    const client = await prisma.client.findUnique({
+      where: { id: document.clientId },
+      include: {
+        cabinet: true,
+        conseiller: true,
+      },
     })
 
-    if (!template) {
+    if (!client || !client.cabinet || !client.conseiller) {
       return {
         success: false,
-        error: 'Template non trouvé',
+        error: 'Client, cabinet ou conseiller non trouvé',
       }
     }
 
-    const templateContent = template.content as unknown as DocumentTemplateContent
+    // Prepare data for PDF generation
+    const clientData: PDFClientData = {
+      id: client.id,
+      firstName: client.firstName,
+      lastName: client.lastName,
+      email: client.email,
+      phone: client.phone,
+      mobile: client.mobile,
+      address: client.address as PDFClientData['address'],
+      birthDate: client.birthDate,
+      birthPlace: client.birthPlace,
+      nationality: client.nationality,
+      maritalStatus: client.maritalStatus,
+      marriageRegime: client.marriageRegime,
+      numberOfChildren: client.numberOfChildren,
+      profession: client.profession,
+      employerName: client.employerName,
+      annualIncome: client.annualIncome ? Number(client.annualIncome) : null,
+      riskProfile: client.riskProfile,
+      investmentHorizon: client.investmentHorizon,
+      investmentGoals: client.investmentGoals as string[] | null,
+      kycStatus: client.kycStatus,
+      isPEP: client.isPEP,
+      originOfFunds: client.originOfFunds,
+    }
 
-    // Generate PDF content
-    const pdfContent = generatePDFContent(
-      document.generatedData,
-      templateContent,
-      branding,
-      validatedOptions.includeSignaturePlaceholders,
-      validatedOptions.watermark
-    )
+    const cabinetData: PDFCabinetData = {
+      id: client.cabinet.id,
+      name: client.cabinet.name,
+      email: client.cabinet.email,
+      phone: client.cabinet.phone,
+      address: client.cabinet.address as PDFCabinetData['address'],
+      oriasNumber: (client.cabinet as Record<string, unknown>).oriasNumber as string | undefined,
+      acprRegistration: (client.cabinet as Record<string, unknown>).acprRegistration as string | undefined,
+      rcProInsurance: (client.cabinet as Record<string, unknown>).rcProInsurance as string | undefined,
+      rcProInsurer: (client.cabinet as Record<string, unknown>).rcProInsurer as string | undefined,
+      rcProPolicyNumber: (client.cabinet as Record<string, unknown>).rcProPolicyNumber as string | undefined,
+      website: (client.cabinet as Record<string, unknown>).website as string | undefined,
+    }
+
+    const advisorData: PDFAdvisorData = {
+      id: client.conseiller.id,
+      firstName: client.conseiller.firstName,
+      lastName: client.conseiller.lastName,
+      email: client.conseiller.email,
+      phone: client.conseiller.phone,
+    }
+
+    // Generate PDF based on document type
+    let pdfResult
+    const documentType = document.documentType as RegulatoryDocumentType
+    const generatedData = document.generatedData as Record<string, unknown>
+
+    switch (documentType) {
+      case 'DER':
+        pdfResult = await generateDERPDF(clientData, cabinetData, advisorData)
+        break
+      
+      case 'DECLARATION_ADEQUATION':
+        const productData: ProductData = {
+          name: (generatedData.productName as string) || 'Produit non spécifié',
+          type: (generatedData.productType as string) || 'Non spécifié',
+          provider: (generatedData.productProvider as string) || 'Non spécifié',
+          isin: generatedData.productIsin as string | undefined,
+          riskLevel: generatedData.productRiskLevel as number | undefined,
+          fees: generatedData.productFees as ProductData['fees'],
+          description: generatedData.productDescription as string | undefined,
+        }
+        const justification = (generatedData.justification as string) || 'Justification non fournie'
+        const warnings = generatedData.warnings as string[] | undefined
+        pdfResult = await generateDeclarationAdequationPDF(
+          clientData, cabinetData, advisorData, productData, justification, warnings
+        )
+        break
+      
+      case 'BULLETIN_SOUSCRIPTION':
+      case 'ORDRE_ARBITRAGE':
+      case 'DEMANDE_RACHAT':
+      case 'BULLETIN_VERSEMENT':
+        const operationData: OperationData = {
+          id: (generatedData.operationId as string) || documentId,
+          reference: (generatedData.operationReference as string) || `OP-${Date.now()}`,
+          type: documentType,
+          amount: (generatedData.amount as number) || 0,
+          date: generatedData.operationDate ? new Date(generatedData.operationDate as string) : new Date(),
+          contractNumber: generatedData.contractNumber as string | undefined,
+          contractName: generatedData.contractName as string | undefined,
+          funds: generatedData.funds as OperationData['funds'],
+        }
+        const complianceChecklist = generatedData.complianceChecklist as Array<{ label: string; checked: boolean }> | undefined
+        pdfResult = await generateBulletinOperationPDF(
+          clientData, cabinetData, advisorData, operationData, complianceChecklist
+        )
+        break
+      
+      case 'LETTRE_MISSION':
+        const missionData = {
+          scope: (generatedData.missionScope as string[]) || ['Conseil en gestion de patrimoine'],
+          duration: (generatedData.missionDuration as string) || '12 mois',
+          deliverables: (generatedData.missionDeliverables as string[]) || ['Rapport de mission'],
+          fees: {
+            type: ((generatedData.feesType as string) || 'FORFAIT') as 'FORFAIT' | 'HORAIRE' | 'COMMISSION',
+            amount: generatedData.feesAmount as number | undefined,
+            hourlyRate: generatedData.feesHourlyRate as number | undefined,
+            description: (generatedData.feesDescription as string) || 'Honoraires selon convention',
+          },
+          terminationConditions: (generatedData.terminationConditions as string) || 'Résiliation possible à tout moment avec préavis de 30 jours',
+        }
+        pdfResult = await generateLettreMissionPDF(clientData, cabinetData, advisorData, missionData)
+        break
+      
+      case 'RECUEIL_INFORMATIONS':
+        const patrimoineData = generatedData.patrimoine as {
+          actifs: Array<{ type: string; description: string; valeur: number }>
+          passifs: Array<{ type: string; description: string; montant: number }>
+        } | undefined
+        const revenusData = generatedData.revenus as {
+          salaires?: number
+          revenus_fonciers?: number
+          revenus_capitaux?: number
+          autres?: number
+        } | undefined
+        const chargesData = generatedData.charges as {
+          loyer?: number
+          credits?: number
+          impots?: number
+          autres?: number
+        } | undefined
+        pdfResult = await generateRecueilInformationsPDF(
+          clientData, cabinetData, advisorData, patrimoineData, revenusData, chargesData
+        )
+        break
+      
+      default:
+        // For unsupported document types, generate a DER as fallback
+        pdfResult = await generateDERPDF(clientData, cabinetData, advisorData)
+    }
+
+    if (!pdfResult.success || !pdfResult.fileBuffer) {
+      return {
+        success: false,
+        error: pdfResult.error || 'Erreur lors de la génération du PDF',
+      }
+    }
+
+    // Validate the generated PDF
+    if (!isValidPDF(pdfResult.fileBuffer)) {
+      return {
+        success: false,
+        error: 'Le fichier PDF généré est invalide',
+      }
+    }
 
     // Generate file name with PDF extension
-    const fileName = document.fileName.replace(/\.\w+$/, '.pdf')
+    const fileName = pdfResult.fileName || document.fileName.replace(/\.\w+$/, '.pdf')
     
-    // In a real implementation, this would:
-    // 1. Use a PDF library (like pdfmake, jsPDF, or @react-pdf/renderer)
-    // 2. Upload to storage (S3, Supabase Storage, etc.)
-    // 3. Return the actual URL
-    
-    // For now, we'll simulate the export
-    const fileUrl = `/exports/${document.cabinetId}/${document.clientId}/${fileName}`
+    // Calculate checksum for integrity verification
+    const checksum = crypto.createHash('md5').update(pdfResult.fileBuffer).digest('hex')
+
+    // Upload to Supabase Storage
+    const uploadResult = await uploadDocument(
+      document.cabinetId,
+      document.clientId,
+      fileName,
+      pdfResult.fileBuffer,
+      CONTENT_TYPES.PDF
+    )
+
+    if (!uploadResult.success) {
+      return {
+        success: false,
+        error: uploadResult.error || 'Erreur lors du stockage du fichier',
+      }
+    }
+
+    const fileUrl = uploadResult.signedUrl || uploadResult.publicUrl || ''
+    const storagePath = uploadResult.path || ''
     const exportedAt = new Date()
 
-    // Update the document record with the new file URL
+    // Update the document record with the new file URL, size, and checksum
     await prisma.regulatoryGeneratedDocument.update({
       where: { id: documentId },
       data: {
         fileUrl,
         format: 'PDF',
+        // Store additional metadata in generatedData
+        generatedData: {
+          ...document.generatedData as Record<string, unknown>,
+          exportedAt: exportedAt.toISOString(),
+          fileSize: pdfResult.fileBuffer.length,
+          checksum,
+          storagePath,
+        },
       },
     })
 
@@ -158,12 +350,15 @@ export async function exportToPDF(
         fileName,
         fileUrl,
         format: 'PDF',
-        size: pdfContent.length, // Simulated size
+        size: pdfResult.fileBuffer.length,
         exportedAt,
+        storagePath,
+        checksum,
       },
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erreur lors de l\'export PDF'
+    console.error('[ExportService] PDF export error:', error)
     return {
       success: false,
       error: message,
@@ -174,6 +369,9 @@ export async function exportToPDF(
 /**
  * Exporte un document en DOCX
  * 
+ * @requirements 3.7 - THE Document_Generator_Real SHALL NOT return placeholder URLs or simulated content
+ * @requirements 3.8 - WHEN a document is generated, THE Document_Generator_Real SHALL save the file to storage
+ * @requirements 8.1 - WHEN the CGP clicks "Télécharger" on a document, THE Result_Validator SHALL initiate a real file download
  * @requirements 16.2 - WHEN exporting to DOCX, THE Document_Export SHALL preserve all formatting, headers, footers, and placeholders
  * @requirements 16.4 - THE Document_Export SHALL include signature placeholders in exported documents
  */
@@ -197,47 +395,215 @@ export async function exportToDOCX(
     }
     const document = documentResult.data
 
-    // Get cabinet branding if needed
-    let branding: CabinetBranding | null = null
-    if (validatedOptions.applyBranding) {
-      branding = await getCabinetBranding(document.cabinetId)
-    }
-
-    // Get the template for styling
-    const template = await prisma.regulatoryDocumentTemplate.findUnique({
-      where: { id: document.templateId },
+    // Get client, cabinet, and advisor data for DOCX generation
+    const client = await prisma.client.findUnique({
+      where: { id: document.clientId },
+      include: {
+        cabinet: true,
+        conseiller: true,
+      },
     })
 
-    if (!template) {
+    if (!client || !client.cabinet || !client.conseiller) {
       return {
         success: false,
-        error: 'Template non trouvé',
+        error: 'Client, cabinet ou conseiller non trouvé',
       }
     }
 
-    const templateContent = template.content as unknown as DocumentTemplateContent
+    // Prepare data for DOCX generation (same types as PDF)
+    const clientData: PDFClientData = {
+      id: client.id,
+      firstName: client.firstName,
+      lastName: client.lastName,
+      email: client.email,
+      phone: client.phone,
+      mobile: client.mobile,
+      address: client.address as PDFClientData['address'],
+      birthDate: client.birthDate,
+      birthPlace: client.birthPlace,
+      nationality: client.nationality,
+      maritalStatus: client.maritalStatus,
+      marriageRegime: client.marriageRegime,
+      numberOfChildren: client.numberOfChildren,
+      profession: client.profession,
+      employerName: client.employerName,
+      annualIncome: client.annualIncome ? Number(client.annualIncome) : null,
+      riskProfile: client.riskProfile,
+      investmentHorizon: client.investmentHorizon,
+      investmentGoals: client.investmentGoals as string[] | null,
+      kycStatus: client.kycStatus,
+      isPEP: client.isPEP,
+      originOfFunds: client.originOfFunds,
+    }
 
-    // Generate DOCX content
-    const docxContent = generateDOCXContent(
-      document.generatedData,
-      templateContent,
-      branding,
-      validatedOptions.includeSignaturePlaceholders
-    )
+    const cabinetData: PDFCabinetData = {
+      id: client.cabinet.id,
+      name: client.cabinet.name,
+      email: client.cabinet.email,
+      phone: client.cabinet.phone,
+      address: client.cabinet.address as PDFCabinetData['address'],
+      oriasNumber: (client.cabinet as Record<string, unknown>).oriasNumber as string | undefined,
+      acprRegistration: (client.cabinet as Record<string, unknown>).acprRegistration as string | undefined,
+      rcProInsurance: (client.cabinet as Record<string, unknown>).rcProInsurance as string | undefined,
+      rcProInsurer: (client.cabinet as Record<string, unknown>).rcProInsurer as string | undefined,
+      rcProPolicyNumber: (client.cabinet as Record<string, unknown>).rcProPolicyNumber as string | undefined,
+      website: (client.cabinet as Record<string, unknown>).website as string | undefined,
+    }
+
+    const advisorData: PDFAdvisorData = {
+      id: client.conseiller.id,
+      firstName: client.conseiller.firstName,
+      lastName: client.conseiller.lastName,
+      email: client.conseiller.email,
+      phone: client.conseiller.phone,
+    }
+
+    // Generate DOCX based on document type
+    let docxResult
+    const documentType = document.documentType as RegulatoryDocumentType
+    const generatedData = document.generatedData as Record<string, unknown>
+
+    switch (documentType) {
+      case 'DER':
+        docxResult = await generateDERDOCX(clientData, cabinetData, advisorData)
+        break
+      
+      case 'DECLARATION_ADEQUATION':
+        const productData: ProductData = {
+          name: (generatedData.productName as string) || 'Produit non spécifié',
+          type: (generatedData.productType as string) || 'Non spécifié',
+          provider: (generatedData.productProvider as string) || 'Non spécifié',
+          isin: generatedData.productIsin as string | undefined,
+          riskLevel: generatedData.productRiskLevel as number | undefined,
+          fees: generatedData.productFees as ProductData['fees'],
+          description: generatedData.productDescription as string | undefined,
+        }
+        const justification = (generatedData.justification as string) || 'Justification non fournie'
+        const warnings = generatedData.warnings as string[] | undefined
+        docxResult = await generateDeclarationAdequationDOCX(
+          clientData, cabinetData, advisorData, productData, justification, warnings
+        )
+        break
+      
+      case 'BULLETIN_SOUSCRIPTION':
+      case 'ORDRE_ARBITRAGE':
+      case 'DEMANDE_RACHAT':
+      case 'BULLETIN_VERSEMENT':
+        const operationData: OperationData = {
+          id: (generatedData.operationId as string) || documentId,
+          reference: (generatedData.operationReference as string) || `OP-${Date.now()}`,
+          type: documentType,
+          amount: (generatedData.amount as number) || 0,
+          date: generatedData.operationDate ? new Date(generatedData.operationDate as string) : new Date(),
+          contractNumber: generatedData.contractNumber as string | undefined,
+          contractName: generatedData.contractName as string | undefined,
+          funds: generatedData.funds as OperationData['funds'],
+        }
+        const complianceChecklist = generatedData.complianceChecklist as Array<{ label: string; checked: boolean }> | undefined
+        docxResult = await generateBulletinOperationDOCX(
+          clientData, cabinetData, advisorData, operationData, complianceChecklist
+        )
+        break
+      
+      case 'LETTRE_MISSION':
+        const missionData = {
+          scope: (generatedData.missionScope as string[]) || ['Conseil en gestion de patrimoine'],
+          duration: (generatedData.missionDuration as string) || '12 mois',
+          deliverables: (generatedData.missionDeliverables as string[]) || ['Rapport de mission'],
+          fees: {
+            type: ((generatedData.feesType as string) || 'FORFAIT') as 'FORFAIT' | 'HORAIRE' | 'COMMISSION',
+            amount: generatedData.feesAmount as number | undefined,
+            hourlyRate: generatedData.feesHourlyRate as number | undefined,
+            description: (generatedData.feesDescription as string) || 'Honoraires selon convention',
+          },
+          terminationConditions: (generatedData.terminationConditions as string) || 'Résiliation possible à tout moment avec préavis de 30 jours',
+        }
+        docxResult = await generateLettreMissionDOCX(clientData, cabinetData, advisorData, missionData)
+        break
+      
+      case 'RECUEIL_INFORMATIONS':
+        const patrimoineData = generatedData.patrimoine as {
+          actifs: Array<{ type: string; description: string; valeur: number }>
+          passifs: Array<{ type: string; description: string; montant: number }>
+        } | undefined
+        const revenusData = generatedData.revenus as {
+          salaires?: number
+          revenus_fonciers?: number
+          revenus_capitaux?: number
+          autres?: number
+        } | undefined
+        const chargesData = generatedData.charges as {
+          loyer?: number
+          credits?: number
+          impots?: number
+          autres?: number
+        } | undefined
+        docxResult = await generateRecueilInformationsDOCX(
+          clientData, cabinetData, advisorData, patrimoineData, revenusData, chargesData
+        )
+        break
+      
+      default:
+        // For unsupported document types, generate a DER as fallback
+        docxResult = await generateDERDOCX(clientData, cabinetData, advisorData)
+    }
+
+    if (!docxResult.success || !docxResult.fileBuffer) {
+      return {
+        success: false,
+        error: docxResult.error || 'Erreur lors de la génération du DOCX',
+      }
+    }
+
+    // Validate the generated DOCX
+    if (!isValidDOCX(docxResult.fileBuffer)) {
+      return {
+        success: false,
+        error: 'Le fichier DOCX généré est invalide',
+      }
+    }
 
     // Generate file name with DOCX extension
-    const fileName = document.fileName.replace(/\.\w+$/, '.docx')
+    const fileName = docxResult.fileName || document.fileName.replace(/\.\w+$/, '.docx')
     
-    // In a real implementation, this would use a DOCX library (like docx)
-    const fileUrl = `/exports/${document.cabinetId}/${document.clientId}/${fileName}`
+    // Calculate checksum for integrity verification
+    const checksum = crypto.createHash('md5').update(docxResult.fileBuffer).digest('hex')
+
+    // Upload to Supabase Storage
+    const uploadResult = await uploadDocument(
+      document.cabinetId,
+      document.clientId,
+      fileName,
+      docxResult.fileBuffer,
+      CONTENT_TYPES.DOCX
+    )
+
+    if (!uploadResult.success) {
+      return {
+        success: false,
+        error: uploadResult.error || 'Erreur lors du stockage du fichier',
+      }
+    }
+
+    const fileUrl = uploadResult.signedUrl || uploadResult.publicUrl || ''
+    const storagePath = uploadResult.path || ''
     const exportedAt = new Date()
 
-    // Update the document record
+    // Update the document record with the new file URL, size, and checksum
     await prisma.regulatoryGeneratedDocument.update({
       where: { id: documentId },
       data: {
         fileUrl,
         format: 'DOCX',
+        // Store additional metadata in generatedData
+        generatedData: {
+          ...document.generatedData as Record<string, unknown>,
+          exportedAt: exportedAt.toISOString(),
+          fileSize: docxResult.fileBuffer.length,
+          checksum,
+          storagePath,
+        },
       },
     })
 
@@ -251,12 +617,15 @@ export async function exportToDOCX(
         fileName,
         fileUrl,
         format: 'DOCX',
-        size: docxContent.length,
+        size: docxResult.fileBuffer.length,
         exportedAt,
+        storagePath,
+        checksum,
       },
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erreur lors de l\'export DOCX'
+    console.error('[ExportService] DOCX export error:', error)
     return {
       success: false,
       error: message,
@@ -331,7 +700,7 @@ export async function batchExport(
 export async function previewExport(
   documentId: string,
   format: DocumentFormat
-): Promise<ExportServiceResult<{ content: string; fileName: string }>> {
+): Promise<ExportServiceResult<{ content: string; fileName: string; fileBuffer?: Buffer }>> {
   try {
     // Get the generated document
     const documentResult = await getGeneratedDocumentById(documentId)
@@ -343,36 +712,88 @@ export async function previewExport(
     }
     const document = documentResult.data
 
-    // Get the template
-    const template = await prisma.regulatoryDocumentTemplate.findUnique({
-      where: { id: document.templateId },
+    // Get client, cabinet, and advisor data
+    const client = await prisma.client.findUnique({
+      where: { id: document.clientId },
+      include: {
+        cabinet: true,
+        conseiller: true,
+      },
     })
 
-    if (!template) {
+    if (!client || !client.cabinet || !client.conseiller) {
       return {
         success: false,
-        error: 'Template non trouvé',
+        error: 'Client, cabinet ou conseiller non trouvé',
       }
     }
 
-    const templateContent = template.content as unknown as DocumentTemplateContent
+    // Prepare data for generation
+    const clientData: PDFClientData = {
+      id: client.id,
+      firstName: client.firstName,
+      lastName: client.lastName,
+      email: client.email,
+      phone: client.phone,
+      mobile: client.mobile,
+      address: client.address as PDFClientData['address'],
+      birthDate: client.birthDate,
+      birthPlace: client.birthPlace,
+      nationality: client.nationality,
+      maritalStatus: client.maritalStatus,
+      marriageRegime: client.marriageRegime,
+      numberOfChildren: client.numberOfChildren,
+      profession: client.profession,
+      employerName: client.employerName,
+      annualIncome: client.annualIncome ? Number(client.annualIncome) : null,
+      riskProfile: client.riskProfile,
+      investmentHorizon: client.investmentHorizon,
+      investmentGoals: client.investmentGoals as string[] | null,
+      kycStatus: client.kycStatus,
+      isPEP: client.isPEP,
+      originOfFunds: client.originOfFunds,
+    }
 
-    // Get branding
-    const branding = await getCabinetBranding(document.cabinetId)
+    const cabinetData: PDFCabinetData = {
+      id: client.cabinet.id,
+      name: client.cabinet.name,
+      email: client.cabinet.email,
+      phone: client.cabinet.phone,
+      address: client.cabinet.address as PDFCabinetData['address'],
+    }
 
-    // Generate preview content
-    const content = format === 'PDF'
-      ? generatePDFContent(document.generatedData, templateContent, branding, true)
-      : generateDOCXContent(document.generatedData, templateContent, branding, true)
+    const advisorData: PDFAdvisorData = {
+      id: client.conseiller.id,
+      firstName: client.conseiller.firstName,
+      lastName: client.conseiller.lastName,
+      email: client.conseiller.email,
+      phone: client.conseiller.phone,
+    }
+
+    // Generate preview based on format
+    let result
+    if (format === 'PDF') {
+      result = await generateDERPDF(clientData, cabinetData, advisorData)
+    } else {
+      result = await generateDERDOCX(clientData, cabinetData, advisorData)
+    }
+
+    if (!result.success || !result.fileBuffer) {
+      return {
+        success: false,
+        error: result.error || 'Erreur lors de la génération de la prévisualisation',
+      }
+    }
 
     const extension = format.toLowerCase()
-    const fileName = document.fileName.replace(/\.\w+$/, `.${extension}`)
+    const fileName = result.fileName || document.fileName.replace(/\.\w+$/, `.${extension}`)
 
     return {
       success: true,
       data: {
-        content,
+        content: `[Binary ${format} content - ${result.fileBuffer.length} bytes]`,
         fileName,
+        fileBuffer: result.fileBuffer,
       },
     }
   } catch (error) {
@@ -438,111 +859,75 @@ async function getCabinetBranding(cabinetId: string): Promise<CabinetBranding | 
 }
 
 /**
- * Génère le contenu PDF
+ * Récupère une URL de téléchargement fraîche pour un document
  * 
- * @requirements 16.3 - Professional document with embedded fonts and proper pagination
- * @requirements 16.4 - Include signature placeholders
+ * @requirements 8.1 - WHEN the CGP clicks "Télécharger" on a document, THE Result_Validator SHALL initiate a real file download
  */
-function generatePDFContent(
-  data: Record<string, unknown>,
-  templateContent: DocumentTemplateContent,
-  branding: CabinetBranding | null,
-  includeSignaturePlaceholders: boolean,
-  watermark?: string
-): string {
-  // This is a simplified representation of PDF content
-  // In a real implementation, this would use a PDF library
-  
-  let content = ''
+export async function getDocumentDownloadUrl(
+  documentId: string
+): Promise<ExportServiceResult<{ url: string; fileName: string }>> {
+  try {
+    const document = await prisma.regulatoryGeneratedDocument.findUnique({
+      where: { id: documentId },
+      select: {
+        fileName: true,
+        fileUrl: true,
+        generatedData: true,
+        cabinetId: true,
+        clientId: true,
+      },
+    })
 
-  // Apply branding header
-  if (branding) {
-    content += `=== ${branding.companyName} ===\n`
-    content += `${branding.address}\n`
-    content += `Tél: ${branding.phone} | Email: ${branding.email}\n`
-    content += '---\n\n'
+    if (!document) {
+      return {
+        success: false,
+        error: 'Document non trouvé',
+      }
+    }
+
+    const generatedData = document.generatedData as Record<string, unknown>
+    const storagePath = generatedData?.storagePath as string
+
+    // If we have a storage path, generate a fresh signed URL
+    if (storagePath) {
+      const signedUrlResult = await getSignedUrl(storagePath, {
+        expiresIn: 3600, // 1 hour
+        download: document.fileName,
+      })
+
+      if (signedUrlResult.success && signedUrlResult.signedUrl) {
+        return {
+          success: true,
+          data: {
+            url: signedUrlResult.signedUrl,
+            fileName: document.fileName,
+          },
+        }
+      }
+    }
+
+    // Fallback to stored URL
+    if (document.fileUrl) {
+      return {
+        success: true,
+        data: {
+          url: document.fileUrl,
+          fileName: document.fileName,
+        },
+      }
+    }
+
+    return {
+      success: false,
+      error: 'Aucune URL de téléchargement disponible',
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Erreur lors de la récupération de l\'URL'
+    return {
+      success: false,
+      error: message,
+    }
   }
-
-  // Render header section
-  content += renderSection(templateContent.header, data)
-
-  // Render main sections
-  for (const section of templateContent.sections.sort((a, b) => a.order - b.order)) {
-    content += renderSection(section, data)
-  }
-
-  // Add signature placeholders
-  if (includeSignaturePlaceholders) {
-    content += '\n---\n'
-    content += 'SIGNATURES\n\n'
-    content += 'Le Client:                          Le Conseiller:\n'
-    content += '\n'
-    content += '________________________           ________________________\n'
-    content += 'Date:                              Date:\n'
-    content += '________________________           ________________________\n'
-  }
-
-  // Render footer section
-  content += '\n---\n'
-  content += renderSection(templateContent.footer, data)
-
-  // Add watermark if specified
-  if (watermark) {
-    content = `[WATERMARK: ${watermark}]\n\n${content}`
-  }
-
-  return content
-}
-
-/**
- * Génère le contenu DOCX
- * 
- * @requirements 16.2 - Preserve all formatting, headers, footers, and placeholders
- */
-function generateDOCXContent(
-  data: Record<string, unknown>,
-  templateContent: DocumentTemplateContent,
-  branding: CabinetBranding | null,
-  includeSignaturePlaceholders: boolean
-): string {
-  // This is a simplified representation of DOCX content
-  // In a real implementation, this would use the docx library
-  
-  let content = ''
-
-  // Apply branding header
-  if (branding) {
-    content += `[HEADER]\n`
-    content += `${branding.companyName}\n`
-    content += `${branding.address}\n`
-    content += `Tél: ${branding.phone} | Email: ${branding.email}\n`
-    content += `[/HEADER]\n\n`
-  }
-
-  // Render header section
-  content += renderSection(templateContent.header, data)
-
-  // Render main sections
-  for (const section of templateContent.sections.sort((a, b) => a.order - b.order)) {
-    content += renderSection(section, data)
-  }
-
-  // Add signature placeholders
-  if (includeSignaturePlaceholders) {
-    content += '\n[SIGNATURE_BLOCK]\n'
-    content += 'Le Client:                          Le Conseiller:\n'
-    content += '\n'
-    content += '[SIGNATURE_FIELD: client]          [SIGNATURE_FIELD: advisor]\n'
-    content += 'Date: [DATE_FIELD: client]         Date: [DATE_FIELD: advisor]\n'
-    content += '[/SIGNATURE_BLOCK]\n'
-  }
-
-  // Render footer section
-  content += '\n[FOOTER]\n'
-  content += renderSection(templateContent.footer, data)
-  content += '[/FOOTER]\n'
-
-  return content
 }
 
 /**

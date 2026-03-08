@@ -1,35 +1,45 @@
  
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { SimulatorGate } from '@/app/_common/components/FeatureGate'
+import { useDossierSimulation } from '@/app/(advisor)/(frontend)/hooks/useDossierSimulation'
+import { ExportSimulationActions } from '@/app/(advisor)/(frontend)/components/simulateurs/ExportSimulationActions'
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
+import {
+  ArrowLeft, ChevronLeft, ChevronRight, Users, Wallet, Home, FileText, Gift,
+  Calculator, BarChart3, CheckCircle, Heart, Building2, TrendingUp, Landmark,
+  Baby, Loader2, Save, ArrowRight,
+} from 'lucide-react'
 
-// Barème IR 2025 (CGI art. 197)
-const BAREME_IR_2025 = [
-  { min: 0, max: 11497, taux: 0 },
-  { min: 11497, max: 29315, taux: 11 },
-  { min: 29315, max: 83823, taux: 30 },
-  { min: 83823, max: 180294, taux: 41 },
-  { min: 180294, max: Infinity, taux: 45 },
-]
+// Barème IR — Source : RULES.ir (centralisé)
+const BAREME_IR_2025 = RULES.ir.bareme.map(t => ({
+  min: t.min,
+  max: t.max,
+  taux: t.taux * 100,
+}))
 
 const DECOTE_2025 = {
-  SEUL: { seuil: 1929, plafond: 873, taux: 0.4525 },
-  COUPLE: { seuil: 3191, plafond: 1444, taux: 0.4525 },
+  SEUL: { seuil: RULES.ir.decote.seuil_celibataire, plafond: RULES.ir.decote.base_celibataire, taux: RULES.ir.decote.coefficient },
+  COUPLE: { seuil: RULES.ir.decote.seuil_couple, plafond: RULES.ir.decote.base_couple, taux: RULES.ir.decote.coefficient },
 }
 
-const PLAFOND_QF_2025 = { GENERAL: 1759, PARENT_ISOLE: 4149 }
-const ABATTEMENT_10 = { MIN: 495, MAX: 14171 }
+const PLAFOND_QF_2025 = { GENERAL: RULES.ir.quotient_familial.plafond_demi_part, PARENT_ISOLE: RULES.ir.quotient_familial.demi_part_parent_isole }
+const ABATTEMENT_10 = { MIN: RULES.ir.abattement_10pct_salaires.plancher, MAX: RULES.ir.abattement_10pct_salaires.plafond }
 
 type Situation = 'CELIBATAIRE' | 'MARIE_PACSE' | 'DIVORCE' | 'VEUF'
 const fmtEur = (n: number) => Math.round(n).toLocaleString('fr-FR') + ' €'
 const fmtPct = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' %'
 
 export default function SimulateurIRPage() {
+  const router = useRouter()
+  const { isFromDossier, returnUrl, saveSimulationToDossier } = useDossierSimulation()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [showResults, setShowResults] = useState(false)
+  const [savedToDossier, setSavedToDossier] = useState(false)
 
   // ÉTAPE 1 : SITUATION FAMILIALE
   const [situation, setSituation] = useState<Situation>('MARIE_PACSE')
@@ -199,6 +209,61 @@ export default function SimulateurIRPage() {
     }
   }, [apercu, nombreParts, isCouple])
 
+  const handleSaveToDossier = useCallback(async () => {
+    const resultData = resultat || apercu
+    const success = await saveSimulationToDossier({
+      simulateurType: 'FISCAL_IR',
+      nom: `Simulation IR ${new Date().getFullYear()} — ${fmtEur(resultData.impotTotal)}`,
+      parametres: {
+        situation, enfantsCharge, enfantsGardeAlternee, parentIsole,
+        salaires1, salaires2: isCouple ? salaires2 : 0,
+        pensions, revenusTNS, fonciersBruts, dividendes, interets,
+        versementsPER, versementsPER2: isCouple ? versementsPER2 : 0,
+        nombreParts,
+      },
+      resultats: {
+        revenuBrut: resultData.revenuBrut,
+        revenuNet: resultData.revenuNet,
+        irBrut: resultData.irBrut,
+        irNet: resultData.irNet,
+        impotTotal: resultData.impotTotal,
+        tmi: resultData.tmi,
+        tauxMoyen: resultData.tauxMoyen,
+        nombreParts,
+        pfuMontant: resultData.pfuMontant,
+        decote: resultData.decote,
+        plafonnement: resultData.plafonnement,
+        montant: resultData.impotTotal,
+      },
+      selectionne: true,
+    })
+    if (success) setSavedToDossier(true)
+  }, [resultat, apercu, saveSimulationToDossier, situation, enfantsCharge, enfantsGardeAlternee, parentIsole, salaires1, salaires2, isCouple, pensions, revenusTNS, fonciersBruts, dividendes, interets, versementsPER, versementsPER2, nombreParts])
+
+  // PDF Export data
+  const pdfParams = useMemo(() => [
+    { label: 'Situation', valeur: situation },
+    { label: 'Nombre de parts', valeur: nombreParts },
+    { label: 'Salaires décl. 1', valeur: salaires1, unite: '€' },
+    ...(isCouple ? [{ label: 'Salaires décl. 2', valeur: salaires2, unite: '€' }] : []),
+    ...(pensions > 0 ? [{ label: 'Pensions retraite', valeur: pensions, unite: '€' }] : []),
+    ...(revenusTNS > 0 ? [{ label: 'Revenus TNS', valeur: revenusTNS, unite: '€' }] : []),
+    ...(fonciersBruts > 0 ? [{ label: 'Revenus fonciers', valeur: fonciersBruts, unite: '€' }] : []),
+    ...(versementsPER > 0 ? [{ label: 'Versements PER', valeur: versementsPER, unite: '€' }] : []),
+  ], [situation, nombreParts, salaires1, salaires2, isCouple, pensions, revenusTNS, fonciersBruts, versementsPER])
+
+  const pdfResults = useMemo(() => [
+    { label: 'Revenu net imposable', valeur: apercu.revenuNet, unite: '€' },
+    { label: 'IR brut', valeur: apercu.irBrut, unite: '€' },
+    ...(apercu.decote > 0 ? [{ label: 'Décote', valeur: apercu.decote, unite: '€' }] : []),
+    ...(apercu.totalRed > 0 ? [{ label: 'Réductions', valeur: apercu.totalRed, unite: '€' }] : []),
+    { label: 'IR net', valeur: apercu.irNet, unite: '€', important: true },
+    ...(apercu.pfuMontant > 0 ? [{ label: 'PFU (flat tax)', valeur: apercu.pfuMontant, unite: '€' }] : []),
+    { label: 'Impôt total', valeur: apercu.impotTotal, unite: '€', important: true },
+    { label: 'TMI', valeur: `${apercu.tmi}%` },
+    { label: 'Taux moyen', valeur: `${apercu.tauxMoyen.toFixed(2)}%` },
+  ], [apercu])
+
   const InputField = ({ label, value, onChange, suffix = '€', hint = '', color = 'blue' }: any) => (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
@@ -218,13 +283,13 @@ export default function SimulateurIRPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center gap-4">
-                <Link href="/dashboard/simulateurs" className="text-gray-400 hover:text-gray-600"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg></Link>
+                <Link href="/dashboard/simulateurs" className="text-gray-400 hover:text-gray-600"><ArrowLeft className="w-5 h-5" /></Link>
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900">Simulateur Impôt sur le Revenu 2025</h1>
+                  <h1 className="text-xl font-bold text-gray-900">Simulateur Impôt sur le Revenu 2026</h1>
                   <p className="text-sm text-gray-500">Calcul conforme au barème CGI art. 197</p>
                 </div>
               </div>
-              <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">Barème 2025</span>
+              <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">Barème 2026</span>
             </div>
           </div>
         </div>
@@ -236,10 +301,10 @@ export default function SimulateurIRPage() {
               {/* Steps */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <div className="flex items-center justify-between">
-                  {[{ n: 1, l: 'Situation', i: '👨‍👩‍👧‍👦' }, { n: 2, l: 'Revenus', i: '💰' }, { n: 3, l: 'Patrimoine', i: '🏠' }, { n: 4, l: 'Charges', i: '📋' }, { n: 5, l: 'Réductions', i: '🎁' }].map((s, idx) => (
+                  {[{ n: 1, l: 'Situation', Icon: Users }, { n: 2, l: 'Revenus', Icon: Wallet }, { n: 3, l: 'Patrimoine', Icon: Home }, { n: 4, l: 'Charges', Icon: FileText }, { n: 5, l: 'Réductions', Icon: Gift }].map((s, idx) => (
                     <div key={s.n} className="flex items-center">
                       <button onClick={() => setStep(s.n)} className={`flex flex-col items-center ${step === s.n ? 'scale-105' : step > s.n ? 'opacity-70' : 'opacity-50'}`}>
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl mb-2 ${step === s.n ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : step > s.n ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>{step > s.n ? '✓' : s.i}</div>
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-2 ${step === s.n ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : step > s.n ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>{step > s.n ? <CheckCircle className="w-5 h-5" /> : <s.Icon className="w-5 h-5" />}</div>
                         <span className={`text-xs font-medium ${step === s.n ? 'text-blue-600' : 'text-gray-500'}`}>{s.l}</span>
                       </button>
                       {idx < 4 && <div className={`w-12 h-0.5 mx-2 ${step > s.n ? 'bg-green-300' : 'bg-gray-200'}`} />}
@@ -253,11 +318,11 @@ export default function SimulateurIRPage() {
                 {/* ÉTAPE 1 */}
                 {step === 1 && (
                   <div className="space-y-6">
-                    <div className="flex items-center gap-3 pb-4 border-b"><span className="text-3xl">👨‍👩‍👧‍👦</span><div><h2 className="text-xl font-bold text-gray-900">Situation familiale</h2><p className="text-sm text-gray-500">Au 1er janvier 2025</p></div></div>
+                    <div className="flex items-center gap-3 pb-4 border-b"><Users className="w-8 h-8 text-blue-600" /><div><h2 className="text-xl font-bold text-gray-900">Situation familiale</h2><p className="text-sm text-gray-500">Au 1er janvier 2026</p></div></div>
                     <div className="grid grid-cols-2 gap-3">
-                      {[{ v: 'CELIBATAIRE', l: 'Célibataire', i: '👤' }, { v: 'MARIE_PACSE', l: 'Marié(e)/Pacsé(e)', i: '💑' }, { v: 'DIVORCE', l: 'Divorcé(e)', i: '💔' }, { v: 'VEUF', l: 'Veuf/Veuve', i: '🖤' }].map(o => (
-                        <button key={o.v} onClick={() => setSituation(o.v as Situation)} className={`p-4 rounded-xl border-2 text-left ${situation === o.v ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
-                          <span className="text-2xl">{o.i}</span><div className="mt-2 font-medium text-gray-900">{o.l}</div>
+                      {[{ v: 'CELIBATAIRE', l: 'Célibataire' }, { v: 'MARIE_PACSE', l: 'Marié(e)/Pacsé(e)' }, { v: 'DIVORCE', l: 'Divorcé(e)' }, { v: 'VEUF', l: 'Veuf/Veuve' }].map(o => (
+                        <button key={o.v} onClick={() => setSituation(o.v as Situation)} className={`p-4 rounded-xl border-2 text-left flex items-center gap-3 ${situation === o.v ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                          <Users className={`w-5 h-5 ${situation === o.v ? 'text-blue-600' : 'text-gray-400'}`} /><div className="font-medium text-gray-900">{o.l}</div>
                         </button>
                       ))}
                     </div>
@@ -273,14 +338,13 @@ export default function SimulateurIRPage() {
                         </label>
                       ))}
                     </div>
-                    <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl"><div className="flex items-center justify-between"><div><div className="text-sm text-gray-600">Nombre de parts</div><div className="text-3xl font-bold text-blue-600">{nombreParts}</div></div><div className="text-5xl">🧮</div></div></div>
+                    <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl"><div className="flex items-center justify-between"><div><div className="text-sm text-gray-600">Nombre de parts</div><div className="text-3xl font-bold text-blue-600">{nombreParts}</div></div><Calculator className="w-10 h-10 text-blue-300" /></div></div>
                   </div>
                 )}
-
                 {/* ÉTAPE 2 */}
                 {step === 2 && (
                   <div className="space-y-6">
-                    <div className="flex items-center gap-3 pb-4 border-b"><span className="text-3xl">💰</span><div><h2 className="text-xl font-bold text-gray-900">Revenus d'activité</h2><p className="text-sm text-gray-500">Salaires, pensions, BIC/BNC</p></div></div>
+                    <div className="flex items-center gap-3 pb-4 border-b"><Wallet className="w-8 h-8 text-blue-600" /><div><h2 className="text-xl font-bold text-gray-900">Revenus d’activité</h2><p className="text-sm text-gray-500">Salaires, pensions, BIC/BNC</p></div></div>
                     <div className="p-4 bg-gray-50 rounded-xl space-y-4">
                       <div className="flex items-center justify-between"><h3 className="font-semibold">Déclarant 1</h3><span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">Case 1AJ</span></div>
                       <InputField label="Salaires nets imposables" value={salaires1} onChange={setSalaires1} />
@@ -305,13 +369,13 @@ export default function SimulateurIRPage() {
                 {/* ÉTAPE 3 */}
                 {step === 3 && (
                   <div className="space-y-6">
-                    <div className="flex items-center gap-3 pb-4 border-b"><span className="text-3xl">🏠</span><div><h2 className="text-xl font-bold text-gray-900">Revenus du patrimoine</h2><p className="text-sm text-gray-500">Fonciers, capitaux, plus-values</p></div></div>
+                    <div className="flex items-center gap-3 pb-4 border-b"><Home className="w-8 h-8 text-blue-600" /><div><h2 className="text-xl font-bold text-gray-900">Revenus du patrimoine</h2><p className="text-sm text-gray-500">Fonciers, capitaux, plus-values</p></div></div>
                     <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 space-y-4">
-                      <div className="flex items-center justify-between"><h3 className="font-semibold text-amber-900">🏘️ Revenus fonciers</h3><select value={regimeFoncier} onChange={(e) => setRegimeFoncier(e.target.value as any)} className="px-3 py-1.5 border border-amber-300 rounded-lg text-sm bg-white"><option value="MICRO">Micro-foncier (−30%)</option><option value="REEL">Régime réel</option></select></div>
+                      <div className="flex items-center justify-between"><h3 className="font-semibold text-amber-900 flex items-center gap-2"><Building2 className="w-4 h-4" /> Revenus fonciers</h3><select value={regimeFoncier} onChange={(e) => setRegimeFoncier(e.target.value as any)} className="px-3 py-1.5 border border-amber-300 rounded-lg text-sm bg-white"><option value="MICRO">Micro-foncier (−30%)</option><option value="REEL">Régime réel</option></select></div>
                       <div className="grid grid-cols-2 gap-4"><InputField label="Loyers bruts" value={fonciersBruts} onChange={setFonciersBruts} color="amber" />{regimeFoncier === 'REEL' && <InputField label="Charges déductibles" value={chargesFoncieres} onChange={setChargesFoncieres} color="amber" />}</div>
                     </div>
                     <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 space-y-4">
-                      <div className="flex items-center justify-between"><h3 className="font-semibold text-emerald-900">💹 Capitaux mobiliers</h3><label className="flex items-center gap-2"><input type="checkbox" checked={optionPFU} onChange={(e) => setOptionPFU(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-emerald-600" /><span className="text-sm">PFU 30%</span></label></div>
+                      <div className="flex items-center justify-between"><h3 className="font-semibold text-emerald-900 flex items-center gap-2"><TrendingUp className="w-4 h-4" /> Capitaux mobiliers</h3><label className="flex items-center gap-2"><input type="checkbox" checked={optionPFU} onChange={(e) => setOptionPFU(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-emerald-600" /><span className="text-sm">PFU 30%</span></label></div>
                       <div className="grid grid-cols-3 gap-4"><InputField label="Dividendes" value={dividendes} onChange={setDividendes} color="emerald" /><InputField label="Intérêts" value={interets} onChange={setInterets} color="emerald" /><InputField label="PV mobilières" value={pvMobilieres} onChange={setPvMobilieres} color="emerald" /></div>
                     </div>
                   </div>
@@ -320,13 +384,13 @@ export default function SimulateurIRPage() {
                 {/* ÉTAPE 4 */}
                 {step === 4 && (
                   <div className="space-y-6">
-                    <div className="flex items-center gap-3 pb-4 border-b"><span className="text-3xl">📋</span><div><h2 className="text-xl font-bold text-gray-900">Charges déductibles</h2><p className="text-sm text-gray-500">Pensions alimentaires, PER</p></div></div>
+                    <div className="flex items-center gap-3 pb-4 border-b"><FileText className="w-8 h-8 text-blue-600" /><div><h2 className="text-xl font-bold text-gray-900">Charges déductibles</h2><p className="text-sm text-gray-500">Pensions alimentaires, PER</p></div></div>
                     <div className="p-4 bg-rose-50 rounded-xl border border-rose-100 space-y-4">
-                      <h3 className="font-semibold text-rose-900">👶 Pensions alimentaires</h3>
+                      <h3 className="font-semibold text-rose-900 flex items-center gap-2"><Baby className="w-4 h-4" /> Pensions alimentaires</h3>
                       <div className="grid grid-cols-2 gap-4"><InputField label="Enfants majeurs" value={pensionEnfant} onChange={setPensionEnfant} hint="Max 6 674€/enfant" color="rose" /><InputField label="Ex-conjoint" value={pensionExConjoint} onChange={setPensionExConjoint} color="rose" /></div>
                     </div>
                     <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100 space-y-4">
-                      <h3 className="font-semibold text-indigo-900">🏦 Épargne retraite (PER)</h3>
+                      <h3 className="font-semibold text-indigo-900 flex items-center gap-2"><Landmark className="w-4 h-4" /> Épargne retraite (PER)</h3>
                       <div className="grid grid-cols-2 gap-4"><InputField label="Versements PER - Déclarant 1" value={versementsPER} onChange={setVersementsPER} color="indigo" />{isCouple && <InputField label="Versements PER - Déclarant 2" value={versementsPER2} onChange={setVersementsPER2} color="indigo" />}</div>
                     </div>
                     <InputField label="CSG déductible" value={csgDeductible} onChange={setCsgDeductible} hint="Revenus du patrimoine N-1" />
@@ -336,18 +400,18 @@ export default function SimulateurIRPage() {
                 {/* ÉTAPE 5 */}
                 {step === 5 && (
                   <div className="space-y-6">
-                    <div className="flex items-center gap-3 pb-4 border-b"><span className="text-3xl">🎁</span><div><h2 className="text-xl font-bold text-gray-900">Réductions d'impôt</h2><p className="text-sm text-gray-500">Dons, emploi domicile, investissements</p></div></div>
+                    <div className="flex items-center gap-3 pb-4 border-b"><Gift className="w-8 h-8 text-blue-600" /><div><h2 className="text-xl font-bold text-gray-900">Réductions d’impôt</h2><p className="text-sm text-gray-500">Dons, emploi domicile, investissements</p></div></div>
                     <div className="p-4 bg-pink-50 rounded-xl border border-pink-100 space-y-4">
-                      <h3 className="font-semibold text-pink-900">❤️ Dons</h3>
+                      <h3 className="font-semibold text-pink-900 flex items-center gap-2"><Heart className="w-4 h-4" /> Dons</h3>
                       <div className="grid grid-cols-2 gap-4"><InputField label="Organismes intérêt général" value={donsInteret} onChange={setDonsInteret} hint="Réduction 66%" color="pink" /><InputField label="Aide aux personnes" value={donsAide} onChange={setDonsAide} hint="Réduction 75% (max 1000€)" color="pink" /></div>
                     </div>
                     <div className="p-4 bg-cyan-50 rounded-xl border border-cyan-100 space-y-4">
-                      <h3 className="font-semibold text-cyan-900">🏠 Services à domicile</h3>
+                      <h3 className="font-semibold text-cyan-900 flex items-center gap-2"><Home className="w-4 h-4" /> Services à domicile</h3>
                       <InputField label="Dépenses emploi domicile" value={emploiDomicile} onChange={setEmploiDomicile} hint="Crédit 50% (max 12000€)" color="cyan" />
                       <div className="grid grid-cols-2 gap-4"><InputField label="Frais de garde (−6 ans)" value={fraisGarde} onChange={setFraisGarde} hint="Crédit 50% (max 3500€/enfant)" color="cyan" /><div><label className="block text-sm font-medium text-gray-700 mb-1">Nb enfants gardés</label><input type="number" value={nbEnfantsGarde} onChange={(e) => setNbEnfantsGarde(Number(e.target.value) || 0)} className="w-full px-4 py-3 border border-gray-300 rounded-xl" /></div></div>
                     </div>
                     <div className="p-4 bg-violet-50 rounded-xl border border-violet-100 space-y-4">
-                      <h3 className="font-semibold text-violet-900">📈 Investissements</h3>
+                      <h3 className="font-semibold text-violet-900 flex items-center gap-2"><TrendingUp className="w-4 h-4" /> Investissements</h3>
                       <div className="grid grid-cols-2 gap-4"><InputField label="Réduction Pinel/Denormandie" value={reductionPinel} onChange={setReductionPinel} color="violet" /><InputField label="Investissement PME" value={investPME} onChange={setInvestPME} hint="Réduction 18%" color="violet" /></div>
                     </div>
                   </div>
@@ -355,11 +419,11 @@ export default function SimulateurIRPage() {
 
                 {/* Navigation */}
                 <div className="flex justify-between pt-6 mt-6 border-t">
-                  <button onClick={() => setStep(Math.max(1, step - 1))} disabled={step === 1} className="px-6 py-3 rounded-xl border border-gray-300 font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">← Précédent</button>
+                  <button onClick={() => setStep(Math.max(1, step - 1))} disabled={step === 1} className="px-6 py-3 rounded-xl border border-gray-300 font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"><ChevronLeft className="w-4 h-4" /> Précédent</button>
                   {step < 5 ? (
-                    <button onClick={() => setStep(step + 1)} className="px-6 py-3 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700">Suivant →</button>
+                    <button onClick={() => setStep(step + 1)} className="px-6 py-3 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 flex items-center gap-1">Suivant <ChevronRight className="w-4 h-4" /></button>
                   ) : (
-                    <button onClick={lancerSimulation} disabled={loading} className="px-8 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold hover:from-blue-700 hover:to-indigo-700 shadow-lg disabled:opacity-50">{loading ? 'Calcul...' : '🧮 Calculer mon impôt'}</button>
+                    <button onClick={lancerSimulation} disabled={loading} className="px-8 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold hover:from-blue-700 hover:to-indigo-700 shadow-lg disabled:opacity-50 flex items-center gap-2">{loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Calcul...</> : <><Calculator className="w-4 h-4" /> Calculer mon impôt</>}</button>
                   )}
                 </div>
               </div>
@@ -368,7 +432,7 @@ export default function SimulateurIRPage() {
             {/* Panneau latéral - Résumé temps réel */}
             <div className="space-y-6">
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-24">
-                <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><span className="text-xl">📊</span> Aperçu en temps réel</h3>
+                <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-blue-600" /> Aperçu en temps réel</h3>
                 <div className="space-y-4">
                   <div className="p-3 bg-gray-50 rounded-xl"><div className="text-xs text-gray-500">Revenu brut global</div><div className="text-lg font-bold text-gray-900">{fmtEur(apercu.revenuBrut)}</div></div>
                   <div className="p-3 bg-gray-50 rounded-xl"><div className="text-xs text-gray-500">Charges déductibles</div><div className="text-lg font-bold text-green-600">− {fmtEur(apercu.charges)}</div></div>
@@ -390,12 +454,38 @@ export default function SimulateurIRPage() {
                     <div className="text-3xl font-bold">{fmtEur(apercu.impotTotal)}</div>
                     <div className="text-sm opacity-90 mt-1">Taux moyen : {fmtPct(apercu.tauxMoyen)}</div>
                   </div>
+                  {isFromDossier && (
+                    <div className="pt-2 space-y-2">
+                      {!savedToDossier ? (
+                        <button
+                          onClick={handleSaveToDossier}
+                          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all shadow-md"
+                        >
+                          <Save className="w-4 h-4 inline mr-1" /> Enregistrer dans le dossier
+                        </button>
+                      ) : (
+                        <>
+                          <div className="w-full px-4 py-3 rounded-xl bg-emerald-100 text-emerald-700 text-center font-semibold">
+                            <CheckCircle className="w-4 h-4 inline mr-1" /> Enregistré dans le dossier
+                          </div>
+                          {returnUrl && (
+                            <button
+                              onClick={() => router.push(returnUrl)}
+                              className="w-full px-4 py-2 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50"
+                            >
+                              <ArrowLeft className="w-4 h-4 inline mr-1" /> Retour au dossier
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Barème IR */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h3 className="font-bold text-gray-900 mb-4">📊 Barème IR 2025</h3>
+                <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-blue-600" /> Barème IR 2026</h3>
                 <div className="space-y-2 text-sm">
                   {BAREME_IR_2025.map((t, i) => (
                     <div key={i} className={`flex justify-between p-2 rounded-lg ${apercu.quotient > t.min && (t.max === Infinity || apercu.quotient <= t.max) ? 'bg-blue-100 font-medium' : 'bg-gray-50'}`}>
@@ -404,6 +494,17 @@ export default function SimulateurIRPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Export PDF */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <ExportSimulationActions
+                  simulateurTitre="Impôt sur le Revenu"
+                  simulationType="FISCAL_IR"
+                  parametres={pdfParams}
+                  resultats={pdfResults}
+                  notes={`Simulation IR 2026 — ${situation}, ${nombreParts} parts, TMI ${apercu.tmi}%`}
+                />
               </div>
             </div>
           </div>

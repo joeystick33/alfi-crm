@@ -6,7 +6,7 @@ import {
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { TacheService } from '@/app/_common/lib/services/tache-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/taches/[id]
  * Récupérer une tâche par ID
@@ -37,7 +37,7 @@ export async function GET(
 
     return createSuccessResponse(tache)
   } catch (error: any) {
-    console.error('Error in GET /api/taches/[id]:', error)
+    logger.error('Error in GET /api/taches/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -76,7 +76,7 @@ export async function PATCH(
 
     return createSuccessResponse(tache)
   } catch (error: any) {
-    console.error('Error in PATCH /api/taches/[id]:', error)
+    logger.error('Error in PATCH /api/taches/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -120,7 +120,7 @@ export async function DELETE(
 
     return createSuccessResponse({ message: 'Tâche deleted successfully' })
   } catch (error: any) {
-    console.error('Error in DELETE /api/taches/[id]:', error)
+    logger.error('Error in DELETE /api/taches/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

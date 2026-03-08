@@ -26,7 +26,7 @@ import type {
   DocumentStatus
 } from '@/app/_common/types/client360'
 import type { DocumentType, DocumentCategory as PrismaDocumentCategory } from '@prisma/client'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * Calculate KYC status from documents
  */
@@ -383,7 +383,7 @@ export async function GET(
       externalSources: null
     })
   } catch (error: unknown) {
-    console.error('Get client documents error:', error)
+    logger.error('Get client documents error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -468,7 +468,7 @@ export async function POST(
 
     return createSuccessResponse(document, 201)
   } catch (error: unknown) {
-    console.error('Upload client document error:', error)
+    logger.error('Upload client document error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error) {
       if (error.message === 'Unauthorized') {

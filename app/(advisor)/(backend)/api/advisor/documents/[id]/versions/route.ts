@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { DocumentService } from '@/app/_common/lib/services/document-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/documents/[id]/versions
  * Récupérer l'historique des versions d'un document
@@ -29,7 +29,7 @@ export async function GET(
 
     return createSuccessResponse(versions)
   } catch (error) {
-    console.error('Error in GET /api/documents/[id]/versions:', error)
+    logger.error('Error in GET /api/documents/[id]/versions:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

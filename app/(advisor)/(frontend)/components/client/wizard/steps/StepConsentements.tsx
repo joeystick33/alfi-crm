@@ -88,9 +88,13 @@ export function StepConsentements({ data, updateField: _updateField, updateNeste
                 <p className="text-sm text-gray-600 mt-1">
                   J'ai lu et j'accepte les conditions générales de service et la lettre de mission.
                 </p>
-                <a href="#" className="text-sm text-blue-600 hover:underline">
+                <button 
+                  type="button"
+                  onClick={() => window.open('/legal/conditions-generales', '_blank')}
+                  className="text-sm text-blue-600 hover:underline cursor-pointer"
+                >
                   Consulter les conditions générales
-                </a>
+                </button>
               </div>
             </div>
           </div>
@@ -112,9 +116,13 @@ export function StepConsentements({ data, updateField: _updateField, updateNeste
                   J'ai pris connaissance de la politique de confidentialité et des modalités 
                   d'exercice de mes droits (accès, rectification, suppression, portabilité).
                 </p>
-                <a href="#" className="text-sm text-blue-600 hover:underline">
+                <button 
+                  type="button"
+                  onClick={() => window.open('/legal/politique-confidentialite', '_blank')}
+                  className="text-sm text-blue-600 hover:underline cursor-pointer"
+                >
                   Consulter la politique de confidentialité
-                </a>
+                </button>
               </div>
             </div>
           </div>

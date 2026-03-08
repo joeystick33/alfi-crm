@@ -3,7 +3,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
 import { normalizeAssignmentPayload } from '../../utils'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/conseillers/[id]/assignments
  * Get all assistant assignments for an advisor
@@ -77,7 +77,7 @@ export async function GET(
       total: formatted.length,
     })
   } catch (error) {
-    console.error('Error in GET /api/advisor/conseillers/[id]/assignments:', error)
+    logger.error('Error in GET /api/advisor/conseillers/[id]/assignments:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -189,7 +189,7 @@ export async function POST(
       assistant: assignment.assistant,
     }, 201)
   } catch (error) {
-    console.error('Error in POST /api/advisor/conseillers/[id]/assignments:', error)
+    logger.error('Error in POST /api/advisor/conseillers/[id]/assignments:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -265,7 +265,7 @@ export async function DELETE(
       message: 'Assignation supprimée avec succès',
     })
   } catch (error) {
-    console.error('Error in DELETE /api/advisor/conseillers/[id]/assignments:', error)
+    logger.error('Error in DELETE /api/advisor/conseillers/[id]/assignments:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

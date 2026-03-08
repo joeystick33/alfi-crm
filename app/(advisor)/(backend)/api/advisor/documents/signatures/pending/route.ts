@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { SignatureService } from '@/app/_common/lib/services/signature-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/documents/signatures/pending
  * Récupère la liste des documents avec des signatures en attente
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     // Utilise le wrapper standardisé { data, timestamp } attendu par le hook
     return createSuccessResponse(pendingSignatures)
   } catch (error) {
-    console.error('Error in GET /api/advisor/documents/signatures/pending:', error)
+    logger.error('Error in GET /api/advisor/documents/signatures/pending:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

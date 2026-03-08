@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/app/_common/lib/prisma'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 // GET /api/advisor/clients/[id]/credits/[creditId] - Récupérer un crédit spécifique
 export async function GET(
   req: NextRequest,
@@ -33,7 +33,7 @@ export async function GET(
 
     return createSuccessResponse(credit)
   } catch (error: any) {
-    console.error('Error fetching credit:', error)
+    logger.error('Error fetching credit:', { error: error instanceof Error ? error.message : String(error) })
     if (error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }
@@ -149,7 +149,7 @@ export async function PUT(
 
     return createSuccessResponse(updatedCredit)
   } catch (error: any) {
-    console.error('Error updating credit:', error)
+    logger.error('Error updating credit:', { error: error instanceof Error ? error.message : String(error) })
     if (error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }
@@ -193,7 +193,7 @@ export async function DELETE(
 
     return createSuccessResponse({ message: 'Credit deleted successfully', id: deletedCredit.id })
   } catch (error: any) {
-    console.error('Error deleting credit:', error)
+    logger.error('Error deleting credit:', { error: error instanceof Error ? error.message : String(error) })
     if (error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }

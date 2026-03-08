@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/_common/componen
 import { Badge } from '@/app/_common/components/ui/Badge'
 import { Button } from '@/app/_common/components/ui/Button'
 import { Skeleton } from '@/app/_common/components/ui/Skeleton'
+import { ClientLink } from '@/app/_common/components/ClientLink'
 import { cn } from '@/app/_common/lib/utils'
 import {
   Shield,
@@ -290,10 +291,20 @@ function ExpiringDocumentRow({
       ? 'bg-orange-100 text-orange-700' 
       : 'bg-amber-100 text-amber-700'
 
+  const handleClick = () => {
+    // If document has a file URL, open it directly
+    if (document.fileUrl) {
+      window.open(document.fileUrl, '_blank')
+    } else {
+      // Otherwise navigate to documents page filtered by type
+      router.push(`/dashboard/conformite/documents?type=${document.type}`)
+    }
+  }
+
   return (
     <div 
       className="p-4 flex items-center gap-4 hover:bg-gray-50 cursor-pointer transition-colors"
-      onClick={() => router.push(`/dashboard/conformite/documents?id=${document.id}`)}
+      onClick={handleClick}
     >
       <div className="p-2.5 bg-amber-50 rounded-lg">
         <FileText className="h-5 w-5 text-amber-600" />
@@ -302,9 +313,16 @@ function ExpiringDocumentRow({
         <p className="text-sm font-medium text-gray-900 truncate">
           {KYC_DOCUMENT_TYPE_LABELS[document.type]}
         </p>
-        <p className="text-xs text-gray-500">
-          Expire le {new Date(document.expiresAt!).toLocaleDateString('fr-FR')}
-        </p>
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <span>Expire le {new Date(document.expiresAt!).toLocaleDateString('fr-FR')}</span>
+          <span>•</span>
+          <ClientLink 
+            clientId={document.clientId} 
+            showAvatar={false}
+            className="text-xs"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
       </div>
       <Badge className={urgencyColor}>
         {daysUntil === 1 ? 'Demain' : `${daysUntil} jours`}
@@ -471,9 +489,22 @@ function AlertRow({ alert }: { alert: ComplianceAlert }) {
         <p className="text-sm font-medium text-gray-900 truncate">
           {alert.title}
         </p>
-        <p className="text-xs text-gray-500">
-          {ALERT_TYPE_LABELS[alert.type]} • {new Date(alert.createdAt).toLocaleDateString('fr-FR')}
-        </p>
+        <div className="flex items-center gap-1 text-xs text-gray-500">
+          <span>{ALERT_TYPE_LABELS[alert.type]}</span>
+          <span>•</span>
+          <span>{new Date(alert.createdAt).toLocaleDateString('fr-FR')}</span>
+          {alert.clientId && (
+            <>
+              <span>•</span>
+              <ClientLink 
+                clientId={alert.clientId} 
+                showAvatar={false}
+                className="text-xs"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </>
+          )}
+        </div>
       </div>
       <Badge className={severityColors[alert.severity]} size="sm">
         {ALERT_SEVERITY_LABELS[alert.severity]}

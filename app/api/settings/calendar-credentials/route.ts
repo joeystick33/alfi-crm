@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, setRLSContext } from "@/app/_common/lib/prisma";
 import { requireAuth } from "@/app/_common/lib/auth-helpers";
+import { encrypt, decrypt } from "@/app/_common/lib/security/crypto-service";
 
 export async function POST(req: NextRequest) {
     try {
@@ -25,8 +26,8 @@ export async function POST(req: NextRequest) {
             await prisma.cabinet.update({
                 where: { id: targetCabinetId },
                 data: {
-                    googleClientId: clientId,
-                    googleClientSecret: clientSecret
+                    googleClientId: encrypt(clientId),
+                    googleClientSecret: encrypt(clientSecret)
                 }
             });
         } catch (dbError: any) {

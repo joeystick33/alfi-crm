@@ -1,16 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 import { prisma } from "@/app/_common/lib/prisma";
+import { verifyOAuthState } from "@/app/_common/lib/oauth-state";
 
 export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
     const code = searchParams.get("code");
-    const userId = searchParams.get("state");
+    const encodedState = searchParams.get("state");
 
-    if (!code || !userId) {
+    if (!code || !encodedState) {
       return NextResponse.json({ error: "Missing code or state" }, { status: 400 });
     }
+
+    const state = verifyOAuthState(encodedState)
+    if (!state || state.provider !== 'google' || state.type !== 'mail') {
+      return NextResponse.json({ error: "Invalid state" }, { status: 400 });
+    }
+    const userId = state.userId
 
     const user = await prisma.user.findUnique({
       where: { id: userId },

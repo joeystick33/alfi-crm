@@ -3,9 +3,12 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import Script from 'next/script'
 import { SimulatorGate } from '@/app/_common/components/FeatureGate'
 import { usePlotlyReady } from '../_hooks/usePlotlyReady'
+import {
+  Users, Home, FileText, CreditCard, Landmark,
+  BarChart3, Target, Briefcase, RefreshCw,
+} from 'lucide-react'
 import { 
   LMNP_DISPLAY as LMNP, 
   calculIRDetaille, 
@@ -292,13 +295,12 @@ export default function ColocationPage() {
 
   return (
     <SimulatorGate simulator="IMMOBILIER" showTeaser>
-      <Script src="https://cdn.plot.ly/plotly-2.27.0.min.js" strategy="afterInteractive" onLoad={handlePlotlyLoad} />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50 to-teal-50">
         <main className="container mx-auto px-4 py-6 max-w-6xl">
           <Link href="/dashboard/simulateurs/immobilier" className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-flex items-center">← Simulateurs immobilier</Link>
           <div className="sim-card mb-6">
             <div className="flex items-center gap-4">
-              <span className="text-4xl">👥</span>
+              <Users className="w-9 h-9 text-cyan-700" />
               <div><h1 className="text-2xl font-bold">Simulateur Colocation</h1><p className="text-gray-600">Multi-baux • Rendement optimisé • Risque réparti</p></div>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
@@ -312,19 +314,19 @@ export default function ColocationPage() {
             <div className="sim-card">
               <div className="mb-6"><div className="h-2 bg-gray-200 rounded-full"><div className="h-full bg-cyan-600 rounded-full transition-all" style={{width:`${step/5*100}%`}}/></div></div>
 
-              {step === 1 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4">🏠 Bien</h2><div className="grid grid-cols-2 md:grid-cols-3 gap-4"><div className="form-group"><label>Prix achat (€)</label><input type="number" value={prixAchat} onChange={e=>setPrixAchat(+e.target.value)}/></div><div className="form-group"><label>Surface (m²)</label><input type="number" value={surface} onChange={e=>setSurface(+e.target.value)}/></div><div className="form-group"><label>Nb chambres</label><input type="number" value={nbChambres} onChange={e=>setNbChambres(+e.target.value)} min={2} max={10}/></div><div className="form-group"><label>Frais notaire (€)</label><input type="number" value={fraisNotaire} onChange={e=>setFraisNotaire(+e.target.value)}/></div><div className="form-group"><label>Travaux (€)</label><input type="number" value={travaux} onChange={e=>setTravaux(+e.target.value)}/></div><div className="form-group"><label>Mobilier (€)</label><input type="number" value={mobilier} onChange={e=>setMobilier(+e.target.value)} disabled={typeLocation==='NU'}/></div></div></div>}
+              {step === 1 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Home className="w-5 h-5" /> Bien</h2><div className="grid grid-cols-2 md:grid-cols-3 gap-4"><div className="form-group"><label>Prix achat (€)</label><input type="number" value={prixAchat} onChange={e=>setPrixAchat(+e.target.value)}/></div><div className="form-group"><label>Surface (m²)</label><input type="number" value={surface} onChange={e=>setSurface(+e.target.value)}/></div><div className="form-group"><label>Nb chambres</label><input type="number" value={nbChambres} onChange={e=>setNbChambres(+e.target.value)} min={2} max={10}/></div><div className="form-group"><label>Frais notaire (€)</label><input type="number" value={fraisNotaire} onChange={e=>setFraisNotaire(+e.target.value)}/></div><div className="form-group"><label>Travaux (€)</label><input type="number" value={travaux} onChange={e=>setTravaux(+e.target.value)}/></div><div className="form-group"><label>Mobilier (€)</label><input type="number" value={mobilier} onChange={e=>setMobilier(+e.target.value)} disabled={typeLocation==='NU'}/></div></div></div>}
 
-              {step === 2 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4">👥 Configuration colocation</h2><div className="grid grid-cols-2 md:grid-cols-3 gap-4"><div className="form-group"><label>Type location</label><select value={typeLocation} onChange={e=>setTypeLocation(e.target.value as TypeLocation)}><option value="MEUBLE">Meublé (LMNP)</option><option value="NU">Nu (foncier)</option></select></div><div className="form-group"><label>Type bail</label><select value={typeBail} onChange={e=>setTypeBail(e.target.value as TypeBail)}><option value="INDIVIDUEL">Baux individuels</option><option value="SOLIDAIRE">Bail solidaire</option></select></div><div className="form-group"><label>Loyer/chambre (€)</label><input type="number" value={loyerParChambre} onChange={e=>setLoyerParChambre(+e.target.value)}/></div><div className="form-group"><label>Charges locataire (€)</label><input type="number" value={chargesLocataire} onChange={e=>setChargesLocataire(+e.target.value)}/></div><div className="form-group"><label>Rotation annuelle (%)</label><input type="number" value={tauxRotation} onChange={e=>setTauxRotation(+e.target.value)} min={0} max={100}/><span className="form-hint">% de chambres avec changement/an</span></div><div className="form-group"><label>Vacance par rotation (sem.)</label><input type="number" value={vacanceMoyenne} onChange={e=>setVacanceMoyenne(+e.target.value)} min={0} max={12}/></div></div><div className="info-box mt-4 grid grid-cols-3 gap-4 text-sm"><div><span className="text-gray-500">Loyer mensuel total</span><div className="font-bold text-2xl text-green-600">{fmtEur(loyerBrutMensuel)}</div></div><div><span className="text-gray-500">Loyer/m²</span><div className="font-bold text-lg">{fmtEur(Math.round(loyerParM2))}/m²</div></div><div><span className="text-gray-500">Taux vacance</span><div className="font-bold text-lg">{fmtPct(tauxVacance)}</div></div></div></div>}
+              {step === 2 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Users className="w-5 h-5" /> Configuration colocation</h2><div className="grid grid-cols-2 md:grid-cols-3 gap-4"><div className="form-group"><label>Type location</label><select value={typeLocation} onChange={e=>setTypeLocation(e.target.value as TypeLocation)}><option value="MEUBLE">Meublé (LMNP)</option><option value="NU">Nu (foncier)</option></select></div><div className="form-group"><label>Type bail</label><select value={typeBail} onChange={e=>setTypeBail(e.target.value as TypeBail)}><option value="INDIVIDUEL">Baux individuels</option><option value="SOLIDAIRE">Bail solidaire</option></select></div><div className="form-group"><label>Loyer/chambre (€)</label><input type="number" value={loyerParChambre} onChange={e=>setLoyerParChambre(+e.target.value)}/></div><div className="form-group"><label>Charges locataire (€)</label><input type="number" value={chargesLocataire} onChange={e=>setChargesLocataire(+e.target.value)}/></div><div className="form-group"><label>Rotation annuelle (%)</label><input type="number" value={tauxRotation} onChange={e=>setTauxRotation(+e.target.value)} min={0} max={100}/><span className="form-hint">% de chambres avec changement/an</span></div><div className="form-group"><label>Vacance par rotation (sem.)</label><input type="number" value={vacanceMoyenne} onChange={e=>setVacanceMoyenne(+e.target.value)} min={0} max={12}/></div></div><div className="info-box mt-4 grid grid-cols-3 gap-4 text-sm"><div><span className="text-gray-500">Loyer mensuel total</span><div className="font-bold text-2xl text-green-600">{fmtEur(loyerBrutMensuel)}</div></div><div><span className="text-gray-500">Loyer/m²</span><div className="font-bold text-lg">{fmtEur(Math.round(loyerParM2))}/m²</div></div><div><span className="text-gray-500">Taux vacance</span><div className="font-bold text-lg">{fmtPct(tauxVacance)}</div></div></div></div>}
 
-              {step === 3 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4">📋 Charges</h2><div className="grid grid-cols-2 md:grid-cols-3 gap-4"><div className="form-group"><label>Taxe foncière (€)</label><input type="number" value={taxeFonciere} onChange={e=>setTaxeFonciere(+e.target.value)}/></div><div className="form-group"><label>Copro (€)</label><input type="number" value={chargesCopro} onChange={e=>setChargesCopro(+e.target.value)}/></div><div className="form-group"><label>PNO (€)</label><input type="number" value={assurancePNO} onChange={e=>setAssurancePNO(+e.target.value)}/></div><div className="form-group"><label>Gestion (%)</label><input type="number" value={fraisGestion} onChange={e=>setFraisGestion(+e.target.value)} step={0.5}/></div><div className="form-group"><label>Provision entretien (€)</label><input type="number" value={provisionEntretien} onChange={e=>setProvisionEntretien(+e.target.value)}/><span className="form-hint">Usure accrue en colocation</span></div></div></div>}
+              {step === 3 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4 flex items-center gap-2"><FileText className="w-5 h-5" /> Charges</h2><div className="grid grid-cols-2 md:grid-cols-3 gap-4"><div className="form-group"><label>Taxe foncière (€)</label><input type="number" value={taxeFonciere} onChange={e=>setTaxeFonciere(+e.target.value)}/></div><div className="form-group"><label>Copro (€)</label><input type="number" value={chargesCopro} onChange={e=>setChargesCopro(+e.target.value)}/></div><div className="form-group"><label>PNO (€)</label><input type="number" value={assurancePNO} onChange={e=>setAssurancePNO(+e.target.value)}/></div><div className="form-group"><label>Gestion (%)</label><input type="number" value={fraisGestion} onChange={e=>setFraisGestion(+e.target.value)} step={0.5}/></div><div className="form-group"><label>Provision entretien (€)</label><input type="number" value={provisionEntretien} onChange={e=>setProvisionEntretien(+e.target.value)}/><span className="form-hint">Usure accrue en colocation</span></div></div></div>}
 
-              {step === 4 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4">💳 Financement</h2><div className="grid grid-cols-2 md:grid-cols-3 gap-4"><div className="form-group"><label>Apport (€)</label><input type="number" value={apport} onChange={e=>setApport(+e.target.value)}/></div><div className="form-group"><label>Taux (%)</label><input type="number" value={tauxCredit} onChange={e=>setTauxCredit(+e.target.value)} step={0.1}/></div><div className="form-group"><label>Durée (ans)</label><input type="number" value={dureeCredit} onChange={e=>setDureeCredit(+e.target.value)}/></div></div><div className="info-box mt-4 grid grid-cols-3 gap-4 text-sm"><div><span className="text-gray-500">Investissement</span><div className="font-bold text-lg">{fmtEur(investTotal)}</div></div><div><span className="text-gray-500">Emprunté</span><div className="font-bold text-lg">{fmtEur(montantEmprunte)}</div></div><div><span className="text-gray-500">Mensualité</span><div className="font-bold text-lg">{fmtEur(Math.round(mensualite))}</div></div></div></div>}
+              {step === 4 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4 flex items-center gap-2"><CreditCard className="w-5 h-5" /> Financement</h2><div className="grid grid-cols-2 md:grid-cols-3 gap-4"><div className="form-group"><label>Apport (€)</label><input type="number" value={apport} onChange={e=>setApport(+e.target.value)}/></div><div className="form-group"><label>Taux (%)</label><input type="number" value={tauxCredit} onChange={e=>setTauxCredit(+e.target.value)} step={0.1}/></div><div className="form-group"><label>Durée (ans)</label><input type="number" value={dureeCredit} onChange={e=>setDureeCredit(+e.target.value)}/></div></div><div className="info-box mt-4 grid grid-cols-3 gap-4 text-sm"><div><span className="text-gray-500">Investissement</span><div className="font-bold text-lg">{fmtEur(investTotal)}</div></div><div><span className="text-gray-500">Emprunté</span><div className="font-bold text-lg">{fmtEur(montantEmprunte)}</div></div><div><span className="text-gray-500">Mensualité</span><div className="font-bold text-lg">{fmtEur(Math.round(mensualite))}</div></div></div></div>}
 
-              {step === 5 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4">🏛️ Fiscalité et Projection</h2><div className="grid grid-cols-2 md:grid-cols-3 gap-4"><div className="form-group"><label>Régime fiscal</label><select value={regimeFiscal} onChange={e=>setRegimeFiscal(e.target.value as RegimeFiscal)}><option value="MICRO">Micro ({abattement}%)</option><option value="REEL">Réel</option></select></div><div className="form-group"><label>Durée (ans)</label><input type="number" value={dureeDetention} onChange={e=>setDureeDetention(+e.target.value)}/></div><div className="form-group"><label>Revalo (%/an)</label><input type="number" value={revalorisationBien} onChange={e=>setRevalorisationBien(+e.target.value)} step={0.1}/></div></div><div className="info-box mt-4 grid grid-cols-3 gap-4 text-sm"><div><span className="text-gray-500">TMI calculé</span><div className="font-bold text-lg">{tmi}%</div></div><div><span className="text-gray-500">IR actuel</span><div className="font-bold text-lg">{fmtEur(irAvant.impotNet)}</div></div><div><span className="text-gray-500">Revenus totaux</span><div className="font-bold text-lg">{fmtEur(revenusTotaux)}</div></div></div></div>}
+              {step === 5 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Landmark className="w-5 h-5" /> Fiscalité et Projection</h2><div className="grid grid-cols-2 md:grid-cols-3 gap-4"><div className="form-group"><label>Régime fiscal</label><select value={regimeFiscal} onChange={e=>setRegimeFiscal(e.target.value as RegimeFiscal)}><option value="MICRO">Micro ({abattement}%)</option><option value="REEL">Réel</option></select></div><div className="form-group"><label>Durée (ans)</label><input type="number" value={dureeDetention} onChange={e=>setDureeDetention(+e.target.value)}/></div><div className="form-group"><label>Revalo (%/an)</label><input type="number" value={revalorisationBien} onChange={e=>setRevalorisationBien(+e.target.value)} step={0.1}/></div></div><div className="info-box mt-4 grid grid-cols-3 gap-4 text-sm"><div><span className="text-gray-500">TMI calculé</span><div className="font-bold text-lg">{tmi}%</div></div><div><span className="text-gray-500">IR actuel</span><div className="font-bold text-lg">{fmtEur(irAvant.impotNet)}</div></div><div><span className="text-gray-500">Revenus totaux</span><div className="font-bold text-lg">{fmtEur(revenusTotaux)}</div></div></div></div>}
 
               <div className="flex justify-between mt-8">
                 <button onClick={()=>setStep(Math.max(1,step-1))} disabled={step===1} className="btn-secondary disabled:opacity-50">← Précédent</button>
-                {step < 5 ? <button onClick={()=>setStep(step+1)} className="btn-primary-cyan">Suivant →</button> : <button onClick={lancerSimulation} disabled={loading} className="btn-primary-cyan">{loading ? '⏳' : '🧮 Analyser'}</button>}
+                {step < 5 ? <button onClick={()=>setStep(step+1)} className="btn-primary-cyan">Suivant →</button> : <button onClick={lancerSimulation} disabled={loading} className="btn-primary-cyan">{loading ? 'Calcul...' : 'Analyser'}</button>}
               </div>
             </div>
           ) : synthese && (
@@ -370,7 +372,7 @@ export default function ColocationPage() {
                   </div>
                 </div>
                 <div className="mt-4 p-3 bg-cyan-50 border border-cyan-200 rounded-lg">
-                  <h4 className="font-semibold text-cyan-800 mb-2">📊 Comprendre la fiscalité colocation</h4>
+                  <h4 className="font-semibold text-cyan-800 mb-2 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Comprendre la fiscalité colocation</h4>
                   <div className="text-sm text-cyan-700 space-y-1">
                     <p>• <strong>{nbChambres} chambres × {fmtEur(loyerParChambre)}</strong> = {fmtEur(loyerBrutMensuel)}/mois = <strong className="text-cyan-600">{fmtEur(loyerBrutAnnuel)}/an</strong>.</p>
                     <p>• <strong>Type bail : {typeBail === 'INDIVIDUEL' ? 'Baux individuels' : 'Bail solidaire'}</strong> - {typeBail === 'INDIVIDUEL' ? 'Gestion simplifiée, risque locatif mutualisé.' : 'Solidarité entre colocataires.'}</p>
@@ -496,7 +498,7 @@ export default function ColocationPage() {
               {/* AVIS PROFESSIONNEL AVEC SCORE GLOBAL */}
               {/* ═══════════════════════════════════════════════════════════════════════════ */}
               <div className="sim-card">
-                <h3 className="font-bold mb-6 text-xl text-slate-800">🎯 Synthèse et avis professionnel</h3>
+                <h3 className="font-bold mb-6 text-xl text-slate-800 flex items-center gap-2"><Target className="w-5 h-5" /> Synthèse et avis professionnel</h3>
                 
                 {(() => {
                   const levier = safeNumber(synthese.capFinal) / apport
@@ -589,7 +591,7 @@ export default function ColocationPage() {
                         
                         {showScoreDetail && (
                           <div className="mt-3 bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm">
-                            <h5 className="font-bold text-slate-700 mb-3">📊 Méthode de calcul du score Colocation</h5>
+                            <h5 className="font-bold text-slate-700 mb-3 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Méthode de calcul du score Colocation</h5>
                             <p className="text-slate-600 mb-3">Score calculé sur 5 critères : TRI (2.5 pts), Cash-flow (2.5 pts), Rendement brut (2.5 pts), Levier (1.5 pts), Config. chambres (1 pt).</p>
                             <p className="text-slate-600">La colocation permet un rendement +30-50% supérieur à la location classique grâce à la mutualisation des espaces.</p>
                           </div>
@@ -600,21 +602,21 @@ export default function ColocationPage() {
                 })()}
                 
                 <div className="bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-200 rounded-xl p-4">
-                  <h4 className="font-bold text-blue-800 mb-3">💼 Avis professionnel</h4>
+                  <h4 className="font-bold text-blue-800 mb-3 flex items-center gap-2"><Briefcase className="w-5 h-5" /> Avis professionnel</h4>
                   <div className="text-sm text-blue-700 space-y-3">
                     {safeNumber(synthese.rendBrut) >= 8 && safeNumber(synthese.cfMoyMois) >= 0 ? (
-                      <p><strong>✅ Excellente opération</strong> : Rendement brut de {fmtPct(synthese.rendBrut)} exceptionnel grâce à la mutualisation des espaces. La colocation maximise le rendement locatif.</p>
+                      <p><strong>Excellente opération</strong> : Rendement brut de {fmtPct(synthese.rendBrut)} exceptionnel grâce à la mutualisation des espaces. La colocation maximise le rendement locatif.</p>
                     ) : safeNumber(synthese.rendBrut) >= 6 ? (
-                      <p><strong>✅ Bonne opération</strong> : Rendement brut de {fmtPct(synthese.rendBrut)} supérieur à la location classique. Surveillez le turnover et la qualité des locataires.</p>
+                      <p><strong>Bonne opération</strong> : Rendement brut de {fmtPct(synthese.rendBrut)} supérieur à la location classique. Surveillez le turnover et la qualité des locataires.</p>
                     ) : (
-                      <p><strong>⚠️ À optimiser</strong> : Rendement de {fmtPct(synthese.rendBrut)}. Vérifiez les loyers du marché ou ajoutez des chambres si possible.</p>
+                      <p><strong>À optimiser</strong> : Rendement de {fmtPct(synthese.rendBrut)}. Vérifiez les loyers du marché ou ajoutez des chambres si possible.</p>
                     )}
                     <p className="text-blue-500 text-xs mt-2"><em>Colocation : rendement boosté (+30-50% vs classique) mais gestion plus active. Privilégiez les baux individuels pour limiter le risque.</em></p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-center"><button onClick={() => setShowResults(false)} className="btn-primary">🔄 Nouvelle simulation</button></div>
+              <div className="flex justify-center"><button onClick={() => setShowResults(false)} className="btn-primary flex items-center gap-2"><RefreshCw className="w-4 h-4" /> Nouvelle simulation</button></div>
             </div>
           )}
         </main>

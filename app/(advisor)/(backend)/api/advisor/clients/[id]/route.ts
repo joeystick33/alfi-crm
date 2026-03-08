@@ -1,8 +1,8 @@
- 
 import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { ClientService } from '@/app/_common/lib/services/client-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
+import { logger } from '@/app/_common/lib/logger'
 
 /**
  * GET /api/clients/[id]
@@ -39,7 +39,7 @@ export async function GET(
 
     return createSuccessResponse(client)
   } catch (error: any) {
-    console.error('Get client error:', error)
+    logger.error('Get client error', { module: 'ClientAPI', action: 'GET', metadata: { error: error.message } } as any)
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -81,7 +81,7 @@ export async function PATCH(
 
     return createSuccessResponse(client)
   } catch (error: any) {
-    console.error('Update client error:', error)
+    logger.error('Update client error', { module: 'ClientAPI', action: 'PATCH', metadata: { error: error.message } } as any)
 
     if (error instanceof Error) {
       if (error.message === 'Unauthorized') {
@@ -123,7 +123,7 @@ export async function DELETE(
 
     return createSuccessResponse({ message: 'Client archived successfully' })
   } catch (error: any) {
-    console.error('Archive client error:', error)
+    logger.error('Archive client error', { module: 'ClientAPI', action: 'DELETE', metadata: { error: error.message } } as any)
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

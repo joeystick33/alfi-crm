@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma, setRLSContext } from "@/app/_common/lib/prisma";
 import { requireAuth } from "@/app/_common/lib/auth-helpers";
 import { isRegularUser } from "@/app/_common/lib/auth-types";
-
+import { logger } from '@/app/_common/lib/logger'
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const context = await requireAuth(req);
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     if (error?.message === "Unauthorized") {
       return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
     }
-    console.error("[Email GET Error]:", error);
+    logger.error("[Email GET Error]:", { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
@@ -88,7 +88,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (error?.message === "Unauthorized") {
       return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
     }
-    console.error("[Email PATCH Error]:", error);
+    logger.error("[Email PATCH Error]:", { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
@@ -124,7 +124,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     if (error?.message === "Unauthorized") {
       return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
     }
-    console.error("[Email DELETE Error]:", error);
+    logger.error("[Email DELETE Error]:", { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

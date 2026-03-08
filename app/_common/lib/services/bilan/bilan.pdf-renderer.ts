@@ -1,8 +1,12 @@
 /**
- * Rendu PDF professionnel pour bilan patrimonial
- * Style CGP / Banque Privée / Family Office
+ * @deprecated Ce renderer jsPDF est remplacé par la génération Puppeteer (PDF vectoriel).
+ * Utiliser à la place :
+ * - POST /api/advisor/pdf/generate { type: 'BILAN_PATRIMONIAL', id: clientId }
+ * - PdfGenerator.generateFromHtml() + generateBilanPatrimonialPremiumHtml()
  * 
- * Utilise jsPDF + jspdf-autotable
+ * Backup disponible dans ./_quarantine/bilan.pdf-renderer.ts.bak
+ * 
+ * Ancien renderer jsPDF + jspdf-autotable — NE PLUS UTILISER
  */
 
 import jsPDF from 'jspdf'

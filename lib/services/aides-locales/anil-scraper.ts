@@ -6,7 +6,7 @@
  * ══════════════════════════════════════════════════════════════════════════════
  */
 
-import { PRETS_REGIONAUX_2025 } from './parameters-ptz-2025'
+import { PRETS_REGIONAUX_2025 } from './parameters-ptz'
 import { CacheFichier } from './cache-fichier'
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -98,7 +98,7 @@ const DEPARTEMENTS_REGIONS: Record<string, string> = {
 /**
  * Récupère les aides locales pour un département donné
  * 1. Vérifie le cache fichier JSON
- * 2. Sinon, utilise les données statiques (parameters-emprunt-2025.ts)
+ * 2. Sinon, utilise les données statiques (parameters-emprunt.ts)
  * 3. Sauvegarde dans le cache pour les prochaines requêtes
  */
 export async function getAidesLocales(departement: string): Promise<AideLocale[]> {
@@ -116,7 +116,7 @@ export async function getAidesLocales(departement: string): Promise<AideLocale[]
     return aidesCachees
   }
 
-  // 2. Données statiques (parameters-emprunt-2025.ts)
+  // 2. Données statiques (parameters-emprunt.ts)
   const aidesStatiques = getAidesStatiques(departement, region)
   
   // 3. Sauvegarder dans le cache fichier

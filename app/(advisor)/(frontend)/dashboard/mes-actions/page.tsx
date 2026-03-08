@@ -67,63 +67,20 @@ const PRIORITY_CONFIG = {
   HAUTE: { label: 'Haute', color: 'text-red-500' },
 }
 
-const DEMO_ACTIONS: MonAction[] = [
-    {
-      id: '1',
-      title: 'Relancer clients PER',
-      description: 'Contacter les clients pour optimisation fiscale PER avant fin d\'année',
-      type: 'RELANCE',
-      status: 'EN_COURS',
-      priority: 'HAUTE',
-      dueDate: '2024-12-15',
-      target: 15,
-      current: 8,
-      unit: 'clients contactés',
-      createdAt: '2024-11-15',
-    },
-    {
-      id: '2',
-      title: 'Prospection LinkedIn',
-      description: 'Contacter 5 nouveaux prospects par semaine',
-      type: 'PROSPECTION',
-      status: 'EN_COURS',
-      priority: 'MOYENNE',
-      target: 20,
-      current: 12,
-      unit: 'contacts',
-      createdAt: '2024-11-01',
-    },
-    {
-      id: '3',
-      title: 'Suivi client Durand',
-      description: 'Appeler M. Durand pour bilan annuel',
-      type: 'SUIVI',
-      status: 'A_FAIRE',
-      priority: 'MOYENNE',
-      dueDate: '2024-11-30',
-      clientId: '1',
-      clientName: 'Pierre Durand',
-      createdAt: '2024-11-20',
-    },
-    {
-      id: '4',
-      title: 'Relance opportunité Martin',
-      description: 'Relancer pour signature assurance vie',
-      type: 'RELANCE',
-      status: 'DONE',
-      priority: 'HAUTE',
-      clientId: '2',
-      clientName: 'Jean Martin',
-      createdAt: '2024-11-10',
-    },
-]
 
 export default function MesActionsPage() {
   const [showNewForm, setShowNewForm] = useState(false)
   const [statusFilter, setStatusFilter] = useState('all')
 
+  // New action form state
+  const [newTitle, setNewTitle] = useState('')
+  const [newDescription, setNewDescription] = useState('')
+  const [newType, setNewType] = useState<'PROSPECTION' | 'RELANCE' | 'SUIVI' | 'AUTRE'>('PROSPECTION')
+  const [newPriority, setNewPriority] = useState<'BASSE' | 'MOYENNE' | 'HAUTE'>('MOYENNE')
+  const [newDueDate, setNewDueDate] = useState('')
+
   // Fetch actions from API
-  const { data: apiData, isLoading } = useMesActions({ 
+  const { data: apiData, isLoading, refetch } = useMesActions({ 
     status: statusFilter !== 'all' ? statusFilter : undefined 
   })
   const createActionMutation = useCreateMesAction()
@@ -145,7 +102,7 @@ export default function MesActionsPage() {
         createdAt: action.createdAt,
       }))
     }
-    return DEMO_ACTIONS
+    return []
   }, [apiData])
 
   const formatDate = (dateString: string) => {
@@ -356,50 +313,98 @@ export default function MesActionsPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label>Titre</Label>
-                <Input placeholder="Ex: Relancer client Durand" className="mt-1" />
-              </div>
-              
-              <div>
-                <Label>Description</Label>
-                <Textarea placeholder="Décrivez l'action..." rows={3} className="mt-1" />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
+              <form onSubmit={async (e) => {
+                e.preventDefault()
+                if (!newTitle.trim()) return
+                await createActionMutation.mutateAsync({
+                  title: newTitle.trim(),
+                  description: newDescription.trim(),
+                  type: newType,
+                  priority: newPriority,
+                  dueDate: newDueDate || undefined,
+                })
+                setNewTitle('')
+                setNewDescription('')
+                setNewType('PROSPECTION')
+                setNewPriority('MOYENNE')
+                setNewDueDate('')
+                setShowNewForm(false)
+                refetch()
+              }} className="space-y-4">
                 <div>
-                  <Label>Type</Label>
-                  <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1">
-                    <option value="PROSPECTION">Prospection</option>
-                    <option value="RELANCE">Relance</option>
-                    <option value="SUIVI">Suivi client</option>
-                    <option value="AUTRE">Autre</option>
-                  </select>
+                  <Label>Titre *</Label>
+                  <Input
+                    placeholder="Ex: Relancer client Durand"
+                    className="mt-1"
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    required
+                  />
                 </div>
+              
                 <div>
-                  <Label>Priorité</Label>
-                  <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1">
-                    <option value="MEDIUM">Moyenne</option>
-                    <option value="LOW">Faible</option>
-                    <option value="HIGH">Haute</option>
-                  </select>
+                  <Label>Description</Label>
+                  <Textarea
+                    placeholder="Décrivez l'action..."
+                    rows={3}
+                    className="mt-1"
+                    value={newDescription}
+                    onChange={(e) => setNewDescription(e.target.value)}
+                  />
                 </div>
-              </div>
               
-              <div>
-                <Label>Échéance</Label>
-                <Input type="date" className="mt-1" />
-              </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Type</Label>
+                    <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1"
+                      value={newType}
+                      onChange={(e) => setNewType(e.target.value as typeof newType)}
+                    >
+                      <option value="PROSPECTION">Prospection</option>
+                      <option value="RELANCE">Relance</option>
+                      <option value="SUIVI">Suivi client</option>
+                      <option value="AUTRE">Autre</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label>Priorité</Label>
+                    <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1"
+                      value={newPriority}
+                      onChange={(e) => setNewPriority(e.target.value as typeof newPriority)}
+                    >
+                      <option value="MOYENNE">Moyenne</option>
+                      <option value="BASSE">Faible</option>
+                      <option value="HAUTE">Haute</option>
+                    </select>
+                  </div>
+                </div>
               
-              <div className="flex gap-3 pt-4">
-                <Button variant="outline" onClick={() => setShowNewForm(false)} className="flex-1">
-                  Annuler
-                </Button>
-                <Button className="flex-1">
-                  <Save className="h-4 w-4 mr-2" />
-                  Créer
-                </Button>
-              </div>
+                <div>
+                  <Label>Échéance</Label>
+                  <Input
+                    type="date"
+                    className="mt-1"
+                    value={newDueDate}
+                    onChange={(e) => setNewDueDate(e.target.value)}
+                  />
+                </div>
+              
+                <div className="flex gap-3 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setShowNewForm(false)} className="flex-1">
+                    Annuler
+                  </Button>
+                  <Button type="submit" className="flex-1" disabled={createActionMutation.isPending || !newTitle.trim()}>
+                    {createActionMutation.isPending ? (
+                      <Clock className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4 mr-2" />
+                    )}
+                    Créer
+                  </Button>
+                </div>
+              </form>
             </CardContent>
           </Card>
         </div>

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/_common/lib/prisma'
 import { getAuthUser } from '@/app/_common/lib/auth-helpers'
 import { isSuperAdmin, isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/portfolio/stats
  * Retourne les statistiques consolidées du portefeuille
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
       growthMTD,
     })
   } catch (error) {
-    console.error('Erreur stats portfolio:', error)
+    logger.error('Erreur stats portfolio:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500 }

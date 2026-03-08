@@ -36,7 +36,6 @@ import {
   Eye,
   AlertTriangle,
   FileText,
-  User,
   Building2,
   Euro,
   Calendar,
@@ -44,6 +43,7 @@ import {
   Filter,
   ChevronDown,
 } from 'lucide-react'
+import { ClientLink } from '@/app/_common/components/ClientLink'
 import {
   AFFAIRE_STATUS_LABELS,
   PRODUCT_TYPE_LABELS,
@@ -265,10 +265,11 @@ function AffaireEnCoursCard({
 
             {/* Info Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-              <div className="flex items-center gap-2 text-gray-600">
-                <User className="h-4 w-4 text-gray-400" />
-                <span>Client #{affaire.clientId.slice(0, 8)}</span>
-              </div>
+              <ClientLink
+                clientId={affaire.clientId}
+                showAvatar={true}
+                avatarSize="sm"
+              />
               <div className="flex items-center gap-2 text-gray-600">
                 <FileText className="h-4 w-4 text-gray-400" />
                 <span>{PRODUCT_TYPE_LABELS[affaire.productType]}</span>

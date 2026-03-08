@@ -4,7 +4,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { ProjetService } from '@/app/_common/lib/services/projet-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { ProjetType } from '@prisma/client'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/clients/[id]/projets
  * Récupère les projets d'un client
@@ -34,7 +34,7 @@ export async function GET(
 
     return createSuccessResponse(projets)
   } catch (error: any) {
-    console.error('Get projets error:', error)
+    logger.error('Get projets error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -87,7 +87,7 @@ export async function POST(
 
     return createSuccessResponse(projet, 201)
   } catch (error: any) {
-    console.error('Create projet error:', error)
+    logger.error('Create projet error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error) {
       if (error.message === 'Unauthorized') {

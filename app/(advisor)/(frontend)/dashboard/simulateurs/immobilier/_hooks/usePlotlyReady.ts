@@ -2,12 +2,6 @@
 
 import { useCallback, useEffect, useState } from 'react'
 
-// Helper pour accéder à Plotly sur window de manière type-safe
-function getPlotly(): unknown {
-  if (typeof window === 'undefined') return undefined
-  return (window as unknown as Record<string, unknown>).Plotly
-}
-
 export function usePlotlyReady() {
   const [plotlyReady, setPlotlyReady] = useState(false)
 
@@ -15,21 +9,16 @@ export function usePlotlyReady() {
     if (plotlyReady) return
     if (typeof window === 'undefined') return
 
-    if (getPlotly()) {
+    // Import dynamique depuis npm — pas de CDN, pas de violation CSP
+    import('plotly.js-dist-min').then((Plotly) => {
+      ;(window as unknown as Record<string, unknown>).Plotly = Plotly.default ?? Plotly
       setPlotlyReady(true)
-      return
-    }
-
-    const intervalId = window.setInterval(() => {
-      if (getPlotly()) {
-        setPlotlyReady(true)
-        window.clearInterval(intervalId)
-      }
-    }, 100)
-
-    return () => window.clearInterval(intervalId)
+    }).catch(() => {
+      console.error('[usePlotlyReady] Impossible de charger plotly.js-dist-min')
+    })
   }, [plotlyReady])
 
+  // Kept for API compatibility with pages that pass it to <Script onLoad>
   const handlePlotlyLoad = useCallback(() => setPlotlyReady(true), [])
 
   return { plotlyReady, handlePlotlyLoad }

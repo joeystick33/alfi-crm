@@ -4,7 +4,7 @@ import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { prisma } from '@/app/_common/lib/prisma'
 import { createClient } from '@/app/_common/lib/supabase/server'
 import bcrypt from 'bcryptjs'
-
+import { logger } from '@/app/_common/lib/logger'
 // GET - Récupérer le profil de l'utilisateur connecté
 export async function GET(request: NextRequest) {
   try {
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(fullUser)
   } catch (error: any) {
-    console.error('Get profile error:', error)
+    logger.error('Get profile error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Unauthorized') {
       return NextResponse.json(
@@ -105,7 +105,7 @@ export async function PATCH(request: NextRequest) {
       user: updatedUser
     })
   } catch (error: any) {
-    console.error('Update profile error:', error)
+    logger.error('Update profile error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Unauthorized') {
       return NextResponse.json(
@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (authError) {
-      console.error('Erreur Supabase password update:', authError)
+      logger.error('Erreur Supabase password update: ' + authError.message)
       // On continue, le mot de passe Prisma est mis à jour
     }
 
@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
       message: 'Mot de passe mis à jour avec succès'
     })
   } catch (error: any) {
-    console.error('Change password error:', error)
+    logger.error('Change password error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Unauthorized') {
       return NextResponse.json(

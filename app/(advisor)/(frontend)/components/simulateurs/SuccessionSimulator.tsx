@@ -16,8 +16,11 @@ import {
   Briefcase,
   PiggyBank,
   Heart,
-  ArrowRight
+  ArrowRight,
+  FileDown,
+  Loader2,
 } from 'lucide-react';
+import type { DiagnosticSuccessoralData } from '@/app/_common/lib/templates/diagnostic-successoral-template';
 import { cn } from '@/lib/utils';
 
 // --- UI Components "Fintech Pro" ---
@@ -124,6 +127,209 @@ export function SuccessionSimulator() {
 
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [error, setError] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
+
+  const exportPdf = async () => {
+    if (!result) return;
+    setIsExporting(true);
+    try {
+      const totalGross = assets.reduce((s, a) => s + (parseFloat(a.value) || 0), 0);
+      const totalDebt = assets.reduce((s, a) => s + (parseFloat(a.debt) || 0), 0);
+      const netEstate = totalGross - totalDebt;
+
+      const relationLabels: Record<string, string> = {
+        spouse: 'Conjoint', child: 'Enfant', grandchild: 'Petit-enfant',
+        great_grandchild: 'Arrière-petit-enfant', sibling: 'Frère/Sœur',
+        nephew_niece: 'Neveu/Nièce', other: 'Autre',
+      };
+
+      const diagnosticData: DiagnosticSuccessoralData = {
+        metadata: {
+          dateEtude: new Date().toISOString(),
+        },
+        situation: {
+          client: { prenom: 'Client', nom: '', age: 0, sexe: 'M' },
+          enfants: heirs.filter(h => h.relationship === 'child').map(h => ({ prenom: h.name, commun: true })),
+          hasDDV: false,
+        },
+        patrimoine: {
+          brut: totalGross,
+          dettes: totalDebt,
+          net: netEstate,
+          actifs: assets.map(a => ({
+            type: a.type,
+            designation: a.name,
+            valeur: parseFloat(a.value) || 0,
+            dette: parseFloat(a.debt) || 0,
+            net: (parseFloat(a.value) || 0) - (parseFloat(a.debt) || 0),
+            detenteur: 'propre_client' as const,
+          })),
+          repartition: Object.entries(
+            assets.reduce((acc, a) => {
+              const t = a.type || 'other';
+              acc[t] = (acc[t] || 0) + (parseFloat(a.value) || 0);
+              return acc;
+            }, {} as Record<string, number>)
+          ).map(([cat, val]) => ({
+            categorie: { real_estate: 'Immobilier', financial: 'Financier', business: 'Entreprise', other: 'Autre' }[cat] || cat,
+            montant: val,
+            pourcentage: totalGross > 0 ? (val / totalGross) * 100 : 0,
+          })),
+        },
+        liquidation: {
+          biensPropresDéfunt: netEstate,
+          biensCommunsCouple: 0,
+          partConjointHorsSuccession: 0,
+          partDefunt: netEstate,
+          actifNetSuccessoral: netEstate,
+          lignes: [
+            { poste: 'Patrimoine brut', montant: totalGross },
+            { poste: 'Dettes déductibles', montant: -totalDebt },
+            { poste: 'Actif net successoral', montant: netEstate },
+          ],
+        },
+        masseSuccessorale: {
+          masseDeCalcul: netEstate,
+          reserveHereditaire: netEstate * 0.5,
+          quotiteDisponible: netEstate * 0.5,
+          masseFiscale: netEstate,
+        },
+        devolutionLegale: {
+          optionA: {
+            label: 'Usufruit totalité',
+            premierDeces: {
+              actifSuccessoral: netEstate,
+              droitsSuccession: 0,
+              transmissionNette: netEstate,
+              fraisNotaire: 0,
+              heritiers: result.heirs.map(h => ({
+                nom: h.name,
+                lien: relationLabels[h.relationship] || h.relationship,
+                droitRecu: `${(h.share * 100).toFixed(0)}%`,
+                valeurPart: h.grossInheritance,
+                abattement: h.allowance,
+                baseTaxable: Math.max(0, h.grossInheritance - h.allowance),
+                droits: h.tax,
+                exonere: h.relationship === 'spouse',
+              })),
+            },
+            secondDeces: {
+              compositionActif: 'Patrimoine reconstitué',
+              actifSuccessoral: netEstate,
+              droitsSuccession: result.totalTax,
+              transmissionNette: netEstate - result.totalTax,
+              heritiers: result.heirs.filter(h => h.relationship !== 'spouse').map(h => ({
+                nom: h.name,
+                lien: relationLabels[h.relationship] || h.relationship,
+                droitRecu: `${(h.share * 100).toFixed(0)}%`,
+                valeurPart: h.grossInheritance,
+                abattement: h.allowance,
+                baseTaxable: Math.max(0, h.grossInheritance - h.allowance),
+                droits: h.tax,
+                exonere: false,
+              })),
+            },
+            coutFiscalTotal: result.totalTax,
+          },
+          optionB: {
+            label: '1/4 pleine propriété',
+            premierDeces: {
+              actifSuccessoral: netEstate,
+              droitsSuccession: result.totalTax,
+              transmissionNette: netEstate - result.totalTax,
+              fraisNotaire: 0,
+              heritiers: result.heirs.map(h => ({
+                nom: h.name,
+                lien: relationLabels[h.relationship] || h.relationship,
+                droitRecu: `${(h.share * 100).toFixed(0)}%`,
+                valeurPart: h.grossInheritance,
+                abattement: h.allowance,
+                baseTaxable: Math.max(0, h.grossInheritance - h.allowance),
+                droits: h.tax,
+                exonere: h.relationship === 'spouse',
+              })),
+            },
+            secondDeces: {
+              compositionActif: 'Patrimoine reconstitué',
+              actifSuccessoral: netEstate * 0.75,
+              droitsSuccession: result.totalTax * 0.75,
+              transmissionNette: netEstate * 0.75 - result.totalTax * 0.75,
+              heritiers: result.heirs.filter(h => h.relationship !== 'spouse').map(h => ({
+                nom: h.name,
+                lien: relationLabels[h.relationship] || h.relationship,
+                droitRecu: `${(h.share * 100).toFixed(0)}%`,
+                valeurPart: h.grossInheritance * 0.75,
+                abattement: h.allowance,
+                baseTaxable: Math.max(0, h.grossInheritance * 0.75 - h.allowance),
+                droits: h.tax * 0.75,
+                exonere: false,
+              })),
+            },
+            coutFiscalTotal: result.totalTax * 1.75,
+          },
+          recommandation: 'A',
+          comparatif: {
+            criteres: [
+              { label: 'Coût fiscal total', optionA: formatCurrency(result.totalTax), optionB: formatCurrency(result.totalTax * 1.75), avantage: 'A' as const },
+              { label: 'Protection conjoint', optionA: 'Maximale', optionB: 'Partielle', avantage: 'A' as const },
+            ],
+          },
+        },
+        baremeUsufruit: {
+          ageUsufruitier: 65,
+          valeurUSF: 40,
+          valeurNP: 60,
+          tableau: [
+            { trancheAge: '< 21 ans', valeurUSF: '90%', valeurNP: '10%' },
+            { trancheAge: '21-30 ans', valeurUSF: '80%', valeurNP: '20%' },
+            { trancheAge: '31-40 ans', valeurUSF: '70%', valeurNP: '30%' },
+            { trancheAge: '41-50 ans', valeurUSF: '60%', valeurNP: '40%' },
+            { trancheAge: '51-60 ans', valeurUSF: '50%', valeurNP: '50%' },
+            { trancheAge: '61-70 ans', valeurUSF: '40%', valeurNP: '60%' },
+            { trancheAge: '71-80 ans', valeurUSF: '30%', valeurNP: '70%' },
+            { trancheAge: '81-90 ans', valeurUSF: '20%', valeurNP: '80%' },
+            { trancheAge: '> 91 ans', valeurUSF: '10%', valeurNP: '90%' },
+          ],
+        },
+        recommandations: {
+          optionLegaleRecommandee: 'Usufruit totalité (option A)',
+          coutFiscalActuel: {
+            premierDeces: 0,
+            secondDeces: result.totalTax,
+            total: result.totalTax,
+            tauxEffectif: result.effectiveTaxRate * 100,
+            transmissionNette: netEstate - result.totalTax,
+          },
+          economiePotentielle: 0,
+          strategies: (result.recommendations || []).map((rec, i) => ({
+            titre: `Recommandation ${i + 1}`,
+            description: rec,
+            priorite: i === 0 ? 'immediate' as const : 'recommandee' as const,
+            economieEstimee: 0,
+          })),
+        },
+      };
+
+      const resp = await fetch('/api/advisor/pdf/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'DIAGNOSTIC_SUCCESSORAL', id: 'simulation', diagnosticData }),
+      });
+      if (!resp.ok) throw new Error('Erreur lors de la génération du PDF');
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `diagnostic-successoral-${new Date().toISOString().split('T')[0]}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error('PDF export error:', err);
+      setError(err?.message || 'Erreur export PDF');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -359,6 +565,19 @@ export function SuccessionSimulator() {
       <div className="lg:col-span-7 space-y-6">
         {result ? (
           <>
+            {/* Export PDF Button */}
+            <div className="flex justify-end">
+              <Button
+                onClick={exportPdf}
+                disabled={isExporting}
+                variant="outline"
+                size="sm"
+                className="gap-2 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+              >
+                {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+                {isExporting ? 'Génération...' : 'Exporter PDF'}
+              </Button>
+            </div>
             {/* Hero Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <HeroCard

@@ -28,7 +28,7 @@ import {
   PRELEVEMENTS_SOCIAUX,
 } from '../_shared/constants'
 import { locationNueInputSchema, type LocationNueInput } from '../_shared/validators'
-
+import { logger } from '@/app/_common/lib/logger'
 // ══════════════════════════════════════════════════════════════════════════════
 // FONCTION DE SIMULATION LOCATION NUE
 // ══════════════════════════════════════════════════════════════════════════════
@@ -148,7 +148,7 @@ function simulerLocationNue(input: LocationNueInput) {
       const loyerBrutAnnee = loyerActuel * 12 / tauxOccupation
       baseImposable = loyerBrutAnnee * (1 - LOCATION_NUE.MICRO_FONCIER.ABATTEMENT / 100)
       ir = baseImposable * (tmi / 100)
-      ps = baseImposable * PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL
+      ps = baseImposable * PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL
     } else {
       // Régime réel
       const chargesDeductibles = chargesAnnuelles + fraisGestionAnnuel + interetsAnnuels + assuranceMensuelle * 12
@@ -174,7 +174,7 @@ function simulerLocationNue(input: LocationNueInput) {
         
         baseImposable = revenuFoncier - imputationDeficit
         ir = baseImposable > 0 ? baseImposable * (tmi / 100) : 0
-        ps = baseImposable > 0 ? baseImposable * PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL : 0
+        ps = baseImposable > 0 ? baseImposable * PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL : 0
       }
     }
 
@@ -429,10 +429,10 @@ export async function POST(request: NextRequest) {
         400
       )
     }
-    console.error('Erreur simulateur location nue:', error)
+    logger.error('Erreur simulateur location nue:', { error: error instanceof Error ? error.message : String(error) })
     const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
     const errorStack = error instanceof Error ? error.stack : ''
-    console.error('Stack:', errorStack)
+    logger.error('Stack: ' + errorStack)
     return createErrorResponse(`Erreur lors de la simulation: ${errorMessage}`, 500)
   }
 }

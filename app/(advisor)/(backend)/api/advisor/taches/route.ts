@@ -7,7 +7,7 @@ import {
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { TacheService } from '@/app/_common/lib/services/tache-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/taches
  * Liste des tâches avec filtres
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse(taches)
   } catch (error: any) {
-    console.error('Error in GET /api/taches:', error)
+    logger.error('Error in GET /api/taches:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
 
     return createSuccessResponse(tache, 201)
   } catch (error: any) {
-    console.error('Error in POST /api/taches:', error)
+    logger.error('Error in POST /api/taches:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

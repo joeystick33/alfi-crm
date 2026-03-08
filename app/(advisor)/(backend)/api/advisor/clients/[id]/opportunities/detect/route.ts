@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { prisma } from '@/app/_common/lib/prisma'
 import { detectOpportunities, calculateOpportunityScore, type ClientProfile } from '@/app/_common/lib/services/opportunities-service'
-
+import { logger } from '@/app/_common/lib/logger'
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -110,7 +110,7 @@ export async function POST(
     })
 
   } catch (error) {
-    console.error('Erreur détection opportunités:', error)
+    logger.error('Erreur détection opportunités:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }

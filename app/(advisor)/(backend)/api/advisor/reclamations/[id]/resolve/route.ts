@@ -6,7 +6,7 @@ import { isRegularUser } from '@/app/_common/lib/auth-types'
 
 import { ReclamationService } from '@/app/_common/lib/services/reclamation-service'
 import { z } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 // Schéma de validation
 const resolveReclamationSchema = z.object({
   responseText: z.string().min(1),
@@ -46,7 +46,7 @@ export async function POST(
 
     return NextResponse.json(reclamation)
   } catch (error: any) {
-    console.error('Error resolving reclamation:', error)
+    logger.error('Error resolving reclamation:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

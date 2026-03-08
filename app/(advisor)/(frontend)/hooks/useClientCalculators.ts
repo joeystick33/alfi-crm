@@ -103,7 +103,7 @@ export interface RetirementSimulationResult {
   isRetirementFeasible: boolean
   replacementRate: number
   projection: { age: number; savingsBalance: number; annualWithdrawal: number }[]
-  recommendations: string[]
+  recommendations: (string | { priorite?: string; type?: string; description: string })[]
 }
 
 export interface ClientCalculatorsData {

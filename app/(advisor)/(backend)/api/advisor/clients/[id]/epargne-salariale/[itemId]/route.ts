@@ -9,7 +9,7 @@ import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
 import { z } from 'zod'
 import { TypeEpargneSalariale } from '@prisma/client'
-
+import { logger } from '@/app/_common/lib/logger'
 const updateSchema = z.object({
   type: z.nativeEnum(TypeEpargneSalariale).optional(),
   libelle: z.string().min(1).optional(),
@@ -50,7 +50,7 @@ export async function GET(
 
     return createSuccessResponse({ epargneSalariale: item })
   } catch (error: any) {
-    console.error('Error getting epargne salariale:', error)
+    logger.error('Error getting epargne salariale:', { error: error instanceof Error ? error.message : String(error) })
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }
@@ -95,7 +95,7 @@ export async function PUT(
 
     return createSuccessResponse({ epargneSalariale: updated, message: 'Mis à jour avec succès' })
   } catch (error: any) {
-    console.error('Error updating epargne salariale:', error)
+    logger.error('Error updating epargne salariale:', { error: error instanceof Error ? error.message : String(error) })
     if (error instanceof z.ZodError) {
       return createErrorResponse('Validation error: ' + error.message, 400)
     }
@@ -136,7 +136,7 @@ export async function DELETE(
 
     return createSuccessResponse({ success: true, message: 'Supprimé avec succès' })
   } catch (error: any) {
-    console.error('Error deleting epargne salariale:', error)
+    logger.error('Error deleting epargne salariale:', { error: error instanceof Error ? error.message : String(error) })
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }

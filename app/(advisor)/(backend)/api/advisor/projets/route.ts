@@ -4,7 +4,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse, checkPermissio
 import { ProjetService } from '@/app/_common/lib/services/projet-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { parseProjetFilters, normalizeProjetCreatePayload } from './utils'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/projets
  * Liste des projets avec filtres
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse(projets)
   } catch (error: any) {
-    console.error('Error in GET /api/projets:', error)
+    logger.error('Error in GET /api/projets:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
 
     return createSuccessResponse(projet, 201)
   } catch (error: any) {
-    console.error('Error in POST /api/projets:', error)
+    logger.error('Error in POST /api/projets:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

@@ -268,8 +268,8 @@ export default function TabReporting({ clientId, client }: TabReportingProps) {
                         <CardTitle>Évolution du portefeuille (Estimée)</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="h-[300px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
+                        <div style={{ width: '100%', height: 300 }}>
+                            <ResponsiveContainer width="100%" height={300}>
                                 <LineChart data={history} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                                     <XAxis
@@ -309,8 +309,8 @@ export default function TabReporting({ clientId, client }: TabReportingProps) {
                         <CardTitle>Allocation d'actifs</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="h-[300px] w-full flex items-center justify-center">
-                            <ResponsiveContainer width="100%" height="100%">
+                        <div className="flex items-center justify-center" style={{ width: '100%', height: 300 }}>
+                            <ResponsiveContainer width="100%" height={300}>
                                 <RePieChart>
                                     <Pie
                                         data={allocation}

@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { ContratService } from '@/app/_common/lib/services/contrat-service'
-
+import { logger } from '@/app/_common/lib/logger'
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -26,7 +26,7 @@ export async function GET(
 
         return createSuccessResponse(data)
     } catch (error: any) {
-        console.error('Error getting contrat:', error)
+        logger.error('Error getting contrat:', { error: error instanceof Error ? error.message : String(error) })
         if (error instanceof Error && error.message === 'Unauthorized') {
             return createErrorResponse('Unauthorized', 401)
         }
@@ -53,7 +53,7 @@ export async function PUT(
 
         return createSuccessResponse(data)
     } catch (error: any) {
-        console.error('Error updating contrat:', error)
+        logger.error('Error updating contrat:', { error: error instanceof Error ? error.message : String(error) })
         if (error instanceof Error && error.message === 'Unauthorized') {
             return createErrorResponse('Unauthorized', 401)
         }
@@ -82,7 +82,7 @@ export async function DELETE(
 
         return createSuccessResponse({ success: true })
     } catch (error: any) {
-        console.error('Error deleting contrat:', error)
+        logger.error('Error deleting contrat:', { error: error instanceof Error ? error.message : String(error) })
         if (error instanceof Error && error.message === 'Unauthorized') {
             return createErrorResponse('Unauthorized', 401)
         }

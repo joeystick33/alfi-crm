@@ -3,9 +3,12 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import Script from 'next/script'
 import { SimulatorGate } from '@/app/_common/components/FeatureGate'
 import { usePlotlyReady } from '../_hooks/usePlotlyReady'
+import {
+  Calendar, User, Home, CreditCard, TrendingUp, Landmark, Sparkles,
+  BarChart3, Target, Briefcase, RefreshCw,
+} from 'lucide-react'
 import { 
   calculIRDetaille, 
   calculNombreParts, 
@@ -250,11 +253,10 @@ export default function NuePropPage() {
 
   return (
     <SimulatorGate simulator="IMMOBILIER" showTeaser>
-      <Script src="https://cdn.plot.ly/plotly-2.27.0.min.js" strategy="afterInteractive" onLoad={handlePlotlyLoad} />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-teal-50 to-emerald-50">
         <main className="container mx-auto px-4 py-6 max-w-6xl">
           <Link href="/dashboard/simulateurs/immobilier" className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-flex items-center">← Simulateurs immobilier</Link>
-          <div className="sim-card mb-6"><div className="flex items-center gap-4"><span className="text-4xl">📅</span><div><h1 className="text-2xl font-bold">Simulateur Nue-Propriété</h1><p className="text-gray-600">Démembrement temporaire • ULS • Hors IFI</p></div></div><div className="flex gap-2 mt-3"><span className="badge-teal">-{decoteCalculee}% décote</span><span className="badge-green">Hors IFI</span><span className="badge-blue">0 IR pendant {dureeDemembrement} ans</span></div></div>
+          <div className="sim-card mb-6"><div className="flex items-center gap-4"><Calendar className="w-9 h-9 text-teal-700" /><div><h1 className="text-2xl font-bold">Simulateur Nue-Propriété</h1><p className="text-gray-600">Démembrement temporaire • ULS • Hors IFI</p></div></div><div className="flex gap-2 mt-3"><span className="badge-teal">-{decoteCalculee}% décote</span><span className="badge-green">Hors IFI</span><span className="badge-blue">0 IR pendant {dureeDemembrement} ans</span></div></div>
 
           {!showResults ? (
             <div className="sim-card">
@@ -262,7 +264,7 @@ export default function NuePropPage() {
 
               {/* ÉTAPE 1 : PROFIL CLIENT (OBLIGATOIRE selon standard) */}
               {step === 1 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-1">👤 Votre profil fiscal</h2>
+                <h2 className="text-lg font-bold mb-1 flex items-center gap-2"><User className="w-5 h-5" /> Votre profil fiscal</h2>
                 <p className="text-sm text-gray-500 mb-6">La nue-propriété est particulièrement avantageuse pour les contribuables IFI</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="form-group"><label>Situation familiale</label><select value={situationFamiliale} onChange={e=>setSituationFamiliale(e.target.value as SituationFamiliale)}><option value="CELIBATAIRE">Célibataire</option><option value="MARIE_PACSE">Marié / Pacsé</option><option value="VEUF">Veuf</option></select></div>
@@ -289,17 +291,17 @@ export default function NuePropPage() {
               </div>}
 
               {/* ÉTAPE 2 : BIEN EN DÉMEMBREMENT */}
-              {step === 2 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4">🏠 Bien en démembrement</h2><div className="grid grid-cols-2 md:grid-cols-3 gap-4"><div className="form-group"><label>Valeur pleine propriété (€)</label><input type="number" value={valeurPP} onChange={e=>setValeurPP(+e.target.value)}/></div><div className="form-group"><label>Durée démembrement (ans)</label><input type="number" value={dureeDemembrement} onChange={e=>setDureeDemembrement(+e.target.value)} min={5} max={20}/></div><div className="form-group"><label>Type usufruitier</label><select value={typeUsufruitier} onChange={e=>setTypeUsufruitier(e.target.value as TypeUsufruitier)}><option value="BAILLEUR_SOCIAL">Bailleur social (ULS)</option><option value="PARTICULIER">Particulier</option><option value="SOCIETE">Société</option></select></div><div className="form-group"><label>Décote NP (%)</label><input type="number" value={decoteCalculee} onChange={e=>setDecoteNP(+e.target.value)}/><span className="form-hint">~{Math.round(dureeDemembrement*2)}% pour {dureeDemembrement} ans</span></div><div className="form-group"><label>Frais notaire (%)</label><input type="number" value={fraisNotaire} onChange={e=>setFraisNotaire(+e.target.value)} step={0.5}/></div></div><div className="info-box mt-4 grid grid-cols-3 gap-4 text-sm"><div><span className="text-gray-500">Prix NP</span><div className="font-bold text-lg text-teal-600">{fmtEur(prixNP)}</div></div><div><span className="text-gray-500">Valeur PP</span><div className="font-bold text-lg">{fmtEur(valeurPP)}</div></div><div><span className="text-gray-500">PV latente</span><div className="font-bold text-lg text-green-600">+{fmtEur(valeurPP - prixNP)}</div></div></div></div>}
+              {step === 2 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Home className="w-5 h-5" /> Bien en démembrement</h2><div className="grid grid-cols-2 md:grid-cols-3 gap-4"><div className="form-group"><label>Valeur pleine propriété (€)</label><input type="number" value={valeurPP} onChange={e=>setValeurPP(+e.target.value)}/></div><div className="form-group"><label>Durée démembrement (ans)</label><input type="number" value={dureeDemembrement} onChange={e=>setDureeDemembrement(+e.target.value)} min={5} max={20}/></div><div className="form-group"><label>Type usufruitier</label><select value={typeUsufruitier} onChange={e=>setTypeUsufruitier(e.target.value as TypeUsufruitier)}><option value="BAILLEUR_SOCIAL">Bailleur social (ULS)</option><option value="PARTICULIER">Particulier</option><option value="SOCIETE">Société</option></select></div><div className="form-group"><label>Décote NP (%)</label><input type="number" value={decoteCalculee} onChange={e=>setDecoteNP(+e.target.value)}/><span className="form-hint">~{Math.round(dureeDemembrement*2)}% pour {dureeDemembrement} ans</span></div><div className="form-group"><label>Frais notaire (%)</label><input type="number" value={fraisNotaire} onChange={e=>setFraisNotaire(+e.target.value)} step={0.5}/></div></div><div className="info-box mt-4 grid grid-cols-3 gap-4 text-sm"><div><span className="text-gray-500">Prix NP</span><div className="font-bold text-lg text-teal-600">{fmtEur(prixNP)}</div></div><div><span className="text-gray-500">Valeur PP</span><div className="font-bold text-lg">{fmtEur(valeurPP)}</div></div><div><span className="text-gray-500">PV latente</span><div className="font-bold text-lg text-green-600">+{fmtEur(valeurPP - prixNP)}</div></div></div></div>}
 
-              {step === 3 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4">💳 Financement</h2><div className="grid grid-cols-2 md:grid-cols-4 gap-4"><div className="form-group"><label>Apport (€)</label><input type="number" value={apport} onChange={e=>setApport(+e.target.value)}/></div><div className="form-group"><label>Taux (%)</label><input type="number" value={tauxCredit} onChange={e=>setTauxCredit(+e.target.value)} step={0.1}/></div><div className="form-group"><label>Durée (ans)</label><input type="number" value={dureeCredit} onChange={e=>setDureeCredit(+e.target.value)}/></div><div className="form-group"><label>Assurance (%)</label><input type="number" value={assuranceCredit} onChange={e=>setAssuranceCredit(+e.target.value)} step={0.05}/></div></div><div className="info-box mt-4 grid grid-cols-3 gap-4 text-sm"><div><span className="text-gray-500">Investissement</span><div className="font-bold text-lg">{fmtEur(investTotal)}</div></div><div><span className="text-gray-500">Emprunté</span><div className="font-bold text-lg">{fmtEur(montantEmprunte)}</div></div><div><span className="text-gray-500">Mensualité</span><div className="font-bold text-lg">{fmtEur(Math.round(mensualite))}</div></div></div><div className="pedagogy-box mt-4"><p className="text-sm text-teal-700">💡 Pendant le démembrement, pas de revenus mais crédit à rembourser. Privilégiez un crédit plus court ou un apport important.</p></div></div>}
+              {step === 3 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4 flex items-center gap-2"><CreditCard className="w-5 h-5" /> Financement</h2><div className="grid grid-cols-2 md:grid-cols-4 gap-4"><div className="form-group"><label>Apport (€)</label><input type="number" value={apport} onChange={e=>setApport(+e.target.value)}/></div><div className="form-group"><label>Taux (%)</label><input type="number" value={tauxCredit} onChange={e=>setTauxCredit(+e.target.value)} step={0.1}/></div><div className="form-group"><label>Durée (ans)</label><input type="number" value={dureeCredit} onChange={e=>setDureeCredit(+e.target.value)}/></div><div className="form-group"><label>Assurance (%)</label><input type="number" value={assuranceCredit} onChange={e=>setAssuranceCredit(+e.target.value)} step={0.05}/></div></div><div className="info-box mt-4 grid grid-cols-3 gap-4 text-sm"><div><span className="text-gray-500">Investissement</span><div className="font-bold text-lg">{fmtEur(investTotal)}</div></div><div><span className="text-gray-500">Emprunté</span><div className="font-bold text-lg">{fmtEur(montantEmprunte)}</div></div><div><span className="text-gray-500">Mensualité</span><div className="font-bold text-lg">{fmtEur(Math.round(mensualite))}</div></div></div><div className="pedagogy-box mt-4"><p className="text-sm text-teal-700">Pendant le démembrement, pas de revenus mais crédit à rembourser. Privilégiez un crédit plus court ou un apport important.</p></div></div>}
 
-              {step === 4 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4">📈 Après démembrement</h2><div className="grid grid-cols-2 md:grid-cols-3 gap-4"><div className="form-group"><label>Loyer estimé après (€/mois)</label><input type="number" value={loyerEstimeApres} onChange={e=>setLoyerEstimeApres(+e.target.value)}/></div><div className="form-group"><label>Revalo bien (%/an)</label><input type="number" value={revalorisationBien} onChange={e=>setRevalorisationBien(+e.target.value)} step={0.1}/></div><div className="form-group"><label>Durée post-démembrement (ans)</label><input type="number" value={dureePostDemembrement} onChange={e=>setDureePostDemembrement(+e.target.value)}/></div></div></div>}
+              {step === 4 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4 flex items-center gap-2"><TrendingUp className="w-5 h-5" /> Après démembrement</h2><div className="grid grid-cols-2 md:grid-cols-3 gap-4"><div className="form-group"><label>Loyer estimé après (€/mois)</label><input type="number" value={loyerEstimeApres} onChange={e=>setLoyerEstimeApres(+e.target.value)}/></div><div className="form-group"><label>Revalo bien (%/an)</label><input type="number" value={revalorisationBien} onChange={e=>setRevalorisationBien(+e.target.value)} step={0.1}/></div><div className="form-group"><label>Durée post-démembrement (ans)</label><input type="number" value={dureePostDemembrement} onChange={e=>setDureePostDemembrement(+e.target.value)}/></div></div></div>}
 
-              {step === 5 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4">🏛️ Récapitulatif fiscal</h2><div className="info-box mt-4 grid grid-cols-4 gap-4 text-sm"><div><span className="text-gray-500">TMI calculé</span><div className="font-bold text-lg">{tmi}%</div></div><div><span className="text-gray-500">IR actuel</span><div className="font-bold text-lg">{fmtEur(irAvant.impotNet)}</div></div><div><span className="text-gray-500">IFI actuel</span><div className="font-bold text-lg text-orange-600">{fmtEur(ifiAvant.impotNet)}</div></div><div><span className="text-gray-500">Patrimoine immo.</span><div className="font-bold text-lg">{fmtEur(patrimoineImmobilierExistant)}</div></div></div><div className="pedagogy-box mt-4"><h4 className="font-semibold text-teal-800 mb-2">✨ Avantages nue-propriété</h4><ul className="text-sm text-teal-700 space-y-1"><li>✅ <strong>Hors IFI</strong> : NP exclue de l'assiette IFI (économie potentielle {fmtEur(Math.round(prixNP * 0.007))} sur {dureeDemembrement} ans)</li><li>✅ <strong>Pas d'IR</strong> sur les loyers (perçus par l'usufruitier)</li><li>✅ <strong>Décote à l'achat</strong> de {decoteCalculee}%</li><li>✅ <strong>Récupération PP</strong> sans fiscalité</li><li>✅ <strong>Bien entretenu</strong> par l'usufruitier</li></ul></div></div>}
+              {step === 5 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Landmark className="w-5 h-5" /> Récapitulatif fiscal</h2><div className="info-box mt-4 grid grid-cols-4 gap-4 text-sm"><div><span className="text-gray-500">TMI calculé</span><div className="font-bold text-lg">{tmi}%</div></div><div><span className="text-gray-500">IR actuel</span><div className="font-bold text-lg">{fmtEur(irAvant.impotNet)}</div></div><div><span className="text-gray-500">IFI actuel</span><div className="font-bold text-lg text-orange-600">{fmtEur(ifiAvant.impotNet)}</div></div><div><span className="text-gray-500">Patrimoine immo.</span><div className="font-bold text-lg">{fmtEur(patrimoineImmobilierExistant)}</div></div></div><div className="pedagogy-box mt-4"><h4 className="font-semibold text-teal-800 mb-2 flex items-center gap-2"><Sparkles className="w-4 h-4" /> Avantages nue-propriété</h4><ul className="text-sm text-teal-700 space-y-1"><li><strong>Hors IFI</strong> : NP exclue de l'assiette IFI (économie potentielle {fmtEur(Math.round(prixNP * 0.007))} sur {dureeDemembrement} ans)</li><li><strong>Pas d'IR</strong> sur les loyers (perçus par l'usufruitier)</li><li><strong>Décote à l'achat</strong> de {decoteCalculee}%</li><li><strong>Récupération PP</strong> sans fiscalité</li><li><strong>Bien entretenu</strong> par l'usufruitier</li></ul></div></div>}
 
               <div className="flex justify-between mt-8">
                 <button onClick={()=>setStep(Math.max(1,step-1))} disabled={step===1} className="btn-secondary disabled:opacity-50">← Précédent</button>
-                {step < 5 ? <button onClick={()=>setStep(step+1)} className="btn-primary-teal">Suivant →</button> : <button onClick={lancerSimulation} disabled={loading} className="btn-primary-teal">{loading?'⏳':'🧮 Analyser'}</button>}
+                {step < 5 ? <button onClick={()=>setStep(step+1)} className="btn-primary-teal">Suivant →</button> : <button onClick={lancerSimulation} disabled={loading} className="btn-primary-teal">{loading ? 'Calcul...' : 'Analyser'}</button>}
               </div>
             </div>
           ) : synthese && (
@@ -317,7 +319,7 @@ export default function NuePropPage() {
                   </div>
                   <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
                     <div className="text-emerald-600 text-xs mb-1">Hors IFI</div>
-                    <div className="font-bold text-lg text-emerald-600">✅ {dureeDemembrement} ans</div>
+                    <div className="font-bold text-lg text-emerald-600">{dureeDemembrement} ans</div>
                     <div className="text-xs text-emerald-400">Économie : {fmtEur(synthese.economieIFI)}</div>
                   </div>
                   <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
@@ -332,7 +334,7 @@ export default function NuePropPage() {
                   </div>
                 </div>
                 <div className="mt-4 p-3 bg-teal-50 border border-teal-200 rounded-lg">
-                  <h4 className="font-semibold text-teal-800 mb-2">📊 Comprendre la nue-propriété</h4>
+                  <h4 className="font-semibold text-teal-800 mb-2 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Comprendre la nue-propriété</h4>
                   <div className="text-sm text-teal-700 space-y-1">
                     <p>• <strong>Décote {fmtPct(decoteCalculee)}</strong> : Vous achetez {fmtEur(prixNP)} un bien valant {fmtEur(valeurPP)} en PP.</p>
                     <p>• <strong>IFI</strong> : La NP est hors assiette IFI (art. 965 CGI). {ifiAvant.assujetti ? `Vous économisez environ ${fmtEur(Math.round(prixNP * 0.007 * dureeDemembrement))} d'IFI sur ${dureeDemembrement} ans.` : 'Vous n\'êtes pas assujetti actuellement.'}</p>
@@ -446,7 +448,7 @@ export default function NuePropPage() {
                           <td className="py-2 px-2 text-right text-emerald-600 bg-emerald-50/50">{p.loyerNet > 0 ? '+' + fmtEur(p.loyerNet) : '-'}</td>
                           <td className="py-2 px-2 text-right text-amber-600 bg-amber-50/50">{p.ir + p.ps > 0 ? fmtEur(p.ir + p.ps) : '-'}</td>
                           <td className={`py-2 px-2 text-right font-semibold ${p.cfNet >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{p.cfNet >= 0 ? '+' : ''}{fmtEur(p.cfNet)}</td>
-                          <td className="py-2 px-2 text-center">{p.enDemembrement ? <span className="text-amber-600">🔒 NP</span> : <span className="text-emerald-600">✅ PP</span>}</td>
+                          <td className="py-2 px-2 text-center">{p.enDemembrement ? <span className="text-amber-600">NP</span> : <span className="text-emerald-600">PP</span>}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -458,7 +460,7 @@ export default function NuePropPage() {
               {/* AVIS PROFESSIONNEL AVEC SCORE GLOBAL */}
               {/* ═══════════════════════════════════════════════════════════════════════════ */}
               <div className="sim-card">
-                <h3 className="font-bold mb-6 text-xl text-slate-800">🎯 Synthèse et avis professionnel</h3>
+                <h3 className="font-bold mb-6 text-xl text-slate-800 flex items-center gap-2"><Target className="w-5 h-5" /> Synthèse et avis professionnel</h3>
                 
                 {(() => {
                   let ptsTRI = 0
@@ -549,7 +551,7 @@ export default function NuePropPage() {
                         
                         {showScoreDetail && (
                           <div className="mt-3 bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm">
-                            <h5 className="font-bold text-slate-700 mb-3">📊 Méthode de calcul du score Nue-Propriété</h5>
+                            <h5 className="font-bold text-slate-700 mb-3 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Méthode de calcul du score Nue-Propriété</h5>
                             <p className="text-slate-600 mb-3">Score calculé sur 5 critères : TRI (2.5 pts), Décote (2.5 pts), Économie IFI (2 pts), PV latente (2 pts), Durée démembrement (1 pt).</p>
                             <p className="text-slate-600">La NP est idéale pour patrimoine IFI ou préparation retraite. Pas de revenus mais capitalisation optimale.</p>
                           </div>
@@ -560,21 +562,21 @@ export default function NuePropPage() {
                 })()}
                 
                 <div className="bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-200 rounded-xl p-4">
-                  <h4 className="font-bold text-blue-800 mb-3">💼 Avis professionnel</h4>
+                  <h4 className="font-bold text-blue-800 mb-3 flex items-center gap-2"><Briefcase className="w-5 h-5" /> Avis professionnel</h4>
                   <div className="text-sm text-blue-700 space-y-3">
                     {ifiAvant.assujetti || patrimoineImmobilierExistant > 800000 ? (
-                      <p><strong>✅ Stratégie IFI pertinente</strong> : Avec un patrimoine immobilier de {fmtEur(patrimoineImmobilierExistant)}, l'acquisition en NP permet d'éviter {fmtEur(synthese.economieIFI)} d'IFI tout en constituant un patrimoine à coût réduit.</p>
+                      <p><strong>Stratégie IFI pertinente</strong> : Avec un patrimoine immobilier de {fmtEur(patrimoineImmobilierExistant)}, l'acquisition en NP permet d'éviter {fmtEur(synthese.economieIFI)} d'IFI tout en constituant un patrimoine à coût réduit.</p>
                     ) : safeNumber(synthese.tri) > 5 ? (
-                      <p><strong>✅ Excellente opération patrimoniale</strong> : TRI de {fmtPct(synthese.tri)} et décote de {fmtPct(decoteCalculee)} pour une stratégie long terme efficace.</p>
+                      <p><strong>Excellente opération patrimoniale</strong> : TRI de {fmtPct(synthese.tri)} et décote de {fmtPct(decoteCalculee)} pour une stratégie long terme efficace.</p>
                     ) : (
-                      <p><strong>✅ Stratégie de capitalisation</strong> : La NP est idéale pour constituer un patrimoine sans revenus immédiats. Pensez à l'impact sur votre trésorerie pendant le démembrement.</p>
+                      <p><strong>Stratégie de capitalisation</strong> : La NP est idéale pour constituer un patrimoine sans revenus immédiats. Pensez à l'impact sur votre trésorerie pendant le démembrement.</p>
                     )}
                     <p className="text-blue-500 text-xs mt-2"><em>Nue-propriété : idéale pour les investisseurs patrimoniaux souhaitant optimiser l'IFI ou préparer leur retraite.</em></p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-center"><button onClick={()=>setShowResults(false)} className="btn-primary">🔄 Nouvelle simulation</button></div>
+              <div className="flex justify-center"><button onClick={()=>setShowResults(false)} className="btn-primary flex items-center gap-2"><RefreshCw className="w-4 h-4" /> Nouvelle simulation</button></div>
             </div>
           )}
         </main>

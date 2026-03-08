@@ -4,7 +4,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { z } from 'zod';
 import { isRegularUser } from '@/app/_common/lib/auth-types';
 import { RendezVousService } from '@/app/_common/lib/services/rendez-vous-service';
-
+import { logger } from '@/app/_common/lib/logger'
 const updateAppointmentSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
@@ -61,7 +61,7 @@ export async function GET(
       },
     });
   } catch (error: any) {
-    console.error('Error fetching appointment:', error);
+    logger.error('Error fetching appointment:', { error: error instanceof Error ? error.message : String(error) });
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401);
     }
@@ -113,7 +113,7 @@ export async function PUT(
       message: 'Rendez-vous mis à jour avec succès',
     });
   } catch (error: any) {
-    console.error('Error updating appointment:', error);
+    logger.error('Error updating appointment:', { error: error instanceof Error ? error.message : String(error) });
 
     if (error instanceof z.ZodError) {
       return createErrorResponse('Données invalides', 400);
@@ -159,7 +159,7 @@ export async function DELETE(
       message: 'Rendez-vous annulé avec succès',
     });
   } catch (error: any) {
-    console.error('Error deleting appointment:', error);
+    logger.error('Error deleting appointment:', { error: error instanceof Error ? error.message : String(error) });
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401);
     }

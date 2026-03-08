@@ -2,10 +2,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ServicesSidebar } from '@/app/(advisor)/(frontend)/components/dashboard/ServicesSidebar'
 import { DashboardHeader } from '@/app/(advisor)/(frontend)/components/dashboard/DashboardHeader'
 import { QuickActions } from '@/app/(advisor)/(frontend)/components/dashboard/QuickActions'
 import { CommandPalette } from '@/app/(advisor)/(frontend)/components/dashboard/CommandPalette'
@@ -13,8 +11,10 @@ import { NotificationCenter } from '@/app/(advisor)/(frontend)/components/dashbo
 import { NavigationSidebar } from '@/app/(advisor)/(frontend)/components/dashboard/NavigationSidebar'
 import { ErrorBoundary } from '@/app/_common/components/ErrorBoundary'
 import { cn } from '@/app/_common/lib/utils'
-import { EyeOff, X } from 'lucide-react'
+import { EyeOff, X, Sparkles, Minimize2 } from 'lucide-react'
 import { PresentationModeProvider } from '@/app/(advisor)/(frontend)/components/dashboard/PresentationModeContext'
+import { AIChatPanel } from '@/app/(advisor)/(frontend)/components/ai/AIChatPanel'
+import { useAuth } from '@/app/_common/hooks/use-auth'
 
 // Create QueryClient outside component to avoid recreating on every render
 const queryClient = new QueryClient({
@@ -23,7 +23,17 @@ const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000, // 5 minutes
       gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
       refetchOnWindowFocus: false,
-      retry: 1,
+      retry: (failureCount, error) => {
+        const status =
+          typeof error === 'object' &&
+          error !== null &&
+          'status' in error
+            ? Number((error as { status?: unknown }).status)
+            : undefined
+
+        if (status === 429) return false
+        return failureCount < 1
+      },
     },
   },
 })
@@ -33,14 +43,23 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const _router = useRouter()
+  const { user, cabinetId } = useAuth()
 
-  const [leftSidebarExpanded, setLeftSidebarExpanded] = useState(false)
-  const [rightSidebarExpanded, setRightSidebarExpanded] = useState(false)
   const [presentationMode, setPresentationMode] = useState(false)
   const [quickActionsOpen, setQuickActionsOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false)
+  const [aiSidebarOpen, setAiSidebarOpen] = useState(false)
+
+  // Load AI sidebar state from localStorage
+  useEffect(() => {
+    const savedAI = localStorage.getItem('aiSidebarOpen')
+    if (savedAI !== null) setAiSidebarOpen(savedAI === 'true')
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem('aiSidebarOpen', String(aiSidebarOpen))
+  }, [aiSidebarOpen])
 
   // Load presentation mode from localStorage
   useEffect(() => {
@@ -71,27 +90,36 @@ export default function DashboardLayout({
       // Ctrl+H / Cmd+H - Toggle Presentation Mode
       if ((e.ctrlKey || e.metaKey) && e.key === 'h') {
         e.preventDefault()
-        setPresentationMode((prev: any) => !prev)
+        setPresentationMode((prev: boolean) => !prev)
+      }
+
+      // Ctrl+I / Cmd+I - Toggle AI Sidebar
+      if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+        e.preventDefault()
+        setAiSidebarOpen(prev => !prev)
       }
     }
 
+    // Listen for sidebar AI button click
+    const handleToggleAI = () => setAiSidebarOpen(prev => !prev)
+
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    window.addEventListener('toggle-ai-panel', handleToggleAI)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('toggle-ai-panel', handleToggleAI)
+    }
   }, [])
 
   return (
     <QueryClientProvider client={queryClient}>
       <div className="flex h-screen bg-[#f8fafc]">
 
-        {/* Left Navigation Sidebar - Fond légèrement plus clair */}
+        {/* Left Navigation Sidebar */}
         <NavigationSidebar />
 
         {/* Main Content Area */}
-        <div
-          className={cn(
-            'flex-1 min-w-0 flex flex-col transition-all duration-300'
-          )}
-        >
+        <div className="flex-1 min-w-0 flex flex-col transition-all duration-300">
           {/* Header */}
           <DashboardHeader
             presentationMode={presentationMode}
@@ -113,11 +141,40 @@ export default function DashboardLayout({
           </main>
         </div>
 
-        {/* Right Services Sidebar */}
-        <ServicesSidebar
-          expanded={rightSidebarExpanded}
-          onExpandedChange={setRightSidebarExpanded}
-        />
+        {/* Right AI Sidebar — minimize/expand toggle, conversation persists */}
+        <div
+          className={cn(
+            'h-full flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden border-l border-[#e2e8f0] bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60',
+            aiSidebarOpen ? 'w-[440px]' : 'w-14'
+          )}
+          title={aiSidebarOpen ? 'AURA ouvert (Ctrl+I pour réduire)' : 'Cliquez pour ouvrir AURA (Ctrl+I)'}
+        >
+          {/* Collapsed strip — always visible when minimized */}
+          {!aiSidebarOpen && (
+            <button
+              type="button"
+              onClick={() => setAiSidebarOpen(true)}
+              className="h-full w-14 flex flex-col items-center justify-center gap-3 text-slate-600 hover:text-[#7373FF] transition-colors"
+              aria-label="Ouvrir le panneau AURA"
+            >
+              <Sparkles className="h-5 w-5" />
+              <span className="-rotate-90 text-[11px] font-semibold tracking-wide">AURA</span>
+            </button>
+          )}
+          {/* Panel — always mounted to preserve conversation state, hidden when minimized */}
+          <div className={cn(
+            'h-full transition-opacity duration-200',
+            aiSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none absolute'
+          )}>
+            <AIChatPanel
+              isOpen={aiSidebarOpen}
+              onClose={() => setAiSidebarOpen(false)}
+              cabinetId={cabinetId || undefined}
+              userId={user?.id}
+              integrated
+            />
+          </div>
+        </div>
 
         {/* Presentation Mode Indicator */}
         <AnimatePresence>
@@ -151,6 +208,7 @@ export default function DashboardLayout({
 
         {/* Notification Center */}
         <NotificationCenter open={notificationCenterOpen} onOpenChange={setNotificationCenterOpen} />
+
       </div>
     </QueryClientProvider>
   )

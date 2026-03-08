@@ -10,9 +10,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { proxyRequest, getStartupInstructions } from '../../proxy'
 import { getBackendConfig } from '../../config'
-
+import { logger } from '@/app/_common/lib/logger'
 interface RouteParams {
   params: {
     backend: string
@@ -33,15 +34,17 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 }
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  return handleRequest(request, params, 'SUPPRESSION')
+  return handleRequest(request, params, 'DELETE')
 }
 
 async function handleRequest(
   request: NextRequest,
   params: { backend: string; path: string[] },
-  method: 'GET' | 'POST' | 'PUT' | 'SUPPRESSION'
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE'
 ) {
   try {
+    await requireAuth(request)
+
     const { backend, path } = params
     const config = getBackendConfig(backend)
 
@@ -91,7 +94,10 @@ async function handleRequest(
 
     return NextResponse.json(result)
   } catch (error: any) {
-    console.error('[Proxy Dynamic] Error:', error)
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    }
+    logger.error('[Proxy Dynamic] Error:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }

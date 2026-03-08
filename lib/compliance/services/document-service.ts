@@ -130,6 +130,12 @@ export async function createDocument(
  * Valide un document KYC
  * 
  * @requirements 2.3 - WHEN a CGP validates a document, THE Document_Manager SHALL update status to "Validé" and record validation date and validator
+ * @requirements 5.1 - WHEN the CGP validates a KYC document, THE Result_Validator SHALL:
+ *   - Update the document status in the database
+ *   - Record the validation in the audit log with timestamp and user
+ *   - Update the client's KYC completion rate
+ *   - Create a timeline event
+ *   - Return confirmation with the updated document data
  */
 export async function validateDocument(
   input: ValidateKYCDocumentInput
@@ -141,6 +147,17 @@ export async function validateDocument(
     // Check if document exists and is in a valid state for validation
     const existingDocument = await prisma.kYCDocument.findUnique({
       where: { id: validatedInput.documentId },
+      include: {
+        client: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            cabinetId: true,
+          },
+        },
+      },
     })
 
     if (!existingDocument) {
@@ -158,30 +175,101 @@ export async function validateDocument(
       }
     }
 
-    // Update document status to VALIDE
-    const document = await prisma.kYCDocument.update({
-      where: { id: validatedInput.documentId },
-      data: {
-        status: 'VALIDE',
-        validatedAt: new Date(),
-        validatedById: validatedInput.validatedById,
-        notes: validatedInput.notes ?? existingDocument.notes,
-      },
-      include: {
-        client: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
+    // Use a transaction to ensure all operations succeed or fail together
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Update document status to VALIDE
+      const document = await tx.kYCDocument.update({
+        where: { id: validatedInput.documentId },
+        data: {
+          status: 'VALIDE',
+          validatedAt: new Date(),
+          validatedById: validatedInput.validatedById,
+          notes: validatedInput.notes ?? existingDocument.notes,
+        },
+        include: {
+          client: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
           },
         },
-      },
+      })
+
+      // 2. Create audit log entry
+      await tx.auditLog.create({
+        data: {
+          cabinetId: existingDocument.cabinetId,
+          userId: validatedInput.validatedById,
+          action: 'APPROBATION',
+          entityType: 'KYCDocument',
+          entityId: validatedInput.documentId,
+          changes: {
+            previousStatus: existingDocument.status,
+            newStatus: 'VALIDE',
+            validatedAt: new Date().toISOString(),
+            validatedById: validatedInput.validatedById,
+            notes: validatedInput.notes,
+          },
+        },
+      })
+
+      // 3. Create timeline event
+      await tx.complianceTimelineEvent.create({
+        data: {
+          cabinetId: existingDocument.cabinetId,
+          clientId: existingDocument.clientId,
+          type: 'DOCUMENT_VALIDATED',
+          title: `Document validé: ${KYC_DOCUMENT_TYPE_LABELS[existingDocument.type as KYCDocumentType] || existingDocument.type}`,
+          description: `Le document de type "${KYC_DOCUMENT_TYPE_LABELS[existingDocument.type as KYCDocumentType] || existingDocument.type}" a été validé.${validatedInput.notes ? ` Notes: ${validatedInput.notes}` : ''}`,
+          metadata: {
+            documentId: validatedInput.documentId,
+            documentType: existingDocument.type,
+            previousStatus: existingDocument.status,
+          },
+          userId: validatedInput.validatedById,
+        },
+      })
+
+      // 4. Calculate and update client's KYC completion rate
+      const allClientDocuments = await tx.kYCDocument.findMany({
+        where: {
+          clientId: existingDocument.clientId,
+          cabinetId: existingDocument.cabinetId,
+        },
+        select: {
+          status: true,
+        },
+      })
+
+      const totalDocuments = allClientDocuments.length
+      const validatedDocuments = allClientDocuments.filter(
+        (doc) => doc.status === 'VALIDE'
+      ).length
+      const kycCompletionRate = totalDocuments > 0 
+        ? Math.round((validatedDocuments / totalDocuments) * 100) 
+        : 0
+
+      // Update client's KYC status based on completion rate
+      const newKycStatus = kycCompletionRate === 100 ? 'COMPLET' : 
+                          kycCompletionRate > 0 ? 'EN_COURS' : 'EN_ATTENTE'
+
+      await tx.client.update({
+        where: { id: existingDocument.clientId },
+        data: {
+          kycStatus: newKycStatus,
+          // Store completion rate in metadata or a dedicated field if available
+        },
+      })
+
+      return document
     })
 
     return {
       success: true,
-      data: document as KYCDocumentWithClient,
+      data: result as KYCDocumentWithClient,
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erreur lors de la validation du document'
@@ -196,6 +284,7 @@ export async function validateDocument(
  * Rejette un document KYC
  * 
  * @requirements 2.4 - WHEN a CGP rejects a document, THE Document_Manager SHALL require a rejection reason and update status to "Rejeté"
+ * @requirements 5.1 - Record the rejection in the audit log and create a timeline event
  */
 export async function rejectDocument(
   input: RejectKYCDocumentInput
@@ -207,6 +296,17 @@ export async function rejectDocument(
     // Check if document exists and is in a valid state for rejection
     const existingDocument = await prisma.kYCDocument.findUnique({
       where: { id: validatedInput.documentId },
+      include: {
+        client: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            cabinetId: true,
+          },
+        },
+      },
     })
 
     if (!existingDocument) {
@@ -224,30 +324,71 @@ export async function rejectDocument(
       }
     }
 
-    // Update document status to REJETE with rejection reason
-    const document = await prisma.kYCDocument.update({
-      where: { id: validatedInput.documentId },
-      data: {
-        status: 'REJETE',
-        validatedAt: new Date(),
-        validatedById: validatedInput.validatedById,
-        rejectionReason: validatedInput.rejectionReason,
-      },
-      include: {
-        client: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
+    // Use a transaction to ensure all operations succeed or fail together
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Update document status to REJETE with rejection reason
+      const document = await tx.kYCDocument.update({
+        where: { id: validatedInput.documentId },
+        data: {
+          status: 'REJETE',
+          validatedAt: new Date(),
+          validatedById: validatedInput.validatedById,
+          rejectionReason: validatedInput.rejectionReason,
+        },
+        include: {
+          client: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
           },
         },
-      },
+      })
+
+      // 2. Create audit log entry
+      await tx.auditLog.create({
+        data: {
+          cabinetId: existingDocument.cabinetId,
+          userId: validatedInput.validatedById,
+          action: 'REJET',
+          entityType: 'KYCDocument',
+          entityId: validatedInput.documentId,
+          changes: {
+            previousStatus: existingDocument.status,
+            newStatus: 'REJETE',
+            rejectedAt: new Date().toISOString(),
+            rejectedById: validatedInput.validatedById,
+            rejectionReason: validatedInput.rejectionReason,
+          },
+        },
+      })
+
+      // 3. Create timeline event
+      await tx.complianceTimelineEvent.create({
+        data: {
+          cabinetId: existingDocument.cabinetId,
+          clientId: existingDocument.clientId,
+          type: 'DOCUMENT_REJECTED',
+          title: `Document rejeté: ${KYC_DOCUMENT_TYPE_LABELS[existingDocument.type as KYCDocumentType] || existingDocument.type}`,
+          description: `Le document de type "${KYC_DOCUMENT_TYPE_LABELS[existingDocument.type as KYCDocumentType] || existingDocument.type}" a été rejeté. Raison: ${validatedInput.rejectionReason}`,
+          metadata: {
+            documentId: validatedInput.documentId,
+            documentType: existingDocument.type,
+            previousStatus: existingDocument.status,
+            rejectionReason: validatedInput.rejectionReason,
+          },
+          userId: validatedInput.validatedById,
+        },
+      })
+
+      return document
     })
 
     return {
       success: true,
-      data: document as KYCDocumentWithClient,
+      data: result as KYCDocumentWithClient,
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erreur lors du rejet du document'
@@ -564,16 +705,21 @@ export async function getDocumentById(
 
 /**
  * Enregistre l'envoi d'une relance pour un document
+ * 
+ * @requirements 5.4 - WHEN the CGP sends a reminder, THE Result_Validator SHALL:
+ *   - Record the reminder action with timestamp
+ *   - Update the reminder count for the document/client
+ *   - Create a timeline event
+ *   - Optionally send an actual email (if email integration is configured)
  */
 export async function recordReminderSent(
-  documentId: string
+  documentId: string,
+  userId: string
 ): Promise<DocumentServiceResult<KYCDocumentWithClient>> {
   try {
-    const document = await prisma.kYCDocument.update({
+    // Get the document first to access client info
+    const existingDocument = await prisma.kYCDocument.findUnique({
       where: { id: documentId },
-      data: {
-        reminderSentAt: new Date(),
-      },
       include: {
         client: {
           select: {
@@ -581,14 +727,79 @@ export async function recordReminderSent(
             firstName: true,
             lastName: true,
             email: true,
+            cabinetId: true,
           },
         },
       },
     })
 
+    if (!existingDocument) {
+      return {
+        success: false,
+        error: 'Document non trouvé',
+      }
+    }
+
+    // Use a transaction to ensure all operations succeed or fail together
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Update document with reminder timestamp
+      const document = await tx.kYCDocument.update({
+        where: { id: documentId },
+        data: {
+          reminderSentAt: new Date(),
+        },
+        include: {
+          client: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+        },
+      })
+
+      // 2. Create audit log entry
+      await tx.auditLog.create({
+        data: {
+          cabinetId: existingDocument.cabinetId,
+          userId,
+          action: 'MODIFICATION',
+          entityType: 'KYCDocument',
+          entityId: documentId,
+          changes: {
+            action: 'REMINDER_SENT',
+            reminderSentAt: new Date().toISOString(),
+            documentType: existingDocument.type,
+            clientId: existingDocument.clientId,
+          },
+        },
+      })
+
+      // 3. Create timeline event
+      await tx.complianceTimelineEvent.create({
+        data: {
+          cabinetId: existingDocument.cabinetId,
+          clientId: existingDocument.clientId,
+          type: 'REMINDER_SENT',
+          title: `Relance envoyée: ${KYC_DOCUMENT_TYPE_LABELS[existingDocument.type as KYCDocumentType] || existingDocument.type}`,
+          description: `Une relance a été envoyée au client ${existingDocument.client.firstName} ${existingDocument.client.lastName} pour le document "${KYC_DOCUMENT_TYPE_LABELS[existingDocument.type as KYCDocumentType] || existingDocument.type}".`,
+          metadata: {
+            documentId,
+            documentType: existingDocument.type,
+            clientEmail: existingDocument.client.email,
+          },
+          userId,
+        },
+      })
+
+      return document
+    })
+
     return {
       success: true,
-      data: document as KYCDocumentWithClient,
+      data: result as KYCDocumentWithClient,
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erreur lors de l\'enregistrement de la relance'

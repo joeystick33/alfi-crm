@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, createErrorResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { prisma } from '@/app/_common/lib/prisma'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * API Pilotage Commercial
  * GET /api/advisor/pilotage
@@ -288,7 +288,7 @@ export async function GET(request: NextRequest) {
       period,
     })
   } catch (error: any) {
-    console.error('Error fetching pilotage data:', error)
+    logger.error('Error fetching pilotage data:', { error: error instanceof Error ? error.message : String(error) })
     if (error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }

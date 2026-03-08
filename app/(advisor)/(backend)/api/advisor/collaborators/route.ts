@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { UserService } from '@/app/_common/lib/services/user-service'
-
+import { logger } from '@/app/_common/lib/logger'
 export async function GET(request: NextRequest) {
   try {
     const context = await requireAuth(request); const { user } = context
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse({ collaborators })
   } catch (error) {
-    console.error('Error loading collaborators:', error)
+    logger.error('Error loading collaborators:', { error: error instanceof Error ? error.message : String(error) })
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }

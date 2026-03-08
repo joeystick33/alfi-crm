@@ -3,8 +3,11 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import Script from 'next/script'
 import { SimulatorGate } from '@/app/_common/components/FeatureGate'
+import {
+  HardHat, User, CreditCard, Wallet, FileText, Landmark, Users,
+  BarChart3, TrendingUp, Target, Briefcase, AlertTriangle, RefreshCw, BookOpen,
+} from 'lucide-react'
 import { 
   DISPOSITIFS_FISCAUX_DISPLAY as DISPOSITIFS_FISCAUX, 
   calculIRDetaille, 
@@ -345,11 +348,28 @@ export default function PinelPage() {
 
   return (
     <SimulatorGate simulator="IMMOBILIER" showTeaser>
-      <Script src="https://cdn.plot.ly/plotly-2.27.0.min.js" strategy="afterInteractive" onLoad={() => setPlotlyReady(true)} />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-sky-50">
         <main className="container mx-auto px-4 py-6 max-w-6xl">
           <Link href="/dashboard/simulateurs/immobilier" className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-flex items-center">← Simulateurs immobilier</Link>
-          <div className="sim-card mb-6"><div className="flex items-center gap-4"><span className="text-4xl">🏗️</span><div><h1 className="text-2xl font-bold">Simulateur Pinel{isPinelPlus ? '+' : ''}</h1><p className="text-gray-600">Réduction d'impôt • Neuf zone tendue • Engagement locatif</p></div></div><div className="flex gap-2 mt-3"><span className="badge-blue">Réduction IR</span><span className="badge-green">{tauxReduction}% sur {dureeEngagement} ans</span><span className="badge-orange">Plafond 10 000 €</span></div></div>
+
+          {/* Bandeau Pinel expiré */}
+          <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 mb-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-6 h-6 text-amber-600" />
+              <div>
+                <h3 className="font-bold text-amber-800">Dispositif Pinel expiré depuis le 31/12/2024</h3>
+                <p className="text-sm text-amber-700 mt-1">
+                  Le dispositif Pinel n&apos;est plus disponible pour les nouvelles acquisitions. Ce simulateur reste accessible
+                  pour les biens acquis avant cette date. Pour un nouvel investissement locatif neuf, utilisez le{' '}
+                  <Link href="/dashboard/simulateurs/immobilier/jeanbrun" className="font-semibold text-emerald-700 underline hover:text-emerald-800">
+                    dispositif Jeanbrun (PLF 2026)
+                  </Link>.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="sim-card mb-6"><div className="flex items-center gap-4"><HardHat className="w-9 h-9 text-blue-700" /><div><h1 className="text-2xl font-bold">Simulateur Pinel{isPinelPlus ? '+' : ''} <span className="text-sm font-normal text-amber-600 bg-amber-100 px-2 py-0.5 rounded ml-2">Expiré</span></h1><p className="text-gray-600">Réduction d&apos;impôt • Neuf zone tendue • Engagement locatif</p></div></div><div className="flex gap-2 mt-3"><span className="badge-blue">Réduction IR</span><span className="badge-green">{tauxReduction}% sur {dureeEngagement} ans</span><span className="badge-orange">Plafond 10 000 €</span></div></div>
 
           {!showResults ? (
             <div className="sim-card">
@@ -357,7 +377,7 @@ export default function PinelPage() {
 
               {/* ÉTAPE 1 : PROFIL CLIENT (OBLIGATOIRE selon standard) */}
               {step === 1 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-1">👤 Votre profil fiscal</h2>
+                <h2 className="text-lg font-bold mb-1 flex items-center gap-2"><User className="w-5 h-5" /> Votre profil fiscal</h2>
                 <p className="text-sm text-gray-500 mb-6">Ces informations permettent de calculer l'impact RÉEL sur votre IR et IFI</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="form-group"><label>Situation familiale</label><select value={situationFamiliale} onChange={e=>setSituationFamiliale(e.target.value as SituationFamiliale)}><option value="CELIBATAIRE">Célibataire</option><option value="MARIE_PACSE">Marié / Pacsé</option><option value="VEUF">Veuf</option></select></div>
@@ -385,7 +405,7 @@ export default function PinelPage() {
 
               {/* ÉTAPE 2 : BIEN NEUF */}
               {step === 2 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">🏗️ Bien neuf</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><HardHat className="w-5 h-5" /> Bien neuf</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="form-group"><label>Date d'acquisition</label><input type="month" value={dateAcquisition} onChange={e=>setDateAcquisition(e.target.value)}/></div>
                   <div className="form-group"><label>Prix d'acquisition (€)</label><input type="number" value={prixAchat} onChange={e=>setPrixAchat(+e.target.value)}/></div>
@@ -408,12 +428,12 @@ export default function PinelPage() {
                   </div>
                 </div>
                 {!isStandardDisponible && (
-                  <div className="alert-warning mt-4 text-sm">⚠️ Le Pinel standard est fermé aux acquisitions postérieures à {P.ANNEE_FIN_STANDARD}. Cette simulation est effectuée en Pinel+.</div>
+                  <div className="alert-warning mt-4 text-sm">Le Pinel standard est fermé aux acquisitions postérieures à {P.ANNEE_FIN_STANDARD}. Cette simulation est effectuée en Pinel+.</div>
                 )}
                 {isPinelPlus && (
                   <div className={`alert-${zoneEligiblePinelPlus && surfaceEligiblePlus ? 'info' : 'error'} mt-4 text-sm`}>
-                    {zoneEligiblePinelPlus ? '✅ Zone éligible Pinel+.' : `❌ Zone ${zone} non éligible Pinel+. Choisissez ${zonesPinelPlus.join(', ')}.`}<br />
-                    {surfaceEligiblePlus ? `Surface: ${surface} m² (min ${P.SURFACE_MIN_PINEL_PLUS} m²).` : `❌ Surface ${surface} m² < ${P.SURFACE_MIN_PINEL_PLUS} m² requis.`}
+                    {zoneEligiblePinelPlus ? 'Zone éligible Pinel+.' : `Zone ${zone} non éligible Pinel+. Choisissez ${zonesPinelPlus.join(', ')}.`}<br />
+                    {surfaceEligiblePlus ? `Surface: ${surface} m² (min ${P.SURFACE_MIN_PINEL_PLUS} m²).` : `Surface ${surface} m² < ${P.SURFACE_MIN_PINEL_PLUS} m² requis.`}
                   </div>
                 )}
                 <div className="info-box mt-4 grid grid-cols-3 gap-4 text-sm">
@@ -425,7 +445,7 @@ export default function PinelPage() {
 
               {/* ÉTAPE 3 : FINANCEMENT */}
               {step === 3 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">💳 Financement</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><CreditCard className="w-5 h-5" /> Financement</h2>
                 
                 {/* Option achat comptant */}
                 <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6">
@@ -440,7 +460,7 @@ export default function PinelPage() {
                       className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                     />
                     <div>
-                      <span className="font-semibold text-slate-800">💵 Achat au comptant (sans financement)</span>
+                      <span className="font-semibold text-slate-800 flex items-center gap-2"><Wallet className="w-4 h-4" /> Achat au comptant (sans financement)</span>
                       <p className="text-sm text-slate-500">Cochez cette case si le client ne passe pas par un crédit immobilier</p>
                     </div>
                   </label>
@@ -448,7 +468,7 @@ export default function PinelPage() {
                 
                 {sansFinancement ? (
                   <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6 text-center">
-                    <div className="text-4xl mb-3">💰</div>
+                    <Wallet className="w-9 h-9 text-emerald-600 mb-3" />
                     <h3 className="font-bold text-emerald-800 text-lg mb-2">Achat au comptant</h3>
                     <p className="text-emerald-700">Investissement total : <strong className="text-xl">{fmtEur(investTotal)}</strong></p>
                     <p className="text-sm text-emerald-600 mt-2">Pas de crédit, pas d'intérêts, pas de mensualités.</p>
@@ -472,19 +492,19 @@ export default function PinelPage() {
 
               {/* ÉTAPE 4 : REVENUS LOCATIFS */}
               {step === 4 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">💰 Revenus locatifs</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Wallet className="w-5 h-5" /> Revenus locatifs</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="form-group"><label>Loyer mensuel (€)</label><input type="number" value={loyerMensuel} onChange={e=>setLoyerMensuel(+e.target.value)}/><span className={`form-hint ${loyerMensuel>loyerMaxMensuel?'text-red-500':'text-green-600'}`}>Max zone {zone}: {fmtEur(loyerMaxMensuel)}</span></div>
                   <div className="form-group"><label>Charges récup. (€)</label><input type="number" value={chargesLocataire} onChange={e=>setChargesLocataire(+e.target.value)}/></div>
                   <div className="form-group"><label>Vacance (semaines/an)</label><input type="number" value={vacanceSemaines} onChange={e=>setVacanceSemaines(+e.target.value)} min={0} max={52}/></div>
                   <div className="form-group"><label>Revalorisation loyer (%/an)</label><input type="number" value={revalorisationLoyer} onChange={e=>setRevalorisationLoyer(+e.target.value)} step={0.1}/></div>
                 </div>
-                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-blue-800 mb-2">📋 Plafonds de loyer Pinel (2024)</h4><div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">{Object.entries(P.PLAFONDS_LOYER_M2).map(([z,v])=><div key={z} className={`p-2 rounded ${z===zone?'bg-blue-100 border-blue-300':'bg-gray-50'}`}><div className="font-medium">{z.replace('_',' ')}</div><div>{v} €/m²</div></div>)}</div></div>
+                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><FileText className="w-4 h-4" /> Plafonds de loyer Pinel (2024)</h4><div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">{Object.entries(P.PLAFONDS_LOYER_M2).map(([z,v])=><div key={z} className={`p-2 rounded ${z===zone?'bg-blue-100 border-blue-300':'bg-gray-50'}`}><div className="font-medium">{z.replace('_',' ')}</div><div>{v} €/m²</div></div>)}</div></div>
               </div>}
 
               {/* ÉTAPE 5 : CHARGES */}
               {step === 5 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-1">📋 Charges déductibles</h2>
+                <h2 className="text-lg font-bold mb-1 flex items-center gap-2"><FileText className="w-5 h-5" /> Charges déductibles</h2>
                 <p className="text-sm text-gray-500 mb-6">Charges non récupérables déductibles des revenus fonciers</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="form-group"><label>Taxe foncière (€)</label><input type="number" value={taxeFonciere} onChange={e=>setTaxeFonciere(+e.target.value)}/><span className="form-hint">Exonérée 2 ans dans le neuf</span></div>
@@ -500,7 +520,7 @@ export default function PinelPage() {
 
               {/* ÉTAPE 6 : LOCATAIRE */}
               {step === 6 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">👥 Locataire (conditions Pinel)</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Users className="w-5 h-5" /> Locataire (conditions Pinel)</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="form-group"><label>Composition foyer locataire</label><select value={compositionFoyer} onChange={e=>setCompositionFoyer(+e.target.value)}>{COMPOSITION_LABELS.map((l,i)=><option key={i} value={i}>{l}</option>)}</select></div>
                   <div className="form-group"><label>Autres réductions niches (€)</label><input type="number" value={autresReductionsNiches} onChange={e=>setAutresReductionsNiches(+e.target.value)}/><span className="form-hint">Plafond global 10 000€</span></div>
@@ -509,12 +529,12 @@ export default function PinelPage() {
                   <div><span className="text-gray-500">Plafond ressources locataire</span><div className="font-bold text-lg">{fmtEur(PLAFONDS_RESSOURCES_2024[zone][compositionFoyer])}</div></div>
                   <div><span className="text-gray-500">Zone</span><div className="font-bold text-lg">{ZONE_LABELS[zone]}</div></div>
                 </div>
-                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-blue-800 mb-2">📋 Plafonds de ressources Pinel (2024)</h4><div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">{Object.entries(PLAFONDS_RESSOURCES_2024).map(([z,vals])=><div key={z} className={`p-2 rounded ${z===zone?'bg-blue-100 border-blue-300':'bg-gray-50'}`}><div className="font-medium">{z.replace('_',' ')}</div><div>Seul: {fmtEur(vals[0])}</div><div>Couple: {fmtEur(vals[1])}</div></div>)}</div></div>
+                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><FileText className="w-4 h-4" /> Plafonds de ressources Pinel (2024)</h4><div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">{Object.entries(PLAFONDS_RESSOURCES_2024).map(([z,vals])=><div key={z} className={`p-2 rounded ${z===zone?'bg-blue-100 border-blue-300':'bg-gray-50'}`}><div className="font-medium">{z.replace('_',' ')}</div><div>Seul: {fmtEur(vals[0])}</div><div>Couple: {fmtEur(vals[1])}</div></div>)}</div></div>
               </div>}
 
               {/* ÉTAPE 7 : PROJECTION */}
               {step === 7 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">🏛️ Projection</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Landmark className="w-5 h-5" /> Projection</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="form-group"><label>Revalorisation bien (%/an)</label><input type="number" value={revalorisationBien} onChange={e=>setRevalorisationBien(+e.target.value)} step={0.1}/></div>
                   <div className="form-group"><label>Frais revente (%)</label><input type="number" value={fraisRevente} onChange={e=>setFraisRevente(+e.target.value)} step={0.1}/></div>
@@ -525,7 +545,7 @@ export default function PinelPage() {
                   <div><span className="text-gray-500">Réduction/an</span><div className="font-bold text-lg text-blue-600">{fmtEur(Math.round(reductionAnnuelle))}</div></div>
                   <div><span className="text-gray-500">Durée simulation</span><div className="font-bold text-lg">{dureeEngagement + 3} ans</div></div>
                 </div>
-                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-blue-800 mb-2">⚠️ Contraintes Pinel</h4><ul className="text-sm text-blue-700 space-y-1">
+                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Contraintes Pinel</h4><ul className="text-sm text-blue-700 space-y-1">
                   <li>• Engagement de location de {dureeEngagement} ans minimum</li>
                   <li>• Respect des plafonds de loyer ({fmtEur(loyerMaxMensuel)}/mois max) et ressources locataires</li>
                   <li>• Location nue à usage de résidence principale</li>
@@ -536,7 +556,7 @@ export default function PinelPage() {
 
               <div className="flex justify-between mt-8">
                 <button onClick={()=>setStep(Math.max(1,step-1))} disabled={step===1} className="btn-secondary disabled:opacity-50">← Précédent</button>
-                {step < 7 ? <button onClick={()=>setStep(step+1)} className="btn-primary">Suivant →</button> : <button onClick={lancerSimulation} disabled={loading} className="btn-primary">{loading?'⏳':'🧮 Analyser'}</button>}
+                {step < 7 ? <button onClick={()=>setStep(step+1)} className="btn-primary">Suivant →</button> : <button onClick={lancerSimulation} disabled={loading} className="btn-primary">{loading ? 'Calcul...' : 'Analyser'}</button>}
               </div>
             </div>
           ) : synthese && (
@@ -583,7 +603,7 @@ export default function PinelPage() {
                   </div>
                 </div>
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h4 className="font-semibold text-blue-800 mb-2">📊 Comprendre la fiscalité Pinel</h4>
+                  <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Comprendre la fiscalité Pinel</h4>
                   <div className="text-sm text-blue-700 space-y-1">
                     <p>• <strong>Réduction d'impôt</strong> : Le Pinel offre une réduction directe d'IR de {fmtEur(synthese.reductionAnnuelle)}/an, soit {fmtPct(synthese.tauxReduction)} du prix plafonné à {fmtEur(synthese.prixPlafonne)}.</p>
                     <p>• <strong>Revenus fonciers</strong> : Les loyers sont imposés au barème IR ({tmi}%) + PS 17.2%. L'impact net est de {fmtEur(Math.round((synthese.totIR + synthese.totPS) / (dureeEngagement + 3)))}/an.</p>
@@ -628,7 +648,7 @@ export default function PinelPage() {
                   </div>
                 </div>
                 <div className="mt-4 p-3 bg-slate-50 border border-slate-200 rounded-lg">
-                  <h4 className="font-semibold text-slate-700 mb-2">📈 Analyse de l'opération Pinel</h4>
+                  <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2"><TrendingUp className="w-4 h-4" /> Analyse de l'opération Pinel</h4>
                   <div className="text-sm text-slate-600 space-y-1">
                     <p>• <strong>Rendement brut {fmtPct(synthese.rendBrut)}</strong> : {safeNumber(synthese.rendBrut) > 4 ? 'Performance correcte pour un investissement neuf en zone tendue.' : 'Rendement limité par les plafonds de loyer Pinel.'}</p>
                     <p>• <strong>TRI {fmtPct(synthese.tri)}</strong> : Intègre tous les flux (loyers, charges, impôts, réduction Pinel, plus-value). {safeNumber(synthese.tri) > 5 ? 'Performance satisfaisante.' : 'Performance modeste, typique du Pinel.'}</p>
@@ -785,7 +805,7 @@ export default function PinelPage() {
                 
                 {/* Info abattements */}
                 <div className="bg-blue-50 border-l-4 border-blue-500 rounded-r-lg p-4">
-                  <h4 className="font-bold text-blue-800 mb-2">📚 Abattements pour durée de détention (CGI art. 150 VC)</h4>
+                  <h4 className="font-bold text-blue-800 mb-2 flex items-center gap-2"><BookOpen className="w-4 h-4" /> Abattements pour durée de détention (CGI art. 150 VC)</h4>
                   <div className="text-sm text-blue-700 space-y-1">
                     <p>• <strong>IR (19%)</strong> : Exonération totale après 22 ans. Abattement progressif de 6%/an entre 6 et 21 ans.</p>
                     <p>• <strong>PS (17.2%)</strong> : Exonération totale après 30 ans. Abattement progressif de 1.65%/an (6-21 ans) puis 9%/an (22-30 ans).</p>
@@ -844,7 +864,7 @@ export default function PinelPage() {
                           <td className="py-1.5 px-1 text-right text-amber-600">{fmtEur(safeNumber(p.impotIR) + safeNumber(p.ps))}</td>
                           <td className={`py-1.5 px-1 text-right font-semibold ${safeNumber(p.cfApres) >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{fmtSignedEur(p.cfApres)}</td>
                           <td className="py-1.5 px-1 text-right text-blue-600 font-medium">{fmtEur(p.capNet)}</td>
-                          {showDetailedTable && <td className="py-1.5 px-1 text-center">{p.enEngagement ? '✅' : '❌'}</td>}
+                          {showDetailedTable && <td className="py-1.5 px-1 text-center">{p.enEngagement ? 'Oui' : 'Non'}</td>}
                         </tr>
                       ))}
                     </tbody>
@@ -874,7 +894,7 @@ export default function PinelPage() {
               {/* AVIS PROFESSIONNEL AVEC SCORE GLOBAL */}
               {/* ═══════════════════════════════════════════════════════════════════════════ */}
               <div className="sim-card">
-                <h3 className="font-bold mb-6 text-xl text-slate-800">🎯 Synthèse et avis professionnel</h3>
+                <h3 className="font-bold mb-6 text-xl text-slate-800 flex items-center gap-2"><Target className="w-5 h-5" /> Synthèse et avis professionnel</h3>
                 
                 {/* Score global - Système de notation équilibré (base 0) */}
                 {(() => {
@@ -1011,7 +1031,7 @@ export default function PinelPage() {
                         
                         {showScoreDetail && (
                           <div className="mt-3 bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm">
-                            <h5 className="font-bold text-slate-700 mb-3">📊 Méthode de calcul du score Pinel (base 0, max 9 points)</h5>
+                            <h5 className="font-bold text-slate-700 mb-3 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Méthode de calcul du score Pinel (base 0, max 9 points)</h5>
                             <p className="text-slate-600 mb-3">Le score est calculé en additionnant des points selon 5 critères clés d'un investissement Pinel :</p>
                             
                             <div className="overflow-x-auto">
@@ -1079,30 +1099,30 @@ export default function PinelPage() {
                 
                 {/* Avis détaillé */}
                 <div className="bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-200 rounded-xl p-4">
-                  <h4 className="font-bold text-blue-800 mb-3">💼 Avis professionnel</h4>
+                  <h4 className="font-bold text-blue-800 mb-3 flex items-center gap-2"><Briefcase className="w-5 h-5" /> Avis professionnel</h4>
                   <div className="text-sm text-blue-700 space-y-3">
                     {safeNumber(synthese.tri) > 4 && safeNumber(synthese.cfMoyMois) >= -200 ? (
                       <>
-                        <p><strong>✅ Opération cohérente</strong> : Avec un TRI de {fmtPct(synthese.tri)} et une réduction d'impôt de {fmtEur(synthese.reductionTotale)}, cette opération Pinel{isPinelPlus ? '+' : ''} est correcte pour un investisseur en TMI {tmi}%.</p>
+                        <p><strong>Opération cohérente</strong> : Avec un TRI de {fmtPct(synthese.tri)} et une réduction d'impôt de {fmtEur(synthese.reductionTotale)}, cette opération Pinel{isPinelPlus ? '+' : ''} est correcte pour un investisseur en TMI {tmi}%.</p>
                         <p>L'avantage fiscal compense en partie le rendement locatif limité par les plafonds de loyer. Le capital net final de {fmtEur(synthese.capFinal)} représente une multiplication par {(safeNumber(synthese.capFinal) / apport).toFixed(1)}x de votre apport.</p>
                       </>
                     ) : safeNumber(synthese.cfMoyMois) >= -500 ? (
                       <>
-                        <p><strong>⚖️ Opération à évaluer</strong> : Le TRI de {fmtPct(synthese.tri)} est modeste mais la réduction d'impôt de {fmtEur(synthese.reductionAnnuelle)}/an peut convenir à un profil fortement imposé (TMI {tmi}%).</p>
+                        <p><strong>Opération à évaluer</strong> : Le TRI de {fmtPct(synthese.tri)} est modeste mais la réduction d'impôt de {fmtEur(synthese.reductionAnnuelle)}/an peut convenir à un profil fortement imposé (TMI {tmi}%).</p>
                         <p>Vérifiez que l'effort de trésorerie de {fmtEur(Math.abs(safeNumber(synthese.cfMoyMois)))}/mois est supportable sur {dureeEngagement} ans. Après fin de l'engagement, le bien pourra être vendu ou conservé avec une fiscalité différente.</p>
                       </>
                     ) : (
                       <>
-                        <p><strong>⚠️ Opération à reconsidérer</strong> : L'effort de trésorerie de {fmtEur(Math.abs(safeNumber(synthese.cfMoyMois)))}/mois est élevé malgré la réduction d'impôt de {fmtEur(synthese.reductionAnnuelle)}/an.</p>
+                        <p><strong>Opération à reconsidérer</strong> : L'effort de trésorerie de {fmtEur(Math.abs(safeNumber(synthese.cfMoyMois)))}/mois est élevé malgré la réduction d'impôt de {fmtEur(synthese.reductionAnnuelle)}/an.</p>
                         <p>Le Pinel n'est pas toujours le dispositif le plus rentable. Considérez le Denormandie (ancien rénové), le déficit foncier ou le LMNP qui peuvent offrir de meilleurs rendements.</p>
                       </>
                     )}
-                    <p className="text-blue-500 text-xs mt-2"><em>⚠️ Le dispositif Pinel a pris fin le 31/12/2024. Cette simulation concerne uniquement les investissements réalisés avant cette date.</em></p>
+                    <p className="text-blue-500 text-xs mt-2"><em>Le dispositif Pinel a pris fin le 31/12/2024. Cette simulation concerne uniquement les investissements réalisés avant cette date.</em></p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-center gap-4"><button onClick={()=>setShowResults(false)} className="btn-primary">🔄 Nouvelle simulation</button></div>
+              <div className="flex justify-center gap-4"><button onClick={()=>setShowResults(false)} className="btn-primary flex items-center gap-2"><RefreshCw className="w-4 h-4" /> Nouvelle simulation</button></div>
             </div>
           )}
         </main>

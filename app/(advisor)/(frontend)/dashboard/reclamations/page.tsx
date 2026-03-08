@@ -5,7 +5,7 @@ import { useState, useMemo } from 'react'
 import { Card } from '@/app/_common/components/ui/Card'
 import { Button } from '@/app/_common/components/ui/Button'
 import { Input } from '@/app/_common/components/ui/Input'
-import { Select } from '@/app/_common/components/ui/Select'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/app/_common/components/ui/Select'
 import { Badge } from '@/app/_common/components/ui/Badge'
 import { Skeleton } from '@/app/_common/components/ui/Skeleton'
 import { EmptyState } from '@/app/_common/components/ui/EmptyState'
@@ -157,17 +157,27 @@ export default function ReclamationsPage() {
               />
             </div>
           </div>
-          <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
-            <option value="all">Tous les statuts</option>
-            {Object.entries(STATUS_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ReclamationStatus | 'all')}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Tous les statuts" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les statuts</SelectItem>
+              {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>{label}</SelectItem>
+              ))}
+            </SelectContent>
           </Select>
-          <Select value={typeFilter} onValueChange={(v: any) => setTypeFilter(v)}>
-            <option value="all">Tous les types</option>
-            {Object.entries(TYPE_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
+          <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as ReclamationType | 'all')}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Tous les types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les types</SelectItem>
+              {Object.entries(TYPE_LABELS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>{label}</SelectItem>
+              ))}
+            </SelectContent>
           </Select>
           <Button
             variant={showOnlyBreach ? 'default' : 'outline'}

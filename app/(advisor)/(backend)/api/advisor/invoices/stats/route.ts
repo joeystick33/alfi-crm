@@ -3,7 +3,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { InvoiceService } from '@/app/_common/lib/services/invoice-service'
 import { parseInvoiceFilters } from '../utils'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/invoices/stats
  * Get invoice statistics
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse(stats)
   } catch (error) {
-    console.error('Error in GET /api/advisor/invoices/stats:', error)
+    logger.error('Error in GET /api/advisor/invoices/stats:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

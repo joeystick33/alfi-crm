@@ -126,11 +126,27 @@ export function TabDiagnostic({ clientId, client }: TabDiagnosticProps) {
 
   const handleSave = async () => {
     setSaving(true)
-    // TODO: Sauvegarder via API
-    await new Promise(r => setTimeout(r, 500))
-    setSaving(false)
-    setIsEditing(false)
-    toast({ title: 'Diagnostic sauvegardé' })
+    try {
+      const response = await fetch(`/api/advisor/clients/${clientId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          diagnosticNotes: data.notes,
+          chiffreAffaires: data.chiffreAffaires,
+          resultatNet: data.resultatNet,
+          effectifTotal: data.effectifTotal,
+          masseSalarialeBrute: data.masseSalarialeBrute,
+        }),
+      })
+      if (!response.ok) throw new Error('Erreur sauvegarde')
+      setIsEditing(false)
+      toast({ title: 'Diagnostic sauvegardé' })
+    } catch {
+      toast({ title: 'Erreur', description: 'Impossible de sauvegarder le diagnostic', variant: 'destructive' })
+    } finally {
+      setSaving(false)
+    }
   }
 
   // Calculs automatiques

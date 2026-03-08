@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from 'react'
+import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -11,7 +11,7 @@ import {
   useCompleteComplianceControl,
   useDeleteComplianceControl,
 } from '@/app/_common/hooks/api/use-compliance-api'
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/_common/components/ui/Card'
+import { Card, CardContent } from '@/app/_common/components/ui/Card'
 import { Badge } from '@/app/_common/components/ui/Badge'
 import { Button } from '@/app/_common/components/ui/Button'
 import { Input } from '@/app/_common/components/ui/Input'
@@ -46,12 +46,12 @@ import {
   Trash2,
   ChevronDown,
   X,
-  Calendar,
   AlertTriangle,
   Clock,
   ArrowLeft,
   Shield,
 } from 'lucide-react'
+import { ClientLink } from '@/app/_common/components/ClientLink'
 import {
   CONTROL_TYPES,
   CONTROL_STATUS,
@@ -140,6 +140,14 @@ function ControlStatusBadge({ status }: { status: ControlStatus }) {
     <Badge className={cn('border', statusColors[status])}>
       {CONTROL_STATUS_LABELS[status]}
     </Badge>
+  )
+}
+
+export default function ControlesACPRPage() {
+  return (
+    <Suspense fallback={null}>
+      <ControlesACPRPageInner />
+    </Suspense>
   )
 }
 
@@ -497,9 +505,9 @@ function CompleteControlDialog({
             <p className="font-medium text-gray-900">
               {CONTROL_TYPE_LABELS[control.type]}
             </p>
-            <p className="text-sm text-gray-500 mt-1">
-              Client #{control.clientId.slice(0, 8)}
-            </p>
+            <div className="text-sm text-gray-500 mt-1">
+              <ClientLink clientId={control.clientId} showIdPrefix />
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -571,7 +579,7 @@ function CompleteControlDialog({
 // Main Page Component
 // ============================================================================
 
-export default function ControlesACPRPage() {
+function ControlesACPRPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { confirm, ConfirmDialog } = useConfirmDialog()
@@ -608,9 +616,7 @@ export default function ControlesACPRPage() {
       label: 'Client',
       sortable: true,
       render: (_, control) => (
-        <span className="font-medium text-gray-900">
-          Client #{control.clientId.slice(0, 8)}
-        </span>
+        <ClientLink clientId={control.clientId} showIdPrefix />
       ),
     },
     {

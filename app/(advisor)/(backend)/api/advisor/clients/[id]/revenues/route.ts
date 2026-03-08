@@ -5,7 +5,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { mapRevenueCategory } from '@/app/_common/lib/enum-mappings'
 import { z } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 // ============================================
 // Schéma de validation pour les revenus
 // Les valeurs sont uniformes: Frontend = Prisma = Supabase
@@ -79,7 +79,7 @@ export async function GET(
 
     return createSuccessResponse(result)
   } catch (error: any) {
-    console.error('Error fetching revenues:', error)
+    logger.error('Error fetching revenues:', { error: error instanceof Error ? error.message : String(error) })
     if (error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }
@@ -146,7 +146,7 @@ export async function POST(
       sourceRevenu: revenue.sourceOrganisme,
     }, 201)
   } catch (error: any) {
-    console.error('Error creating revenue:', error)
+    logger.error('Error creating revenue:', { error: error instanceof Error ? error.message : String(error) })
     if (error instanceof z.ZodError) {
       return createErrorResponse('Données invalides: ' + error.issues.map(e => e.message).join(', '), 400)
     }

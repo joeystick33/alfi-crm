@@ -6,7 +6,7 @@
 
 import { NextResponse } from 'next/server'
 import { checkJavaBackendHealth, JAVA_PATRIMONIAL_URL } from '../proxy-utils'
-
+import { logger } from '@/app/_common/lib/logger'
 export async function GET(_request: Request) {
   try {
     const isHealthy = await checkJavaBackendHealth()
@@ -48,7 +48,7 @@ export async function GET(_request: Request) {
       ...status
     })
   } catch (error: any) {
-    console.error('[Health Check] Error:', error)
+    logger.error('[Health Check] Error:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { 
         success: false, 

@@ -25,7 +25,8 @@ import {
   TrendingUp,
   Heart,
   ChevronRight,
-  Lock
+  Lock,
+  Users
 } from 'lucide-react'
 import { useToast } from '@/app/_common/hooks/use-toast'
 import { useFeatureAccess } from '@/app/_common/hooks/use-feature-access'
@@ -206,6 +207,18 @@ const SIMULATORS: SimulatorInfo[] = [
     href: '/dashboard/simulateurs/retraite',
     endpoints: ['/api/advisor/simulators/retirement/pension', '/api/advisor/simulators/retirement/simulate', '/api/advisor/simulators/retirement/compare'],
     featureCode: 'SIM_RETIREMENT',
+  },
+  {
+    key: 'succession',
+    name: 'Succession Complet',
+    description: 'Simulateur successoral complet : dévolution légale, DDV, fiscalité, assurance-vie, donations',
+    icon: Users,
+    type: 'typescript',
+    port: null,
+    category: 'patrimoine',
+    href: '/dashboard/simulateurs/succession',
+    endpoints: ['/api/advisor/simulators/succession-smp'],
+    featureCode: 'SIM_SUCCESSION',
   },
 ]
 
@@ -467,11 +480,11 @@ export default function SimulateursHubPage() {
                 <span className="text-xs text-muted-foreground">Simulation complète</span>
               </Button>
             </Link>
-            <Link href="/dashboard/simulators/succession">
+            <Link href="/dashboard/simulateurs/succession">
               <Button variant="outline" className="w-full h-auto py-4 flex-col">
-                <Shield className="h-6 w-6 mb-2" />
+                <Users className="h-6 w-6 mb-2" />
                 <span>Succession</span>
-                <span className="text-xs text-muted-foreground">Optimisation transmission</span>
+                <span className="text-xs text-muted-foreground">Simulateur complet</span>
               </Button>
             </Link>
             <Link href="/dashboard/simulators/fiscalite">

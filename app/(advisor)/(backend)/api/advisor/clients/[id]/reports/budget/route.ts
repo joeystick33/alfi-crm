@@ -8,7 +8,7 @@ import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
-
+import { logger } from '@/app/_common/lib/logger'
 const formatCurrency = (amount: number | null | undefined): string => {
   if (amount == null) return '0 €'
   return new Intl.NumberFormat('fr-FR', {
@@ -239,7 +239,7 @@ export async function GET(
       },
     })
   } catch (error) {
-    console.error('Error generating budget report:', error)
+    logger.error('Error generating budget report:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Erreur lors de la génération du rapport' },
       { status: 500 }

@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
+import { logger } from '@/app/_common/lib/logger'
 import {
   calculateBudgetMetrics,
   detectBudgetAnomalies,
@@ -168,7 +169,7 @@ export async function GET(
       { status: 200 }
     )
   } catch (error) {
-    console.error(
+    logger.error(
       'GET /api/advisor/clients/[id]/budget/metrics error:',
       error
     )

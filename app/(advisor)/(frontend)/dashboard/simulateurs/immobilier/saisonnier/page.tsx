@@ -3,9 +3,12 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import Script from 'next/script'
 import { SimulatorGate } from '@/app/_common/components/FeatureGate'
 import { usePlotlyReady } from '../_hooks/usePlotlyReady'
+import {
+  Palmtree, User, Home, Calendar, CreditCard, Landmark,
+  BarChart3, TrendingUp, FileText, Target, Briefcase, AlertTriangle, RefreshCw,
+} from 'lucide-react'
 import { 
   calculIRDetaille, 
   calculNombreParts, 
@@ -270,11 +273,10 @@ export default function SaisonnierPage() {
 
   return (
     <SimulatorGate simulator="IMMOBILIER" showTeaser>
-      <Script src="https://cdn.plot.ly/plotly-2.27.0.min.js" strategy="afterInteractive" onLoad={handlePlotlyLoad} />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-amber-50">
         <main className="container mx-auto px-4 py-6 max-w-6xl">
           <Link href="/dashboard/simulateurs/immobilier" className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-flex items-center">← Simulateurs immobilier</Link>
-          <div className="sim-card mb-6"><div className="flex items-center gap-4"><span className="text-4xl">🏖️</span><div><h1 className="text-2xl font-bold">Simulateur Location Saisonnière</h1><p className="text-gray-600">Airbnb • Meublé tourisme • Courte durée</p></div></div><div className="flex gap-2 mt-3"><span className="badge-orange">{nuitsOccupees} nuits/an</span><span className="badge-green">{fmtEur(tarifNuitee)}/nuit</span><span className="badge-blue">Abattement {abattement}%</span></div></div>
+          <div className="sim-card mb-6"><div className="flex items-center gap-4"><Palmtree className="w-9 h-9 text-orange-600" /><div><h1 className="text-2xl font-bold">Simulateur Location Saisonnière</h1><p className="text-gray-600">Airbnb • Meublé tourisme • Courte durée</p></div></div><div className="flex gap-2 mt-3"><span className="badge-orange">{nuitsOccupees} nuits/an</span><span className="badge-green">{fmtEur(tarifNuitee)}/nuit</span><span className="badge-blue">Abattement {abattement}%</span></div></div>
 
           {!showResults ? (
             <div className="sim-card">
@@ -282,7 +284,7 @@ export default function SaisonnierPage() {
 
               {/* ÉTAPE 1 : PROFIL CLIENT (OBLIGATOIRE selon standard) */}
               {step === 1 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-1">👤 Votre profil fiscal</h2>
+                <h2 className="text-lg font-bold mb-1 flex items-center gap-2"><User className="w-5 h-5" /> Votre profil fiscal</h2>
                 <p className="text-sm text-gray-500 mb-6">Les revenus de location saisonnière sont imposés en BIC (bénéfices industriels et commerciaux)</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="form-group"><label>Situation familiale</label><select value={situationFamiliale} onChange={e=>setSituationFamiliale(e.target.value as SituationFamiliale)}><option value="CELIBATAIRE">Célibataire</option><option value="MARIE_PACSE">Marié / Pacsé</option><option value="VEUF">Veuf</option></select></div>
@@ -309,21 +311,21 @@ export default function SaisonnierPage() {
               </div>}
 
               {/* ÉTAPE 2 : BIEN */}
-              {step === 2 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4">🏠 Bien</h2><div className="grid grid-cols-2 md:grid-cols-4 gap-4"><div className="form-group"><label>Prix (€)</label><input type="number" value={prixAchat} onChange={e=>setPrixAchat(+e.target.value)}/></div><div className="form-group"><label>Frais notaire (€)</label><input type="number" value={fraisNotaire} onChange={e=>setFraisNotaire(+e.target.value)}/></div><div className="form-group"><label>Travaux (€)</label><input type="number" value={travaux} onChange={e=>setTravaux(+e.target.value)}/></div><div className="form-group"><label>Mobilier (€)</label><input type="number" value={mobilier} onChange={e=>setMobilier(+e.target.value)}/></div><div className="form-group"><label>Type</label><select value={typeMeuble} onChange={e=>setTypeMeuble(e.target.value as TypeMeuble)}><option value="TOURISME_NON_CLASSE">Meublé non classé</option><option value="TOURISME_CLASSE">Meublé tourisme classé</option><option value="CHAMBRE_HOTES">Chambre d'hôtes</option></select></div><div className="form-group flex items-center gap-2 pt-6"><input type="checkbox" checked={estResidencePrincipale} onChange={e=>setEstResidencePrincipale(e.target.checked)} className="w-4 h-4"/><label>Résidence principale</label></div></div></div>}
+              {step === 2 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Home className="w-5 h-5" /> Bien</h2><div className="grid grid-cols-2 md:grid-cols-4 gap-4"><div className="form-group"><label>Prix (€)</label><input type="number" value={prixAchat} onChange={e=>setPrixAchat(+e.target.value)}/></div><div className="form-group"><label>Frais notaire (€)</label><input type="number" value={fraisNotaire} onChange={e=>setFraisNotaire(+e.target.value)}/></div><div className="form-group"><label>Travaux (€)</label><input type="number" value={travaux} onChange={e=>setTravaux(+e.target.value)}/></div><div className="form-group"><label>Mobilier (€)</label><input type="number" value={mobilier} onChange={e=>setMobilier(+e.target.value)}/></div><div className="form-group"><label>Type</label><select value={typeMeuble} onChange={e=>setTypeMeuble(e.target.value as TypeMeuble)}><option value="TOURISME_NON_CLASSE">Meublé non classé</option><option value="TOURISME_CLASSE">Meublé tourisme classé</option><option value="CHAMBRE_HOTES">Chambre d'hôtes</option></select></div><div className="form-group flex items-center gap-2 pt-6"><input type="checkbox" checked={estResidencePrincipale} onChange={e=>setEstResidencePrincipale(e.target.checked)} className="w-4 h-4"/><label>Résidence principale</label></div></div></div>}
 
-              {step === 3 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4">📅 Exploitation</h2><div className="grid grid-cols-2 md:grid-cols-4 gap-4"><div className="form-group"><label>Tarif/nuit (€)</label><input type="number" value={tarifNuitee} onChange={e=>setTarifNuitee(+e.target.value)}/></div><div className="form-group"><label>Taux occupation (%)</label><input type="number" value={tauxOccupation} onChange={e=>setTauxOccupation(+e.target.value)} min={0} max={100}/></div><div className="form-group"><label>Nuits max/an</label><input type="number" value={nbNuitsMax} onChange={e=>setNbNuitsMax(+e.target.value)} max={estResidencePrincipale?120:365}/>{estResidencePrincipale && <span className="form-hint text-orange-600">Max 120 (RP)</span>}</div><div className="form-group"><label>Commission plateforme (%)</label><input type="number" value={fraisPlateforme} onChange={e=>setFraisPlateforme(+e.target.value)} step={0.5}/></div><div className="form-group"><label>Frais ménage/séjour (€)</label><input type="number" value={fraisMenage} onChange={e=>setFraisMenage(+e.target.value)}/></div><div className="form-group"><label>Charges annuelles (€)</label><input type="number" value={chargesAnnuelles} onChange={e=>setChargesAnnuelles(+e.target.value)}/></div></div><div className="info-box mt-4 grid grid-cols-3 gap-4 text-sm"><div><span className="text-gray-500">Nuits occupées</span><div className="font-bold text-lg">{nuitsOccupees}</div></div><div><span className="text-gray-500">Recettes brutes</span><div className="font-bold text-lg text-green-600">{fmtEur(recettesBrutes)}</div></div><div><span className="text-gray-500">Net charges</span><div className="font-bold text-lg">{fmtEur(Math.round(recettesNettes))}</div></div></div></div>}
+              {step === 3 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Calendar className="w-5 h-5" /> Exploitation</h2><div className="grid grid-cols-2 md:grid-cols-4 gap-4"><div className="form-group"><label>Tarif/nuit (€)</label><input type="number" value={tarifNuitee} onChange={e=>setTarifNuitee(+e.target.value)}/></div><div className="form-group"><label>Taux occupation (%)</label><input type="number" value={tauxOccupation} onChange={e=>setTauxOccupation(+e.target.value)} min={0} max={100}/></div><div className="form-group"><label>Nuits max/an</label><input type="number" value={nbNuitsMax} onChange={e=>setNbNuitsMax(+e.target.value)} max={estResidencePrincipale?120:365}/>{estResidencePrincipale && <span className="form-hint text-orange-600">Max 120 (RP)</span>}</div><div className="form-group"><label>Commission plateforme (%)</label><input type="number" value={fraisPlateforme} onChange={e=>setFraisPlateforme(+e.target.value)} step={0.5}/></div><div className="form-group"><label>Frais ménage/séjour (€)</label><input type="number" value={fraisMenage} onChange={e=>setFraisMenage(+e.target.value)}/></div><div className="form-group"><label>Charges annuelles (€)</label><input type="number" value={chargesAnnuelles} onChange={e=>setChargesAnnuelles(+e.target.value)}/></div></div><div className="info-box mt-4 grid grid-cols-3 gap-4 text-sm"><div><span className="text-gray-500">Nuits occupées</span><div className="font-bold text-lg">{nuitsOccupees}</div></div><div><span className="text-gray-500">Recettes brutes</span><div className="font-bold text-lg text-green-600">{fmtEur(recettesBrutes)}</div></div><div><span className="text-gray-500">Net charges</span><div className="font-bold text-lg">{fmtEur(Math.round(recettesNettes))}</div></div></div></div>}
 
-              {step === 4 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4">💳 Financement</h2><div className="grid grid-cols-2 md:grid-cols-3 gap-4"><div className="form-group"><label>Apport (€)</label><input type="number" value={apport} onChange={e=>setApport(+e.target.value)}/></div><div className="form-group"><label>Taux (%)</label><input type="number" value={tauxCredit} onChange={e=>setTauxCredit(+e.target.value)} step={0.1}/></div><div className="form-group"><label>Durée (ans)</label><input type="number" value={dureeCredit} onChange={e=>setDureeCredit(+e.target.value)}/></div></div><div className="info-box mt-4 grid grid-cols-2 gap-4 text-sm"><div><span className="text-gray-500">Emprunté</span><div className="font-bold text-lg">{fmtEur(montantEmprunte)}</div></div><div><span className="text-gray-500">Mensualité</span><div className="font-bold text-lg">{fmtEur(Math.round(mensualite))}</div></div></div></div>}
+              {step === 4 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4 flex items-center gap-2"><CreditCard className="w-5 h-5" /> Financement</h2><div className="grid grid-cols-2 md:grid-cols-3 gap-4"><div className="form-group"><label>Apport (€)</label><input type="number" value={apport} onChange={e=>setApport(+e.target.value)}/></div><div className="form-group"><label>Taux (%)</label><input type="number" value={tauxCredit} onChange={e=>setTauxCredit(+e.target.value)} step={0.1}/></div><div className="form-group"><label>Durée (ans)</label><input type="number" value={dureeCredit} onChange={e=>setDureeCredit(+e.target.value)}/></div></div><div className="info-box mt-4 grid grid-cols-2 gap-4 text-sm"><div><span className="text-gray-500">Emprunté</span><div className="font-bold text-lg">{fmtEur(montantEmprunte)}</div></div><div><span className="text-gray-500">Mensualité</span><div className="font-bold text-lg">{fmtEur(Math.round(mensualite))}</div></div></div></div>}
 
-              {step === 5 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4">🏛️ Fiscalité</h2><div className="grid grid-cols-2 gap-4"><div className="form-group"><label>Régime</label><select value={regimeFiscal} onChange={e=>setRegimeFiscal(e.target.value as RegimeFiscal)}><option value="MICRO_BIC">Micro-BIC ({abattement}%)</option><option value="REEL">Réel (amortissements)</option></select></div></div><div className="info-box mt-4 grid grid-cols-3 gap-4 text-sm"><div><span className="text-gray-500">TMI calculé</span><div className="font-bold text-lg">{tmi}%</div></div><div><span className="text-gray-500">IR actuel</span><div className="font-bold text-lg">{fmtEur(irAvant.impotNet)}</div></div><div><span className="text-gray-500">Revenus totaux</span><div className="font-bold text-lg">{fmtEur(revenusTotaux)}</div></div></div><div className="pedagogy-box mt-4"><h4 className="font-semibold text-orange-800 mb-2">📊 Fiscalité saisonnière</h4><ul className="text-sm text-orange-700 space-y-1"><li>• <strong>Micro-BIC :</strong> abattement {abattement}% (plafond {fmtEur(plafondMicroBIC)})</li><li>• <strong>Réel :</strong> charges + amortissements déductibles</li><li>• <strong>&gt; 23 000 € :</strong> cotisations SSI obligatoires</li></ul></div></div>}
+              {step === 5 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Landmark className="w-5 h-5" /> Fiscalité</h2><div className="grid grid-cols-2 gap-4"><div className="form-group"><label>Régime</label><select value={regimeFiscal} onChange={e=>setRegimeFiscal(e.target.value as RegimeFiscal)}><option value="MICRO_BIC">Micro-BIC ({abattement}%)</option><option value="REEL">Réel (amortissements)</option></select></div></div><div className="info-box mt-4 grid grid-cols-3 gap-4 text-sm"><div><span className="text-gray-500">TMI calculé</span><div className="font-bold text-lg">{tmi}%</div></div><div><span className="text-gray-500">IR actuel</span><div className="font-bold text-lg">{fmtEur(irAvant.impotNet)}</div></div><div><span className="text-gray-500">Revenus totaux</span><div className="font-bold text-lg">{fmtEur(revenusTotaux)}</div></div></div><div className="pedagogy-box mt-4"><h4 className="font-semibold text-orange-800 mb-2 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Fiscalité saisonnière</h4><ul className="text-sm text-orange-700 space-y-1"><li>• <strong>Micro-BIC :</strong> abattement {abattement}% (plafond {fmtEur(plafondMicroBIC)})</li><li>• <strong>Réel :</strong> charges + amortissements déductibles</li><li>• <strong>&gt; 23 000 € :</strong> cotisations SSI obligatoires</li></ul></div></div>}
 
-              {step === 6 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4">📈 Projection</h2><div className="grid grid-cols-2 md:grid-cols-3 gap-4"><div className="form-group"><label>Durée détention (ans)</label><input type="number" value={dureeDetention} onChange={e=>setDureeDetention(+e.target.value)}/></div><div className="form-group"><label>Revalo bien (%/an)</label><input type="number" value={revalorisationBien} onChange={e=>setRevalorisationBien(+e.target.value)} step={0.1}/></div><div className="form-group"><label>Frais revente (%)</label><input type="number" value={fraisRevente} onChange={e=>setFraisRevente(+e.target.value)} step={0.1}/></div></div></div>}
+              {step === 6 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4 flex items-center gap-2"><TrendingUp className="w-5 h-5" /> Projection</h2><div className="grid grid-cols-2 md:grid-cols-3 gap-4"><div className="form-group"><label>Durée détention (ans)</label><input type="number" value={dureeDetention} onChange={e=>setDureeDetention(+e.target.value)}/></div><div className="form-group"><label>Revalo bien (%/an)</label><input type="number" value={revalorisationBien} onChange={e=>setRevalorisationBien(+e.target.value)} step={0.1}/></div><div className="form-group"><label>Frais revente (%)</label><input type="number" value={fraisRevente} onChange={e=>setFraisRevente(+e.target.value)} step={0.1}/></div></div></div>}
 
-              {step === 7 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4">📋 Récapitulatif</h2><div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm"><div className="p-3 bg-gray-50 rounded-lg"><span className="text-gray-500">Investissement</span><div className="font-bold">{fmtEur(investTotal)}</div></div><div className="p-3 bg-gray-50 rounded-lg"><span className="text-gray-500">Recettes/an</span><div className="font-bold text-green-600">{fmtEur(recettesBrutes)}</div></div><div className="p-3 bg-gray-50 rounded-lg"><span className="text-gray-500">Régime</span><div className="font-bold">{regimeFiscal === 'MICRO_BIC' ? 'Micro-BIC' : 'Réel'}</div></div><div className="p-3 bg-gray-50 rounded-lg"><span className="text-gray-500">TMI</span><div className="font-bold">{tmi}%</div></div></div></div>}
+              {step === 7 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4 flex items-center gap-2"><FileText className="w-5 h-5" /> Récapitulatif</h2><div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm"><div className="p-3 bg-gray-50 rounded-lg"><span className="text-gray-500">Investissement</span><div className="font-bold">{fmtEur(investTotal)}</div></div><div className="p-3 bg-gray-50 rounded-lg"><span className="text-gray-500">Recettes/an</span><div className="font-bold text-green-600">{fmtEur(recettesBrutes)}</div></div><div className="p-3 bg-gray-50 rounded-lg"><span className="text-gray-500">Régime</span><div className="font-bold">{regimeFiscal === 'MICRO_BIC' ? 'Micro-BIC' : 'Réel'}</div></div><div className="p-3 bg-gray-50 rounded-lg"><span className="text-gray-500">TMI</span><div className="font-bold">{tmi}%</div></div></div></div>}
 
               <div className="flex justify-between mt-8">
                 <button onClick={()=>setStep(Math.max(1,step-1))} disabled={step===1} className="btn-secondary disabled:opacity-50">← Précédent</button>
-                {step < 7 ? <button onClick={()=>setStep(step+1)} className="btn-primary-orange">Suivant →</button> : <button onClick={lancerSimulation} disabled={loading} className="btn-primary-orange">{loading?'⏳':'🧮 Analyser'}</button>}
+                {step < 7 ? <button onClick={()=>setStep(step+1)} className="btn-primary-orange">Suivant →</button> : <button onClick={lancerSimulation} disabled={loading} className="btn-primary-orange">{loading ? 'Calcul...' : 'Analyser'}</button>}
               </div>
             </div>
           ) : synthese && (
@@ -369,11 +371,11 @@ export default function SaisonnierPage() {
                   </div>
                 </div>
                 <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                  <h4 className="font-semibold text-orange-800 mb-2">📊 Comprendre la fiscalité saisonnière</h4>
+                  <h4 className="font-semibold text-orange-800 mb-2 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Comprendre la fiscalité saisonnière</h4>
                   <div className="text-sm text-orange-700 space-y-1">
                     <p>• <strong>Micro-BIC</strong> : Abattement {abattement}%, plafond {fmtEur(plafondMicroBIC)}. Idéal si peu de charges.</p>
                     <p>• <strong>Réel</strong> : Amortissement + charges déductibles. Optimal si travaux importants.</p>
-                    {recettesBrutes > 23000 && <p>• <strong>⚠️ Cotisations SSI</strong> : Recettes {">"} 23 000 € = cotisations sociales obligatoires (~45%).</p>}
+                    {recettesBrutes > 23000 && <p>• <strong>Cotisations SSI</strong> : Recettes {">"} 23 000 € = cotisations sociales obligatoires (~45%).</p>}
                   </div>
                 </div>
               </div>
@@ -495,7 +497,7 @@ export default function SaisonnierPage() {
               {/* AVIS PROFESSIONNEL AVEC SCORE GLOBAL */}
               {/* ═══════════════════════════════════════════════════════════════════════════ */}
               <div className="sim-card">
-                <h3 className="font-bold mb-6 text-xl text-slate-800">🎯 Synthèse et avis professionnel</h3>
+                <h3 className="font-bold mb-6 text-xl text-slate-800 flex items-center gap-2"><Target className="w-5 h-5" /> Synthèse et avis professionnel</h3>
                 
                 {(() => {
                   const levier = safeNumber(synthese.capFinal) / apport
@@ -588,7 +590,7 @@ export default function SaisonnierPage() {
                         
                         {showScoreDetail && (
                           <div className="mt-3 bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm">
-                            <h5 className="font-bold text-slate-700 mb-3">📊 Méthode de calcul du score Location Saisonnière</h5>
+                            <h5 className="font-bold text-slate-700 mb-3 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Méthode de calcul du score Location Saisonnière</h5>
                             <p className="text-slate-600 mb-3">Score calculé sur 5 critères : TRI (2.5 pts), Cash-flow (2.5 pts), Rendement brut (2.5 pts), Taux d'occupation (1.5 pt), Levier (1 pt).</p>
                             <p className="text-slate-600">La location saisonnière offre des rendements élevés mais nécessite une gestion active. {recettesBrutes > 23000 ? 'Attention : cotisations SSI au-delà de 23 000 €.' : ''}</p>
                           </div>
@@ -599,21 +601,21 @@ export default function SaisonnierPage() {
                 })()}
                 
                 <div className="bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-200 rounded-xl p-4">
-                  <h4 className="font-bold text-blue-800 mb-3">💼 Avis professionnel</h4>
+                  <h4 className="font-bold text-blue-800 mb-3 flex items-center gap-2"><Briefcase className="w-5 h-5" /> Avis professionnel</h4>
                   <div className="text-sm text-blue-700 space-y-3">
                     {safeNumber(synthese.rendBrut) >= 10 && safeNumber(synthese.cfMoyMois) >= 0 ? (
-                      <p><strong>✅ Excellente opération</strong> : Rendement brut de {fmtPct(synthese.rendBrut)} exceptionnel. La location saisonnière est très rentable sur ce bien.</p>
+                      <p><strong>Excellente opération</strong> : Rendement brut de {fmtPct(synthese.rendBrut)} exceptionnel. La location saisonnière est très rentable sur ce bien.</p>
                     ) : safeNumber(synthese.rendBrut) >= 7 ? (
-                      <p><strong>✅ Bonne opération</strong> : Rendement brut de {fmtPct(synthese.rendBrut)} supérieur à la location classique. Surveillez le taux d'occupation.</p>
+                      <p><strong>Bonne opération</strong> : Rendement brut de {fmtPct(synthese.rendBrut)} supérieur à la location classique. Surveillez le taux d'occupation.</p>
                     ) : (
-                      <p><strong>⚠️ À optimiser</strong> : Rendement de {fmtPct(synthese.rendBrut)}. Augmentez le tarif ou le taux d'occupation pour améliorer la rentabilité.</p>
+                      <p><strong>À optimiser</strong> : Rendement de {fmtPct(synthese.rendBrut)}. Augmentez le tarif ou le taux d'occupation pour améliorer la rentabilité.</p>
                     )}
                     <p className="text-blue-500 text-xs mt-2"><em>Location saisonnière : rentabilité élevée mais gestion active nécessaire. {recettesBrutes > 23000 ? 'Attention : SSI obligatoires au-delà de 23 000 €.' : ''}</em></p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-center"><button onClick={()=>setShowResults(false)} className="btn-primary">🔄 Nouvelle simulation</button></div>
+              <div className="flex justify-center"><button onClick={()=>setShowResults(false)} className="btn-primary flex items-center gap-2"><RefreshCw className="w-4 h-4" /> Nouvelle simulation</button></div>
             </div>
           )}
         </main>

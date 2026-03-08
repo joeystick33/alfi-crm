@@ -5,4 +5,4 @@
  * import { PLAFONDS, AGIRC_ARRCO, ... } from '@/lib/retirement/config'
  */
 
-export * from './parameters-2025'
+export * from './parameters'

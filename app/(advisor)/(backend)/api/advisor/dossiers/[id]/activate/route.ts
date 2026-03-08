@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { DossierService } from '@/app/_common/lib/services/dossier-service'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * POST /api/advisor/dossiers/[id]/activate
  * Activer un dossier (BROUILLON → ACTIF)
@@ -37,7 +37,7 @@ export async function POST(
       message: 'Dossier activé avec succès',
     })
   } catch (error) {
-    console.error('Error in POST /api/advisor/dossiers/[id]/activate:', error)
+    logger.error('Error in POST /api/advisor/dossiers/[id]/activate:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

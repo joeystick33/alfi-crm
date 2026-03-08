@@ -551,7 +551,7 @@ function RetirementCalculatorsSection({ calculators }: { calculators: ReturnType
               {retirementSimulation.recommendations.map((rec, i) => (
                 <div key={i} className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
                   <Lightbulb className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-gray-700">{rec}</p>
+                  <p className="text-sm text-gray-700">{typeof rec === 'string' ? rec : rec.description}</p>
                 </div>
               ))}
             </div>

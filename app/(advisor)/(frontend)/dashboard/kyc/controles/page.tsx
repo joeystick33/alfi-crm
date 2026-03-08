@@ -223,22 +223,37 @@ export default function KYCControlesPage() {
             </div>
           </div>
           <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
-            <option value="all">Tous les statuts</option>
-            {Object.entries(STATUS_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Tous les statuts" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les statuts</SelectItem>
+              {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>{label}</SelectItem>
+              ))}
+            </SelectContent>
           </Select>
           <Select value={typeFilter} onValueChange={(v: any) => setTypeFilter(v)}>
-            <option value="all">Tous les types</option>
-            {Object.entries(TYPE_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Tous les types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les types</SelectItem>
+              {Object.entries(TYPE_LABELS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>{label}</SelectItem>
+              ))}
+            </SelectContent>
           </Select>
           <Select value={priorityFilter} onValueChange={(v: any) => setPriorityFilter(v)}>
-            <option value="all">Toutes priorités</option>
-            {Object.entries(PRIORITY_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Toutes priorités" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes priorités</SelectItem>
+              {Object.entries(PRIORITY_LABELS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>{label}</SelectItem>
+              ))}
+            </SelectContent>
           </Select>
           <Button
             variant={showOnlyACPR ? 'primary' : 'outline'}

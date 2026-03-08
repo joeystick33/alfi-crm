@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { SignatureService } from '@/app/_common/lib/services/signature-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 const UpdateStepSchema = z.object({
   status: z.enum(['EN_ATTENTE', 'EN_COURS', 'SIGNE', 'PARTIELLEMENT_SIGNE', 'REJETEE', 'EXPIRE', 'ANNULE']),
   signedAt: z.string().datetime().optional(),
@@ -43,7 +43,7 @@ export async function PATCH(
 
     return createSuccessResponse(updatedStep)
   } catch (error) {
-    console.error('Error in PATCH /api/advisor/documents/signatures/[stepId]:', error)
+    logger.error('Error in PATCH /api/advisor/documents/signatures/[stepId]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof z.ZodError) {
       const details = error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', ')

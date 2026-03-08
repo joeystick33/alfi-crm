@@ -4,6 +4,8 @@
  * Backend: http://localhost:8081
  */
 
+import { logger } from '@/app/_common/lib/logger'
+
 const JAVA_PATRIMONIAL_URL = process.env.JAVA_PATRIMOINE_URL || 'http://localhost:8081'
 
 export interface ProxyResponse<T = any> {
@@ -27,7 +29,7 @@ export async function proxyToJavaBackend<T = any>(
 
   try {
     const url = `${JAVA_PATRIMONIAL_URL}${endpoint}`
-    console.log(`[Proxy] ${method} ${url}`)
+    logger.info(`[Proxy] ${method} ${url}`)
 
     const options: RequestInit = {
       method,
@@ -47,7 +49,7 @@ export async function proxyToJavaBackend<T = any>(
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error(`[Proxy] Error ${response.status}: ${errorText}`)
+      logger.error(`[Proxy] Error ${response.status}: ${errorText}`)
       return {
         success: false,
         error: `Backend error: ${response.status} - ${errorText}`,
@@ -80,7 +82,7 @@ export async function proxyToJavaBackend<T = any>(
       }
     }
 
-    console.error('[Proxy] Unexpected error:', error)
+    logger.error('[Proxy] Unexpected error:', { error: error instanceof Error ? error.message : String(error) })
     return {
       success: false,
       error: error.message || 'Erreur inattendue',

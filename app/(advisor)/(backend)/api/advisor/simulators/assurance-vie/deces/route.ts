@@ -7,7 +7,7 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
-
+import { logger } from '@/app/_common/lib/logger'
 // Barème art. 990 I CGI
 const ABATTEMENT_990I = 152500
 const SEUIL_990I = 700000
@@ -348,7 +348,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return createErrorResponse(`Données invalides: ${error.issues.map(e => e.message).join(', ')}`, 400)
     }
-    console.error('Erreur simulateur décès AV:', error)
+    logger.error('Erreur simulateur décès AV:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la simulation', 500)
   }
 }

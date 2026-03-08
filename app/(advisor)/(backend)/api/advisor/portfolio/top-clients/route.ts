@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/_common/lib/prisma'
 import { getAuthUser } from '@/app/_common/lib/auth-helpers'
 import { isSuperAdmin, isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/portfolio/top-clients
  * Retourne les clients classés par patrimoine
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(topClients)
   } catch (error) {
-    console.error('Erreur top-clients portfolio:', error)
+    logger.error('Erreur top-clients portfolio:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500 }

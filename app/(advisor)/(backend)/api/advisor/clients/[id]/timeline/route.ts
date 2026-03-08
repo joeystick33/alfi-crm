@@ -5,7 +5,7 @@ import { ClientService } from '@/app/_common/lib/services/client-service'
 import { TimelineService } from '@/app/_common/lib/services/timeline-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { TimelineEventType } from '@prisma/client'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/clients/[id]/timeline
  * Récupère la timeline d'un client
@@ -36,7 +36,7 @@ export async function GET(
 
     return createSuccessResponse(events)
   } catch (error: any) {
-    console.error('Get timeline error:', error)
+    logger.error('Get timeline error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -108,7 +108,7 @@ export async function POST(
 
     return createSuccessResponse(event)
   } catch (error: any) {
-    console.error('Create timeline event error:', error)
+    logger.error('Create timeline event error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error) {
       if (error.message === 'Unauthorized') {

@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { ScenarioService } from '@/app/_common/lib/services/scenario-service'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
-
+import { logger } from '@/app/_common/lib/logger'
 // Schéma validation mise à jour
 const UpdateScenarioSchema = z.object({
   name: z.string().min(1).max(200).optional(),
@@ -54,7 +54,7 @@ export async function GET(
 
     return NextResponse.json(scenario)
   } catch (error: any) {
-    console.error(`Erreur GET /api/advisor/scenarios/${scenarioId}:`, error)
+    logger.error(`Erreur GET /api/advisor/scenarios/${scenarioId}:`, { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Scénario non trouvé') {
       return NextResponse.json(
@@ -99,7 +99,7 @@ export async function PATCH(
 
     return NextResponse.json(scenario)
   } catch (error: any) {
-    console.error(`Erreur PATCH /api/advisor/scenarios/${scenarioId}:`, error)
+    logger.error(`Erreur PATCH /api/advisor/scenarios/${scenarioId}:`, { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -148,7 +148,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error: any) {
-    console.error(`Erreur DELETE /api/advisor/scenarios/${scenarioId}:`, error)
+    logger.error(`Erreur DELETE /api/advisor/scenarios/${scenarioId}:`, { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Scénario non trouvé') {
       return NextResponse.json(

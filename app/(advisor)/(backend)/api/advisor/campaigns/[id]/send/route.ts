@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CampaignService } from '@/app/_common/lib/services/campaign-service'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * POST /api/advisor/campaigns/[id]/send
  * Envoyer une campagne immédiatement
@@ -29,7 +29,7 @@ export async function POST(
 
     return NextResponse.json(campaign)
   } catch (error: any) {
-    console.error(`Erreur POST /api/advisor/campaigns/${campaignId}/send:`, error)
+    logger.error(`Erreur POST /api/advisor/campaigns/${campaignId}/send:`, { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Campagne non trouvée') {
       return NextResponse.json(

@@ -6,7 +6,7 @@ import { isRegularUser } from '@/app/_common/lib/auth-types'
 
 import { ReclamationService } from '@/app/_common/lib/services/reclamation-service'
 import { z } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 // Schéma de validation
 const updateReclamationSchema = z.object({
   subject: z.string().min(1).optional(),
@@ -44,7 +44,7 @@ export async function GET(
     const reclamation = await service.getReclamation(reclamationId)
     return NextResponse.json(reclamation)
   } catch (error: any) {
-    console.error('Error fetching reclamation:', error)
+    logger.error('Error fetching reclamation:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }
@@ -80,7 +80,7 @@ export async function PATCH(
     const reclamation = await service.updateReclamation(reclamationId, validatedData)
     return NextResponse.json(reclamation)
   } catch (error: any) {
-    console.error('Error updating reclamation:', error)
+    logger.error('Error updating reclamation:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -121,7 +121,7 @@ export async function DELETE(
     await service.deleteReclamation(reclamationId)
     return NextResponse.json({ success: true })
   } catch (error: any) {
-    console.error('Error deleting reclamation:', error)
+    logger.error('Error deleting reclamation:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }

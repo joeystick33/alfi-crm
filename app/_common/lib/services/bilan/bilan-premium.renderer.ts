@@ -7,7 +7,7 @@
 import puppeteer from 'puppeteer'
 import type { BilanPremiumData } from './bilan-premium.types'
 import { generatePremiumTemplate } from './bilan-premium.template'
-
+import { logger } from '@/app/_common/lib/logger'
 export interface PdfRenderOptions {
   format?: 'A4' | 'Letter'
   printBackground?: boolean
@@ -73,7 +73,7 @@ export async function renderPremiumPdf(
       const w = window as unknown as { Chart?: unknown }
       return typeof w.Chart !== 'undefined'
     }, { timeout: 10000 }).catch(() => {
-      console.warn('Chart.js not loaded, continuing without charts')
+      logger.warn('Chart.js not loaded, continuing without charts')
     })
     
     // Attendre un peu pour le rendu des graphiques

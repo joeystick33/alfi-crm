@@ -6,7 +6,7 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
-
+import { logger } from '@/app/_common/lib/logger'
 // Plafonds légaux 2025
 const PLAFONDS = {
   MICRO_FONCIER: 15000, // Plafond annuel revenus fonciers
@@ -662,10 +662,10 @@ export async function POST(request: NextRequest) {
     
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error('Erreur validation Zod:', error.issues)
+      logger.error('Erreur validation Zod: ' + error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', '))
       return createErrorResponse(`Données invalides: ${error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')}`, 400)
     }
-    console.error('Erreur simulateur immobilier:', error)
+    logger.error('Erreur simulateur immobilier:', { error: error instanceof Error ? error.message : String(error) })
     const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
     return createErrorResponse(`Erreur lors de la simulation: ${errorMessage}`, 500)
   }
@@ -714,7 +714,7 @@ export async function GET(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('Erreur GET simulateur immobilier:', error)
+    logger.error('Erreur GET simulateur immobilier:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la récupération des paramètres', 500)
   }
 }

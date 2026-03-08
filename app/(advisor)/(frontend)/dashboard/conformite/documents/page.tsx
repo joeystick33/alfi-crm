@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useMemo } from 'react'
+import { Suspense, useState, useMemo, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useToast } from '@/app/_common/hooks/use-toast'
 import { 
   useComplianceDocuments,
   useValidateComplianceDocument,
@@ -33,11 +34,11 @@ import {
   Download,
   ChevronDown,
   X,
-  FileText,
   Clock,
   AlertTriangle,
   ArrowLeft,
 } from 'lucide-react'
+import { ClientLink } from '@/app/_common/components/ClientLink'
 import {
   KYC_DOCUMENT_TYPES,
   KYC_DOCUMENT_STATUS,
@@ -294,7 +295,7 @@ function DocumentActionsMenu({
 // Main Page Component
 // ============================================================================
 
-export default function DocumentsKYCPage() {
+function DocumentsKYCPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { confirm, ConfirmDialog } = useConfirmDialog()
@@ -362,14 +363,11 @@ export default function DocumentsKYCPage() {
       label: 'Client',
       sortable: true,
       render: (_, doc) => (
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-gray-100 rounded-lg">
-            <FileText className="h-4 w-4 text-gray-600" />
-          </div>
-          <span className="font-medium text-gray-900">
-            Client #{doc.clientId.slice(0, 8)}
-          </span>
-        </div>
+        <ClientLink
+          clientId={doc.clientId}
+          showAvatar={true}
+          avatarSize="md"
+        />
       ),
     },
     {
@@ -592,8 +590,34 @@ export default function DocumentsKYCPage() {
           searchable
           exportable
           onExport={() => {
-            // TODO: Implement export
-            console.log('Export documents')
+            try {
+              // Générer le CSV des documents
+              const csvLines: string[] = []
+              csvLines.push('Référence,Type,Client,Statut,Date Expiration,Date Création')
+              
+              documents.forEach((doc: any) => {
+                const clientName = doc.client ? `${doc.client.firstName || ''} ${doc.client.lastName || ''}`.trim() : ''
+                const statusLabel = KYC_DOCUMENT_STATUS_LABELS[doc.status as KYCDocumentStatus] || doc.status
+                const typeLabel = KYC_DOCUMENT_TYPE_LABELS[doc.type as KYCDocumentType] || doc.type
+                const expiryDate = doc.expiryDate ? new Date(doc.expiryDate).toLocaleDateString('fr-FR') : '-'
+                const createdAt = doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('fr-FR') : '-'
+                
+                csvLines.push(`${doc.reference || doc.id},${typeLabel},${clientName},${statusLabel},${expiryDate},${createdAt}`)
+              })
+              
+              const csvContent = csvLines.join('\n')
+              const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+              const url = URL.createObjectURL(blob)
+              const link = document.createElement('a')
+              link.href = url
+              link.download = `documents-conformite-${new Date().toISOString().split('T')[0]}.csv`
+              document.body.appendChild(link)
+              link.click()
+              document.body.removeChild(link)
+              URL.revokeObjectURL(url)
+            } catch (error) {
+              console.error('Erreur export:', error)
+            }
           }}
         />
       )}
@@ -631,5 +655,13 @@ export default function DocumentsKYCPage() {
       {/* Confirm Dialog */}
       <ConfirmDialog />
     </div>
+  )
+}
+
+export default function DocumentsKYCPage() {
+  return (
+    <Suspense fallback={null}>
+      <DocumentsKYCPageInner />
+    </Suspense>
   )
 }

@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, createErrorResponse } from '@/app/_common/lib/auth-helpers'
 import { createFeatureService } from '@/app/_common/lib/features/feature-service'
 import { prisma } from '@/app/_common/lib/prisma'
-
+import { logger } from '@/app/_common/lib/logger'
 // =============================================================================
 // GET /api/advisor/features
 // Récupère les features du cabinet de l'utilisateur
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
       usage,
     })
   } catch (error: any) {
-    console.error('GET /api/advisor/features error:', error)
+    logger.error('GET /api/advisor/features error:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error.message?.includes('Non autorisé') || error.message?.includes('Unauthorized')) {
       return createErrorResponse('Non autorisé', 401)
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     
     return createErrorResponse('featureCode ou featureCodes requis', 400)
   } catch (error: any) {
-    console.error('POST /api/advisor/features error:', error)
+    logger.error('POST /api/advisor/features error:', { error: error instanceof Error ? error.message : String(error) })
     
     return createErrorResponse(
       error.message || 'Erreur serveur',

@@ -4,7 +4,7 @@ import { isRegularUser } from '@/app/_common/lib/auth-types'
 
 
 import { KYCService } from '@/app/_common/lib/services/kyc-service'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/kyc/stats
  * Récupère les statistiques KYC globales
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
       checks: checkStats,
     })
   } catch (error) {
-    console.error('Error fetching KYC stats:', error)
+    logger.error('Error fetching KYC stats:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }

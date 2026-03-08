@@ -2,22 +2,26 @@
  * Fonctions d'affichage simplifiées pour les simulateurs immobiliers
  * Les vrais calculs sont effectués côté serveur via les API
  * Ces fonctions servent uniquement à l'aperçu dans les formulaires
+ * 
+ * Valeurs fiscales centralisées : RULES (fiscal-rules.ts)
  */
 
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
+
 // ══════════════════════════════════════════════════════════════════════════════
-// CONSTANTES D'AFFICHAGE (valeurs publiques, pas de formules sensibles)
+// CONSTANTES D'AFFICHAGE — Source : RULES (fiscal-rules.ts)
 // ══════════════════════════════════════════════════════════════════════════════
 
 export const BAREME_IFI_DISPLAY = {
-  SEUIL_IMPOSITION: 1300000,
-  SEUIL_DECLENCHEMENT: 800000,
+  SEUIL_IMPOSITION: RULES.ifi.seuil_assujettissement,
+  SEUIL_DECLENCHEMENT: RULES.ifi.seuil_debut_taxation,
 }
 
 export const PRELEVEMENTS_SOCIAUX_DISPLAY = {
-  TAUX_GLOBAL: 17.2,
-  CSG: 9.2,
-  CRDS: 0.5,
-  CSG_DEDUCTIBLE: 6.8,
+  TAUX_GLOBAL: RULES.ps.total * 100,
+  CSG: RULES.ps.csg * 100,
+  CRDS: RULES.ps.crds * 100,
+  CSG_DEDUCTIBLE: RULES.ps.csg_deductible * 100,
 }
 
 export const DISPOSITIFS_FISCAUX_DISPLAY = {
@@ -55,10 +59,10 @@ export const DISPOSITIFS_FISCAUX_DISPLAY = {
     MINIMUM_JOURS_OUVERTURE: 50, // CGI art. 156-II-1° ter : 50 jours/an ou 40 jours été
   },
   DEFICIT_FONCIER: {
-    PLAFOND_IMPUTATION_RG: 10700,
-    PLAFOND_RENOVATION_ENERGETIQUE: 21400,
+    PLAFOND_IMPUTATION_RG: RULES.immobilier.deficit_foncier.plafond_imputation_revenu_global,
+    PLAFOND_RENOVATION_ENERGETIQUE: RULES.immobilier.deficit_foncier.plafond_imputation_revenu_global * 2,
   },
-  PLAFOND_NICHES_FISCALES: 10000,
+  PLAFOND_NICHES_FISCALES: RULES.ir.plafond_niches_fiscales,
 }
 
 export const LMP_DISPLAY = {
@@ -86,21 +90,21 @@ export const SCPI_DISPLAY = {
 }
 
 export const LOCATION_NUE_DISPLAY = {
-  ABATTEMENT_MICRO_FONCIER: 30,
-  PLAFOND_MICRO_FONCIER: 15000,
+  ABATTEMENT_MICRO_FONCIER: RULES.immobilier.micro_foncier.abattement * 100,
+  PLAFOND_MICRO_FONCIER: RULES.immobilier.micro_foncier.seuil,
   MICRO_FONCIER: {
-    ABATTEMENT: 30,
-    PLAFOND: 15000,
-    PLAFOND_RECETTES: 15000,
+    ABATTEMENT: RULES.immobilier.micro_foncier.abattement * 100,
+    PLAFOND: RULES.immobilier.micro_foncier.seuil,
+    PLAFOND_RECETTES: RULES.immobilier.micro_foncier.seuil,
   },
   DEFICIT_FONCIER: {
-    PLAFOND_IMPUTATION_RG: 10700,
-    PLAFOND_RENOVATION_ENERGETIQUE: 21400,
-    PLAFOND_IMPUTATION_RG_RENOVATION_ENERGETIQUE: 21400,
+    PLAFOND_IMPUTATION_RG: RULES.immobilier.deficit_foncier.plafond_imputation_revenu_global,
+    PLAFOND_RENOVATION_ENERGETIQUE: RULES.immobilier.deficit_foncier.plafond_imputation_revenu_global * 2,
+    PLAFOND_IMPUTATION_RG_RENOVATION_ENERGETIQUE: RULES.immobilier.deficit_foncier.plafond_imputation_revenu_global * 2,
   },
 }
 
-export const PLAFOND_NICHES = 10000
+export const PLAFOND_NICHES = RULES.ir.plafond_niches_fiscales
 
 export const PEDAGOGIE_DISPLAY = {
   PINEL: { DESCRIPTION: 'Investissement locatif neuf avec réduction d\'impôt' },
@@ -215,7 +219,7 @@ export function verifierPlafondNiches(params: {
   plafondRestant: number
   totalReductions: number
 } {
-  const plafond = 10000
+  const plafond = RULES.ir.plafond_niches_fiscales
   const totalReductions = (params.pinel || 0) + (params.denormandie || 0) + (params.malraux || 0) + (params.autresReductions || 0)
   const depasse = totalReductions > plafond
   const depassement = Math.max(0, totalReductions - plafond)
@@ -252,8 +256,8 @@ export function calculImpotPlusValue(
 ): { impotIR: number; impotPS: number; impotTotal: number; abattementIR: number; abattementPS: number } {
   const abattementIR = calculAbattementPVIR(dureeDetention)
   const abattementPS = calculAbattementPVPS(dureeDetention)
-  const impotIR = Math.round(plusValueBrute * (1 - abattementIR / 100) * 0.19)
-  const impotPS = Math.round(plusValueBrute * (1 - abattementPS / 100) * 0.172)
+  const impotIR = Math.round(plusValueBrute * (1 - abattementIR / 100) * RULES.immobilier.plus_value.taux_ir)
+  const impotPS = Math.round(plusValueBrute * (1 - abattementPS / 100) * RULES.immobilier.plus_value.taux_ps)
   return { impotIR, impotPS, impotTotal: impotIR + impotPS, abattementIR, abattementPS }
 }
 
@@ -261,7 +265,7 @@ export function calculImpotPlusValue(
  * Calcul CSG déductible simplifiée (6.8% sur revenus patrimoine)
  */
 export function calculCSGDeductible(baseImposable: number): number {
-  return Math.round(baseImposable * 0.068)
+  return Math.round(baseImposable * RULES.ps.csg_deductible)
 }
 
 /**
@@ -308,8 +312,8 @@ export function calculPlusValueLMNP(
   const plusValueBrute = prixRevente - fraisRevente - prixAcquisitionMajore + amortissementsCumules
   const abattementIR = calculAbattementPVIR(dureeDetention)
   const abattementPS = calculAbattementPVPS(dureeDetention)
-  const impotIR = Math.max(0, Math.round(plusValueBrute * (1 - abattementIR / 100) * 0.19))
-  const impotPS = Math.max(0, Math.round(plusValueBrute * (1 - abattementPS / 100) * 0.172))
+  const impotIR = Math.max(0, Math.round(plusValueBrute * (1 - abattementIR / 100) * RULES.immobilier.plus_value.taux_ir))
+  const impotPS = Math.max(0, Math.round(plusValueBrute * (1 - abattementPS / 100) * RULES.immobilier.plus_value.taux_ps))
   
   return {
     plusValueBrute: Math.round(plusValueBrute),

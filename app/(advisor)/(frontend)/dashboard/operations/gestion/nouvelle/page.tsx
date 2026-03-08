@@ -1,8 +1,10 @@
 "use client"
 
-import { useState, useMemo } from 'react'
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
+import { Suspense, useState, useMemo, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCreateOperationGestion } from '@/app/_common/hooks/api/use-operations-api'
+import { useClients, useClient, useClientContrats } from '@/app/_common/hooks/use-api'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/app/_common/components/ui/Card'
 import { Badge } from '@/app/_common/components/ui/Badge'
 import { Button } from '@/app/_common/components/ui/Button'
@@ -125,42 +127,9 @@ const WIZARD_STEPS: WizardStep[] = [
 ]
 
 // ============================================================================
-// Mock Data (to be replaced with real API)
+// Note: Les clients et contrats sont maintenant chargés via API
+// Voir les hooks useClients et useClientContrats dans les composants
 // ============================================================================
-
-const MOCK_CLIENTS = [
-  { id: 'client-1', name: 'Jean Dupont', email: 'jean.dupont@email.com' },
-  { id: 'client-2', name: 'Marie Martin', email: 'marie.martin@email.com' },
-  { id: 'client-3', name: 'Pierre Bernard', email: 'pierre.bernard@email.com' },
-]
-
-const MOCK_CONTRACTS: ContractInfo[] = [
-  {
-    id: 'contract-1',
-    reference: 'AV-2020-0001',
-    productName: 'Assurance Vie Multisupport',
-    providerName: 'AXA',
-    currentValue: 125000,
-    openDate: new Date('2020-03-15'),
-    allocations: [
-      { fundId: 'fund-1', fundName: 'Fonds Euro', percentage: 60 },
-      { fundId: 'fund-2', fundName: 'Actions Monde', percentage: 25 },
-      { fundId: 'fund-3', fundName: 'Obligations', percentage: 15 },
-    ],
-  },
-  {
-    id: 'contract-2',
-    reference: 'PER-2021-0042',
-    productName: 'PER Individuel',
-    providerName: 'Generali',
-    currentValue: 45000,
-    openDate: new Date('2021-06-01'),
-    allocations: [
-      { fundId: 'fund-1', fundName: 'Fonds Euro', percentage: 40 },
-      { fundId: 'fund-4', fundName: 'Actions Europe', percentage: 60 },
-    ],
-  },
-]
 
 const AVAILABLE_FUNDS: FundAllocation[] = [
   { fundId: 'fund-1', fundName: 'Fonds Euro', percentage: 0 },
@@ -202,13 +171,13 @@ function calculateTaxSimulation(
   const gainRatio = (currentValue - totalPremiums) / currentValue
   const taxableAmount = withdrawalAmount * gainRatio
   
-  // Simplified tax calculation
-  let taxRate = 0.128 // PFU 12.8%
+  // Simplified tax calculation — Source : RULES
+  let taxRate = RULES.ps.pfu_ir // PFU 12.8%
   if (contractAge >= 8) {
-    taxRate = 0.075 // Reduced rate after 8 years
+    taxRate = RULES.assurance_vie.rachat.taux_reduit_8ans // Taux réduit après 8 ans
   }
   
-  const socialCharges = taxableAmount * 0.172 // 17.2% prélèvements sociaux
+  const socialCharges = taxableAmount * RULES.ps.total // Prélèvements sociaux
   const estimatedTax = taxableAmount * taxRate
   
   return {
@@ -228,76 +197,128 @@ function calculateTaxSimulation(
 function ContractStep({
   formData,
   setFormData,
+  clientLocked,
+  clientLockedName,
 }: {
   formData: FormData
   setFormData: (data: Partial<FormData>) => void
+  clientLocked: boolean
+  clientLockedName?: string
 }) {
   const [searchQuery, setSearchQuery] = useState(formData.clientSearch)
   
+  // Charger les clients via API
+  const { data: clientsData, isLoading: loadingClients } = useClients(
+    { search: searchQuery || undefined },
+    { enabled: !clientLocked }
+  )
+  
+  // Charger les contrats du client sélectionné
+  const { data: contractsData, isLoading: loadingContracts } = useClientContrats(
+    formData.clientId || ''
+  )
+  
+  // Transformer les données clients
+  const clients = useMemo(() => {
+    const rawClients = (clientsData as any)?.data || (clientsData as any)?.data?.data || []
+    return (Array.isArray(rawClients) ? rawClients : []).map((c: any) => ({
+      id: c.id,
+      name: `${c.firstName || ''} ${c.lastName || ''}`.trim() || c.email || 'Client',
+      email: c.email || '',
+    }))
+  }, [clientsData])
+  
   const filteredClients = useMemo(() => {
-    if (!searchQuery) return MOCK_CLIENTS
+    if (!searchQuery) return clients
     const query = searchQuery.toLowerCase()
-    return MOCK_CLIENTS.filter(
-      c => c.name.toLowerCase().includes(query) || c.email.toLowerCase().includes(query)
+    return clients.filter(
+      (c: any) => c.name.toLowerCase().includes(query) || c.email.toLowerCase().includes(query)
     )
-  }, [searchQuery])
+  }, [searchQuery, clients])
 
-  const clientContracts = useMemo(() => {
+  // Transformer les contrats pour l'affichage
+  const clientContracts: ContractInfo[] = useMemo(() => {
     if (!formData.clientId) return []
-    return MOCK_CONTRACTS // In real app, filter by clientId
-  }, [formData.clientId])
+    const rawContracts = Array.isArray(contractsData) ? contractsData : []
+    return rawContracts.map((c: any) => ({
+      id: c.id,
+      reference: c.contractNumber || c.reference || `Contrat ${String(c.id).slice(0, 8)}`,
+      productName: c.name || c.productName || 'Produit',
+      providerName: c.provider || c.providerName || 'Fournisseur',
+      currentValue: Number(c.value || c.currentValue || 0),
+      openDate: c.startDate ? new Date(c.startDate) : new Date(c.openDate || Date.now()),
+      allocations: [],
+    }))
+  }, [formData.clientId, contractsData])
 
   return (
     <div className="space-y-6">
-      {/* Client Selection */}
-      <div>
-        <Label htmlFor="client-search">Rechercher un client</Label>
-        <div className="relative mt-2">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            id="client-search"
-            placeholder="Nom, email..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value)
-              setFormData({ clientSearch: e.target.value })
-            }}
-            className="pl-9"
-          />
+      {/* Client Selection (locked when coming from Client360) */}
+      {clientLocked ? (
+        <div>
+          <Label>Client</Label>
+          <div className="mt-2 flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50">
+            <div className="p-2 bg-white rounded-lg border border-gray-200">
+              <User className="h-4 w-4 text-gray-600" />
+            </div>
+            <div>
+              <p className="font-medium text-gray-900">{clientLockedName || 'Client'}</p>
+              <p className="text-xs text-gray-500">Client sélectionné</p>
+            </div>
+          </div>
         </div>
-      </div>
+      ) : (
+        <>
+          <div>
+            <Label htmlFor="client-search">Rechercher un client</Label>
+            <div className="relative mt-2">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                id="client-search"
+                placeholder="Nom, email..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setFormData({ clientSearch: e.target.value })
+                }}
+                className="pl-9"
+              />
+            </div>
+          </div>
 
-      <div className="space-y-2">
-        <Label>Sélectionner un client</Label>
-        <div className="grid gap-2 max-h-[200px] overflow-y-auto">
-          {filteredClients.map((client) => (
-            <button
-              key={client.id}
-              type="button"
-              onClick={() => setFormData({ clientId: client.id, contractId: '' })}
-              className={cn(
-                'flex items-center justify-between p-3 rounded-lg border text-left transition-all',
-                formData.clientId === client.id
-                  ? 'border-[#7373FF] bg-[#7373FF]/5 ring-2 ring-[#7373FF]/20'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-gray-100 rounded-lg">
-                  <User className="h-4 w-4 text-gray-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">{client.name}</p>
-                  <p className="text-sm text-gray-500">{client.email}</p>
-                </div>
-              </div>
-              {formData.clientId === client.id && (
-                <CheckCircle2 className="h-5 w-5 text-[#7373FF]" />
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
+          <div className="space-y-2">
+            <Label>Sélectionner un client</Label>
+            <div className="grid gap-2 max-h-[200px] overflow-y-auto">
+              {filteredClients.map((client) => (
+                <button
+                  key={client.id}
+                  type="button"
+                  onClick={() => setFormData({ clientId: client.id, contractId: '' })}
+                  className={cn(
+                    'flex items-center justify-between p-3 rounded-lg border text-left transition-all',
+                    formData.clientId === client.id
+                      ? 'border-[#7373FF] bg-[#7373FF]/5 ring-2 ring-[#7373FF]/20'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gray-100 rounded-lg">
+                      <User className="h-4 w-4 text-gray-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{client.name}</p>
+                      <p className="text-sm text-gray-500">{client.email}</p>
+                    </div>
+                  </div>
+                  {formData.clientId === client.id && (
+                    <CheckCircle2 className="h-5 w-5 text-[#7373FF]" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Contract Selection */}
       {formData.clientId && (
@@ -343,6 +364,14 @@ function ContractStep({
         </div>
       )}
     </div>
+  )
+}
+
+export default function NouvelleOperationGestionPage() {
+  return (
+    <Suspense fallback={null}>
+      <NouvelleOperationGestionPageInner />
+    </Suspense>
   )
 }
 
@@ -1090,12 +1119,14 @@ function ConfirmationStep({
   formData,
   setFormData,
   contract,
+  clientName,
 }: {
   formData: FormData
   setFormData: (data: Partial<FormData>) => void
   contract: ContractInfo | null
+  clientName?: string
 }) {
-  const client = MOCK_CLIENTS.find(c => c.id === formData.clientId)
+  // Le nom du client est maintenant passé en props depuis le composant parent
 
   return (
     <div className="space-y-6">
@@ -1106,7 +1137,7 @@ function ConfirmationStep({
           <dl className="space-y-2 text-sm">
             <div className="flex justify-between">
               <dt className="text-gray-500">Client</dt>
-              <dd className="font-medium text-gray-900">{client?.name || '—'}</dd>
+              <dd className="font-medium text-gray-900">{clientName || '—'}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-gray-500">Contrat</dt>
@@ -1192,15 +1223,19 @@ function ConfirmationStep({
 // Main Component
 // ============================================================================
 
-export default function NouvelleOperationGestionPage() {
+function NouvelleOperationGestionPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [currentStep, setCurrentStep] = useState(0)
+  const clientIdFromUrl = searchParams.get('clientId') || ''
+  const contractIdFromUrl = searchParams.get('contractId') || ''
+  const clientLocked = !!clientIdFromUrl
+
+  const [currentStep, setCurrentStep] = useState(clientLocked && contractIdFromUrl ? 1 : 0)
   
   const [formData, setFormData] = useState<FormData>({
-    clientId: searchParams.get('clientId') || '',
+    clientId: clientIdFromUrl,
     clientSearch: '',
-    contractId: searchParams.get('contractId') || '',
+    contractId: contractIdFromUrl,
     operationType: null,
     amount: 0,
     effectiveDate: '',
@@ -1224,10 +1259,33 @@ export default function NouvelleOperationGestionPage() {
 
   const createOperation = useCreateOperationGestion()
 
-  // Get selected contract
-  const selectedContract = useMemo(() => {
-    return MOCK_CONTRACTS.find(c => c.id === formData.contractId) || null
-  }, [formData.contractId])
+  const { data: clientDetail } = useClient(formData.clientId || '')
+  const selectedClientName = useMemo(() => {
+    if (!clientDetail) return undefined
+    const firstName = (clientDetail as any)?.firstName || ''
+    const lastName = (clientDetail as any)?.lastName || ''
+    return `${firstName} ${lastName}`.trim() || (clientDetail as any)?.email || 'Client'
+  }, [clientDetail])
+
+  // Charger les contrats du client sélectionné pour le composant principal
+  const { data: mainContractsData } = useClientContrats(formData.clientId || '')
+  
+  // Get selected contract from API data
+  const selectedContract: ContractInfo | null = useMemo(() => {
+    if (!formData.contractId) return null
+    const contracts = Array.isArray(mainContractsData) ? mainContractsData : []
+    const found = contracts.find((c) => c.id === formData.contractId)
+    if (!found) return null
+    return {
+      id: found.id,
+      reference: found.contractNumber || `Contrat ${String(found.id).slice(0, 8)}`,
+      productName: found.name || 'Produit',
+      providerName: found.provider || 'Fournisseur',
+      currentValue: Number((found as any).value ?? 0),
+      openDate: found.startDate ? new Date(found.startDate as any) : new Date(),
+      allocations: [],
+    }
+  }, [formData.contractId, mainContractsData])
 
   const updateFormData = (data: Partial<FormData>) => {
     setFormData(prev => ({ ...prev, ...data }))
@@ -1358,7 +1416,14 @@ export default function NouvelleOperationGestionPage() {
   const renderStepContent = () => {
     switch (currentStep) {
       case 0:
-        return <ContractStep formData={formData} setFormData={updateFormData} />
+        return (
+          <ContractStep
+            formData={formData}
+            setFormData={updateFormData}
+            clientLocked={clientLocked}
+            clientLockedName={selectedClientName}
+          />
+        )
       case 1:
         return <OperationTypeStep formData={formData} setFormData={updateFormData} />
       case 2:

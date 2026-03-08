@@ -15,7 +15,8 @@ import {
   Globe,
   Database,
   Key,
-  Info
+  Info,
+  Brain,
 } from 'lucide-react'
 
 interface SettingsCardProps {
@@ -88,7 +89,7 @@ function SettingsCard({
 }
 
 export default function SettingsPage() {
-  const { user } = useAuth()
+  const { user, isSuperAdmin } = useAuth()
   const isAdmin = user?.role === 'ADMIN'
 
   return (
@@ -188,6 +189,28 @@ export default function SettingsPage() {
               iconBg="bg-emerald-50"
             />
             <SettingsCard
+              href="/dashboard/settings/ai-connections"
+              icon={Brain}
+              title="Connexions IA (AURA)"
+              description="Configurez les fournisseurs d'IA pour votre assistant"
+              badge="V2"
+              badgeVariant="primary"
+              iconColor="text-violet-600"
+              iconBg="bg-violet-50"
+            />
+            {isSuperAdmin && (
+              <SettingsCard
+                href="/dashboard/settings/ai-profiles"
+                icon={Brain}
+                title="Assistants IA & Agent Autonome"
+                description="Profils d'assistant, prompts système et agent background"
+                badge="Superadmin"
+                badgeVariant="warning"
+                iconColor="text-purple-600"
+                iconBg="bg-purple-50"
+              />
+            )}
+            <SettingsCard
               href="/dashboard/integrations"
               icon={Globe}
               title="Intégrations"
@@ -234,7 +257,7 @@ export default function SettingsPage() {
           <div>
             <p className="text-sm font-medium text-slate-900">Besoin d'aide ?</p>
             <p className="text-xs text-slate-600 mt-0.5">
-              Consultez notre <a href="#" className="text-indigo-600 hover:underline">documentation</a> ou contactez le support pour toute question.
+              Consultez notre <a href="https://docs.aura-crm.fr" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">documentation</a> ou contactez le support à <a href="mailto:support@aura-crm.fr" className="text-indigo-600 hover:underline">support@aura-crm.fr</a> pour toute question.
             </p>
           </div>
         </div>

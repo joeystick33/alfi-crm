@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectiveCalculator } from '@/app/_common/lib/services/calculators/objective-calculator';
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * POST /api/calculators/objectives/multiple
  * Calculate allocation for multiple financial objectives with priorities
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error calculating multiple objectives:', error);
+    logger.error('Error calculating multiple objectives:', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { 
         error: 'Calculation Error', 

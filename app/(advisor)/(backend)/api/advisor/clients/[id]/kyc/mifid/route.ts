@@ -7,7 +7,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
-
+import { logger } from '@/app/_common/lib/logger'
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -63,7 +63,7 @@ export async function PUT(
       message: 'Profil MiFID II mis à jour',
     })
   } catch (error: any) {
-    console.error('Error updating MiFID profile:', error)
+    logger.error('Error updating MiFID profile:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -110,7 +110,7 @@ export async function GET(
 
     return createSuccessResponse({ mifid: client })
   } catch (error: any) {
-    console.error('Error getting MiFID profile:', error)
+    logger.error('Error getting MiFID profile:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

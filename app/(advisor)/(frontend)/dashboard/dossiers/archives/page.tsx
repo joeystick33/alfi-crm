@@ -65,7 +65,13 @@ export default function DossiersArchivesPage() {
   const { data: statsData } = useDossierStats({ isArchive: true })
   const unarchiveMutation = useUnarchiveDossier()
 
-  const dossiers = data?.data || []
+  // Gérer les différentes structures de réponse API
+  const dossiers = useMemo(() => {
+    if (!data) return []
+    const apiData = data as Record<string, unknown>
+    const rawData = apiData.data || apiData.dossiers || data
+    return Array.isArray(rawData) ? rawData : []
+  }, [data])
   const stats: any = statsData || {
     total: 0,
     byStatus: {},

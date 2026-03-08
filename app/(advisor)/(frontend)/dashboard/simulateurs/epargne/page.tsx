@@ -2,8 +2,13 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import Link from 'next/link'
-import Script from 'next/script'
 import { SimulatorGate } from '@/app/_common/components/FeatureGate'
+import { usePlotlyReady } from '../immobilier/_hooks/usePlotlyReady'
+import {
+  TrendingUp, Wallet, Scale, Target, Lightbulb, XCircle,
+  Trophy, FileText, Calculator, BarChart3, PieChart, SlidersHorizontal,
+  BookOpen, CheckCircle, AlertTriangle, CircleDot,
+} from 'lucide-react'
 
 // Types alignés avec le backend
 interface EvolutionAnnuelle {
@@ -153,6 +158,7 @@ details[open] summary{border-radius:.3rem .3rem 0 0}
 `
 
 export default function EpargnePage() {
+  usePlotlyReady()
   const resultRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<HTMLDivElement>(null)
   const pieRef = useRef<HTMLDivElement>(null)
@@ -386,18 +392,17 @@ export default function EpargnePage() {
   return (
     <SimulatorGate simulator="EPARGNE" showTeaser>
       <style dangerouslySetInnerHTML={{ __html: styles }} />
-      <Script src="https://cdn.plot.ly/plotly-2.27.0.min.js" strategy="afterInteractive" />
       
       <main className="pw">
         <div className="ph">
           <Link href="/dashboard/simulateurs" style={{ fontSize: '11px', color: '#64748b' }}>← Retour aux simulateurs</Link>
-          <h1>📈 Simulateur Épargne Flexible</h1>
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><TrendingUp style={{ width: 24, height: 24 }} /> Simulateur Épargne Flexible</h1>
           <p>Projetez la croissance du capital et visualisez l'effet des intérêts composés</p>
         </div>
 
         {/* Sélection du type de calcul - PROMINENT */}
         <div className="card card-p">
-          <h2 className="card-t">🎯 Choisissez votre type de simulation</h2>
+          <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Target style={{ width: 18, height: 18 }} /> Choisissez votre type de simulation</h2>
           <div className="narr mb">
             <div className="narr-x">Sélectionnez le calcul adapté à votre besoin. Chaque type grisera automatiquement les champs non pertinents.</div>
           </div>
@@ -407,7 +412,7 @@ export default function EpargnePage() {
               onClick={() => setCalculType('capital_final')}
               style={{ cursor: 'pointer', border: calculType === 'capital_final' ? '2px solid var(--pri)' : '1px solid var(--brd)', background: calculType === 'capital_final' ? 'rgba(30,64,175,0.05)' : 'var(--bg)' }}
             >
-              <div className="gc-t" style={{ color: calculType === 'capital_final' ? 'var(--pri)' : 'var(--txt)' }}>📈 Capital final</div>
+              <div className="gc-t" style={{ color: calculType === 'capital_final' ? 'var(--pri)' : 'var(--txt)', display: 'flex', alignItems: 'center', gap: '.4rem' }}><TrendingUp style={{ width: 14, height: 14 }} /> Capital final</div>
               <div className="mu">Quel capital dans X ans ?</div>
             </div>
             <div 
@@ -415,7 +420,7 @@ export default function EpargnePage() {
               onClick={() => setCalculType('versement_initial')}
               style={{ cursor: 'pointer', border: calculType === 'versement_initial' ? '2px solid var(--pri)' : '1px solid var(--brd)', background: calculType === 'versement_initial' ? 'rgba(30,64,175,0.05)' : 'var(--bg)' }}
             >
-              <div className="gc-t" style={{ color: calculType === 'versement_initial' ? 'var(--pri)' : 'var(--txt)' }}>💰 Versement initial</div>
+              <div className="gc-t" style={{ color: calculType === 'versement_initial' ? 'var(--pri)' : 'var(--txt)', display: 'flex', alignItems: 'center', gap: '.4rem' }}><Wallet style={{ width: 14, height: 14 }} /> Versement initial</div>
               <div className="mu">Combien placer au départ ?</div>
             </div>
             <div 
@@ -423,7 +428,7 @@ export default function EpargnePage() {
               onClick={() => setCalculType('duree_necessaire')}
               style={{ cursor: 'pointer', border: calculType === 'duree_necessaire' ? '2px solid var(--pri)' : '1px solid var(--brd)', background: calculType === 'duree_necessaire' ? 'rgba(30,64,175,0.05)' : 'var(--bg)' }}
             >
-              <div className="gc-t" style={{ color: calculType === 'duree_necessaire' ? 'var(--pri)' : 'var(--txt)' }}>⏱️ Durée nécessaire</div>
+              <div className="gc-t" style={{ color: calculType === 'duree_necessaire' ? 'var(--pri)' : 'var(--txt)', display: 'flex', alignItems: 'center', gap: '.4rem' }}><Calculator style={{ width: 14, height: 14 }} /> Durée nécessaire</div>
               <div className="mu">Combien de temps faut-il ?</div>
             </div>
             <div 
@@ -431,15 +436,15 @@ export default function EpargnePage() {
               onClick={() => setCalculType('comparer_scenarios')}
               style={{ cursor: 'pointer', border: calculType === 'comparer_scenarios' ? '2px solid var(--pri)' : '1px solid var(--brd)', background: calculType === 'comparer_scenarios' ? 'rgba(30,64,175,0.05)' : 'var(--bg)' }}
             >
-              <div className="gc-t" style={{ color: calculType === 'comparer_scenarios' ? 'var(--pri)' : 'var(--txt)' }}>⚖️ Comparer 3 scénarios</div>
+              <div className="gc-t" style={{ color: calculType === 'comparer_scenarios' ? 'var(--pri)' : 'var(--txt)', display: 'flex', alignItems: 'center', gap: '.4rem' }}><Scale style={{ width: 14, height: 14 }} /> Comparer 3 scénarios</div>
               <div className="mu">Quel scénario est le meilleur ?</div>
             </div>
           </div>
           <div className={calculType === 'capital_final' ? 'tbox mt' : calculType === 'versement_initial' ? 'ibox mt' : calculType === 'duree_necessaire' ? 'wbox mt' : 'narr mt'}>
-            {calculType === 'capital_final' && <><strong>📈 Capital final :</strong> Calcule le montant que vous atteindrez avec un capital initial, des versements mensuels, une durée et un rendement.</>}
-            {calculType === 'versement_initial' && <><strong>💰 Versement initial :</strong> Calcule le montant à placer au départ pour atteindre votre objectif. <em>Le champ "Capital initial" sera ignoré (calculé).</em></>}
-            {calculType === 'duree_necessaire' && <><strong>⏱️ Durée nécessaire :</strong> Calcule le temps nécessaire pour atteindre votre objectif. <em>Le champ "Durée" sera ignoré (calculé).</em></>}
-            {calculType === 'comparer_scenarios' && <><strong>⚖️ Comparaison :</strong> Comparez 3 scénarios côte à côte pour identifier le plus performant.</>}
+            {calculType === 'capital_final' && <><strong>Capital final :</strong> Calcule le montant que vous atteindrez avec un capital initial, des versements mensuels, une durée et un rendement.</>}
+            {calculType === 'versement_initial' && <><strong>Versement initial :</strong> Calcule le montant à placer au départ pour atteindre votre objectif. <em>Le champ "Capital initial" sera ignoré (calculé).</em></>}
+            {calculType === 'duree_necessaire' && <><strong>Durée nécessaire :</strong> Calcule le temps nécessaire pour atteindre votre objectif. <em>Le champ "Durée" sera ignoré (calculé).</em></>}
+            {calculType === 'comparer_scenarios' && <><strong>Comparaison :</strong> Comparez 3 scénarios côte à côte pour identifier le plus performant.</>}
           </div>
         </div>
 
@@ -448,7 +453,7 @@ export default function EpargnePage() {
           <form onSubmit={simulate}>
             {calculType !== 'comparer_scenarios' ? (
               <div className="sec">
-                <h3 className="sec-t">💰 Paramètres de l'épargne</h3>
+                <h3 className="sec-t" style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}><Wallet style={{ width: 16, height: 16 }} /> Paramètres de l'épargne</h3>
                 <div className="fg">
                   <div className="fgrp" style={{ opacity: calculType === 'versement_initial' ? 0.4 : 1 }}>
                     <label className="flbl">Capital initial {calculType !== 'versement_initial' && <span className="r">*</span>}{calculType === 'versement_initial' && <span className="bdg bdg-w" style={{ marginLeft: '.3rem' }}>Calculé</span>}</label>
@@ -479,7 +484,7 @@ export default function EpargnePage() {
               </div>
             ) : (
               <div className="sec">
-                <h3 className="sec-t">⚖️ Configuration des 3 scénarios à comparer</h3>
+                <h3 className="sec-t" style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}><Scale style={{ width: 16, height: 16 }} /> Configuration des 3 scénarios à comparer</h3>
                 <div className="narr mb">
                   <div className="narr-x">Personnalisez chaque scénario pour comparer différentes stratégies d'épargne. Le backend identifiera automatiquement le meilleur.</div>
                 </div>
@@ -513,14 +518,14 @@ export default function EpargnePage() {
             )}
             <div className="tc">
               <button type="submit" className="btn" disabled={loading}>
-                {loading ? '⏳ Calcul en cours...' : 
-                 calculType === 'capital_final' ? '📈 Calculer le capital final' :
-                 calculType === 'versement_initial' ? '💰 Calculer le versement initial' :
-                 calculType === 'duree_necessaire' ? '⏱️ Calculer la durée' :
-                 '⚖️ Comparer les 3 scénarios'}
+                {loading ? 'Calcul en cours...' : 
+                 calculType === 'capital_final' ? 'Calculer le capital final' :
+                 calculType === 'versement_initial' ? 'Calculer le versement initial' :
+                 calculType === 'duree_necessaire' ? 'Calculer la durée' :
+                 'Comparer les 3 scénarios'}
               </button>
             </div>
-            {error && <div className="abox mt">❌ {error}</div>}
+            {error && <div className="abox mt">{error}</div>}
           </form>
         </div>
 
@@ -530,7 +535,7 @@ export default function EpargnePage() {
           {viResult && (
             <div className="fi">
               <div className="card card-p">
-                <h2 className="card-t">💰 Résultat : Versement Initial Nécessaire</h2>
+                <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Wallet style={{ width: 18, height: 18 }} /> Résultat : Versement Initial Nécessaire</h2>
                 <div className={viResult.objectifAtteintSansVI ? 'tbox' : 'ibox'}>
                   <p style={{ fontSize: '13px', lineHeight: 1.6 }}>{viResult.message}</p>
                 </div>
@@ -554,10 +559,10 @@ export default function EpargnePage() {
               {/* Recommandations */}
               {recommandations.length > 0 && (
                 <div className="card">
-                  <h2 className="card-t">💡 Recommandations</h2>
+                  <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Lightbulb style={{ width: 18, height: 18 }} /> Recommandations</h2>
                   {recommandations.map((r, i) => (
                     <div key={i} className={r.priorite === 'haute' ? 'abox' : r.priorite === 'moyenne' ? 'wbox' : 'ibox'}>
-                      <strong>{r.priorite === 'haute' ? '🔴' : r.priorite === 'moyenne' ? '🟡' : '🟢'} {r.type.toUpperCase()}</strong> : {r.description}
+                      <strong><CircleDot style={{ width: 12, height: 12, display: 'inline', color: r.priorite === 'haute' ? '#ef4444' : r.priorite === 'moyenne' ? '#eab308' : '#22c55e' }} /> {r.type.toUpperCase()}</strong> : {r.description}
                     </div>
                   ))}
                 </div>
@@ -601,10 +606,10 @@ export default function EpargnePage() {
               {/* Recommandations */}
               {recommandations.length > 0 && (
                 <div className="card">
-                  <h2 className="card-t">💡 Recommandations</h2>
+                  <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Lightbulb style={{ width: 18, height: 18 }} /> Recommandations</h2>
                   {recommandations.map((r, i) => (
                     <div key={i} className={r.priorite === 'haute' ? 'abox' : r.priorite === 'moyenne' ? 'wbox' : 'ibox'}>
-                      <strong>{r.priorite === 'haute' ? '🔴' : r.priorite === 'moyenne' ? '🟡' : '🟢'} {r.type.toUpperCase()}</strong> : {r.description}
+                      <strong><CircleDot style={{ width: 12, height: 12, display: 'inline', color: r.priorite === 'haute' ? '#ef4444' : r.priorite === 'moyenne' ? '#eab308' : '#22c55e' }} /> {r.type.toUpperCase()}</strong> : {r.description}
                     </div>
                   ))}
                 </div>
@@ -616,7 +621,7 @@ export default function EpargnePage() {
           {scenariosResult && scenariosResult.scenarios && (
             <div className="fi">
               <div className="card card-p">
-                <h2 className="card-t">⚖️ Résultat : Comparaison des 3 Scénarios</h2>
+                <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Scale style={{ width: 18, height: 18 }} /> Résultat : Comparaison des 3 Scénarios</h2>
                 <div className="narr mb">
                   <div className="narr-x"><strong>Comment lire ce tableau ?</strong> Chaque ligne représente un scénario avec ses paramètres et résultats. Le meilleur scénario est mis en évidence.</div>
                 </div>
@@ -641,7 +646,7 @@ export default function EpargnePage() {
                         <td>{s.tauxRendementGlobal}%</td>
                         <td>
                           {s.estMeilleur ? (
-                            <span className="bdg bdg-s">🏆 Meilleur</span>
+                            <span className="bdg bdg-s" style={{ display: 'inline-flex', alignItems: 'center', gap: '.3rem' }}><Trophy style={{ width: 12, height: 12 }} /> Meilleur</span>
                           ) : (
                             <span className="bdg bdg-w">{eur(s.ecartAvecMeilleur)} €</span>
                           )}
@@ -652,14 +657,14 @@ export default function EpargnePage() {
                 </table>
                 {scenariosResult.meilleurScenario && (
                   <div className="tbox mt">
-                    <strong>🏆 Conclusion :</strong> Le scénario <strong>"{scenariosResult.meilleurScenario}"</strong> est le plus performant avec le capital final le plus élevé.
+                    <strong>Conclusion :</strong> Le scénario <strong>"{scenariosResult.meilleurScenario}"</strong> est le plus performant avec le capital final le plus élevé.
                   </div>
                 )}
               </div>
 
               {/* Narration pédagogique */}
               <div className="card">
-                <h2 className="card-t">📝 Analyse comparative</h2>
+                <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><FileText style={{ width: 18, height: 18 }} /> Analyse comparative</h2>
                 <div className="narr">
                   <div className="narr-x">
                     <strong>Ce qu'il faut retenir :</strong> La comparaison montre que le choix du rendement et du montant des versements impacte significativement le capital final. 
@@ -667,7 +672,7 @@ export default function EpargnePage() {
                   </div>
                 </div>
                 <div className="ibox mt">
-                  <strong>💡 Conseil :</strong> Présentez ces 3 scénarios au client pour illustrer l'impact de chaque paramètre. Cela aide à choisir le profil de risque adapté à son horizon et sa tolérance.
+                  <strong>Conseil :</strong> Présentez ces 3 scénarios au client pour illustrer l'impact de chaque paramètre. Cela aide à choisir le profil de risque adapté à son horizon et sa tolérance.
                 </div>
               </div>
             </div>
@@ -678,7 +683,7 @@ export default function EpargnePage() {
             <div className="fi">
               {/* Synthèse narrative */}
               <div className="card card-p">
-                <h2 className="card-t">📋 Synthèse de la projection</h2>
+                <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><FileText style={{ width: 18, height: 18 }} /> Synthèse de la projection</h2>
                 <div className="narr">
                   <div className="narr-x">
                     Avec un capital initial de **{eur(form.capitalInitial)} €**, des versements de **{eur(form.versementMensuel)} €/mois** pendant **{form.dureeAnnees} ans** à **{form.rendementAnnuel}%** de rendement annuel, le capital atteindrait **{eur(result.capitalFinal)} €**.
@@ -691,7 +696,7 @@ export default function EpargnePage() {
 
               {/* KPIs */}
               <div className="card">
-                <h2 className="card-t">🎯 Indicateurs clés</h2>
+                <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Target style={{ width: 18, height: 18 }} /> Indicateurs clés</h2>
                 <div className="narr mb">
                   <div className="narr-x"><strong>Que signifient ces chiffres ?</strong> Ils résument la performance de l'épargne et permettent de comparer différentes stratégies.</div>
                 </div>
@@ -714,14 +719,14 @@ export default function EpargnePage() {
                   </div>
                 </div>
                 <div className="ibox mt">
-                  <strong>💡 Lecture :</strong> Le multiplicateur indique combien vaut le capital final par rapport aux versements. ×{indicators.multiplicateur.toFixed(2)} signifie que chaque euro versé "vaut" {indicators.multiplicateur.toFixed(2)} € à l'arrivée.
+                  <strong>Lecture :</strong> Le multiplicateur indique combien vaut le capital final par rapport aux versements. ×{indicators.multiplicateur.toFixed(2)} signifie que chaque euro versé "vaut" {indicators.multiplicateur.toFixed(2)} € à l'arrivée.
                 </div>
               </div>
 
               {/* Objectif */}
               <div className="card" style={{ background: indicators.atteint ? '#ecfdf5' : '#fef3c7', borderColor: indicators.atteint ? '#10b981' : '#f59e0b' }}>
                 <h2 className="card-t" style={{ color: indicators.atteint ? '#065f46' : '#92400e' }}>
-                  {indicators.atteint ? '✅' : '⚠️'} Objectif : {eur(form.objectif)} €
+                  Objectif : {eur(form.objectif)} €
                 </h2>
                 <div className="prog"><div className="prog-f" style={{ width: `${Math.min(100, (result.capitalFinal / form.objectif) * 100)}%`, background: indicators.atteint ? '#10b981' : '#f59e0b' }} /></div>
                 <p style={{ fontSize: '12px', marginTop: '.5rem' }}>
@@ -734,7 +739,7 @@ export default function EpargnePage() {
 
               {/* Effet intérêts composés */}
               <div className="card">
-                <h2 className="card-t">🧮 L'effet des intérêts composés</h2>
+                <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Calculator style={{ width: 18, height: 18 }} /> L'effet des intérêts composés</h2>
                 <div className="narr mb">
                   <div className="narr-x">
                     <strong>Pourquoi c'est important ?</strong> Les intérêts composés font que vos intérêts génèrent eux-mêmes des intérêts. Plus la durée est longue, plus cet effet est puissant. C'est ce qu'Einstein appelait "la 8ème merveille du monde".
@@ -742,12 +747,12 @@ export default function EpargnePage() {
                 </div>
                 <div className="g2">
                   <div className="gc">
-                    <div className="gc-t">📊 Intérêts simples (théoriques)</div>
+                    <div className="gc-t" style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}><BarChart3 style={{ width: 14, height: 14 }} /> Intérêts simples (théoriques)</div>
                     <div className="gc-a">{eur(indicators.interetsSimples)} €</div>
                     <div className="mu">Sans réinvestissement des gains</div>
                   </div>
                   <div className="gc">
-                    <div className="gc-t">📈 Intérêts composés (réels)</div>
+                    <div className="gc-t" style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}><TrendingUp style={{ width: 14, height: 14 }} /> Intérêts composés (réels)</div>
                     <div className="gc-a vs">{eur(result.interetsGeneres)} €</div>
                     <div className="mu">Avec réinvestissement automatique</div>
                   </div>
@@ -759,7 +764,7 @@ export default function EpargnePage() {
 
               {/* Graphique évolution */}
               <div className="card">
-                <h2 className="card-t">📊 Évolution du capital sur {form.dureeAnnees} ans</h2>
+                <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><BarChart3 style={{ width: 18, height: 18 }} /> Évolution du capital sur {form.dureeAnnees} ans</h2>
                 <div className="narr mb">
                   <div className="narr-x"><strong>Comment lire ce graphique ?</strong> La zone grise représente vos versements cumulés. La zone bleue au-dessus représente les intérêts. Plus l'écart grandit, plus les intérêts composés font leur effet.</div>
                 </div>
@@ -768,7 +773,7 @@ export default function EpargnePage() {
 
               {/* Répartition */}
               <div className="card">
-                <h2 className="card-t">🍩 Répartition du capital final</h2>
+                <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><PieChart style={{ width: 18, height: 18 }} /> Répartition du capital final</h2>
                 <div className="narr mb">
                   <div className="narr-x"><strong>D'où vient l'argent ?</strong> Ce graphique montre la part de vos versements (effort d'épargne) vs la part générée par les intérêts (travail de l'argent).</div>
                 </div>
@@ -784,19 +789,19 @@ export default function EpargnePage() {
 
               {/* Simulateur interactif */}
               <div className="card">
-                <h2 className="card-t">🎛️ Simulateur de scénarios — testez l'impact</h2>
+                <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><SlidersHorizontal style={{ width: 18, height: 18 }} /> Simulateur de scénarios — testez l'impact</h2>
                 <div className="narr mb">
                   <div className="narr-x"><strong>À quoi sert cette section ?</strong> Jouez avec les curseurs pour voir comment le rendement et la durée impactent le capital final. C'est pédagogique pour montrer au client l'importance du temps et du choix de placement.</div>
                 </div>
                 <div className="g2">
                   <div>
                     <div className="fgrp mb">
-                      <label className="flbl">📈 Rendement : {scenarioRendement}%</label>
+                      <label className="flbl" style={{ display: 'flex', alignItems: 'center', gap: '.3rem' }}><TrendingUp style={{ width: 13, height: 13 }} /> Rendement : {scenarioRendement}%</label>
                       <div className="slw"><input type="range" min={1} max={10} step={0.5} value={scenarioRendement} onChange={e => setScenarioRendement(Number(e.target.value))} /></div>
                       <span className="fh">De prudent (1-2%) à agressif (8-10%)</span>
                     </div>
                     <div className="fgrp">
-                      <label className="flbl">⏱️ Durée : {scenarioDuree} ans</label>
+                      <label className="flbl" style={{ display: 'flex', alignItems: 'center', gap: '.3rem' }}><Calculator style={{ width: 13, height: 13 }} /> Durée : {scenarioDuree} ans</label>
                       <div className="slw"><input type="range" min={5} max={40} step={1} value={scenarioDuree} onChange={e => setScenarioDuree(Number(e.target.value))} /></div>
                       <span className="fh">L'horizon de placement</span>
                     </div>
@@ -823,7 +828,7 @@ export default function EpargnePage() {
               {/* Comparaison profils */}
               {scenarios && (
                 <div className="card">
-                  <h2 className="card-t">🎯 Comparaison des profils de risque</h2>
+                  <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Target style={{ width: 18, height: 18 }} /> Comparaison des profils de risque</h2>
                   <div className="narr mb">
                     <div className="narr-x"><strong>Quel profil choisir ?</strong> Ce tableau compare les résultats selon le niveau de risque accepté. Un profil dynamique offre plus de rendement mais avec plus de volatilité. À présenter au client pour expliquer l'arbitrage risque/rendement.</div>
                   </div>
@@ -846,7 +851,7 @@ export default function EpargnePage() {
                           <td className="vs">{eur(s.interetsGeneres)} €</td>
                           <td>
                             {s.capitalFinal >= form.objectif 
-                              ? <span className="bdg bdg-s">✅ Atteint</span>
+                              ? <span className="bdg bdg-s">Atteint</span>
                               : <span className="bdg bdg-w">-{eur(form.objectif - s.capitalFinal)} €</span>
                             }
                           </td>
@@ -855,14 +860,14 @@ export default function EpargnePage() {
                     </tbody>
                   </table>
                   <div className="ibox mt">
-                    <strong>💡 Conseil :</strong> Le choix du profil dépend de l'horizon (plus il est long, plus on peut prendre de risque) et de la tolérance du client aux fluctuations de marché.
+                    <strong>Conseil :</strong> Le choix du profil dépend de l'horizon (plus il est long, plus on peut prendre de risque) et de la tolérance du client aux fluctuations de marché.
                   </div>
                 </div>
               )}
 
               {/* Tableau détaillé */}
               <div className="card">
-                <h2 className="card-t">📋 Projection année par année</h2>
+                <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><FileText style={{ width: 18, height: 18 }} /> Projection année par année</h2>
                 <div className="narr mb">
                   <div className="narr-x"><strong>À quoi sert ce tableau ?</strong> Il montre l'évolution précise du capital. On voit comment les intérêts s'accélèrent au fil du temps (effet "boule de neige").</div>
                 </div>
@@ -895,13 +900,13 @@ export default function EpargnePage() {
               {/* Recommandations du backend */}
               {recommandations.length > 0 && (
                 <div className="card">
-                  <h2 className="card-t">💡 Recommandations personnalisées</h2>
+                  <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Lightbulb style={{ width: 18, height: 18 }} /> Recommandations personnalisées</h2>
                   <div className="narr mb">
                     <div className="narr-x"><strong>Ces recommandations sont générées automatiquement</strong> par le backend en fonction des parametres et résultats de la simulation.</div>
                   </div>
                   {recommandations.map((r, i) => (
                     <div key={i} className={r.priorite === 'haute' ? 'abox' : r.priorite === 'moyenne' ? 'wbox' : 'tbox'}>
-                      <strong>{r.priorite === 'haute' ? '🔴 Priorité haute' : r.priorite === 'moyenne' ? '🟡 Priorité moyenne' : '🟢 Info'}</strong> — {r.description}
+                      <strong>{r.priorite === 'haute' ? 'Priorité haute' : r.priorite === 'moyenne' ? 'Priorité moyenne' : 'Info'}</strong> — {r.description}
                     </div>
                   ))}
                 </div>
@@ -910,7 +915,7 @@ export default function EpargnePage() {
               {/* Comparaison profils du backend */}
               {comparaisonProfils.length > 0 && (
                 <div className="card">
-                  <h2 className="card-t">📊 Comparaison par profil de risque (backend)</h2>
+                  <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><BarChart3 style={{ width: 18, height: 18 }} /> Comparaison par profil de risque (backend)</h2>
                   <div className="narr mb">
                     <div className="narr-x"><strong>Données calculées par le backend</strong> : cette comparaison montre les résultats pour différents profils de risque avec les mêmes paramètres d'épargne.</div>
                   </div>
@@ -934,8 +939,8 @@ export default function EpargnePage() {
                           <td className="v">{eur(p.capitalFinal || 0)} €</td>
                           <td className="vs">{eur(p.interetsGeneres || 0)} €</td>
                           <td>
-                            {p.objectifAtteint === true ? <span className="bdg bdg-s">✅ Atteint</span> :
-                             p.objectifAtteint === false ? <span className="bdg bdg-w">❌ Non atteint</span> :
+                            {p.objectifAtteint === true ? <span className="bdg bdg-s">Atteint</span> :
+                             p.objectifAtteint === false ? <span className="bdg bdg-w">Non atteint</span> :
                              <span className="mu">-</span>}
                           </td>
                         </tr>
@@ -947,28 +952,28 @@ export default function EpargnePage() {
 
               {/* Glossaire */}
               <div className="card">
-                <h2 className="card-t">📚 Glossaire & concepts</h2>
+                <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><BookOpen style={{ width: 18, height: 18 }} /> Glossaire & concepts</h2>
                 <details>
-                  <summary>💰 Intérêts composés</summary>
+                  <summary>Intérêts composés</summary>
                   <div className="dc">Les intérêts générés sont réinvestis et produisent eux-mêmes des intérêts. Formule : Capital × (1 + taux)^durée. Plus la durée est longue, plus l'effet est puissant.</div>
                 </details>
                 <details>
-                  <summary>📈 Rendement annuel</summary>
+                  <summary>Rendement annuel</summary>
                   <div className="dc">Performance moyenne attendue par an. Fonds euros ~2%, actions ~5-7% sur le long terme. Attention : le rendement n'est pas garanti pour les UC.</div>
                 </details>
                 <details>
-                  <summary>⏱️ Horizon de placement</summary>
+                  <summary>Horizon de placement</summary>
                   <div className="dc">Durée pendant laquelle l'argent reste investi. Plus l'horizon est long, plus on peut prendre de risque (lissage des cycles de marché).</div>
                 </details>
                 <details>
-                  <summary>🎯 Profil de risque</summary>
+                  <summary>Profil de risque</summary>
                   <div className="dc">Prudent : 0-3%, Équilibré : 3-5%, Dynamique : 5-7%, Agressif : 7%+. Le choix dépend de l'horizon et de la tolérance aux pertes temporaires.</div>
                 </details>
               </div>
 
               {/* Conclusion pédagogique */}
               <div className="card card-p">
-                <h2 className="card-t">📝 En résumé pour ce client</h2>
+                <h2 className="card-t" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><FileText style={{ width: 18, height: 18 }} /> En résumé pour ce client</h2>
                 <div className="narr">
                   <div className="narr-x">
                     <strong>Ce qu'il faut retenir :</strong> Avec cette stratégie d'épargne, le client peut espérer **{eur(result.capitalFinal)} €** dans {form.dureeAnnees} ans.
@@ -977,7 +982,7 @@ export default function EpargnePage() {
                   </div>
                 </div>
                 <div className="tbox mt">
-                  <strong>💡 Points de discussion avec le client :</strong>
+                  <strong>Points de discussion avec le client :</strong>
                   <ul style={{ marginTop: '.3rem', paddingLeft: '1rem' }}>
                     {!indicators.atteint && <li>Augmenter les versements de {eur(Math.ceil((form.objectif - result.capitalFinal) / (form.dureeAnnees * 12)))} €/mois permettrait d'atteindre l'objectif</li>}
                     {form.dureeAnnees < 15 && <li>Allonger la durée amplifierait considérablement l'effet des intérêts composés</li>}

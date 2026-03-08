@@ -1,0 +1,17 @@
+com/alkaus/smp/application/inheritanceCompleteResults/service/MetadataServiceImplTest.class
+com/alkaus/smp/application/engines/ScenarioOptionsEngineImplTest.class
+com/alkaus/smp/application/engines/InheritanceSimulationEngineServiceImplTest.class
+com/alkaus/smp/application/TestFiscalRulesFactory.class
+com/alkaus/smp/application/inheritanceCompleteResults/service/InheritanceScenariosServiceImplTest.class
+com/alkaus/smp/application/inheritanceCompleteResults/service/OptimizationServiceImplTest.class
+com/alkaus/smp/application/inheritanceCompleteResults/service/AlertServiceImplTest.class
+com/alkaus/smp/application/engines/ForcedHeirshipCalculatorTest.class
+com/alkaus/smp/application/inheritanceCompleteResults/service/HeritageCalculationServiceImplTest.class
+com/alkaus/smp/application/engines/LiquidationRegimeServiceTest.class
+com/alkaus/smp/application/engines/DonationRulesServiceTest.class
+com/alkaus/smp/application/inheritanceCompleteResults/service/FinancialImpactServiceImplTest.class
+com/alkaus/smp/application/engines/LegalDevolutionEngineTest.class
+com/alkaus/smp/application/fiscal/FiscalCalculatorTest.class
+com/alkaus/smp/application/inheritanceCompleteResults/service/InheritanceSimulationServiceImplTest.class
+com/alkaus/smp/application/engines/AssuranceVieRulesServiceTest.class
+com/alkaus/smp/application/inheritanceCompleteResults/service/InheritanceScenariosServiceImplTest$1.class

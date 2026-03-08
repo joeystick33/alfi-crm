@@ -4,7 +4,7 @@
  */
 
 import { BackendConfig, getBackendConfig, BACKEND_CONFIGS } from './config'
-
+import { logger } from '@/app/_common/lib/logger'
 export interface ProxyResult<T = any> {
   success: boolean
   data?: T
@@ -35,7 +35,7 @@ export interface HealthCheckResult {
 export async function proxyRequest<T = any>(
   backendKey: string,
   endpoint: string,
-  method: 'GET' | 'POST' | 'PUT' | 'SUPPRESSION' = 'POST',
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'POST',
   body?: any,
   timeout: number = 30000
 ): Promise<ProxyResult<T>> {
@@ -54,7 +54,7 @@ export async function proxyRequest<T = any>(
 
   try {
     const url = `${config.baseUrl}${endpoint}`
-    console.log(`[Proxy] ${method} ${url}`)
+    logger.info(`[Proxy] ${method} ${url}`)
 
     const options: RequestInit = {
       method,
@@ -75,7 +75,7 @@ export async function proxyRequest<T = any>(
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error(`[Proxy] Error ${response.status}: ${errorText}`)
+      logger.error(`[Proxy] Error ${response.status}: ${errorText}`)
       return {
         success: false,
         error: `Backend error: ${response.status} - ${errorText}`,

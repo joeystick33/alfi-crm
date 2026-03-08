@@ -3,7 +3,7 @@ import { getPrismaClient } from '@/app/_common/lib/prisma'
 import { GmailService, GmailMessage } from './email-sync/gmail-service'
 import { OutlookService, OutlookMessage } from './email-sync/outlook-service'
 import { EmailProvider, EmailDirection } from '@prisma/client'
-
+import { logger } from '@/app/_common/lib/logger'
 // Email classification keywords
 const CLASSIFICATION_RULES = {
   CLIENT: [
@@ -220,7 +220,7 @@ export class EmailSyncService {
         await this.saveEmail(message, EmailProvider.GMAIL, integration)
         synced++
       } catch (error: unknown) {
-        console.error('Error saving email:', error)
+        logger.error('Error saving email:', { error: error instanceof Error ? error.message : String(error) })
         errors++
       }
     }
@@ -247,7 +247,7 @@ export class EmailSyncService {
         await this.saveEmail(message, EmailProvider.OUTLOOK, integration)
         synced++
       } catch (error: unknown) {
-        console.error('Error saving email:', error)
+        logger.error('Error saving email:', { error: error instanceof Error ? error.message : String(error) })
         errors++
       }
     }

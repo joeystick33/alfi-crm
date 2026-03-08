@@ -1,0 +1,111 @@
+/**
+ * CAISSES COMPLÉMENTAIRES PL — Suite (CNBF, CARPV, CAVOM, CPRN, CAVP, CAVAMAC)
+ */
+import type { CaissePLConfig } from './fiscal-rules-prevoyance-types'
+
+export const CAISSES_PL_SUITE: Record<string, CaissePLConfig> = {
+  CNBF: {
+    code: 'CNBF',
+    nom: 'Caisse Nationale des Barreaux Français',
+    professions: ['Avocats'],
+    retraite_complementaire: {
+      systeme: 'classes', valeur_point_service: 0,
+      classes: [
+        { nom: 'Classe 1', cotisation: 3178, points: 0, revenus_min: 0, revenus_max: 47654 },
+        { nom: 'Classe 2', cotisation: 5556, points: 0, revenus_min: 47654, revenus_max: 95308 },
+        { nom: 'Classe 3', cotisation: 7936, points: 0, revenus_min: 95308, revenus_max: 142962 },
+        { nom: 'Classe 4', cotisation: 10316, points: 0, revenus_min: 142962, revenus_max: 190616 },
+        { nom: 'Classe 5', cotisation: 15872, points: 0, revenus_min: 190616, revenus_max: Infinity },
+      ],
+      description: 'Régime autonome (hors CNAVPL). Retraite de base par annuités + complémentaire par classes. Taux plein à 67 ans ou avec durée d\'assurance requise.',
+    },
+    invalidite_deces: { cotisation_forfaitaire: 137, pension_invalidite_totale: 'Variable selon ancienneté et cotisations', pension_invalidite_partielle: 'Variable', capital_deces_conjoint: 'Variable selon cotisations', description: 'Cotisation ID modeste. Prévoyance complémentaire fortement recommandée.' },
+    reversion: { taux_base: 0.54, taux_complementaire: 0.60, conditions: 'Régime autonome. Réversion sous conditions spécifiques de la CNBF.' },
+    cumul_emploi_retraite: { plafond_cumul_partiel: 48060, cumul_integral_conditions: 'Taux plein + toutes retraites liquidées', cotisations_generent_droits: true, description: 'Cumul emploi-retraite possible. Cotisations créatrices de droits en base depuis 2023.' },
+  },
+  CARPV: {
+    code: 'CARPV',
+    nom: 'Caisse Autonome de Retraites et de Prévoyance des Vétérinaires',
+    professions: ['Vétérinaires libéraux'],
+    retraite_complementaire: {
+      systeme: 'classes', valeur_point_service: 39.54,
+      classes: [
+        { nom: 'B', cotisation: 4980, points: 12, revenus_min: 0, revenus_max: 75105 },
+        { nom: 'C', cotisation: 9960, points: 24, revenus_min: 75105, revenus_max: 150210 },
+        { nom: 'D', cotisation: 14940, points: 36, revenus_min: 150210, revenus_max: Infinity },
+      ],
+      points_max_annuel: 36,
+      description: 'Régime par classes (B, C, D). Taux plein à 65 ans. Décote 1,25%/trimestre. Majoration 10% pour 3 enfants. Sur-cotisation de rachat à partir de 55 ans (+25% des points, coût 1,5× prix du point).',
+    },
+    invalidite_deces: { cotisation_forfaitaire: 1200, pension_invalidite_totale: 'Rente selon cotisations et durée d\'affiliation', pension_invalidite_partielle: 'Proportionnel au taux d\'invalidité', capital_deces_conjoint: 'Variable selon affiliation et classe', rente_orphelin: 'Variable', rente_conjoint: 'Variable', ij_montant: 0, description: 'Régime obligatoire. Exonération de cotisation en cas d\'invalidité reconnue (>6 mois) avec attribution gratuite de max 12 points retraite/an.' },
+    reversion: { taux_base: 0.54, taux_complementaire: 0.60, conditions: 'Mariage min 2 ans (sauf enfant du mariage). Pas de condition de ressources pour la complémentaire. Réversibilité portée à 100% si surcotisation conjoint (majoration 20%).' },
+    cumul_emploi_retraite: { plafond_cumul_partiel: 48060, cumul_integral_conditions: 'Taux plein + toutes retraites liquidées', cotisations_generent_droits: true, description: 'Cumul intégral sans limite. Seconde pension max 5% du PASS/an en base.' },
+  },
+  CAVOM: {
+    code: 'CAVOM',
+    nom: 'Caisse d\'Assurance Vieillesse des Officiers Ministériels, Officiers Publics et des Compagnies Judiciaires',
+    professions: ['Commissaires de justice (huissiers de justice)','Commissaires-priseurs judiciaires','Commissaires-priseurs habilités (ventes volontaires)','Administrateurs judiciaires','Mandataires judiciaires','Greffiers près les tribunaux de commerce','Arbitres près les tribunaux de commerce'],
+    retraite_complementaire: { systeme: 'points', valeur_point_service: 3.3745, taux_cotisation: 0.125, plafond_cotisation: 384480, description: 'Cotisation proportionnelle 12,5% (PL) ou 7,5% (salariés) sur revenus jusqu\'à 8 PASS. Cotisation minimale 1 141 € (PL). Taux plein entre 65 et 67 ans. Décote 1,25%/trimestre. Bonification 1,25%/trimestre au-delà de 67 ans (max 25%).' },
+    invalidite_deces: { cotisation_forfaitaire: 600, pension_invalidite_totale: 'Variable selon classe de cotisation ID', pension_invalidite_partielle: 'Variable selon classe', capital_deces_conjoint: 'Variable selon classe', ij_montant: 197.51, ij_debut_jour: 1, ij_duree_max_jours: 90, description: '4 classes de cotisation ID au choix (A, B, C, D). IJ versées par la CNAVPL pendant 90 jours max (plafond 197,51 €/jour en 2026).' },
+    reversion: { taux_base: 0.54, taux_complementaire: 0.60, conditions: 'Réversion complémentaire sous condition de mariage min 2 ans. 100% si cotisation facultative de conjoint payée. Le PACS n\'ouvre pas droit à réversion.' },
+    cumul_emploi_retraite: { plafond_cumul_partiel: 48060, cumul_integral_conditions: 'Âge taux plein (65-67 ans) + toutes retraites liquidées', cotisations_generent_droits: true, description: 'Cumul intégral possible. Maintien des fonctions jusqu\'à 70 ans.' },
+  },
+  CPRN: {
+    code: 'CPRN',
+    nom: 'Caisse de Prévoyance et de Retraite des Notaires',
+    professions: ['Notaires libéraux titulaires d\'office'],
+    retraite_complementaire: {
+      systeme: 'classes', valeur_point_service: 17.595,
+      classes: [
+        { nom: 'Classe 1', cotisation: 1400, points: 10, revenus_min: 0, revenus_max: 50000 },
+        { nom: 'Classe 2', cotisation: 2800, points: 20, revenus_min: 50000, revenus_max: 100000 },
+        { nom: 'Classe 3', cotisation: 4200, points: 30, revenus_min: 100000, revenus_max: 150000 },
+        { nom: 'Classe 4', cotisation: 5600, points: 40, revenus_min: 150000, revenus_max: 200000 },
+        { nom: 'Classe 5', cotisation: 7000, points: 50, revenus_min: 200000, revenus_max: 300000 },
+        { nom: 'Classe 6', cotisation: 8400, points: 60, revenus_min: 300000, revenus_max: 400000 },
+        { nom: 'Classe 7', cotisation: 9800, points: 70, revenus_min: 400000, revenus_max: 500000 },
+        { nom: 'Classe 8', cotisation: 11200, points: 80, revenus_min: 500000, revenus_max: Infinity },
+      ],
+      points_max_annuel: 80,
+      description: 'Section B (forfaitaire, 8 classes selon produits de l\'étude) + Section C (proportionnelle, 4,10%). Taux plein entre 66a2m et 67 ans. Décote 5%/an, surcote 1%/trimestre jusqu\'à 70 ans.',
+    },
+    invalidite_deces: { cotisation_forfaitaire: 1324, pension_invalidite_totale: 'Variable selon cotisations et durée d\'affiliation', pension_invalidite_partielle: 'Proportionnel au taux d\'invalidité', capital_deces_conjoint: 'Variable selon affiliation', description: 'Cotisation forfaitaire unique de 1 324 € (2025). Régime obligatoire couvrant invalidité et décès.' },
+    reversion: { taux_base: 0.54, taux_complementaire: 0.60, conditions: 'Réversion complémentaire à partir de 52 ans. Mariage min 2 ans (5 ans si postérieur à la retraite). Remariage met fin aux droits.' },
+    cumul_emploi_retraite: { plafond_cumul_partiel: 48060, cumul_integral_conditions: 'Taux plein + toutes retraites liquidées. Cessation d\'activité de notaire titulaire obligatoire.', cotisations_generent_droits: true, description: 'Cessation d\'activité libérale obligatoire pour percevoir RC. Cumul plafonné au BNC moyen 3 ans ou PASS si plus favorable.' },
+  },
+  CAVP: {
+    code: 'CAVP',
+    nom: 'Caisse d\'Assurance Vieillesse des Pharmaciens',
+    professions: ['Pharmaciens libéraux (titulaires d\'officine)','Biologistes médicaux libéraux'],
+    retraite_complementaire: {
+      systeme: 'classes', valeur_point_service: 0,
+      classes: [
+        { nom: 'Classe 3', cotisation: 10503, points: 0, revenus_min: 0, revenus_max: 48060 },
+        { nom: 'Classe 4', cotisation: 12193, points: 0, revenus_min: 48060, revenus_max: 60075 },
+        { nom: 'Classe 5', cotisation: 13883, points: 0, revenus_min: 60075, revenus_max: 72090 },
+        { nom: 'Classe 6', cotisation: 15573, points: 0, revenus_min: 72090, revenus_max: 84105 },
+        { nom: 'Classe 7', cotisation: 17263, points: 0, revenus_min: 84105, revenus_max: 96120 },
+        { nom: 'Classe 8', cotisation: 18953, points: 0, revenus_min: 96120, revenus_max: 108135 },
+        { nom: 'Classe 9', cotisation: 20643, points: 0, revenus_min: 108135, revenus_max: 120150 },
+        { nom: 'Classe 10', cotisation: 22333, points: 0, revenus_min: 120150, revenus_max: 144180 },
+        { nom: 'Classe 11', cotisation: 24023, points: 0, revenus_min: 144180, revenus_max: 168210 },
+        { nom: 'Classe 12', cotisation: 25713, points: 0, revenus_min: 168210, revenus_max: 192240 },
+        { nom: 'Classe 13', cotisation: 27403, points: 0, revenus_min: 192240, revenus_max: Infinity },
+      ],
+      description: 'Système unique : répartition (forfait 7 657 € avec taux d\'appel 105,4% en 2026, valeur annuité 328,80 €) + capitalisation (proportionnelle au revenu N-2, classes 3 à 13). Taux plein RC à 65 ans.',
+    },
+    asv: { valeur_point_service: 0, cotisation_forfaitaire: 490, taux_proportionnel_secteur_1: 0.0015, taux_proportionnel_secteur_2: 0.0015, prise_en_charge_am: 0.6666, description: 'ASV réservée aux biologistes médicaux conventionnés uniquement (pas les pharmaciens d\'officine).' },
+    invalidite_deces: { cotisation_forfaitaire: 689, pension_invalidite_totale: 'Rente selon affiliation et durée de cotisation', pension_invalidite_partielle: 'Proportionnelle au taux d\'invalidité', capital_deces_conjoint: 'Variable selon affiliation', rente_conjoint: 'Variable', description: 'Cotisation forfaitaire annuelle (689 € en 2025). Prévoyance complémentaire fortement recommandée.' },
+    reversion: { taux_base: 0.54, taux_complementaire: 0.60, conditions: 'Répartition : réversion 60% à partir de 60 ans, sans condition de ressources. Capitalisation : réversible 50% à 100% sur option à la liquidation.' },
+    cumul_emploi_retraite: { plafond_cumul_partiel: 48060, cumul_integral_conditions: 'Taux plein + toutes retraites liquidées', cotisations_generent_droits: true, description: 'Si < 10 ans de cotisation : remboursement des cotisations à 65 ans au lieu de pension. Cumul intégral possible.' },
+  },
+  CAVAMAC: {
+    code: 'CAVAMAC',
+    nom: 'Caisse d\'Allocation Vieillesse des Agents Généraux d\'Assurance et des Mandataires non Salariés d\'Assurance et de Capitalisation',
+    professions: ['Agents généraux d\'assurance','Mandataires non salariés d\'assurance'],
+    retraite_complementaire: { systeme: 'points', valeur_point_service: 1.18, taux_cotisation: 0.071, plafond_cotisation: 384480, description: 'Deux régimes complémentaires : RCO (en points) et RID (capitalisé). Cotisation RCO proportionnelle aux commissions nettes. Taux plein à 65 ans.' },
+    invalidite_deces: { cotisation_forfaitaire: 500, pension_invalidite_totale: 'Variable selon cotisations', pension_invalidite_partielle: 'Variable', capital_deces_conjoint: 'Variable', description: 'Régime invalidité-décès obligatoire. Prestations liées à la durée et au montant des cotisations.' },
+    reversion: { taux_base: 0.54, taux_complementaire: 0.60, conditions: 'Conditions standard. Réversion RCO à 60% sans condition de ressources.' },
+    cumul_emploi_retraite: { plafond_cumul_partiel: 48060, cumul_integral_conditions: 'Taux plein + toutes retraites liquidées', cotisations_generent_droits: true, description: 'Cumul emploi-retraite possible dans les conditions générales.' },
+  },
+}

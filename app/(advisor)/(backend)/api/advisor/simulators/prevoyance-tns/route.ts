@@ -11,6 +11,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { logger } from '@/app/_common/lib/logger'
+import { calculPlafondMadelinPrevoyance } from '@/app/_common/lib/rules/fiscal-rules'
 import {
   PASS_2025,
   CPAM_2025,
@@ -35,7 +37,7 @@ import {
 // CONSTANTES EXPORTÉES DEPUIS LE FICHIER CENTRALISÉ
 // Toute modification des règles doit se faire dans parameters-prevoyance-2025.ts
 // ============================================================================
-const ANNEE_PARAMS = 2025
+const ANNEE_PARAMS = 2026
 
 // ============================================================================
 // RÈGLES DES CAISSES (caisses.json)
@@ -221,33 +223,28 @@ const FORMULAS: Record<string, {
   deces: { fixed?: number; celibataire?: number; autre?: number }
 }> = {
   MSA: {
-    // MSA AMEXA 2025 : carence 4 jours (3j si hospi), montant forfaitaire
-    ij: { fixed: 34.39 },
+    ij: { fixed: MSA_2025.ij.montantJours29Plus },
     invalidite: { rate: 0.40, plancherPassRate: 0.30, baseMaxPassMultiplier: 1.5, capPassRate: 0.50 },
-    deces: { fixed: 3539.0 }
+    deces: { fixed: MSA_2025.deces.capitalForfaitaire }
   },
   SSI: {
-    // SSI 2025 : 1/730e du RAAM (3 ans), plafond 1 PASS/730 = 64,52 €
-    ij: { rate: 1.0, divisor: 730, max: 64.52 },
-    invalidite: { cat1Rate: 0.3, cat1Max: 1177.50, cat2Rate: 0.5, cat2Max: 1962.50 }, // max = 50% PASS mensuel
-    deces: { fixed: 8798.0 } // ~20% PASS 2025
+    ij: { rate: 1.0, divisor: 730, max: SSI_2025.ij.max },
+    invalidite: { cat1Rate: SSI_2025.invalidite.categorie1.taux, cat1Max: 1177.50, cat2Rate: SSI_2025.invalidite.categorie2.taux, cat2Max: 1962.50 },
+    deces: { fixed: SSI_2025.deces.capitalBase }
   },
   CIPAV: {
-    // CIPAV 2025 : régime commun CNAVPL, 1/730e, min 25,80 €, max 193,56 €
-    ij: { rate: 1.0, divisor: 730, min: 25.80, max: 193.56 },
+    ij: { rate: 1.0, divisor: 730, min: CPAM_2025.ijMin, max: CPAM_2025.ijMax },
     invalidite: { rate: 0.4, min: 8975.0, max: 35457.0 },
     deces: { celibataire: 26926.55, autre: 106372.77 }
   },
   CAVEC: {
-    // CAVEC 2025 : taux unique 125 €/jour à partir du 91e jour
-    ij: { fixed: 125.0 },
-    invalidite: { rate: 0.5, min: 0, max: 0 },
+    ij: { fixed: CAVEC_2025.ij.montantJour },
+    invalidite: { rate: 0.5, min: 0, max: PASS_2025 * 3 },
     deces: { fixed: 30000.0 }
   },
   CNBF: {
-    // CNBF 2025 : pas de formule IJ fixe (via LPA/AON puis CNBF)
     ij: { fixed: 0 },
-    invalidite: { rate: 0.5, min: 0, max: 0 }, // 50% retraite base
+    invalidite: { fixed: 9482 }, // 50% retraite base forfaitaire 2025 (< 20 ans ancienneté) — source barème CNBF 2025
     deces: { fixed: 50000.0 }
   },
   ENIM: {
@@ -398,10 +395,10 @@ function calculerGarantiesBase(codeCaisse: string, classeIndex: number | null, r
         // Pour CARMF Classe B : invalidité proportionnelle aux revenus
         // Formule approximative : entre 23198€ (classe A) et 30930€ (classe C)
         // Interpolation linéaire basée sur le revenu
-        const seuilMin = 47100  // 1 PASS
-        const seuilMax = 141300 // 3 PASS
-        const invMin = 23198
-        const invMax = 30930
+        const seuilMin = PASS_2025  // 1 PASS
+        const seuilMax = PASS_2025 * 3 // 3 PASS
+        const invMin = CARMF_2025.classeA.invaliditeAnnuelle
+        const invMax = CARMF_2025.classeC.invaliditeAnnuelle
         if (revenuAn <= seuilMin) {
           montantInvaliditeAnnuel = invMin
         } else if (revenuAn >= seuilMax) {
@@ -431,7 +428,10 @@ function calculerGarantiesBase(codeCaisse: string, classeIndex: number | null, r
     }
 
     // Invalidité
-    if (formula.invalidite.cat2Max !== undefined) {
+    if (formula.invalidite.fixed !== undefined) {
+      // Montant annuel fixe (ex: CNBF forfaitaire)
+      montantInvaliditeAnnuel = formula.invalidite.fixed
+    } else if (formula.invalidite.cat2Max !== undefined) {
       // SSI style
       montantInvaliditeAnnuel = formula.invalidite.cat2Max * 12
     } else if (formula.invalidite.rate !== undefined) {
@@ -715,9 +715,9 @@ function calculerSectionIJ(params: SectionIJParams): SectionIJResult {
     conseils.push('Priorité absolue : couvrir au minimum vos charges fixes')
   }
   
-  // Simulation mois par mois (12 mois)
+  // Simulation mois par mois (36 mois = 3 ans)
   const simulation: SectionIJResult['simulation'] = []
-  for (let mois = 1; mois <= 12; mois++) {
+  for (let mois = 1; mois <= 36; mois++) {
     const jourDebut = (mois - 1) * 30 + 1
     const jourFin = mois * 30
     let ijTotal = 0
@@ -834,7 +834,7 @@ interface SectionInvaliditeResult {
 }
 
 function calculerSectionInvalidite(params: SectionInvaliditeParams): SectionInvaliditeResult {
-  const { codeCaisse, revenuMensuel, chargesTotal, baseGuarantees, idealCoverage } = params
+  const { codeCaisse, revenuAn, revenuMensuel, chargesTotal, baseGuarantees, idealCoverage } = params
   
   const renteMensuelle = baseGuarantees.montantInvaliditeMensuel_base || 0
   const renteAnnuelle = renteMensuelle * 12
@@ -878,10 +878,12 @@ function calculerSectionInvalidite(params: SectionInvaliditeParams): SectionInva
     categories.push({ nom: 'Invalidité partielle', taux: '30%', montant: Math.round(renteMensuelle * 0.6) })
     categories.push({ nom: 'Invalidité totale', taux: '50%', montant: renteMensuelle })
   } else if (codeCaisse === 'CNBF') {
-    explication = `La CNBF verse une pension d'invalidité égale à 50% de la retraite de base que vous auriez acquise. Elle peut être complétée par le régime complémentaire.`
-    conditionsObtention = 'Incapacité totale d\'exercer la profession d\'avocat'
-    delaiCarence = 'Après épuisement des IJ (max 3 ans)'
-    duree = 'Jusqu\'à l\'âge de la retraite'
+    explication = `La CNBF verse une pension d'invalidité permanente **forfaitaire** (indépendante de votre revenu). Pour moins de 20 ans d'ancienneté : 50% de la retraite de base forfaitaire entière (18 964 €/an en 2025) = 9 482 €/an = 790 €/mois. Au-delà de 20 ans, le calcul devient proportionnel aux points acquis. Cette pension prend le relais après épuisement des IJ (3 ans) et est versée jusqu'à 62 ans. La CNBF ne couvre PAS l'invalidité partielle — seule l'invalidité totale (> 66%) est indemnisée.`
+    conditionsObtention = 'Invalidité totale (> 66%) — incapacité d\'exercer la profession d\'avocat'
+    delaiCarence = 'Après épuisement des IJ (max 3 ans = 1095 jours)'
+    duree = 'Jusqu\'à 62 ans'
+    categories.push({ nom: 'Invalidité partielle', taux: 'Non couvert', montant: 0 })
+    categories.push({ nom: 'Invalidité totale (< 20 ans)', taux: '50% forfait base', montant: 790 })
   } else {
     explication = `Votre caisse ${codeCaisse} verse une rente d'invalidité en cas d'incapacité permanente d'exercer votre profession. Le montant dépend de votre classe de cotisation et de vos revenus antérieurs.`
     conditionsObtention = 'Incapacité permanente d\'exercer la profession'
@@ -1323,7 +1325,7 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error: any) {
-    console.error('[API Prevoyance TNS] GET Error:', error)
+    logger.error('[API Prevoyance TNS] GET Error:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ success: false, error: 'Erreur serveur interne' }, { status: 500 })
   }
 }
@@ -1505,10 +1507,17 @@ export async function POST(request: NextRequest) {
         invalidite: sectionInvalidite,
         deces: sectionDeces
       },
-      synthese
+      synthese,
+      // =========================================
+      // FISCALITÉ MADELIN
+      // =========================================
+      madelin: {
+        plafondDeductible: calculPlafondMadelinPrevoyance(revenuAn),
+        revenuBase: revenuAn,
+      }
     })
   } catch (error: any) {
-    console.error('[Prevoyance TNS] Erreur:', error)
+    logger.error('[Prevoyance TNS] Erreur:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({
       success: false,
       error: error.message || 'Erreur lors de la simulation'

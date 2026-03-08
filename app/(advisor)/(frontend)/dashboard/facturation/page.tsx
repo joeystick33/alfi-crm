@@ -239,7 +239,10 @@ export default function FacturationPage() {
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {invoices.map((invoice: any) => {
-                  const statusConfig = STATUS_CONFIG[invoice.status as keyof typeof STATUS_CONFIG]
+                  const statusConfig = STATUS_CONFIG[invoice.status as keyof typeof STATUS_CONFIG] || {
+                    label: invoice.status || 'Inconnu',
+                    color: 'bg-slate-100 text-slate-700 border-slate-200'
+                  }
                   return (
                     <tr key={invoice.id} className="hover:bg-slate-50">
                       <td className="px-4 py-3 text-sm font-medium text-slate-900">

@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { ProjetService } from '@/app/_common/lib/services/projet-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * POST /api/projets/[id]/update-progress
  * Mettre à jour la progression d'un projet
@@ -37,7 +37,7 @@ export async function POST(
 
     return createSuccessResponse(projet)
   } catch (error) {
-    console.error('Error in POST /api/projets/[id]/update-progress:', error)
+    logger.error('Error in POST /api/projets/[id]/update-progress:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

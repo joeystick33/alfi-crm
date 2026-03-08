@@ -13,7 +13,7 @@ import {
   generateBudgetEvolution 
 } from '@/app/_common/lib/services/budget-data-service'
 import type { ClientBudget } from '@/app/_common/lib/api-types'
-
+import { logger } from '@/app/_common/lib/logger'
 // ============================================================================
 // GET /api/advisor/clients/[id]/budget/data
 // Returns complete budget data for TabBudget
@@ -87,7 +87,7 @@ export async function GET(
     }, { status: 200 })
 
   } catch (error) {
-    console.error('GET /api/advisor/clients/[id]/budget/data error:', error)
+    logger.error('GET /api/advisor/clients/[id]/budget/data error:', { error: error instanceof Error ? error.message : String(error) })
 
     return NextResponse.json(
       {

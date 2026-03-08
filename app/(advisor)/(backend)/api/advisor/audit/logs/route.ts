@@ -3,7 +3,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { AuditService } from '@/app/_common/lib/services/audit-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { AuditAction } from '@prisma/client'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/audit/logs
  * Récupérer les logs d'audit avec filtres
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse(logs)
   } catch (error) {
-    console.error('Error in GET /api/audit/logs:', error)
+    logger.error('Error in GET /api/audit/logs:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

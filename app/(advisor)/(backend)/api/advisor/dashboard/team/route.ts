@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, createErrorResponse } from '@/app/_common/lib/auth-helpers';
 import { DashboardService } from '@/app/_common/lib/services/dashboard-service';
 import { isRegularUser } from '@/app/_common/lib/auth-types';
-
+import { logger } from '@/app/_common/lib/logger'
 export async function GET(request: NextRequest) {
   try {
     const context = await requireAuth(request);
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(teamStats);
   } catch (error) {
-    console.error('Error fetching team stats:', error);
+    logger.error('Error fetching team stats:', { error: error instanceof Error ? error.message : String(error) });
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401);
     }

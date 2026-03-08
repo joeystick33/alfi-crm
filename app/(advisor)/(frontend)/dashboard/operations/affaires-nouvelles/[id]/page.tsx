@@ -39,7 +39,6 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  User,
   Building2,
   Package,
   Euro,
@@ -51,6 +50,7 @@ import {
   Download,
   Eye,
 } from 'lucide-react'
+import { ClientLink } from '@/app/_common/components/ClientLink'
 import {
   AFFAIRE_STATUS_LABELS,
   AFFAIRE_STATUS_TRANSITIONS,
@@ -621,11 +621,13 @@ export default function AffaireDetailPage() {
             </CardHeader>
             <CardContent className="p-4">
               <div className="grid grid-cols-2 gap-4">
-                <InfoCard
-                  icon={User}
-                  label="Client"
-                  value={`Client #${affaire.clientId.slice(0, 8)}`}
-                />
+                <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg">
+                  <ClientLink
+                    clientId={affaire.clientId}
+                    showAvatar={true}
+                    avatarSize="md"
+                  />
+                </div>
                 <InfoCard
                   icon={Package}
                   label="Produit"

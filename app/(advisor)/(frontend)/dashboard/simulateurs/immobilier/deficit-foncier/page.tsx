@@ -3,8 +3,11 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import Script from 'next/script'
 import { SimulatorGate } from '@/app/_common/components/FeatureGate'
+import {
+  Wrench, User, Home, Calendar, CreditCard, Wallet, FileText, Landmark,
+  BarChart3, TrendingUp, Target, Briefcase, AlertTriangle, RefreshCw,
+} from 'lucide-react'
 import { 
   LOCATION_NUE_DISPLAY as LOCATION_NUE, 
   calculIRDetaille, 
@@ -282,11 +285,10 @@ export default function DeficitFoncierPage() {
 
   return (
     <SimulatorGate simulator="IMMOBILIER" showTeaser>
-      <Script src="https://cdn.plot.ly/plotly-2.27.0.min.js" strategy="afterInteractive" />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-amber-50 to-orange-50">
         <main className="container mx-auto px-4 py-6 max-w-6xl">
           <Link href="/dashboard/simulateurs/immobilier" className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-flex items-center">← Simulateurs immobilier</Link>
-          <div className="sim-card mb-6"><div className="flex items-center gap-4"><span className="text-4xl">🔧</span><div><h1 className="text-2xl font-bold">Simulateur Déficit Foncier</h1><p className="text-gray-600">Travaux déductibles • Imputation sur revenu global • Report 10 ans</p></div></div><div className="flex gap-2 mt-3"><span className="badge-amber">Max {fmtEur(plafondDeficitRG)}/an</span><span className="badge-green">TMI {tmi}%</span><span className="badge-blue">Report 10 ans</span></div></div>
+          <div className="sim-card mb-6"><div className="flex items-center gap-4"><Wrench className="w-9 h-9 text-amber-700" /><div><h1 className="text-2xl font-bold">Simulateur Déficit Foncier</h1><p className="text-gray-600">Travaux déductibles • Imputation sur revenu global • Report 10 ans</p></div></div><div className="flex gap-2 mt-3"><span className="badge-amber">Max {fmtEur(plafondDeficitRG)}/an</span><span className="badge-green">TMI {tmi}%</span><span className="badge-blue">Report 10 ans</span></div></div>
 
           {!showResults ? (
             <div className="sim-card">
@@ -294,7 +296,7 @@ export default function DeficitFoncierPage() {
 
               {/* ÉTAPE 1 : PROFIL CLIENT (OBLIGATOIRE selon standard) */}
               {step === 1 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-1">👤 Votre profil fiscal</h2>
+                <h2 className="text-lg font-bold mb-1 flex items-center gap-2"><User className="w-5 h-5" /> Votre profil fiscal</h2>
                 <p className="text-sm text-gray-500 mb-6">Le déficit foncier s'impute sur le revenu global - plus votre TMI est élevé, plus l'économie est importante</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="form-group"><label>Situation familiale</label><select value={situationFamiliale} onChange={e=>setSituationFamiliale(e.target.value as SituationFamiliale)}><option value="CELIBATAIRE">Célibataire</option><option value="MARIE_PACSE">Marié / Pacsé</option><option value="VEUF">Veuf</option></select></div>
@@ -323,19 +325,19 @@ export default function DeficitFoncierPage() {
 
               {/* ÉTAPE 2 : BIEN À RÉNOVER */}
               {step === 2 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">🏠 Bien à rénover</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Home className="w-5 h-5" /> Bien à rénover</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="form-group"><label>Date d'acquisition</label><input type="month" value={dateAcquisition} onChange={e=>setDateAcquisition(e.target.value)}/></div>
                   <div className="form-group"><label>Prix d'acquisition (€)</label><input type="number" value={prixAchat} onChange={e=>setPrixAchat(+e.target.value)}/></div>
                   <div className="form-group"><label>Frais notaire (€)</label><input type="number" value={fraisNotaire} onChange={e=>setFraisNotaire(+e.target.value)}/></div>
                   <div className="form-group"><label>Travaux total (€)</label><input type="number" value={travauxTotal} onChange={e=>setTravauxTotal(+e.target.value)}/></div>
                 </div>
-                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-amber-800 mb-2">🔧 Travaux déductibles (CGI art. 31)</h4><div className="grid grid-cols-2 gap-4 text-sm text-amber-700"><div><strong>✅ Déductibles :</strong><ul className="mt-1 space-y-1"><li>• Réparations, entretien</li><li>• Amélioration (confort, habitabilité)</li><li>• Rénovation énergétique</li></ul></div><div><strong>❌ Non déductibles :</strong><ul className="mt-1 space-y-1"><li>• Construction, reconstruction</li><li>• Agrandissement</li><li>• Travaux sur parties non louées</li></ul></div></div></div>
+                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-amber-800 mb-2 flex items-center gap-2"><Wrench className="w-4 h-4" /> Travaux déductibles (CGI art. 31)</h4><div className="grid grid-cols-2 gap-4 text-sm text-amber-700"><div><strong>Déductibles :</strong><ul className="mt-1 space-y-1"><li>• Réparations, entretien</li><li>• Amélioration (confort, habitabilité)</li><li>• Rénovation énergétique</li></ul></div><div><strong>Non déductibles :</strong><ul className="mt-1 space-y-1"><li>• Construction, reconstruction</li><li>• Agrandissement</li><li>• Travaux sur parties non louées</li></ul></div></div></div>
               </div>}
 
               {/* ÉTAPE 3 : TRAVAUX - RÉPARTITION */}
               {step === 3 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">📅 Répartition travaux</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Calendar className="w-5 h-5" /> Répartition travaux</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="form-group"><label>Travaux année 1 (€)</label><input type="number" value={travauxAnnee1} onChange={e=>setTravauxAnnee1(+e.target.value)}/></div>
                   <div className="form-group"><label>Travaux année 2 (€)</label><input type="number" value={travauxAnnee2} onChange={e=>setTravauxAnnee2(+e.target.value)}/></div>
@@ -346,14 +348,14 @@ export default function DeficitFoncierPage() {
                     <div><strong>Plafond déficit sur RG :</strong><div className="text-2xl font-bold text-amber-600">{fmtEur(plafondDeficitRG)}/an</div></div>
                     <div><strong>Économie IR maximale :</strong><div className="text-2xl font-bold text-emerald-600">{fmtEur(Math.round(plafondDeficitRG * tmi / 100))}/an</div></div>
                   </div>
-                  {travauxRenovEnergetique > 0 && <p className="text-sm text-green-700 mt-2">✅ Plafond doublé à 21 400 € car travaux de rénovation énergétique (dispositif jusqu'au 31/12/2025)</p>}
-                  {travauxRenovEnergetique === 0 && <p className="text-sm text-amber-700 mt-2">💡 Ajoutez des travaux de rénovation énergétique pour doubler le plafond (21 400 € au lieu de 10 700 €)</p>}
+                  {travauxRenovEnergetique > 0 && <p className="text-sm text-green-700 mt-2">Plafond doublé à 21 400 € car travaux de rénovation énergétique (dispositif jusqu'au 31/12/2025)</p>}
+                  {travauxRenovEnergetique === 0 && <p className="text-sm text-amber-700 mt-2">Ajoutez des travaux de rénovation énergétique pour doubler le plafond (21 400 € au lieu de 10 700 €)</p>}
                 </div>
               </div>}
 
               {/* ÉTAPE 4 : FINANCEMENT */}
               {step === 4 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">💳 Financement</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><CreditCard className="w-5 h-5" /> Financement</h2>
                 
                 {/* Option achat comptant */}
                 <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6">
@@ -368,7 +370,7 @@ export default function DeficitFoncierPage() {
                       className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                     />
                     <div>
-                      <span className="font-semibold text-slate-800">💵 Achat au comptant (sans financement)</span>
+                      <span className="font-semibold text-slate-800 flex items-center gap-2"><Wallet className="w-4 h-4" /> Achat au comptant (sans financement)</span>
                       <p className="text-sm text-slate-500">Cochez cette case si le client ne passe pas par un crédit immobilier</p>
                     </div>
                   </label>
@@ -376,7 +378,7 @@ export default function DeficitFoncierPage() {
                 
                 {sansFinancement ? (
                   <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6 text-center">
-                    <div className="text-4xl mb-3">💰</div>
+                    <Wallet className="w-9 h-9 text-emerald-600 mb-3" />
                     <h3 className="font-bold text-emerald-800 text-lg mb-2">Achat au comptant</h3>
                     <p className="text-emerald-700">Investissement total : <strong className="text-xl">{fmtEur(investTotal)}</strong></p>
                     <p className="text-sm text-emerald-600 mt-2">Pas de crédit = pas d'intérêts. Le déficit foncier sera constitué uniquement des travaux et charges.</p>
@@ -394,14 +396,14 @@ export default function DeficitFoncierPage() {
                       <div><span className="text-gray-500">Emprunté</span><div className="font-bold text-lg">{fmtEur(montantEmprunte)}</div></div>
                       <div><span className="text-gray-500">Mensualité</span><div className="font-bold text-lg">{fmtEur(Math.round(mensualite))}</div></div>
                     </div>
-                    <div className="pedagogy-box mt-4"><p className="text-sm text-amber-700"><strong>⚠️ Attention :</strong> Les intérêts d'emprunt ne peuvent s'imputer que sur les revenus fonciers (pas sur le RG). Seul le déficit hors intérêts s'impute sur le revenu global.</p></div>
+                    <div className="pedagogy-box mt-4"><p className="text-sm text-amber-700"><strong>Attention :</strong> Les intérêts d'emprunt ne peuvent s'imputer que sur les revenus fonciers (pas sur le RG). Seul le déficit hors intérêts s'impute sur le revenu global.</p></div>
                   </>
                 )}
               </div>}
 
               {/* ÉTAPE 5 : REVENUS LOCATIFS */}
               {step === 5 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">💰 Revenus locatifs</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Wallet className="w-5 h-5" /> Revenus locatifs</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="form-group"><label>Loyer mensuel (€)</label><input type="number" value={loyerMensuel} onChange={e=>setLoyerMensuel(+e.target.value)}/></div>
                   <div className="form-group"><label>Vacance (semaines/an)</label><input type="number" value={vacanceSemaines} onChange={e=>setVacanceSemaines(+e.target.value)} min={0} max={52}/></div>
@@ -417,7 +419,7 @@ export default function DeficitFoncierPage() {
 
               {/* ÉTAPE 6 : CHARGES */}
               {step === 6 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-1">📋 Charges déductibles</h2>
+                <h2 className="text-lg font-bold mb-1 flex items-center gap-2"><FileText className="w-5 h-5" /> Charges déductibles</h2>
                 <p className="text-sm text-gray-500 mb-6">Ces charges s'ajoutent aux travaux pour créer le déficit foncier</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="form-group"><label>Taxe foncière (€)</label><input type="number" value={taxeFonciere} onChange={e=>setTaxeFonciere(+e.target.value)}/></div>
@@ -433,7 +435,7 @@ export default function DeficitFoncierPage() {
 
               {/* ÉTAPE 7 : PROJECTION */}
               {step === 7 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">🏛️ Projection</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Landmark className="w-5 h-5" /> Projection</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="form-group"><label>Durée détention (ans)</label><input type="number" value={dureeDetention} onChange={e=>setDureeDetention(+e.target.value)} min={3}/><span className="form-hint">Min 3 ans obligatoire</span></div>
                   <div className="form-group"><label>Revalorisation bien (%/an)</label><input type="number" value={revalorisationBien} onChange={e=>setRevalorisationBien(+e.target.value)} step={0.1}/></div>
@@ -445,7 +447,7 @@ export default function DeficitFoncierPage() {
                   <div><span className="text-gray-500">Plafond déficit RG</span><div className="font-bold text-lg text-amber-600">{fmtEur(plafondDeficitRG)}</div></div>
                   <div><span className="text-gray-500">Économie max/an</span><div className="font-bold text-lg text-emerald-600">{fmtEur(Math.round(plafondDeficitRG * tmi / 100))}</div></div>
                 </div>
-                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-amber-800 mb-2">⚠️ Obligations légales (CGI art. 156-I-3°)</h4><ul className="text-sm text-amber-700 space-y-1">
+                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-amber-800 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Obligations légales (CGI art. 156-I-3°)</h4><ul className="text-sm text-amber-700 space-y-1">
                   <li>• <strong>Engagement 3 ans :</strong> Le bien doit rester loué jusqu'au 31/12 de la 3e année suivant l'imputation</li>
                   <li>• <strong>Plafond :</strong> {fmtEur(plafondDeficitRG)}/an {travauxRenovEnergetique > 0 ? '(doublé car rénovation énergétique)' : '(10 700 € sans rénovation énergétique)'}</li>
                   <li>• <strong>Report :</strong> L'excédent est reportable 10 ans sur les revenus fonciers futurs</li>
@@ -455,7 +457,7 @@ export default function DeficitFoncierPage() {
 
               <div className="flex justify-between mt-8">
                 <button onClick={()=>setStep(Math.max(1,step-1))} disabled={step===1} className="btn-secondary disabled:opacity-50">← Précédent</button>
-                {step < 7 ? <button onClick={()=>setStep(step+1)} className="btn-primary-amber">Suivant →</button> : <button onClick={lancerSimulation} disabled={loading} className="btn-primary-amber">{loading?'⏳':'🧮 Analyser'}</button>}
+                {step < 7 ? <button onClick={()=>setStep(step+1)} className="btn-primary-amber">Suivant →</button> : <button onClick={lancerSimulation} disabled={loading} className="btn-primary-amber">{loading ? 'Calcul...' : 'Analyser'}</button>}
               </div>
             </div>
           ) : synthese && (
@@ -501,7 +503,7 @@ export default function DeficitFoncierPage() {
                   </div>
                 </div>
                 <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                  <h4 className="font-semibold text-amber-800 mb-2">📊 Comprendre le déficit foncier</h4>
+                  <h4 className="font-semibold text-amber-800 mb-2 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Comprendre le déficit foncier</h4>
                   <div className="text-sm text-amber-700 space-y-1">
                     <p>• <strong>Imputation sur RG</strong> : Le déficit foncier (hors intérêts) s'impute sur le revenu global dans la limite de {fmtEur(synthese.plafondDeficit)}/an, réduisant directement votre IR.</p>
                     <p>• <strong>Économie réelle</strong> : Avec un TMI de {tmi}%, {fmtEur(synthese.plafondDeficit)} de déficit = {fmtEur(Math.round(synthese.plafondDeficit * tmi / 100))} d'économie d'IR.</p>
@@ -557,7 +559,7 @@ export default function DeficitFoncierPage() {
 
               {/* TIMELINE DES ÉVÉNEMENTS */}
               <div className="sim-card">
-                <h3 className="font-bold mb-4 text-slate-800">📅 Timeline des événements clés</h3>
+                <h3 className="font-bold mb-4 text-slate-800 flex items-center gap-2"><Calendar className="w-5 h-5" /> Timeline des événements clés</h3>
                 <div className="relative">
                   <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-amber-200" />
                   <div className="space-y-4">
@@ -565,35 +567,35 @@ export default function DeficitFoncierPage() {
                       <div className="absolute left-2.5 w-3 h-3 bg-amber-600 rounded-full border-2 border-white" />
                       <div className="flex-1 bg-amber-50 p-3 rounded-lg border border-amber-200">
                         <div className="font-semibold text-amber-800">{synthese.anneeAcquisition}</div>
-                        <div className="text-sm text-amber-700">🏠 Acquisition + Travaux • Investissement {fmtEur(synthese.investTotal)}</div>
+                        <div className="text-sm text-amber-700">Acquisition + Travaux • Investissement {fmtEur(synthese.investTotal)}</div>
                       </div>
                     </div>
                     <div className="relative flex items-start pl-10">
                       <div className="absolute left-2.5 w-3 h-3 bg-amber-500 rounded-full border-2 border-white" />
                       <div className="flex-1 bg-amber-50 p-3 rounded-lg border border-amber-200">
                         <div className="font-semibold text-amber-800">{synthese.anneeAcquisition + 3}</div>
-                        <div className="text-sm text-amber-700">⚠️ Fin engagement location (3 ans minimum après déficit)</div>
+                        <div className="text-sm text-amber-700">Fin engagement location (3 ans minimum après déficit)</div>
                       </div>
                     </div>
                     <div className="relative flex items-start pl-10">
                       <div className="absolute left-2.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white" />
                       <div className="flex-1 bg-emerald-50 p-3 rounded-lg border border-emerald-200">
                         <div className="font-semibold text-emerald-800">{synthese.anneeFinCredit}</div>
-                        <div className="text-sm text-emerald-700">✅ Fin du crédit immobilier</div>
+                        <div className="text-sm text-emerald-700">Fin du crédit immobilier</div>
                       </div>
                     </div>
                     <div className="relative flex items-start pl-10">
                       <div className="absolute left-2.5 w-3 h-3 bg-blue-500 rounded-full border-2 border-white" />
                       <div className="flex-1 bg-blue-50 p-3 rounded-lg border border-blue-200">
                         <div className="font-semibold text-blue-800">{synthese.anneeExonerationIR}</div>
-                        <div className="text-sm text-blue-700">🎯 Exonération PV IR (22 ans)</div>
+                        <div className="text-sm text-blue-700">Exonération PV IR (22 ans)</div>
                       </div>
                     </div>
                     {synthese.anneeRevente && <div className="relative flex items-start pl-10">
                       <div className="absolute left-2.5 w-3 h-3 bg-red-500 rounded-full border-2 border-white" />
                       <div className="flex-1 bg-red-50 p-3 rounded-lg border border-red-200">
                         <div className="font-semibold text-red-800">{synthese.anneeRevente}</div>
-                        <div className="text-sm text-red-700">📤 Revente simulée • Valeur {fmtEur(synthese.valRev)}</div>
+                        <div className="text-sm text-red-700">Revente simulée • Valeur {fmtEur(synthese.valRev)}</div>
                       </div>
                     </div>}
                   </div>
@@ -694,7 +696,7 @@ export default function DeficitFoncierPage() {
               {/* AVIS PROFESSIONNEL AVEC SCORE GLOBAL */}
               {/* ═══════════════════════════════════════════════════════════════════════════ */}
               <div className="sim-card">
-                <h3 className="font-bold mb-6 text-xl text-slate-800">🎯 Synthèse et avis professionnel</h3>
+                <h3 className="font-bold mb-6 text-xl text-slate-800 flex items-center gap-2"><Target className="w-5 h-5" /> Synthèse et avis professionnel</h3>
                 
                 {(() => {
                   const levier = safeNumber(synthese.capFinal || synthese.valRev) / apport
@@ -791,7 +793,7 @@ export default function DeficitFoncierPage() {
                         
                         {showScoreDetail && (
                           <div className="mt-3 bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm">
-                            <h5 className="font-bold text-slate-700 mb-3">📊 Méthode de calcul du score Déficit Foncier</h5>
+                            <h5 className="font-bold text-slate-700 mb-3 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Méthode de calcul du score Déficit Foncier</h5>
                             <p className="text-slate-600 mb-3">Score calculé sur 5 critères : TRI (2.5 pts), Cash-flow (2 pts), Effet fiscal (2.5 pts), Levier (1.5 pts), Rendement (1.5 pts).</p>
                             <p className="text-slate-600">L'effet fiscal = économie IR / travaux. Plus votre TMI est élevé ({tmi}%), plus l'effet fiscal est important.</p>
                           </div>
@@ -802,30 +804,30 @@ export default function DeficitFoncierPage() {
                 })()}
                 
                 <div className="bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-200 rounded-xl p-4">
-                  <h4 className="font-bold text-blue-800 mb-3">💼 Avis professionnel</h4>
+                  <h4 className="font-bold text-blue-800 mb-3 flex items-center gap-2"><Briefcase className="w-5 h-5" /> Avis professionnel</h4>
                   <div className="text-sm text-blue-700 space-y-3">
                     {tmi >= 41 && safeNumber(synthese.totEcoIR) > 10000 ? (
                       <>
-                        <p><strong>✅ Opération très favorable</strong> : Avec un TMI de {tmi}%, le déficit foncier est particulièrement efficace. Votre économie d'IR de {fmtEur(synthese.totEcoIR)} représente {fmtPct(safeNumber(synthese.totEcoIR) / travauxTotal * 100)} de l'investissement travaux.</p>
+                        <p><strong>Opération très favorable</strong> : Avec un TMI de {tmi}%, le déficit foncier est particulièrement efficace. Votre économie d'IR de {fmtEur(synthese.totEcoIR)} représente {fmtPct(safeNumber(synthese.totEcoIR) / travauxTotal * 100)} de l'investissement travaux.</p>
                         <p>Le TRI de {fmtPct(synthese.tri)} est {safeNumber(synthese.tri) > 8 ? 'excellent' : safeNumber(synthese.tri) > 5 ? 'très bon' : 'satisfaisant'}. Capital net final de {fmtEur(synthese.capFinal || synthese.valRev)}, soit ×{((safeNumber(synthese.capFinal) || safeNumber(synthese.valRev)) / apport).toFixed(1)} votre apport.</p>
                       </>
                     ) : tmi >= 30 ? (
                       <>
-                        <p><strong>⚖️ Opération correcte</strong> : Le déficit foncier avec un TMI de {tmi}% reste intéressant. L'économie d'IR de {fmtEur(synthese.totEcoIR)} réduit significativement le coût réel des travaux.</p>
+                        <p><strong>Opération correcte</strong> : Le déficit foncier avec un TMI de {tmi}% reste intéressant. L'économie d'IR de {fmtEur(synthese.totEcoIR)} réduit significativement le coût réel des travaux.</p>
                         <p>Pour optimiser, concentrez les travaux sur 2-3 ans pour maximiser l'effet fiscal. Le plafond de 10 700 €/an sur le revenu global est une limite à prendre en compte.</p>
                       </>
                     ) : (
                       <>
-                        <p><strong>⚠️ TMI faible</strong> : Avec un TMI de {tmi}%, l'effet fiscal du déficit foncier est limité ({fmtPct(safeNumber(synthese.totEcoIR) / travauxTotal * 100)} du coût travaux).</p>
+                        <p><strong>TMI faible</strong> : Avec un TMI de {tmi}%, l'effet fiscal du déficit foncier est limité ({fmtPct(safeNumber(synthese.totEcoIR) / travauxTotal * 100)} du coût travaux).</p>
                         <p>L'opération reste un bon investissement locatif mais l'avantage fiscal est réduit. Envisagez d'autres stratégies ou attendez une augmentation de vos revenus.</p>
                       </>
                     )}
-                    <p className="text-blue-500 text-xs mt-2"><em>⚠️ Rappel : Engagement de location 3 ans minimum après imputation du déficit sur le revenu global (CGI art. 156-I-3°).</em></p>
+                    <p className="text-blue-500 text-xs mt-2"><em>Rappel : Engagement de location 3 ans minimum après imputation du déficit sur le revenu global (CGI art. 156-I-3°).</em></p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-center"><button onClick={()=>setShowResults(false)} className="btn-primary">🔄 Nouvelle simulation</button></div>
+              <div className="flex justify-center"><button onClick={()=>setShowResults(false)} className="btn-primary flex items-center gap-2"><RefreshCw className="w-4 h-4" /> Nouvelle simulation</button></div>
             </div>
           )}
         </main>

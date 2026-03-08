@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { prisma } from '@/app/_common/lib/prisma'
-
+import { logger } from '@/app/_common/lib/logger'
 // Prix des plans (en euros/mois)
 // STARTER: CRM uniquement | BUSINESS: CRM + Calculateurs | PREMIUM: CRM + Calculateurs + Simulateurs
 const PLAN_PRICES: Record<string, { monthly: number; yearly: number; name: string }> = {
@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
       createdAt: cabinet.createdAt,
     })
   } catch (error: any) {
-    console.error('Get cabinet error:', error)
+    logger.error('Get cabinet error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Unauthorized') {
       return NextResponse.json(
@@ -189,7 +189,7 @@ export async function PATCH(request: NextRequest) {
       cabinet: updatedCabinet
     })
   } catch (error: any) {
-    console.error('Update cabinet error:', error)
+    logger.error('Update cabinet error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Unauthorized') {
       return NextResponse.json(

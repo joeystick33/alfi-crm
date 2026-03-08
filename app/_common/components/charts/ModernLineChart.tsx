@@ -84,8 +84,8 @@ export function ModernLineChart({
         </h3>
       )}
 
-      <div className="h-[300px] w-full animate-in fade-in-0 duration-700">
-        <ResponsiveContainer width="100%" height="100%">
+      <div style={{ width: '100%', height: 300 }} className="animate-in fade-in-0 duration-700">
+        <ResponsiveContainer width="100%" height={300}>
           <AreaChart
             data={data}
             margin={{ top: 10, right: 10, left: 0, bottom: 0 }}

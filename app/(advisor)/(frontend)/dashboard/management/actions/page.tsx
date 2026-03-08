@@ -71,88 +71,6 @@ const PRIORITY_CONFIG = {
   URGENTE: { label: 'Urgente', color: 'text-red-500' },
 }
 
-const DEMO_ACTIONS: ActionCommerciale[] = [
-  {
-    id: '1',
-    title: 'Campagne Fin d\'Année PER',
-    description: 'Relancer tous les clients pour optimisation fiscale via PER avant le 31/12',
-    type: 'CAMPAGNE',
-    status: 'EN_COURS',
-    priority: 'HAUTE',
-    assignedTo: [
-      { id: '1', firstName: 'Marie', lastName: 'Dupont' },
-      { id: '2', firstName: 'Pierre', lastName: 'Martin' },
-    ],
-    startDate: '2024-11-01',
-    endDate: '2024-12-31',
-    target: 50,
-    current: 32,
-    unit: 'clients contactés',
-    createdAt: '2024-10-28',
-  },
-  {
-    id: '2',
-    title: 'Prospection LinkedIn',
-    description: 'Développer le réseau LinkedIn et contacter des prospects qualifiés',
-    type: 'PROSPECTION',
-    status: 'EN_COURS',
-    priority: 'MOYENNE',
-    assignedTo: [{ id: '3', firstName: 'Lucas', lastName: 'Bernard' }],
-    startDate: '2024-11-15',
-    target: 20,
-    current: 8,
-    unit: 'contacts',
-    createdAt: '2024-11-10',
-  },
-  {
-    id: '3',
-    title: 'Relance Clients Inactifs',
-    description: 'Contacter les clients sans activité depuis plus de 6 mois',
-    type: 'RELANCE',
-    status: 'PLANIFIE',
-    priority: 'MOYENNE',
-    assignedTo: [{ id: '1', firstName: 'Marie', lastName: 'Dupont' }],
-    startDate: '2024-12-01',
-    endDate: '2024-12-15',
-    target: 25,
-    current: 0,
-    unit: 'clients',
-    createdAt: '2024-11-20',
-  },
-  {
-    id: '4',
-    title: 'Webinaire Transmission Patrimoine',
-    description: 'Organisation d\'un webinaire sur les stratégies de transmission',
-    type: 'EVENEMENT',
-    status: 'PLANIFIE',
-    priority: 'HAUTE',
-    assignedTo: [
-      { id: '1', firstName: 'Marie', lastName: 'Dupont' },
-      { id: '2', firstName: 'Pierre', lastName: 'Martin' },
-      { id: '3', firstName: 'Lucas', lastName: 'Bernard' },
-    ],
-    startDate: '2024-12-10',
-    target: 30,
-    current: 12,
-    unit: 'inscrits',
-    createdAt: '2024-11-15',
-  },
-  {
-    id: '5',
-    title: 'Formation SCPI',
-    description: 'Formation équipe sur les nouveaux produits SCPI',
-    type: 'FORMATION',
-    status: 'TERMINE',
-    priority: 'BASSE',
-    assignedTo: [
-      { id: '1', firstName: 'Marie', lastName: 'Dupont' },
-      { id: '2', firstName: 'Pierre', lastName: 'Martin' },
-    ],
-    startDate: '2024-11-05',
-    endDate: '2024-11-05',
-    createdAt: '2024-11-01',
-  },
-]
 
 export default function ActionsCommercialesPage() {
   const [showNewForm, setShowNewForm] = useState(false)
@@ -187,7 +105,7 @@ export default function ActionsCommercialesPage() {
         createdAt: action.createdAt,
       }))
     }
-    return DEMO_ACTIONS
+    return []
   }, [apiData])
 
   const formatDate = (dateString: string) => {
@@ -408,8 +326,23 @@ export default function ActionsCommercialesPage() {
 
       {filteredActions.length === 0 && (
         <Card className="p-12 text-center">
-          <Briefcase className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">Aucune action commerciale trouvée</p>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-50 mb-4">
+            <Briefcase className="h-8 w-8 text-purple-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-1">
+            {actions.length === 0 ? 'Aucune action commerciale' : 'Aucun résultat'}
+          </h3>
+          <p className="text-gray-500 mb-6 max-w-md mx-auto">
+            {actions.length === 0
+              ? 'Créez votre première action commerciale pour organiser vos campagnes, relances et événements.'
+              : 'Essayez de modifier vos filtres de recherche.'}
+          </p>
+          {actions.length === 0 && (
+            <Button onClick={() => setShowNewForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Créer une action
+            </Button>
+          )}
         </Card>
       )}
     </div>

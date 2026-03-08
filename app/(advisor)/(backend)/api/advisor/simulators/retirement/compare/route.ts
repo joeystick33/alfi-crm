@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * Comparateur de Scénarios de Retraite
  * 
@@ -296,7 +296,7 @@ export async function POST(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Error in retirement comparison:', error)
+    logger.error('Error in retirement comparison:', { error: error instanceof Error ? error.message : String(error) })
     if (error instanceof z.ZodError) {
       return NextResponse.json({ success: false, error: 'Validation error: ' + error.message }, { status: 400 })
     }

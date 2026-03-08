@@ -1,14 +1,16 @@
 /**
  * API Route: /api/advisor/clients/[id]/reports/synthese
  * GET - Génère un rapport PDF de synthèse (Bilan Patrimonial)
+ * 
+ * Migré de jsPDF → Puppeteer (PDF vectoriel, texte sélectionnable)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
-
+import { PdfGenerator } from '@/app/_common/lib/services/pdf-generator'
+import { premiumReportStyles, generateDonutChart } from '@/app/_common/lib/templates/pdf-styles-premium'
+import { logger } from '@/app/_common/lib/logger'
 const formatCurrency = (amount: number | null | undefined): string => {
     if (amount == null) return '0 €'
     return new Intl.NumberFormat('fr-FR', {
@@ -21,7 +23,7 @@ const formatCurrency = (amount: number | null | undefined): string => {
 const formatDate = (date: Date): string => {
     return new Date(date).toLocaleDateString('fr-FR', {
         day: '2-digit',
-        month: '2-digit',
+        month: 'long',
         year: 'numeric',
     })
 }
@@ -69,123 +71,202 @@ export async function GET(
         const totalCredits = client.credits.reduce((sum, c) => sum + Number(c.mensualiteTotale || 0), 0)
         const solde = totalRevenus - totalCharges - totalCredits
 
-        // Générer le PDF
-        const doc = new jsPDF()
-        const pageWidth = doc.internal.pageSize.getWidth()
+        // Répartition par catégorie pour le donut chart
+        const catColors: Record<string, string> = {
+            IMMOBILIER: '#3b82f6', FINANCIER: '#8b5cf6', EPARGNE_SALARIALE: '#f59e0b',
+            EPARGNE_RETRAITE: '#10b981', PROFESSIONNEL: '#ef4444', MOBILIER: '#6366f1', AUTRE: '#94a3b8',
+        }
+        const catLabels: Record<string, string> = {
+            IMMOBILIER: 'Immobilier', FINANCIER: 'Financier', EPARGNE_SALARIALE: 'Ép. salariale',
+            EPARGNE_RETRAITE: 'Ép. retraite', PROFESSIONNEL: 'Professionnel', MOBILIER: 'Mobilier', AUTRE: 'Autres',
+        }
+        const parCategorie: Record<string, number> = {}
+        client.actifs.forEach(ca => {
+            const cat = ca.actif.category || 'AUTRE'
+            parCategorie[cat] = (parCategorie[cat] || 0) + Number(ca.actif.value || 0)
+        })
+        const chartData = Object.entries(parCategorie)
+            .filter(([, v]) => v > 0)
+            .map(([cat, val]) => ({ label: catLabels[cat] || cat, value: val, color: catColors[cat] || '#94a3b8' }))
 
-        // Header
-        doc.setFontSize(22)
-        doc.setTextColor(115, 115, 255) // Brand color
-        doc.setFont('helvetica', 'bold')
-        doc.text('BILAN PATRIMONIAL', pageWidth / 2, 25, { align: 'center' })
+        // Générer le HTML pour Puppeteer
+        const html = `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Bilan Patrimonial - ${client.firstName} ${client.lastName}</title>
+  <style>
+    ${premiumReportStyles}
+    body { font-size: 10pt; }
+  </style>
+</head>
+<body>
 
-        doc.setFontSize(14)
-        doc.setTextColor(100, 100, 100)
-        doc.setFont('helvetica', 'normal')
-        doc.text(`${client.firstName} ${client.lastName}`, pageWidth / 2, 35, { align: 'center' })
-        doc.text(`Document préparé le ${formatDate(new Date())}`, pageWidth / 2, 42, { align: 'center' })
+  <!-- COUVERTURE -->
+  <div class="page cover">
+    <div class="cover-header">
+      <div class="cover-logo">
+        <div class="cover-logo-icon">A</div>
+        <span class="cover-logo-text">Aura CRM</span>
+      </div>
+      <div class="cover-date">${formatDate(new Date())}</div>
+    </div>
+    <div class="cover-main">
+      <div class="cover-badge">RAPPORT DE SYNTHÈSE</div>
+      <div class="cover-title">Bilan<br/>Patrimonial</div>
+      <div class="cover-subtitle">Synthèse de la situation patrimoniale, budgétaire et des actifs</div>
+      <div class="cover-client-card">
+        <div class="cover-client-label">CLIENT</div>
+        <div class="cover-client-name">${client.firstName} ${client.lastName}</div>
+        <div class="cover-client-info">${formatDate(new Date())}</div>
+      </div>
+    </div>
+    <div class="cover-footer">
+      <div class="cover-footer-item"><span>Patrimoine brut</span><br/><span class="cover-footer-value">${formatCurrency(totalActifs)}</span></div>
+      <div class="cover-footer-item"><span>Dettes</span><br/><span class="cover-footer-value">${formatCurrency(totalPassifs)}</span></div>
+      <div class="cover-footer-item"><span>Patrimoine net</span><br/><span class="cover-footer-value">${formatCurrency(patrimoineNet)}</span></div>
+    </div>
+  </div>
 
-        // --- Section 1: Synthèse ---
-        let yPos = 60
-        doc.setFontSize(16)
-        doc.setTextColor(0, 0, 0)
-        doc.setFont('helvetica', 'bold')
-        doc.text('1. Synthèse Globale', 14, yPos)
+  <!-- PAGE 2: SYNTHÈSE -->
+  <div class="page content-page" style="padding:50px;">
+    <div class="page-header">
+      <div class="page-title">Synthèse Globale</div>
+      <div class="page-number">1</div>
+    </div>
 
-        yPos += 8
-        const globalData = [
-            ['Patrimoine Brut', formatCurrency(totalActifs)],
-            ['Total des Dettes', formatCurrency(totalPassifs)],
-            ['Patrimoine Net', formatCurrency(patrimoineNet)],
-            ['Capacité d\'épargne mensuelle', formatCurrency(solde)],
-        ]
+    <div class="stats-row">
+      <div class="stat-card highlight">
+        <div class="stat-label">PATRIMOINE NET</div>
+        <div class="stat-value">${formatCurrency(patrimoineNet)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">PATRIMOINE BRUT</div>
+        <div class="stat-value">${formatCurrency(totalActifs)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">TOTAL DETTES</div>
+        <div class="stat-value" style="color:var(--danger);">${formatCurrency(totalPassifs)}</div>
+      </div>
+    </div>
 
-        autoTable(doc, {
-            startY: yPos,
-            body: globalData,
-            theme: 'plain',
-            styles: { fontSize: 12, cellPadding: 5 },
-            columnStyles: { 0: { fontStyle: 'bold' }, 1: { halign: 'right' } },
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">REVENUS MENSUELS</div>
+        <div class="stat-value">${formatCurrency(totalRevenus)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">CHARGES + CRÉDITS</div>
+        <div class="stat-value">${formatCurrency(totalCharges + totalCredits)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">CAPACITÉ D'ÉPARGNE</div>
+        <div class="stat-value" style="color:${solde >= 0 ? 'var(--success)' : 'var(--danger)'};">${formatCurrency(solde)}</div>
+      </div>
+    </div>
+
+    ${chartData.length > 0 ? `
+    <div class="card" style="margin-top:20px;">
+      <div class="card-header"><span class="card-title">Répartition du patrimoine</span></div>
+      <div class="chart-container" style="padding:16px;">
+        ${generateDonutChart(chartData, 160, 22, { centerLabel: 'Net', centerValue: formatCurrency(patrimoineNet) })}
+      </div>
+    </div>` : ''}
+  </div>
+
+  <!-- PAGE 3: DÉTAIL PATRIMOINE -->
+  <div class="page content-page" style="padding:50px;">
+    <div class="page-header">
+      <div class="page-title">Détail du Patrimoine</div>
+      <div class="page-number">2</div>
+    </div>
+
+    ${client.actifs.length > 0 ? `
+    <div class="table-container">
+      <div class="table-header"><span class="table-title">Actifs</span></div>
+      <table>
+        <thead><tr><th>Désignation</th><th>Type</th><th>Catégorie</th><th style="text-align:right;">Valeur</th></tr></thead>
+        <tbody>
+          ${client.actifs.map(ca => `<tr>
+            <td class="td-main">${ca.actif.name || 'Actif'}</td>
+            <td>${ca.actif.type || '-'}</td>
+            <td>${catLabels[ca.actif.category || 'AUTRE'] || ca.actif.category}</td>
+            <td class="td-amount">${formatCurrency(Number(ca.actif.value))}</td>
+          </tr>`).join('')}
+          <tr class="table-footer"><td colspan="3">Total Actifs</td><td class="td-amount">${formatCurrency(totalActifs)}</td></tr>
+        </tbody>
+      </table>
+    </div>` : '<p style="color:var(--text-muted);font-style:italic;">Aucun actif répertorié.</p>'}
+
+    ${client.passifs.length > 0 ? `
+    <div class="table-container" style="margin-top:24px;">
+      <div class="table-header"><span class="table-title">Passifs</span></div>
+      <table>
+        <thead><tr><th>Désignation</th><th>Type</th><th style="text-align:right;">Capital restant</th><th style="text-align:right;">Mensualité</th></tr></thead>
+        <tbody>
+          ${client.passifs.map(p => `<tr>
+            <td class="td-main">${p.name || 'Passif'}</td>
+            <td>${p.type || '-'}</td>
+            <td class="td-amount negative">${formatCurrency(Number(p.remainingAmount))}</td>
+            <td class="td-amount">${formatCurrency(Number(p.monthlyPayment))}</td>
+          </tr>`).join('')}
+          <tr class="table-footer"><td colspan="2">Total Passifs</td><td class="td-amount">${formatCurrency(totalPassifs)}</td><td class="td-amount">${formatCurrency(totalCredits)}</td></tr>
+        </tbody>
+      </table>
+    </div>` : ''}
+  </div>
+
+  <!-- PAGE 4: BUDGET -->
+  <div class="page content-page" style="padding:50px;">
+    <div class="page-header">
+      <div class="page-title">Budget et Capacité d'Épargne</div>
+      <div class="page-number">3</div>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <tbody>
+          <tr><td class="td-main">Total Revenus Mensuels</td><td class="td-amount positive">${formatCurrency(totalRevenus)}</td></tr>
+          <tr><td class="td-main">Total Charges Mensuelles</td><td class="td-amount negative">${formatCurrency(totalCharges)}</td></tr>
+          <tr><td class="td-main">Mensualités Crédits</td><td class="td-amount negative">${formatCurrency(totalCredits)}</td></tr>
+          <tr class="table-footer"><td>Solde disponible (Capacité d'épargne)</td><td class="td-amount">${formatCurrency(solde)}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:40px;padding:24px;background:var(--bg-light);border-radius:12px;font-size:8pt;color:var(--text-muted);line-height:1.6;">
+      <strong>Avertissement :</strong> Ce document est fourni à titre informatif et ne constitue pas un conseil en investissement.
+      Les valeurs indiquées sont des estimations basées sur les données déclarées par le client au ${formatDate(new Date())}.
+    </div>
+  </div>
+
+</body>
+</html>`
+
+        // Générer le PDF vectoriel avec Puppeteer
+        const pdfBuffer = await PdfGenerator.generateFromHtml(html, {
+            format: 'A4',
+            margin: { top: '0', right: '0', bottom: '0', left: '0' },
+            printBackground: true,
+            displayHeaderFooter: true,
+            footerTemplate: `
+                <div style="width:100%;font-size:8px;padding:0 40px;display:flex;justify-content:space-between;color:#999;">
+                    <span>Bilan patrimonial — ${client.firstName} ${client.lastName} — Document confidentiel</span>
+                    <span>Page <span class="pageNumber"></span> / <span class="totalPages"></span></span>
+                </div>
+            `,
         })
 
-        yPos = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 20
-
-        // --- Section 2: Détail du Patrimoine ---
-        doc.setFontSize(16)
-        doc.setFont('helvetica', 'bold')
-        doc.text('2. Détail du Patrimoine', 14, yPos)
-
-        yPos += 8
-        if (client.actifs.length > 0) {
-            const actifsData = client.actifs.map(a => [
-                a.actif.name || 'Actif',
-                a.actif.type || '-',
-                formatCurrency(Number(a.actif.value)),
-            ])
-
-            autoTable(doc, {
-                startY: yPos,
-                head: [['Désignation', 'Type', 'Valeur Estimée']],
-                body: actifsData,
-                theme: 'striped',
-                headStyles: { fillColor: [115, 115, 255] },
-            })
-            yPos = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15
-        } else {
-            yPos += 10
-            doc.setFontSize(11)
-            doc.setFont('helvetica', 'italic')
-            doc.text('Aucun actif répertorié.', 14, yPos)
-            yPos += 15
-        }
-
-        // --- Section 3: Budget et Flux ---
-        if (yPos > 240) { doc.addPage(); yPos = 20 }
-        doc.setFontSize(16)
-        doc.setFont('helvetica', 'bold')
-        doc.text('3. Budget et Capacité d\'Épargne', 14, yPos)
-
-        yPos += 8
-        const budgetData = [
-            ['Total Revenus Mensuels', formatCurrency(totalRevenus)],
-            ['Total Charges Mensuelles', formatCurrency(totalCharges)],
-            ['Mensualités Crédits', formatCurrency(totalCredits)],
-            ['Solde Disponible (Capacité d\'épargne)', formatCurrency(solde)],
-        ]
-
-        autoTable(doc, {
-            startY: yPos,
-            body: budgetData,
-            theme: 'striped',
-            styles: { fontSize: 11 },
-            columnStyles: { 0: { fontStyle: 'bold' }, 1: { halign: 'right' } },
-        })
-
-        // Footer
-        const pageCount = doc.getNumberOfPages()
-        for (let i = 1; i <= pageCount; i++) {
-            doc.setPage(i)
-            doc.setFontSize(9)
-            doc.setTextColor(150, 150, 150)
-            doc.text(
-                `Page ${i} / ${pageCount} - Aura CRM - Rapport confidentiel`,
-                pageWidth / 2,
-                doc.internal.pageSize.getHeight() - 10,
-                { align: 'center' }
-            )
-        }
-
-        const pdfBuffer = doc.output('arraybuffer')
-
-        return new NextResponse(pdfBuffer, {
+        return new NextResponse(new Uint8Array(pdfBuffer), {
             status: 200,
             headers: {
                 'Content-Type': 'application/pdf',
-                'Content-Disposition': `attachment; filename="bilan-patrimonial-${client.lastName}-${formatDate(new Date()).replace(/\//g, '-')}.pdf"`,
+                'Content-Disposition': `attachment; filename="bilan-patrimonial-${client.lastName}-${new Date().toISOString().split('T')[0]}.pdf"`,
             },
         })
     } catch (error) {
-        console.error('Error generating synthesis report:', error)
+        logger.error('Error generating synthesis report:', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json(
             { error: 'Erreur lors de la génération du rapport' },
             { status: 500 }

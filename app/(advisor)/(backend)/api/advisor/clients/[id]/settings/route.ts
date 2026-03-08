@@ -11,7 +11,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { SettingsDataService } from '@/app/_common/lib/services/settings-data-service'
-
+import { logger } from '@/app/_common/lib/logger'
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -30,7 +30,7 @@ export async function GET(
 
     return createSuccessResponse(data)
   } catch (error: unknown) {
-    console.error('Error fetching client settings:', error)
+    logger.error('Error fetching client settings:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -81,7 +81,7 @@ export async function PUT(
 
     return createSuccessResponse(data)
   } catch (error: unknown) {
-    console.error('Error updating client settings:', error)
+    logger.error('Error updating client settings:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error) {
       if (error.message === 'Unauthorized') {

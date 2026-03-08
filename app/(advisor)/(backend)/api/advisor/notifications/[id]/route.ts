@@ -3,6 +3,10 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { NotificationService } from '@/app/_common/lib/services/notification-service'
 import { normalizeNotificationUpdatePayload } from '../utils'
+import { logger } from '@/app/_common/lib/logger'
+function resolveCabinetId(cabinetIdFromContext: string, userCabinetId?: string): string {
+  return cabinetIdFromContext || userCabinetId || ''
+}
 
 /**
  * GET /api/advisor/notifications/[id]
@@ -20,13 +24,18 @@ export async function GET(
       return createErrorResponse('Invalid user type', 400)
     }
 
+    const cabinetId = resolveCabinetId(context.cabinetId, user.cabinetId)
+    if (!context.isSuperAdmin && !cabinetId) {
+      return createErrorResponse('Missing cabinet context', 400)
+    }
+
     if (!id) {
       return createErrorResponse('Missing notification ID', 400)
     }
 
     // Instantiate service
     const service = new NotificationService(
-      context.cabinetId,
+      cabinetId,
       user.id,
       user.role,
       context.isSuperAdmin
@@ -41,7 +50,7 @@ export async function GET(
 
     return createSuccessResponse(notification)
   } catch (error) {
-    console.error('Error in GET /api/advisor/notifications/[id]:', error)
+    logger.error('Error in GET /api/advisor/notifications/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -67,6 +76,11 @@ export async function PATCH(
       return createErrorResponse('Invalid user type', 400)
     }
 
+    const cabinetId = resolveCabinetId(context.cabinetId, user.cabinetId)
+    if (!context.isSuperAdmin && !cabinetId) {
+      return createErrorResponse('Missing cabinet context', 400)
+    }
+
     if (!id) {
       return createErrorResponse('Missing notification ID', 400)
     }
@@ -77,7 +91,7 @@ export async function PATCH(
 
     // Instantiate service
     const service = new NotificationService(
-      context.cabinetId,
+      cabinetId,
       user.id,
       user.role,
       context.isSuperAdmin
@@ -88,7 +102,7 @@ export async function PATCH(
 
     return createSuccessResponse(notification)
   } catch (error) {
-    console.error('Error in PATCH /api/advisor/notifications/[id]:', error)
+    logger.error('Error in PATCH /api/advisor/notifications/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -122,13 +136,18 @@ export async function DELETE(
       return createErrorResponse('Invalid user type', 400)
     }
 
+    const cabinetId = resolveCabinetId(context.cabinetId, user.cabinetId)
+    if (!context.isSuperAdmin && !cabinetId) {
+      return createErrorResponse('Missing cabinet context', 400)
+    }
+
     if (!id) {
       return createErrorResponse('Missing notification ID', 400)
     }
 
     // Instantiate service
     const service = new NotificationService(
-      context.cabinetId,
+      cabinetId,
       user.id,
       user.role,
       context.isSuperAdmin
@@ -139,7 +158,7 @@ export async function DELETE(
 
     return createSuccessResponse({ success: true })
   } catch (error) {
-    console.error('Error in DELETE /api/advisor/notifications/[id]:', error)
+    logger.error('Error in DELETE /api/advisor/notifications/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

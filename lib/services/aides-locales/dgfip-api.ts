@@ -98,7 +98,7 @@ import {
   PLAFONDS_REVENUS_PTZ_2025, 
   PLAFONDS_PLI_2025,
   PRET_ACCESSION_SOCIALE_2025 
-} from './parameters-ptz-2025'
+} from './parameters-ptz'
 
 // ══════════════════════════════════════════════════════════════════════════════
 // FONCTIONS PRINCIPALES

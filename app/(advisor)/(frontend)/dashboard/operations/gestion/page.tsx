@@ -1,11 +1,13 @@
 "use client"
 
-import { useState, useMemo } from 'react'
+import { Suspense, useState, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { 
   useOperationsGestion,
   useDeleteOperationGestion,
 } from '@/app/_common/hooks/api/use-operations-api'
+import { useToast } from '@/app/_common/hooks/use-toast'
+import { ConfirmDialog } from '@/app/_common/components/ui/ConfirmDialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/_common/components/ui/Card'
 import { Badge } from '@/app/_common/components/ui/Badge'
 import { Button } from '@/app/_common/components/ui/Button'
@@ -32,7 +34,6 @@ import {
   Eye,
   Edit,
   Trash2,
-  User,
   FileText,
   Euro,
   Calendar,
@@ -40,6 +41,7 @@ import {
   X,
   RefreshCw,
 } from 'lucide-react'
+import { ClientLink } from '@/app/_common/components/ClientLink'
 import {
   OPERATION_GESTION_TYPES,
   OPERATION_GESTION_TYPE_LABELS,
@@ -114,6 +116,14 @@ function FilterDropdown({
   )
 }
 
+export default function OperationsGestionPage() {
+  return (
+    <Suspense fallback={null}>
+      <OperationsGestionPageInner />
+    </Suspense>
+  )
+}
+
 // ============================================================================
 // Table Header Component
 // ============================================================================
@@ -173,12 +183,11 @@ function OperationRow({
         </button>
       </td>
       <td className="px-4 py-3">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-gray-100 rounded-lg">
-            <User className="h-3.5 w-3.5 text-gray-500" />
-          </div>
-          <span className="text-sm text-gray-900">Client #{operation.clientId.slice(0, 8)}</span>
-        </div>
+        <ClientLink
+          clientId={operation.clientId}
+          showAvatar={true}
+          avatarSize="sm"
+        />
       </td>
       <td className="px-4 py-3">
         <span className="text-sm text-gray-700">
@@ -248,7 +257,7 @@ function OperationRow({
 
 function TableSkeleton() {
   return (
-    <div className="space-y-3">
+    <div className="p-6 space-y-6">
       {[1, 2, 3, 4, 5].map((i) => (
         <div key={i} className="flex items-center gap-4 px-4 py-3">
           <Skeleton className="h-4 w-24" />
@@ -344,7 +353,7 @@ function SummaryStats({
 // Main Page Component
 // ============================================================================
 
-export default function OperationsGestionPage() {
+function OperationsGestionPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -360,6 +369,36 @@ export default function OperationsGestionPage() {
   
   const [sortField, setSortField] = useState<SortField>('createdAt')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
+  
+  // État pour la suppression
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [operationToDelete, setOperationToDelete] = useState<string | null>(null)
+  const { toast } = useToast()
+
+  const handleDeleteClick = (operationId: string) => {
+    setOperationToDelete(operationId)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (operationToDelete) {
+      try {
+        await deleteOperation.mutateAsync(operationToDelete)
+        toast({
+          title: 'Opération supprimée',
+          description: 'L\'opération a été supprimée avec succès.',
+        })
+        setDeleteDialogOpen(false)
+        setOperationToDelete(null)
+      } catch (error: any) {
+        toast({
+          title: 'Erreur',
+          description: error.message || 'Impossible de supprimer l\'opération.',
+          variant: 'destructive',
+        })
+      }
+    }
+  }
 
   // Fetch data
   const { 
@@ -659,7 +698,7 @@ export default function OperationsGestionPage() {
                       operation={operation}
                       onView={() => router.push(`/dashboard/operations/gestion/${operation.id}`)}
                       onEdit={() => router.push(`/dashboard/operations/gestion/${operation.id}/edit`)}
-                      onDelete={() => {/* TODO: Implement delete confirmation */}}
+                      onDelete={() => handleDeleteClick(operation.id)}
                     />
                   ))}
                 </tbody>
@@ -675,6 +714,20 @@ export default function OperationsGestionPage() {
           {filteredOperations.length} opération{filteredOperations.length > 1 ? 's' : ''} trouvée{filteredOperations.length > 1 ? 's' : ''}
         </p>
       )}
+
+      {/* Modal de confirmation de suppression */}
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Supprimer l'opération"
+        description="Êtes-vous sûr de vouloir supprimer cette opération ? Cette action est irréversible."
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setOperationToDelete(null)}
+        variant="danger"
+        loading={deleteOperation.isPending}
+      />
     </div>
   )
 }

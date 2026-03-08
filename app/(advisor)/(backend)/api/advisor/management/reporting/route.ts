@@ -4,7 +4,7 @@ import { requireAuth, createErrorResponse } from '@/app/_common/lib/auth-helpers
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
 import type { PrismaClient } from '@prisma/client'
-
+import { logger } from '@/app/_common/lib/logger'
 interface BaseReportData {
   cabinet: string
   period: string
@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
     // Return JSON data
     return NextResponse.json(reportData)
   } catch (error) {
-    console.error('Error in GET /api/advisor/management/reporting:', error)
+    logger.error('Error in GET /api/advisor/management/reporting:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

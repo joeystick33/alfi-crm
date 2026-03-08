@@ -3,7 +3,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
 import { normalizeConseillerUpdatePayload } from '../utils'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/conseillers/[id]
  * Get a specific conseiller by ID
@@ -76,7 +76,7 @@ export async function GET(
 
     return createSuccessResponse(formatted)
   } catch (error) {
-    console.error('Error in GET /api/advisor/conseillers/[id]:', error)
+    logger.error('Error in GET /api/advisor/conseillers/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -181,7 +181,7 @@ export async function PATCH(
 
     return createSuccessResponse(updated)
   } catch (error) {
-    console.error('Error in PATCH /api/advisor/conseillers/[id]:', error)
+    logger.error('Error in PATCH /api/advisor/conseillers/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -253,7 +253,7 @@ export async function DELETE(
       message: 'Conseiller désactivé avec succès',
     })
   } catch (error) {
-    console.error('Error in DELETE /api/advisor/conseillers/[id]:', error)
+    logger.error('Error in DELETE /api/advisor/conseillers/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { EmailTemplateService } from '@/app/_common/lib/services/email-template-service'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
-
+import { logger } from '@/app/_common/lib/logger'
 // Schéma validation duplication
 const DuplicateTemplateSchema = z.object({
   newName: z.string().min(1).max(200).optional(),
@@ -37,7 +37,7 @@ export async function POST(
 
     return NextResponse.json(template, { status: 201 })
   } catch (error) {
-    console.error(`Erreur POST /api/advisor/email-templates/${templateId}/duplicate:`, error)
+    logger.error(`Erreur POST /api/advisor/email-templates/${templateId}/duplicate:`, { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

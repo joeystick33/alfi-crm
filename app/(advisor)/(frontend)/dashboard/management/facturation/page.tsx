@@ -9,7 +9,7 @@
  * - Commissions et honoraires
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/_common/components/ui/Card'
 import { Badge } from '@/app/_common/components/ui/Badge'
@@ -91,63 +91,91 @@ export default function FacturationPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
 
-  useEffect(() => {
-    loadData()
-  }, [period])
+  const [error, setError] = useState<string | null>(null)
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
       const response = await fetch(`/api/advisor/management/facturation?period=${period}`, {
         credentials: 'include',
       })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setStats(data.stats)
-        setFactures(data.factures)
-        setConseillers(data.conseillers)
-      } else {
-        setStats(generateDemoStats())
-        setFactures(generateDemoFactures())
-        setConseillers(generateDemoConseillers())
+
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}))
+        throw new Error(errBody.error || `Erreur ${response.status}`)
       }
-    } catch (error) {
-      console.error('Erreur:', error)
-      setStats(generateDemoStats())
-      setFactures(generateDemoFactures())
-      setConseillers(generateDemoConseillers())
+
+      const result = await response.json()
+      const data = result.data || result
+
+      // Map API stats to local format
+      setStats({
+        totalCA: data.stats?.totalCA || 0,
+        totalPaye: data.stats?.paidAmount || 0,
+        totalEnAttente: data.stats?.pendingAmount || 0,
+        totalEnRetard: data.stats?.overdueAmount || 0,
+        nbFactures: data.stats?.invoiceCount || 0,
+        nbPayees: data.stats?.paidCount || 0,
+        nbEnAttente: data.stats?.pendingCount || 0,
+        nbEnRetard: 0,
+        trendCA: 0,
+      })
+
+      // Map API invoices to local format
+      const apiInvoices = data.invoices || []
+      setFactures(apiInvoices.map((inv: any) => {
+        const clientParts = inv.client?.split(' ') || []
+        const conseillerParts = inv.conseiller?.split(' ') || []
+        return {
+          id: inv.id,
+          numero: inv.invoiceNumber,
+          client: {
+            id: inv.clientId || '',
+            firstName: clientParts[0] || '',
+            lastName: clientParts.slice(1).join(' ') || '',
+          },
+          conseiller: {
+            id: inv.conseillerId || '',
+            firstName: conseillerParts[0] || '',
+            lastName: conseillerParts.slice(1).join(' ') || '',
+          },
+          montant: inv.amountTTC || 0,
+          type: 'HONORAIRES' as const,
+          status: inv.status,
+          dateEmission: inv.issueDate ? new Date(inv.issueDate).toISOString().split('T')[0] : '',
+          dateEcheance: inv.dueDate ? new Date(inv.dueDate).toISOString().split('T')[0] : '',
+          datePaiement: inv.paidDate ? new Date(inv.paidDate).toISOString().split('T')[0] : undefined,
+        }
+      }))
+
+      // Map conseillers
+      const apiConseillers = data.facturationParConseiller || []
+      setConseillers(apiConseillers.map((c: any) => {
+        const nameParts = c.name?.split(' ') || []
+        return {
+          id: c.id,
+          firstName: nameParts[0] || '',
+          lastName: nameParts.slice(1).join(' ') || '',
+          totalFacture: c.totalCA || 0,
+          totalPaye: c.paid || 0,
+          totalEnAttente: c.pending || 0,
+          nbFactures: c.count || 0,
+        }
+      }))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Impossible de charger les données')
+      setStats(null)
+      setFactures([])
+      setConseillers([])
     } finally {
       setLoading(false)
     }
-  }
+  }, [period])
 
-  const generateDemoStats = (): FacturationStats => ({
-    totalCA: 487500,
-    totalPaye: 412000,
-    totalEnAttente: 58000,
-    totalEnRetard: 17500,
-    nbFactures: 47,
-    nbPayees: 38,
-    nbEnAttente: 6,
-    nbEnRetard: 3,
-    trendCA: 12.5,
-  })
-
-  const generateDemoFactures = (): FactureData[] => [
-    { id: '1', numero: 'FAC-2024-001', client: { id: '1', firstName: 'Jean', lastName: 'Martin' }, conseiller: { id: '1', firstName: 'Marie', lastName: 'Dupont' }, montant: 1500, type: 'HONORAIRES', status: 'PAYEE', dateEmission: '2024-11-01', dateEcheance: '2024-11-30', datePaiement: '2024-11-15' },
-    { id: '2', numero: 'FAC-2024-002', client: { id: '2', firstName: 'Sophie', lastName: 'Bernard' }, conseiller: { id: '1', firstName: 'Marie', lastName: 'Dupont' }, montant: 2500, type: 'COMMISSION', status: 'ENVOYE', dateEmission: '2024-11-10', dateEcheance: '2024-12-10' },
-    { id: '3', numero: 'FAC-2024-003', client: { id: '3', firstName: 'Pierre', lastName: 'Durand' }, conseiller: { id: '2', firstName: 'Pierre', lastName: 'Martin' }, montant: 800, type: 'HONORAIRES', status: 'EN_RETARD', dateEmission: '2024-10-15', dateEcheance: '2024-11-15' },
-    { id: '4', numero: 'FAC-2024-004', client: { id: '4', firstName: 'Lucas', lastName: 'Petit' }, conseiller: { id: '2', firstName: 'Pierre', lastName: 'Martin' }, montant: 3200, type: 'COMMISSION', status: 'PAYEE', dateEmission: '2024-11-05', dateEcheance: '2024-12-05', datePaiement: '2024-11-20' },
-    { id: '5', numero: 'FAC-2024-005', client: { id: '5', firstName: 'Emma', lastName: 'Leroy' }, conseiller: { id: '3', firstName: 'Lucas', lastName: 'Bernard' }, montant: 1200, type: 'HONORAIRES', status: 'BROUILLON', dateEmission: '2024-11-25', dateEcheance: '2024-12-25' },
-  ]
-
-  const generateDemoConseillers = (): ConseillerFacturation[] => [
-    { id: '1', firstName: 'Marie', lastName: 'Dupont', totalFacture: 185000, totalPaye: 165000, totalEnAttente: 20000, nbFactures: 18 },
-    { id: '2', firstName: 'Pierre', lastName: 'Martin', totalFacture: 152000, totalPaye: 132000, totalEnAttente: 20000, nbFactures: 15 },
-    { id: '3', firstName: 'Lucas', lastName: 'Bernard', totalFacture: 98000, totalPaye: 78000, totalEnAttente: 20000, nbFactures: 10 },
-    { id: '4', firstName: 'Sophie', lastName: 'Laurent', totalFacture: 52500, totalPaye: 37000, totalEnAttente: 15500, nbFactures: 4 },
-  ]
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value)

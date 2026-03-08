@@ -15,7 +15,6 @@ import { ClientHeader } from '@/app/(advisor)/(frontend)/components/client360-v2
 import { Client360ProContainerV2 } from '@/app/(advisor)/(frontend)/components/client360-pro'
 import { ClientEditModal } from '@/app/(advisor)/(frontend)/components/client360/ClientEditModal'
 import { useToast } from '@/app/_common/hooks/use-toast'
-import { useClientKPIs } from '@/app/(advisor)/(frontend)/hooks/useClientKPIs'
 import {
   ArrowLeft,
   UserX,
@@ -43,7 +42,6 @@ export default function ClientPage({ params }: ClientPageProps) {
   const [showEditModal, setShowEditModal] = useState(false)
 
   const { toast } = useToast()
-  const kpis = useClientKPIs(id)
 
   if (isLoading) {
     return (
@@ -101,11 +99,6 @@ export default function ClientPage({ params }: ClientPageProps) {
       <ClientHeader
         client={client}
         wealth={wealth as any}
-        kpis={{
-          patrimoineNet: kpis.patrimoine.net,
-          patrimoineEvolution: kpis.patrimoine.evolution,
-          tmi: kpis.fiscalite.tmi,
-        }}
         onBack={() => router.push('/dashboard/clients')}
         onEdit={() => setShowEditModal(true)}
         onAction={(action) => {

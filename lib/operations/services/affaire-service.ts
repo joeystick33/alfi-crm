@@ -140,6 +140,12 @@ async function generateAffaireReference(cabinetId: string): Promise<string> {
  * Crée une nouvelle affaire
  * 
  * @requirements 19.2 - WHEN creating an Affaire Nouvelle, THE Affaire_Nouvelle SHALL require client, product type, provider, estimated amount, target date, source
+ * @requirements 5.2 - WHEN the CGP creates an operation, THE Result_Validator SHALL:
+ *   - Create the operation record in the database
+ *   - Generate a unique reference number
+ *   - Link to the client and any associated documents
+ *   - Create a timeline event
+ *   - Return the created operation with all details
  */
 export async function createAffaire(
   input: CreateAffaireInput
@@ -148,73 +154,130 @@ export async function createAffaire(
     // Validate input
     const validatedInput = createAffaireSchema.parse(input)
 
+    const initialStatus: AffaireStatus =
+      validatedInput.source === 'PROSPECTION' ? 'PROSPECT' : 'QUALIFICATION'
+
     // Generate unique reference
     const reference = await generateAffaireReference(validatedInput.cabinetId)
 
-    // Create affaire with initial status PROSPECT
-    const affaire = await prisma.affaireNouvelle.create({
-      data: {
-        cabinetId: validatedInput.cabinetId,
-        reference,
-        clientId: validatedInput.clientId,
-        productType: validatedInput.productType as ProductType,
-        providerId: validatedInput.providerId,
-        productId: validatedInput.productId ?? null,
-        status: 'PROSPECT',
-        source: validatedInput.source as AffaireSource,
-        estimatedAmount: validatedInput.estimatedAmount,
-        targetDate: validatedInput.targetDate ?? null,
-        productDetails: (validatedInput.productDetails ?? null) as unknown as Prisma.InputJsonValue,
-        createdById: validatedInput.createdById,
-        lastActivityAt: new Date(),
-      },
-      include: {
-        client: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
+    // Use a transaction to ensure all operations succeed or fail together
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Create affaire with initial status
+      const affaire = await tx.affaireNouvelle.create({
+        data: {
+          cabinetId: validatedInput.cabinetId,
+          reference,
+          clientId: validatedInput.clientId,
+          productType: validatedInput.productType as ProductType,
+          providerId: validatedInput.providerId,
+          productId: validatedInput.productId ?? null,
+          status: initialStatus,
+          source: validatedInput.source as AffaireSource,
+          estimatedAmount: validatedInput.estimatedAmount,
+          targetDate: validatedInput.targetDate ?? null,
+          productDetails: (validatedInput.productDetails ?? null) as unknown as Prisma.InputJsonValue,
+          createdById: validatedInput.createdById,
+          lastActivityAt: new Date(),
+        },
+        include: {
+          client: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+          provider: {
+            select: {
+              id: true,
+              name: true,
+              type: true,
+            },
+          },
+          product: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+            },
+          },
+          createdBy: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
           },
         },
-        provider: {
-          select: {
-            id: true,
-            name: true,
-            type: true,
-          },
-        },
-        product: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-          },
-        },
-        createdBy: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-      },
-    })
+      })
 
-    // Record initial status in history
-    await prisma.affaireStatusHistory.create({
-      data: {
-        affaireId: affaire.id,
-        fromStatus: null,
-        toStatus: 'PROSPECT',
-        note: 'Création de l\'affaire',
-        userId: validatedInput.createdById,
-      },
+      // 2. Record initial status in history
+      await tx.affaireStatusHistory.create({
+        data: {
+          affaireId: affaire.id,
+          fromStatus: null,
+          toStatus: initialStatus,
+          note: 'Création de l\'affaire',
+          userId: validatedInput.createdById,
+        },
+      })
+
+      // 3. Create audit log entry
+      await tx.auditLog.create({
+        data: {
+          cabinetId: validatedInput.cabinetId,
+          userId: validatedInput.createdById,
+          action: 'CREATION',
+          entityType: 'AffaireNouvelle',
+          entityId: affaire.id,
+          changes: {
+            reference,
+            clientId: validatedInput.clientId,
+            productType: validatedInput.productType,
+            providerId: validatedInput.providerId,
+            estimatedAmount: validatedInput.estimatedAmount,
+            source: validatedInput.source,
+            status: initialStatus,
+          },
+        },
+      })
+
+      // 4. Create timeline event for the client
+      await tx.complianceTimelineEvent.create({
+        data: {
+          cabinetId: validatedInput.cabinetId,
+          clientId: validatedInput.clientId,
+          operationId: affaire.id,
+          type: 'CONTROL_CREATED', // Using closest available type for operation creation
+          title: `Nouvelle affaire créée: ${reference}`,
+          description: `Une nouvelle affaire de type "${validatedInput.productType}" a été créée avec le fournisseur ${affaire.provider.name}. Montant estimé: ${validatedInput.estimatedAmount.toLocaleString('fr-FR')} €`,
+          metadata: {
+            affaireId: affaire.id,
+            reference,
+            productType: validatedInput.productType,
+            providerId: validatedInput.providerId,
+            providerName: affaire.provider.name,
+            estimatedAmount: validatedInput.estimatedAmount,
+            source: validatedInput.source,
+          },
+          userId: validatedInput.createdById,
+        },
+      })
+
+      // 5. Link any existing required documents for this operation type
+      // This creates document requirements based on the product type
+      const requiredDocumentTypes = getRequiredDocumentsForProductType(validatedInput.productType as ProductType)
+      
+      // Note: We don't create the documents here, just track what's needed
+      // The actual document generation happens when the user requests it
+
+      return affaire
     })
 
     return {
       success: true,
-      data: transformAffaire(affaire),
+      data: transformAffaire(result),
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erreur lors de la création de l\'affaire'
@@ -223,6 +286,30 @@ export async function createAffaire(
       error: message,
     }
   }
+}
+
+/**
+ * Returns the list of required document types for a given product type
+ */
+function getRequiredDocumentsForProductType(productType: ProductType): string[] {
+  const documentRequirements: Record<ProductType, string[]> = {
+    ASSURANCE_VIE: ['DER', 'RECUEIL_INFORMATIONS', 'DECLARATION_ADEQUATION', 'BULLETIN_SOUSCRIPTION'],
+    PER_INDIVIDUEL: ['DER', 'RECUEIL_INFORMATIONS', 'DECLARATION_ADEQUATION', 'BULLETIN_SOUSCRIPTION'],
+    PER_ENTREPRISE: ['DER', 'RECUEIL_INFORMATIONS', 'DECLARATION_ADEQUATION', 'BULLETIN_SOUSCRIPTION'],
+    SCPI: ['DER', 'RECUEIL_INFORMATIONS', 'DECLARATION_ADEQUATION', 'BULLETIN_SOUSCRIPTION'],
+    OPCI: ['DER', 'RECUEIL_INFORMATIONS', 'DECLARATION_ADEQUATION', 'BULLETIN_SOUSCRIPTION'],
+    COMPTE_TITRES: ['DER', 'RECUEIL_INFORMATIONS', 'DECLARATION_ADEQUATION'],
+    PEA: ['DER', 'RECUEIL_INFORMATIONS', 'DECLARATION_ADEQUATION'],
+    PEA_PME: ['DER', 'RECUEIL_INFORMATIONS', 'DECLARATION_ADEQUATION'],
+    CAPITALISATION: ['DER', 'RECUEIL_INFORMATIONS', 'DECLARATION_ADEQUATION', 'BULLETIN_SOUSCRIPTION'],
+    FCPR: ['DER', 'RECUEIL_INFORMATIONS', 'DECLARATION_ADEQUATION', 'BULLETIN_SOUSCRIPTION'],
+    FCPI: ['DER', 'RECUEIL_INFORMATIONS', 'DECLARATION_ADEQUATION', 'BULLETIN_SOUSCRIPTION'],
+    FIP: ['DER', 'RECUEIL_INFORMATIONS', 'DECLARATION_ADEQUATION', 'BULLETIN_SOUSCRIPTION'],
+    IMMOBILIER_DIRECT: ['DER', 'RECUEIL_INFORMATIONS', 'LETTRE_MISSION'],
+    CREDIT_IMMOBILIER: ['DER', 'RECUEIL_INFORMATIONS', 'LETTRE_MISSION'],
+  }
+  
+  return documentRequirements[productType] || ['DER', 'RECUEIL_INFORMATIONS']
 }
 
 /**

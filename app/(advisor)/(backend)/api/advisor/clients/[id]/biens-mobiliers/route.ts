@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { prisma } from '@/app/_common/lib/prisma'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 // Schéma de validation pour les biens mobiliers
 const createBienMobilierSchema = z.object({
   type: z.string().min(1, 'Le type est requis'),
@@ -66,7 +66,7 @@ export async function GET(
 
     return createSuccessResponse(biensMobiliers)
   } catch (error: unknown) {
-    console.error('Error fetching biens mobiliers:', error)
+    logger.error('Error fetching biens mobiliers:', { error: error instanceof Error ? error.message : String(error) })
     if ((error as Error).message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }
@@ -139,7 +139,7 @@ export async function POST(
 
     return createSuccessResponse(bienMobilier, 201)
   } catch (error: unknown) {
-    console.error('Error creating bien mobilier:', error)
+    logger.error('Error creating bien mobilier:', { error: error instanceof Error ? error.message : String(error) })
     if (error instanceof z.ZodError) {
       return createErrorResponse('Données invalides: ' + error.issues.map(e => e.message).join(', '), 400)
     }

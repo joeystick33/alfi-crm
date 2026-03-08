@@ -5,7 +5,7 @@ import { isRegularUser } from '@/app/_common/lib/auth-types'
 
 import { KYCService } from '@/app/_common/lib/services/kyc-service'
 import { z } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 // Schéma de validation
 const validateKYCDocumentSchema = z.object({
   status: z.enum(['VALIDE', 'REJETE']),
@@ -46,7 +46,7 @@ export async function POST(
 
     return NextResponse.json(document)
   } catch (error) {
-    console.error('Error validating KYC document:', error)
+    logger.error('Error validating KYC document:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse, checkPermission } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { StorageService } from '@/app/_common/lib/services/storage-service'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * POST /api/advisor/documents/upload
  * Upload brut d'un fichier vers le stockage GED
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       201
     )
   } catch (error) {
-    console.error('Error in POST /api/advisor/documents/upload:', error)
+    logger.error('Error in POST /api/advisor/documents/upload:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

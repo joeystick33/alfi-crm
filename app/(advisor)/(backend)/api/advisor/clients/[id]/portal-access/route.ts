@@ -9,7 +9,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
 import { createAdminClient } from '@/app/_common/lib/supabase/server'
-
+import { logger } from '@/app/_common/lib/logger'
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -80,7 +80,7 @@ export async function POST(
     if (inviteError) {
       // Si l'utilisateur existe déjà, on peut quand même activer l'accès
       if (!inviteError.message.includes('already') && !inviteError.message.includes('exists')) {
-        console.error('Erreur Supabase invitation:', inviteError)
+        logger.error('Erreur Supabase invitation: ' + inviteError.message)
         return createErrorResponse(`Erreur lors de l'envoi de l'invitation: ${inviteError.message}`, 500)
       }
     }
@@ -103,7 +103,7 @@ export async function POST(
     })
 
   } catch (error: unknown) {
-    console.error('Error enabling portal access:', error)
+    logger.error('Error enabling portal access:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -171,7 +171,7 @@ export async function DELETE(
           })
         }
       } catch (supabaseError) {
-        console.error('Erreur désactivation Supabase:', supabaseError)
+        logger.error('Erreur désactivation Supabase:', supabaseError)
         // Continue - l'accès Prisma est déjà révoqué
       }
     }
@@ -181,7 +181,7 @@ export async function DELETE(
     })
 
   } catch (error: unknown) {
-    console.error('Error disabling portal access:', error)
+    logger.error('Error disabling portal access:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -235,7 +235,7 @@ export async function GET(
     })
 
   } catch (error: unknown) {
-    console.error('Error fetching portal access status:', error)
+    logger.error('Error fetching portal access status:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

@@ -3,13 +3,16 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { DossierService } from '@/app/_common/lib/services/dossier-service'
 import { z } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 const updateDossierSchema = z.object({
   nom: z.string().min(1).optional(),
   description: z.string().optional(),
-  type: z.enum(['PATRIMOINE', 'SUCCESSION', 'RETRAITE', 'INVESTISSEMENT', 'FISCAL', 'IMMOBILIER', 'ASSURANCE', 'CONSEIL', 'AUDIT', 'FORMATION', 'AUTRE']).optional(),
+  type: z.string().optional(),
+  categorie: z.string().optional(),
   priorite: z.enum(['BASSE', 'NORMALE', 'HAUTE', 'URGENTE']).optional(),
-  status: z.enum(['BROUILLON', 'ACTIF', 'EN_COURS', 'EN_ATTENTE', 'TERMINE', 'ARCHIVE', 'ANNULE']).optional(),
+  status: z.string().optional(),
+  etapeActuelle: z.enum(['COLLECTE', 'ANALYSE', 'PRECONISATION', 'VALIDATION', 'CLOTURE']).optional(),
+  clientDataSnapshot: z.record(z.string(), z.unknown()).optional(),
   dateCloturePrevu: z.string().optional().transform(val => val ? new Date(val) : undefined),
   dateClotureReelle: z.string().optional().transform(val => val ? new Date(val) : undefined),
   montantEstime: z.number().optional(),
@@ -54,7 +57,7 @@ export async function GET(
 
     return createSuccessResponse(dossier)
   } catch (error) {
-    console.error('Error in GET /api/advisor/dossiers/[id]:', error)
+    logger.error('Error in GET /api/advisor/dossiers/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -116,7 +119,7 @@ export async function PATCH(
 
     return createSuccessResponse(updated)
   } catch (error) {
-    console.error('Error in PATCH /api/advisor/dossiers/[id]:', error)
+    logger.error('Error in PATCH /api/advisor/dossiers/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -164,7 +167,7 @@ export async function DELETE(
       message: 'Dossier supprimé avec succès',
     })
   } catch (error) {
-    console.error('Error in DELETE /api/advisor/dossiers/[id]:', error)
+    logger.error('Error in DELETE /api/advisor/dossiers/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { EmailTemplateService } from '@/app/_common/lib/services/email-template-service'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * POST /api/advisor/email-templates/[id]/unarchive
  * Restaurer un template archivé
@@ -28,7 +28,7 @@ export async function POST(
 
     return NextResponse.json(template)
   } catch (error) {
-    console.error(`Erreur POST /api/advisor/email-templates/${templateId}/unarchive:`, error)
+    logger.error(`Erreur POST /api/advisor/email-templates/${templateId}/unarchive:`, { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Template non trouvé') {
       return NextResponse.json(

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectiveCalculator } from '@/app/_common/lib/services/calculators/objective-calculator';
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * POST /api/calculators/objectives/home-purchase
  * Calculate home purchase savings plan with price appreciation
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error calculating home purchase:', error);
+    logger.error('Error calculating home purchase:', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { 
         error: 'Calculation Error', 

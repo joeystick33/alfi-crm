@@ -2,9 +2,13 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import Script from 'next/script'
 import { SimulatorGate } from '@/app/_common/components/FeatureGate'
 import { usePlotlyReady } from '../immobilier/_hooks/usePlotlyReady'
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
+import {
+  Home, User, Wallet, FileText, CreditCard, BarChart3,
+  Lightbulb, AlertTriangle, CheckCircle, XCircle, BookOpen, Rocket,
+} from 'lucide-react'
 
 // ══════════════════════════════════════════════════════════════════════════════
 // INTERFACES
@@ -31,11 +35,11 @@ interface CapaciteResultats {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// CONSTANTES D'AFFICHAGE (les calculs sont côté serveur)
+// CONSTANTES D'AFFICHAGE — Source : RULES.immobilier.hcsf
 // ══════════════════════════════════════════════════════════════════════════════
 const HCSF = {
-  TAUX_ENDETTEMENT_MAX: 35,
-  DUREE_MAX: 25,
+  TAUX_ENDETTEMENT_MAX: RULES.immobilier.hcsf.taux_endettement_max * 100,
+  DUREE_MAX: RULES.immobilier.hcsf.duree_max_ans,
   RESTE_A_VIVRE_SEUL: 700,
   RESTE_A_VIVRE_COUPLE: 1000,
   PAR_ENFANT: 150,
@@ -300,7 +304,6 @@ export default function CapaciteEmpruntPage() {
 
   return (
     <SimulatorGate simulator="CAPACITE_EMPRUNT" showTeaser>
-      <Script src="https://cdn.plot.ly/plotly-2.27.0.min.js" strategy="afterInteractive" onLoad={handlePlotlyLoad} />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-sky-50">
         <main className="container mx-auto px-4 py-6 max-w-6xl">
           <Link href="/dashboard/simulateurs" className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-flex items-center">← Simulateurs</Link>
@@ -308,7 +311,7 @@ export default function CapaciteEmpruntPage() {
           {/* HEADER */}
           <div className="sim-card mb-6">
             <div className="flex items-center gap-4">
-              <span className="text-4xl">🏠</span>
+              <Home className="w-10 h-10 text-blue-600" />
               <div>
                 <h1 className="text-2xl font-bold">Simulateur Capacité d'Emprunt</h1>
                 <p className="text-gray-600">Calcul selon les normes HCSF 2025 • Taux d'endettement max 35%</p>
@@ -337,7 +340,7 @@ export default function CapaciteEmpruntPage() {
               {/* ÉTAPE 1 : PROFIL */}
               {step === 1 && (
                 <div className="animate-fadeIn">
-                  <h2 className="text-lg font-bold mb-4">👤 Profil emprunteur</h2>
+                  <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><User className="w-5 h-5 text-blue-600" /> Profil emprunteur</h2>
                   <p className="text-gray-600 mb-4">Ces informations permettent de calculer le reste à vivre minimum requis par les banques.</p>
 
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -372,7 +375,7 @@ export default function CapaciteEmpruntPage() {
 
                   <div className="pedagogy-box mt-4">
                     <p className="text-sm text-blue-700">
-                      <strong>📚 Normes HCSF :</strong> Depuis janvier 2022, le taux d'endettement ne peut pas dépasser 35% des revenus nets.
+                      <strong className="flex items-center gap-1"><BookOpen className="w-4 h-4 inline" /> Normes HCSF :</strong> Depuis janvier 2022, le taux d'endettement ne peut pas dépasser 35% des revenus nets.
                       Les banques vérifient également que le reste à vivre est suffisant pour couvrir les dépenses courantes.
                     </p>
                   </div>
@@ -382,7 +385,7 @@ export default function CapaciteEmpruntPage() {
               {/* ÉTAPE 2 : REVENUS */}
               {step === 2 && (
                 <div className="animate-fadeIn">
-                  <h2 className="text-lg font-bold mb-4">💰 Vos revenus mensuels</h2>
+                  <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Wallet className="w-5 h-5 text-green-600" /> Vos revenus mensuels</h2>
                   <p className="text-gray-600 mb-4">Les banques appliquent des coefficients de pondération selon le type de revenu.</p>
 
                   <div className="space-y-3">
@@ -430,7 +433,7 @@ export default function CapaciteEmpruntPage() {
 
                   <div className="pedagogy-box mt-4">
                     <p className="text-sm text-blue-700">
-                      <strong>💡 Pondération bancaire :</strong> Les revenus CDI sont pris à 100%, les CDD à 70% (moyenne sur 2 ans),
+                      <strong className="flex items-center gap-1"><Lightbulb className="w-4 h-4 inline" /> Pondération bancaire :</strong> Les revenus CDI sont pris à 100%, les CDD à 70% (moyenne sur 2 ans),
                       les revenus locatifs à 70% des loyers bruts. Ces coefficients permettent de sécuriser le prêteur.
                     </p>
                   </div>
@@ -440,7 +443,7 @@ export default function CapaciteEmpruntPage() {
               {/* ÉTAPE 3 : CHARGES */}
               {step === 3 && (
                 <div className="animate-fadeIn">
-                  <h2 className="text-lg font-bold mb-4">📋 Vos charges mensuelles</h2>
+                  <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><FileText className="w-5 h-5 text-red-600" /> Vos charges mensuelles</h2>
                   <p className="text-gray-600 mb-4">Crédits en cours et charges récurrentes prises en compte dans le calcul d'endettement.</p>
 
                   {/* Option supprimer loyer */}
@@ -453,7 +456,7 @@ export default function CapaciteEmpruntPage() {
                         className="w-5 h-5 rounded border-slate-300 text-blue-600"
                       />
                       <div>
-                        <span className="font-semibold text-slate-800">🏠 Supprimer le loyer actuel du calcul</span>
+                        <span className="font-semibold text-slate-800 flex items-center gap-1"><Home className="w-4 h-4" /> Supprimer le loyer actuel du calcul</span>
                         <p className="text-sm text-slate-500">Si vous achetez votre résidence principale, le loyer disparaîtra</p>
                       </div>
                     </label>
@@ -505,7 +508,7 @@ export default function CapaciteEmpruntPage() {
               {/* ÉTAPE 4 : PROJET IMMOBILIER */}
               {step === 4 && (
                 <div className="animate-fadeIn">
-                  <h2 className="text-lg font-bold mb-4">🏡 Votre projet immobilier</h2>
+                  <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Home className="w-5 h-5 text-blue-600" /> Votre projet immobilier</h2>
                   <p className="text-gray-600 mb-4">Décrivez le bien que vous souhaitez acquérir.</p>
 
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -564,7 +567,7 @@ export default function CapaciteEmpruntPage() {
                   {montantAFinancer > capaciteMaxTheorique && (
                     <div className="alert-warning mt-4">
                       <p className="text-sm">
-                        ⚠️ Le montant à financer ({fmtEur(montantAFinancer)}) dépasse votre capacité d'emprunt maximale ({fmtEur(capaciteMaxTheorique)}).
+                        <AlertTriangle className="w-4 h-4 inline mr-1" /> Le montant à financer ({fmtEur(montantAFinancer)}) dépasse votre capacité d'emprunt maximale ({fmtEur(capaciteMaxTheorique)}).
                         Augmentez votre apport ou réduisez le prix du bien.
                       </p>
                     </div>
@@ -575,7 +578,7 @@ export default function CapaciteEmpruntPage() {
               {/* ÉTAPE 5 : CRÉDIT */}
               {step === 5 && (
                 <div className="animate-fadeIn">
-                  <h2 className="text-lg font-bold mb-4">💳 Paramètres du crédit</h2>
+                  <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><CreditCard className="w-5 h-5 text-blue-600" /> Paramètres du crédit</h2>
                   <p className="text-gray-600 mb-4">Ajustez les conditions de votre prêt immobilier.</p>
 
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -600,7 +603,7 @@ export default function CapaciteEmpruntPage() {
 
                   {/* Synthèse crédit */}
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-                    <h3 className="font-semibold text-blue-800 mb-3">📊 SYNTHÈSE DU CRÉDIT</h3>
+                    <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2"><BarChart3 className="w-5 h-5" /> SYNTHÈSE DU CRÉDIT</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div className="bg-white p-3 rounded-lg">
                         <div className="text-gray-500 text-xs">Montant emprunté</div>
@@ -627,7 +630,7 @@ export default function CapaciteEmpruntPage() {
                   {/* Faisabilité */}
                   <div className={`mt-4 p-4 rounded-lg border-2 ${projetFaisable ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}`}>
                     <div className="flex items-center gap-3">
-                      <span className="text-3xl">{projetFaisable ? '✅' : '❌'}</span>
+                      {projetFaisable ? <CheckCircle className="w-8 h-8 text-green-600" /> : <XCircle className="w-8 h-8 text-red-600" />}
                       <div>
                         <h4 className={`font-bold ${projetFaisable ? 'text-green-700' : 'text-red-700'}`}>
                           {projetFaisable ? 'Projet finançable' : 'Projet non finançable en l\'état'}
@@ -658,7 +661,7 @@ export default function CapaciteEmpruntPage() {
                   </button>
                 ) : (
                   <button onClick={lancerSimulation} disabled={loading} className="btn-primary">
-                    {loading ? '⏳ Calcul en cours...' : '🚀 Lancer la simulation'}
+                    {loading ? 'Calcul en cours...' : 'Lancer la simulation'}
                   </button>
                 )}
               </div>
@@ -695,7 +698,7 @@ export default function CapaciteEmpruntPage() {
               {/* Alertes et recommandations */}
               {alertes.length > 0 && (
                 <div className="sim-card bg-red-50 border-red-200">
-                  <h3 className="font-bold text-red-700 mb-2">⚠️ Alertes</h3>
+                  <h3 className="font-bold text-red-700 mb-2 flex items-center gap-2"><AlertTriangle className="w-5 h-5" /> Alertes</h3>
                   <ul className="space-y-1">
                     {alertes.map((a, i) => <li key={i} className="text-sm text-red-600">• {a}</li>)}
                   </ul>
@@ -704,7 +707,7 @@ export default function CapaciteEmpruntPage() {
 
               {recommandations.length > 0 && (
                 <div className="sim-card bg-blue-50 border-blue-200">
-                  <h3 className="font-bold text-blue-700 mb-2">💡 Recommandations</h3>
+                  <h3 className="font-bold text-blue-700 mb-2 flex items-center gap-2"><Lightbulb className="w-5 h-5" /> Recommandations</h3>
                   <ul className="space-y-1">
                     {recommandations.map((r, i) => <li key={i} className="text-sm text-blue-600">• {r}</li>)}
                   </ul>
@@ -724,7 +727,7 @@ export default function CapaciteEmpruntPage() {
               {/* Tableau d'amortissement */}
               {tableauAmortissement.length > 0 && (
                 <div className="sim-card">
-                  <h3 className="font-bold text-lg mb-4">📊 Tableau d'amortissement</h3>
+                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-blue-600" /> Tableau d'amortissement</h3>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead className="bg-gray-100">

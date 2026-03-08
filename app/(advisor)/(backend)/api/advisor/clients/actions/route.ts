@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { CommercialActionService } from '@/app/_common/lib/services/commercial-action-service'
-
+import { logger } from '@/app/_common/lib/logger'
 const createActionSchema = z.object({
   title: z.string().min(1),
   objective: z.string().optional(),
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse(actions)
   } catch (error: any) {
-    console.error('Error fetching commercial actions:', error)
+    logger.error('Error fetching commercial actions:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       return createErrorResponse('Unauthorized', 401)
     }
 
-    console.error('Error creating commercial action:', error)
+    logger.error('Error creating commercial action:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la création de l\'action', 500)
   }
 }

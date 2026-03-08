@@ -199,6 +199,29 @@ export function useMaFacturation(
 }
 
 /**
+ * Submit or cancel a personal invoice
+ */
+export function useSubmitMaFacture(options?: UseMutationOptions<Record<string, unknown>, Error, { factureId: string; action: 'submit' | 'cancel' }>) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: { factureId: string; action: 'submit' | 'cancel' }) =>
+      api.patch<Record<string, unknown>>('/advisor/ma-facturation', data),
+    onSuccess: (_, { action }) => {
+      queryClient.invalidateQueries({ queryKey: ['ma-facturation'] })
+      toast({
+        title: action === 'submit' ? 'Facture soumise' : 'Facture annulée',
+        description: action === 'submit' ? 'La facture a été envoyée au cabinet' : 'La facture a été annulée',
+        variant: 'success',
+      })
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' })
+    },
+    ...options,
+  })
+}
+
+/**
  * Create personal invoice
  */
 export function useCreateMaFacture(options?: UseMutationOptions<MaFactureItem, Error, { type: string; clientId?: string; montant: number; description?: string }>) {

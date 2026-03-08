@@ -4,7 +4,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { RendezVousService } from '@/app/_common/lib/services/rendez-vous-service';
 import { TacheService } from '@/app/_common/lib/services/tache-service';
 import { isRegularUser } from '@/app/_common/lib/auth-types';
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/events
  * Fetch calendar events for the advisor using Services
@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching events:', error);
+    logger.error('Error fetching events:', { error: error instanceof Error ? error.message : String(error) });
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401);

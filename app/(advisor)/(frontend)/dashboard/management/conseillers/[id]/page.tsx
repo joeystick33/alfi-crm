@@ -108,73 +108,31 @@ export default function ConseillerDetailPage() {
         credentials: 'include',
       })
       
-      if (response.ok) {
-        const data = await response.json()
-        setConseiller(data.conseiller)
-      } else {
-        setConseiller(generateDemoConseiller())
+      if (!response.ok) {
+        throw new Error(`Erreur ${response.status}`)
       }
+      const result = await response.json()
+      const data = result.data || result
+      setConseiller(data.conseiller || data)
     } catch (error) {
-      console.error('Erreur:', error)
-      setConseiller(generateDemoConseiller())
+      setConseiller(null)
     } finally {
       setLoading(false)
     }
   }
 
-  const generateDemoConseiller = (): ConseillerDetail => ({
-    id: conseillerId,
-    firstName: 'Marie',
-    lastName: 'Dupont',
-    email: 'marie.dupont@cabinet.fr',
-    phone: '+33 6 12 34 56 78',
-    role: 'ADVISOR',
-    createdAt: '2023-03-15',
-    lastLogin: '2024-11-25T09:30:00Z',
-    stats: {
-      clients: 45,
-      clientsNew: 8,
-      opportunities: 12,
-      opportunitiesWon: 6,
-      opportunitiesLost: 2,
-      opportunitiesValue: 450000,
-      ca: 185000,
-      caObjectif: 200000,
-      tasks: 24,
-      tasksDone: 20,
-      tasksOverdue: 2,
-    },
-    monthlyPerformance: [
-      { month: 'Juin', ca: 28000, clients: 3, opportunities: 2 },
-      { month: 'Juil', ca: 32000, clients: 4, opportunities: 1 },
-      { month: 'Août', ca: 18000, clients: 1, opportunities: 0 },
-      { month: 'Sept', ca: 35000, clients: 5, opportunities: 3 },
-      { month: 'Oct', ca: 42000, clients: 6, opportunities: 4 },
-      { month: 'Nov', ca: 30000, clients: 4, opportunities: 2 },
-    ],
-    recentClients: [
-      { id: '1', firstName: 'Jean', lastName: 'Martin', patrimony: 850000, lastContact: '2024-11-20' },
-      { id: '2', firstName: 'Sophie', lastName: 'Bernard', patrimony: 1200000, lastContact: '2024-11-18' },
-      { id: '3', firstName: 'Pierre', lastName: 'Durand', patrimony: 450000, lastContact: '2024-11-15' },
-    ],
-    recentOpportunities: [
-      { id: '1', name: 'Assurance vie 100K', value: 100000, status: 'NEGOTIATION', client: 'Jean Martin' },
-      { id: '2', name: 'PER entreprise', value: 50000, status: 'PROPOSAL_SENT', client: 'Sophie Bernard' },
-      { id: '3', name: 'SCPI Corum', value: 80000, status: 'QUALIFIEE', client: 'Pierre Durand' },
-    ],
-    notes: [
-      { id: '1', date: '2024-11-22', content: 'Excellent mois de novembre. Marie a dépassé ses objectifs sur les nouveaux clients. Point à améliorer: suivi des opportunités en négociation.', author: 'Admin' },
-      { id: '2', date: '2024-11-15', content: 'Formation produits SCPI terminée. Marie est maintenant autonome sur ces placements.', author: 'Admin' },
-    ],
-  })
 
   const handleSaveNote = async () => {
     if (!newNote.trim()) return
     setSavingNote(true)
     
     try {
-      // API call would go here
-      await new Promise(resolve => setTimeout(resolve, 500))
+      await fetch(`/api/advisor/management/conseillers/${conseillerId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ note: newNote }),
+      })
       
       setConseiller(prev => prev ? {
         ...prev,

@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { CampaignService } from '@/app/_common/lib/services/campaign-service'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
-
+import { logger } from '@/app/_common/lib/logger'
 const ScheduleSchema = z.object({
   scheduledAt: z.string().datetime('Date de planification invalide'),
 })
@@ -37,7 +37,7 @@ export async function POST(
 
     return NextResponse.json(campaign)
   } catch (error: any) {
-    console.error(`Erreur POST /api/advisor/campaigns/${campaignId}/schedule:`, error)
+    logger.error(`Erreur POST /api/advisor/campaigns/${campaignId}/schedule:`, { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

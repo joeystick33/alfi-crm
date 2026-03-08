@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/app/_common/lib/prisma'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 // Multiplicateurs pour calcul du montant annuel
 const FREQUENCE_MULTIPLIER: Record<string, number> = {
   MENSUEL: 12,
@@ -73,7 +73,7 @@ export async function GET(
       details,
     })
   } catch (error: unknown) {
-    console.error('Error calculating annual income:', error)
+    logger.error('Error calculating annual income:', { error: error instanceof Error ? error.message : String(error) })
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }

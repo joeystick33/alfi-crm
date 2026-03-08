@@ -1,0 +1,104 @@
+rules:
+  - year: 2026
+    abatementsByLink:
+      # Direct line (parents / children / ascendant / descendant)
+      DIRECT_LINE:
+        amount: 100000
+      # Brothers and sisters
+      SIBLINGS:
+        amount: 15932
+      # Nephew and nieces
+      NIECE_NEPHEW:
+        amount: 7967
+      # Grandparents (ascendants ordinaires — art. 779 I CGI: même abattement ligne directe)
+      GRANDPARENT:
+        amount: 100000
+      # Uncles, aunts, cousins (collatéraux ordinaires 3e/4e degré — art. 788 CGI)
+      UNCLE_AUNT:
+        amount: 1594
+      # Others heirs 
+      OTHERS: 
+        amount: 1594
+    scalesByLink:
+      DIRECT_LINE:
+        slices:
+          - upperLimitInc: 8072
+            rate: 0.05
+          - upperLimitInc: 12109
+            rate: 0.10
+          - upperLimitInc: 15932
+            rate: 0.15
+          - upperLimitInc: 552324
+            rate: 0.20
+          - upperLimitInc: 902838
+            rate: 0.30
+          - upperLimitInc: 1805677
+            rate: 0.40
+          - upperLimitInc: null
+            rate: 0.45
+      SIBLINGS:
+        slices:
+          - upperLimitInc: 24430
+            rate: 0.35
+          - upperLimitInc: null
+            rate: 0.45
+      NIECE_NEPHEW:
+        slices:
+          - upperLimitInc: null
+            rate: 0.55
+      # Grandparents: same progressive scale as direct line (art. 777 CGI)
+      GRANDPARENT:
+        slices:
+          - upperLimitInc: 8072
+            rate: 0.05
+          - upperLimitInc: 12109
+            rate: 0.10
+          - upperLimitInc: 15932
+            rate: 0.15
+          - upperLimitInc: 552324
+            rate: 0.20
+          - upperLimitInc: 902838
+            rate: 0.30
+          - upperLimitInc: 1805677
+            rate: 0.40
+          - upperLimitInc: null
+            rate: 0.45
+      # Uncles, aunts, cousins (collatéraux ordinaires up to 4th degree — art. 777 CGI)
+      UNCLE_AUNT:
+        slices:
+          - upperLimitInc: null
+            rate: 0.55
+      OTHERS:
+        slices:
+          - upperLimitInc: null
+            rate: 0.60
+
+    usufructScales:
+    #key = max age inc, value = % usufruct
+      levels:
+        20: 90
+        30: 80
+        40: 70
+        50: 60
+        60: 50
+        70: 40
+        80: 30
+        90: 20
+        91: 10
+
+    abatementsPrincipalResidencePct: 0.20
+
+    # Abattement personne handicapée (art. 779 II CGI) — cumulable avec l'abattement par lien
+    disabilityAllowance: 159325
+
+    # Rapport fiscal des donations (art. 784 CGI) — durée de rappel en années
+    donationRecallYears: 15
+
+    # Assurance-vie — art. 990 I CGI (versements avant 70 ans)
+    lifeInsuranceBefore70GlobalAbatement: 152500
+    lifeInsurance990IRate1: 0.20       # 20 % jusqu'au seuil
+    lifeInsurance990IRate2: 0.3125     # 31,25 % au-delà du seuil
+    lifeInsurance990IThreshold: 700000 # seuil entre taux 1 et taux 2
+
+    # Assurance-vie — art. 757 B CGI (versements après 70 ans)
+    lifeInsuranceAfter70ReintegrationTreshold: 30500

@@ -10,7 +10,7 @@ import {
   type ConseillerFilters,
 } from './utils'
 import { hash } from 'bcryptjs'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/conseillers
  * List all conseillers (advisors, assistants, managers) in cabinet
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Error in GET /api/advisor/conseillers:', error)
+    logger.error('Error in GET /api/advisor/conseillers:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -205,17 +205,17 @@ export async function POST(request: NextRequest) {
       })
 
       if (authError && !authError.message.includes('already')) {
-        console.error('Erreur Supabase Auth:', authError)
+        logger.error('Erreur Supabase Auth: ' + authError.message)
       }
     } catch (supabaseError) {
-      console.error('Erreur création Supabase:', supabaseError)
+      logger.error('Erreur création Supabase: ' + (supabaseError instanceof Error ? supabaseError.message : String(supabaseError)))
     }
 
     // TODO: Send welcome email with temporary password
     // This will be implemented in Phase 4 (Email provider)
     // SECURITY: Ne jamais logger les mots de passe en production
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[DEV ONLY] Temporary password for ${conseiller.email}: ${tempPassword}`)
+      logger.info(`[DEV ONLY] Temporary password for ${conseiller.email}: ${tempPassword}`)
     }
 
     return createSuccessResponse({
@@ -223,7 +223,7 @@ export async function POST(request: NextRequest) {
       tempPassword, // Include in response for now (remove when email is implemented)
     }, 201)
   } catch (error) {
-    console.error('Error in POST /api/advisor/conseillers:', error)
+    logger.error('Error in POST /api/advisor/conseillers:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

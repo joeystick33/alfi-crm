@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
 import { z } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 // ============================================================================
 // Validation Schema
 // ============================================================================
@@ -59,7 +59,7 @@ export async function GET(
     })
 
   } catch (error) {
-    console.error('Erreur GET /structures:', error)
+    logger.error('Erreur GET /structures:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Erreur serveur', code: 'INTERNAL_ERROR' },
       { status: 500 }
@@ -149,7 +149,7 @@ export async function POST(
     */
 
   } catch (error) {
-    console.error('Erreur POST /structures:', error)
+    logger.error('Erreur POST /structures:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Erreur serveur', code: 'INTERNAL_ERROR' },
       { status: 500 }

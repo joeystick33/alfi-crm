@@ -426,8 +426,8 @@ export function TabContratsComplet({ clientId, client }: TabContratsCompletProps
             </div>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="h-64 min-h-[256px]">
-              <ResponsiveContainer width="100%" height="100%">
+            <div style={{ width: '100%', height: 256 }}>
+              <ResponsiveContainer width="100%" height={256}>
                 <PieChart>
                   <Pie data={chartData} cx="50%" cy="50%" innerRadius={60} outerRadius={85} dataKey="value" strokeWidth={2} stroke="#fff">
                     {chartData.map((entry, i) => <Cell key={i} fill={entry.color} />)}

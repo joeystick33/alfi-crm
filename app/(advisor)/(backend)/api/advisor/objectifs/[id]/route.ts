@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { ObjectifService } from '@/app/_common/lib/services/objectif-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/objectifs/[id]
  * Récupère un objectif par ID
@@ -34,7 +34,7 @@ export async function GET(
 
     return createSuccessResponse(objectif)
   } catch (error: any) {
-    console.error('Get objectif error:', error)
+    logger.error('Get objectif error:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -75,7 +75,7 @@ export async function PATCH(
 
     return createSuccessResponse(objectif)
   } catch (error: any) {
-    console.error('Update objectif error:', error)
+    logger.error('Update objectif error:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error) {
       if (error.message === 'Unauthorized') {
@@ -117,7 +117,7 @@ export async function DELETE(
 
     return createSuccessResponse({ message: 'Objectif deleted successfully' })
   } catch (error: any) {
-    console.error('Delete objectif error:', error)
+    logger.error('Delete objectif error:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

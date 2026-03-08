@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -50,6 +50,7 @@ import {
   ArrowLeft,
   Calendar,
 } from 'lucide-react'
+import { ClientLink } from '@/app/_common/components/ClientLink'
 import {
   RECLAMATION_TYPES,
   RECLAMATION_STATUS,
@@ -521,9 +522,11 @@ function ResolveReclamationDialog({
               </Badge>
             </div>
             <p className="text-sm text-gray-600">{reclamation.subject}</p>
-            <p className="text-xs text-gray-500">
-              Client #{reclamation.clientId.slice(0, 8)}
-            </p>
+            <ClientLink
+              clientId={reclamation.clientId}
+              showAvatar={false}
+              className="text-xs"
+            />
           </div>
 
           {reclamation.slaBreach && (
@@ -584,7 +587,7 @@ function ResolveReclamationDialog({
 // Main Page Component
 // ============================================================================
 
-export default function ReclamationsPage() {
+function ReclamationsPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { confirm, ConfirmDialog } = useConfirmDialog()
@@ -625,9 +628,10 @@ export default function ReclamationsPage() {
       label: 'Client',
       sortable: true,
       render: (_, rec) => (
-        <span className="text-sm text-gray-700">
-          Client #{rec.clientId.slice(0, 8)}
-        </span>
+        <ClientLink
+          clientId={rec.clientId}
+          showAvatar={false}
+        />
       ),
     },
     {
@@ -828,5 +832,13 @@ export default function ReclamationsPage() {
       {/* Confirm Dialog */}
       <ConfirmDialog />
     </div>
+  )
+}
+
+export default function ReclamationsPage() {
+  return (
+    <Suspense fallback={null}>
+      <ReclamationsPageInner />
+    </Suspense>
   )
 }

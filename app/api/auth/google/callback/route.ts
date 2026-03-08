@@ -1,16 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 import { prisma } from "@/app/_common/lib/prisma";
+import { verifyOAuthState } from "@/app/_common/lib/oauth-state";
 
 export async function GET(req: NextRequest) {
     try {
         const searchParams = req.nextUrl.searchParams;
         const code = searchParams.get("code");
-        const userId = searchParams.get("state"); // We passed user ID in state
+        const encodedState = searchParams.get("state");
 
-        if (!code || !userId) {
+        if (!code || !encodedState) {
             return NextResponse.json({ error: "Missing code or state" }, { status: 400 });
         }
+
+        const state = verifyOAuthState(encodedState)
+        if (!state || state.provider !== 'google' || state.type !== 'calendar') {
+            return NextResponse.json({ error: "Invalid state" }, { status: 400 });
+        }
+        const userId = state.userId
 
         // 1. Get Cabinet Credentials again
         const user = await prisma.user.findUnique({

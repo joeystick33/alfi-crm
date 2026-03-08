@@ -7,7 +7,7 @@
 
 import PREVOYANCE_TNS_2025 from './parameters-prevoyance-2025'
 import PREVOYANCE_TNS_2026 from './parameters-prevoyance-2026'
-
+import { logger } from '@/app/_common/lib/logger'
 // Configuration par défaut (année en cours)
 export const ANNEE_EN_COURS = 2025
 
@@ -24,7 +24,7 @@ export const CONFIGURATIONS = {
 export function getConfiguration(annee: number = ANNEE_EN_COURS) {
   const config = CONFIGURATIONS[annee as keyof typeof CONFIGURATIONS]
   if (!config) {
-    console.warn(`[Prévoyance TNS] Configuration ${annee} non disponible, utilisation de ${ANNEE_EN_COURS}`)
+    logger.warn(`[Prévoyance TNS] Configuration ${annee} non disponible, utilisation de ${ANNEE_EN_COURS}`)
     return CONFIGURATIONS[ANNEE_EN_COURS]
   }
   return config

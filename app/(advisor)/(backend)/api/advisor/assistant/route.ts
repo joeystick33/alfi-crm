@@ -4,7 +4,7 @@ import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { prisma } from '@/app/_common/lib/prisma'
 import { createAdminClient } from '@/app/_common/lib/supabase/server'
 import bcrypt from 'bcryptjs'
-
+import { logger } from '@/app/_common/lib/logger'
 // GET - Récupérer l'assistant du conseiller connecté
 export async function GET(request: NextRequest) {
   try {
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       permissions: assignment.permissions,
     })
   } catch (error: any) {
-    console.error('Get assistant error:', error)
+    logger.error('Get assistant error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Unauthorized') {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (authError) {
-      console.error('Erreur Supabase Auth:', authError)
+      logger.error('Erreur Supabase Auth: ' + authError.message)
       // Continue - l'assistant pourra se créer à la première connexion
     }
 
@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
       message: `${firstName} peut maintenant se connecter avec son email et mot de passe`
     })
   } catch (error: any) {
-    console.error('Create assistant error:', error)
+    logger.error('Create assistant error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Unauthorized') {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
@@ -255,7 +255,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error: any) {
-    console.error('Delete assistant error:', error)
+    logger.error('Delete assistant error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Unauthorized') {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })

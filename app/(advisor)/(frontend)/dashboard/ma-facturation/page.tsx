@@ -19,7 +19,7 @@ import { Label } from '@/app/_common/components/ui/Label'
 import { Textarea } from '@/app/_common/components/ui/Textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/_common/components/ui/Tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/_common/components/ui/Select'
-import { useMaFacturation, useCreateMaFacture } from '@/app/_common/hooks/use-api'
+import { useMaFacturation, useCreateMaFacture, useSubmitMaFacture } from '@/app/_common/hooks/use-api'
 import type { ManagementStatsFilters } from '@/app/_common/lib/api-types'
 import {
   Euro,
@@ -73,69 +73,20 @@ const TYPE_CONFIG = {
   COMMISSION: { label: 'Commission', color: 'bg-blue-100 text-blue-700' },
 }
 
-const DEMO_STATS: MesStats = {
-  totalCA: 32000,
-  totalPaye: 25000,
-  totalEnAttente: 7000,
-  nbFactures: 12,
-  nbPayees: 9,
-  nbEnAttente: 3,
-}
-
-const DEMO_FACTURES: MaFacture[] = [
-  {
-    id: '1',
-    numero: 'FACT-2024-042',
-    type: 'COMMISSION',
-    montant: 2500,
-    status: 'PAYEE',
-    client: { id: '1', firstName: 'Jean', lastName: 'Martin' },
-    description: 'Commission placement assurance vie 100 000€',
-    dateCreation: '2024-11-01',
-    dateSoumission: '2024-11-02',
-    datePaiement: '2024-11-15',
-  },
-  {
-    id: '2',
-    numero: 'FACT-2024-043',
-    type: 'HONORAIRES',
-    montant: 800,
-    status: 'APPROUVEE',
-    client: { id: '2', firstName: 'Sophie', lastName: 'Bernard' },
-    description: 'Honoraires conseil patrimonial',
-    dateCreation: '2024-11-10',
-    dateSoumission: '2024-11-10',
-  },
-  {
-    id: '3',
-    numero: 'FACT-2024-044',
-    type: 'COMMISSION',
-    montant: 1500,
-    status: 'SUBMITTED',
-    client: { id: '3', firstName: 'Pierre', lastName: 'Durand' },
-    description: 'Commission PER 50 000€',
-    dateCreation: '2024-11-20',
-    dateSoumission: '2024-11-20',
-  },
-  {
-    id: '4',
-    numero: 'FACT-2024-045',
-    type: 'HONORAIRES',
-    montant: 1200,
-    status: 'BROUILLON',
-    client: { id: '4', firstName: 'Lucas', lastName: 'Petit' },
-    description: 'Bilan patrimonial complet',
-    dateCreation: '2024-11-25',
-  },
-]
 
 export default function MaFacturationPage() {
   const [period, setPeriod] = useState<ManagementStatsFilters['period']>('month')
   const [activeTab, setActiveTab] = useState('all')
   const [showNewForm, setShowNewForm] = useState(false)
 
+  // New facture form state
+  const [newType, setNewType] = useState<'COMMISSION' | 'HONORAIRES'>('COMMISSION')
+  const [newClientId, setNewClientId] = useState('')
+  const [newMontant, setNewMontant] = useState('')
+  const [newDescription, setNewDescription] = useState('')
+
   // Fetch data from API
-  const { data: apiData, isLoading } = useMaFacturation({
+  const { data: apiData, isLoading, refetch } = useMaFacturation({
     period,
     status: activeTab !== 'all' ? activeTab : undefined
   })
@@ -154,7 +105,7 @@ export default function MaFacturationPage() {
         nbEnAttente: s.nbEnAttente || 0,
       }
     }
-    return DEMO_STATS
+    return { totalCA: 0, totalPaye: 0, totalEnAttente: 0, nbFactures: 0, nbPayees: 0, nbEnAttente: 0 }
   }, [apiData])
 
   const factures: MaFacture[] = useMemo(() => {
@@ -172,7 +123,7 @@ export default function MaFacturationPage() {
         datePaiement: f.datePaiement,
       }))
     }
-    return DEMO_FACTURES
+    return []
   }, [apiData])
 
   const formatCurrency = (value: number) => {
@@ -191,9 +142,14 @@ export default function MaFacturationPage() {
     ? factures
     : factures.filter(f => f.status === activeTab)
 
+  const submitMutation = useSubmitMaFacture()
+
   const handleSubmitFacture = async (factureId: string) => {
-    // TODO: Implement submit mutation when API is ready
-    console.log('Submit facture:', factureId)
+    submitMutation.mutate({ factureId, action: 'submit' })
+  }
+
+  const handleCancelFacture = async (factureId: string) => {
+    submitMutation.mutate({ factureId, action: 'cancel' })
   }
 
   if (isLoading) {
@@ -393,54 +349,88 @@ export default function MaFacturationPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label>Type de facturation</Label>
-                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1">
-                  <option value="COMMISSION">Commission</option>
-                  <option value="HONORAIRES">Honoraires</option>
-                </select>
-              </div>
+              <form onSubmit={async (e) => {
+                e.preventDefault()
+                if (!newMontant) return
+                await createFactureMutation.mutateAsync({
+                  type: newType,
+                  clientId: newClientId || undefined,
+                  montant: parseFloat(newMontant),
+                  description: newDescription.trim(),
+                })
+                setNewType('COMMISSION')
+                setNewClientId('')
+                setNewMontant('')
+                setNewDescription('')
+                setShowNewForm(false)
+                refetch()
+              }} className="space-y-4">
+                <div>
+                  <Label>Type de facturation</Label>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1"
+                    value={newType}
+                    onChange={(e) => setNewType(e.target.value as typeof newType)}
+                  >
+                    <option value="COMMISSION">Commission</option>
+                    <option value="HONORAIRES">Honoraires</option>
+                  </select>
+                </div>
 
-              <div>
-                <Label>Client concerné</Label>
-                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1">
-                  <option value="">Sélectionner un client</option>
-                  <option value="1">Jean Martin</option>
-                  <option value="2">Sophie Bernard</option>
-                  <option value="3">Pierre Durand</option>
-                </select>
-              </div>
+                <div>
+                  <Label>Client concerné</Label>
+                  <Input
+                    placeholder="Nom du client"
+                    className="mt-1"
+                    value={newClientId}
+                    onChange={(e) => setNewClientId(e.target.value)}
+                  />
+                </div>
 
-              <div>
-                <Label>Montant (€)</Label>
-                <Input type="number" placeholder="1500" className="mt-1" />
-              </div>
+                <div>
+                  <Label>Montant (€) *</Label>
+                  <Input
+                    type="number"
+                    placeholder="1500"
+                    className="mt-1"
+                    value={newMontant}
+                    onChange={(e) => setNewMontant(e.target.value)}
+                    required
+                  />
+                </div>
 
-              <div>
-                <Label>Description</Label>
-                <Textarea
-                  placeholder="Ex: Commission placement assurance vie 100 000€"
-                  rows={3}
-                  className="mt-1"
-                />
-              </div>
+                <div>
+                  <Label>Description</Label>
+                  <Textarea
+                    placeholder="Ex: Commission placement assurance vie 100 000€"
+                    rows={3}
+                    className="mt-1"
+                    value={newDescription}
+                    onChange={(e) => setNewDescription(e.target.value)}
+                  />
+                </div>
 
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-700">
-                  <strong>Note:</strong> La facture sera créée en brouillon.
-                  Vous pourrez la soumettre au cabinet une fois prête.
-                </p>
-              </div>
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-700">
+                    <strong>Note:</strong> La facture sera créée en brouillon.
+                    Vous pourrez la soumettre au cabinet une fois prête.
+                  </p>
+                </div>
 
-              <div className="flex gap-3 pt-4">
-                <Button variant="outline" onClick={() => setShowNewForm(false)} className="flex-1">
-                  Annuler
-                </Button>
-                <Button className="flex-1">
-                  <Save className="h-4 w-4 mr-2" />
-                  Créer brouillon
-                </Button>
-              </div>
+                <div className="flex gap-3 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setShowNewForm(false)} className="flex-1">
+                    Annuler
+                  </Button>
+                  <Button type="submit" className="flex-1" disabled={createFactureMutation.isPending || !newMontant}>
+                    {createFactureMutation.isPending ? (
+                      <Clock className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4 mr-2" />
+                    )}
+                    Créer brouillon
+                  </Button>
+                </div>
+              </form>
             </CardContent>
           </Card>
         </div>

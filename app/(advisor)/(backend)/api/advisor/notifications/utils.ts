@@ -58,6 +58,20 @@ function ensureNumber(value: unknown, field: string, required = false): number |
 }
 
 /**
+ * Ensures a value is a valid positive integer
+ */
+function ensurePositiveInteger(value: unknown, field: string): number | undefined {
+  const parsed = ensureNumber(value, field)
+  if (parsed === undefined) return undefined
+
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    throw new Error(`${field} must be a positive integer`)
+  }
+
+  return parsed
+}
+
+/**
  * Ensures a value is a valid date
  */
 function ensureDate(value: unknown, field: string, required = false): string | undefined {
@@ -125,12 +139,22 @@ export function parseNotificationFilters(searchParams: URLSearchParams): Notific
 
   const limit = ensureNumber(searchParams.get('limit'), 'limit')
   const offset = ensureNumber(searchParams.get('offset'), 'offset')
+  const page = ensurePositiveInteger(searchParams.get('page'), 'page')
+  const pageSize = ensurePositiveInteger(searchParams.get('pageSize'), 'pageSize')
+
+  // Support both limit/offset and page/pageSize formats
+  const resolvedLimit = limit ?? pageSize
+  const resolvedOffset = offset ?? (
+    page !== undefined
+      ? ((page - 1) * (resolvedLimit ?? 50))
+      : undefined
+  )
 
   // Validate limit and offset are positive
-  if (limit !== undefined && limit < 0) {
+  if (resolvedLimit !== undefined && resolvedLimit < 0) {
     throw new Error('limit must be a positive number')
   }
-  if (offset !== undefined && offset < 0) {
+  if (resolvedOffset !== undefined && resolvedOffset < 0) {
     throw new Error('offset must be a positive number')
   }
 
@@ -141,8 +165,10 @@ export function parseNotificationFilters(searchParams: URLSearchParams): Notific
     isRead,
     createdAfter,
     createdBefore,
-    limit,
-    offset,
+    page,
+    pageSize,
+    limit: resolvedLimit,
+    offset: resolvedOffset,
   }
 }
 

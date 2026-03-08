@@ -62,7 +62,13 @@ export default function DossiersKanbanPage() {
   const { data, isLoading, error, refetch } = useDossiers(apiFilters)
   const updateMutation = useUpdateDossier()
 
-  const dossiers = data?.data || []
+  // Gérer les différentes structures de réponse API
+  const dossiers = useMemo(() => {
+    if (!data) return []
+    const apiData = data as Record<string, unknown>
+    const rawData = apiData.data || apiData.dossiers || data
+    return Array.isArray(rawData) ? rawData : []
+  }, [data])
 
   // Grouper les dossiers par statut
   const dossiersByStatus = useMemo(() => {
@@ -74,6 +80,8 @@ export default function DossiersKanbanPage() {
       TERMINE: [],
       ANNULE: [],
     }
+
+    if (!Array.isArray(dossiers)) return grouped
 
     dossiers.forEach((dossier: any) => {
       if (grouped[dossier.status as DossierStatus]) {

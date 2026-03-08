@@ -3,7 +3,6 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import Script from 'next/script'
 import { SimulatorGate } from '@/app/_common/components/FeatureGate'
 import { usePlotlyReady } from '../../simulateurs/immobilier/_hooks/usePlotlyReady'
 import { Plus, Trash2, CheckCircle, XCircle, User, Users, AlertTriangle, Info, FileText, Lightbulb, Settings, TrendingUp, Home, Banknote, Shield, FileCheck, RotateCcw, MapPin } from 'lucide-react'
@@ -21,7 +20,7 @@ import {
   verifierEligibiliteEcoPTZ,
   getTauxAssuranceParAge,
   calculerFraisNotaire,
-} from './parameters-emprunt-2025'
+} from './parameters-emprunt'
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -139,7 +138,7 @@ const ZONES_PTZ = [
 ]
 
 // ══════════════════════════════════════════════════════════════════════════════
-// PRÊTS AIDÉS NATIONAUX 2025 - Données complètes dans parameters-emprunt-2025.ts
+// PRÊTS AIDÉS NATIONAUX 2025 - Données complètes dans parameters-emprunt.ts
 // Source: Service-public.fr, ANIL, Action Logement - Décembre 2025
 // ══════════════════════════════════════════════════════════════════════════════
 const PRETS_AIDES = {
@@ -211,7 +210,7 @@ const PRETS_AIDES = {
   },
 }
 
-// Liste exhaustive des garanties - données complètes dans parameters-emprunt-2025.ts
+// Liste exhaustive des garanties - données complètes dans parameters-emprunt.ts
 const GARANTIES = [
   // Cautions mutuelles
   { value: 'credit_logement', label: 'Crédit Logement', frais: 0.012, restitution: 0.70, type: 'caution', description: 'Leader 200+ banques partenaires' },
@@ -248,7 +247,7 @@ const CREDIT_LIGNE_TYPES = [
   { value: 'regional', label: 'Prêt régional/local (0%)', categorie: 'aide', taux: 0 },
 ]
 
-// Taux CAFPI décembre 2025 - Voir parameters-emprunt-2025.ts pour les valeurs
+// Taux CAFPI décembre 2025 - Voir parameters-emprunt.ts pour les valeurs
 const DUREES = DUREES_PRET_AUTORISEES // [7, 10, 12, 15, 17, 20, 22, 25] - HCSF max 25 ans (27 VEFA)
 
 const DOCUMENTS_REQUIS = {
@@ -267,7 +266,7 @@ const DOCUMENTS_REQUIS = {
 const fmtEur = (n: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n)
 const fmtPct = (n: number) => n.toFixed(2) + '%'
 
-// Fonctions de calcul importées de parameters-emprunt-2025.ts
+// Fonctions de calcul importées de parameters-emprunt.ts
 const calcMensualiteHorsAss = calculerMensualiteHorsAssurance
 const calcCoutTotal = calculerCoutTotalInterets
 const getTauxParDuree = getTauxMoyenParDuree
@@ -310,7 +309,7 @@ const CapaciteEmpruntPage = () => {
   const [fraisAgence, setFraisAgence] = useState(0)
   const [travaux, setTravaux] = useState(0)
   const [loyerEstime, setLoyerEstime] = useState(0)
-  // Frais de notaire calculés via le module parameters-emprunt-2025
+  // Frais de notaire calculés via le module parameters-emprunt
   const fraisNotaireCalc = useMemo(() => {
     if (prixBien <= 0) return { total: 0, detail: '' }
     return calculerFraisNotaire(prixBien, neufOuAncien === 'neuf')
@@ -573,7 +572,7 @@ const CapaciteEmpruntPage = () => {
   const sautDeCharge = mensualiteTotale - loyerActuel
 
   // Indicateurs HCSF
-  const mensualiteMaxHCSF = Math.round(totalRevenusPonderes * 0.35) - totalCreditsCours
+  const mensualiteMaxHCSF = Math.round(totalRevenusPonderes * NORMES_HCSF_2025.tauxEndettementMax) - totalCreditsCours
   const ratioEndettement = totalRevenusPonderes > 0 ? ((mensualiteTotale + totalCreditsCours) / totalRevenusPonderes) * 100 : 0
   const resteAVivre = totalRevenusPonderes - mensualiteTotale - totalCharges
 
@@ -599,7 +598,7 @@ const CapaciteEmpruntPage = () => {
     && !dureeDepasseHCSF
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // ÉLIGIBILITÉ PRÊTS AIDÉS (Logique 2025 avec fonctions parameters-emprunt-2025)
+  // ÉLIGIBILITÉ PRÊTS AIDÉS (Logique 2025 avec fonctions parameters-emprunt)
   // ═══════════════════════════════════════════════════════════════════════════
   const pretsEligibles = useMemo(() => {
     const result: { type: string; nom: string; eligible: boolean; montantMax: number; raisons: string[]; details?: string }[] = []
@@ -892,7 +891,7 @@ const CapaciteEmpruntPage = () => {
         tauxSouhaite: lignesCredit[0]?.taux || 3.55,
         supprimerLoyerActuel: supprimerLoyer && natureProjet === 'achat_rp'
       }
-      console.log('payload_simulation', payload)
+      
       const response = await fetch('/api/advisor/simulators/capacite-emprunt', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
       })
@@ -951,7 +950,6 @@ const CapaciteEmpruntPage = () => {
 
   return (
     <SimulatorGate simulator="CAPACITE_EMPRUNT">
-      <Script src="https://cdn.plot.ly/plotly-2.27.0.min.js" onLoad={handlePlotlyLoad} />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-sky-50">
         {/* Header */}
         <div className="bg-white border-b border-gray-200 sticky top-0 z-40">

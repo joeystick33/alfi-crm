@@ -1,106 +1,97 @@
 /**
- * Constantes fiscales immobilier 2025
+ * Constantes fiscales immobilier — Source unique : RULES (fiscal-rules.ts)
  * SÉCURISÉES - Côté serveur uniquement
  * 
- * Sources :
- * - CGI art. 197 (barème IR)
- * - CGI art. 977 (barème IFI)
- * - CGI art. 199 novovicies (Pinel)
- * - CGI art. 199 tervicies (Malraux)
- * - CGI art. 156-I-3° (déficit foncier)
+ * Les valeurs fiscales annuelles (barème IR, PS, IFI, etc.) sont lues
+ * depuis RULES et se mettent à jour automatiquement via l'admin.
+ * Les constantes structurelles (LMNP, Pinel, Jeanbrun, etc.) restent ici.
  */
 
-// ══════════════════════════════════════════════════════════════════════════════
-// BARÈME IR 2025
-// ══════════════════════════════════════════════════════════════════════════════
-
-export const BAREME_IR_2025 = [
-  { min: 0, max: 11497, taux: 0 },
-  { min: 11497, max: 29315, taux: 11 },
-  { min: 29315, max: 83823, taux: 30 },
-  { min: 83823, max: 180294, taux: 41 },
-  { min: 180294, max: Infinity, taux: 45 },
-] as const
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
 
 // ══════════════════════════════════════════════════════════════════════════════
-// DÉCOTE IR 2025 - CGI art. 197 I-4°
+// BARÈME IR — Source : RULES.ir.bareme
+// ══════════════════════════════════════════════════════════════════════════════
+
+export const BAREME_IR_2025 = RULES.ir.bareme.map(t => ({
+  min: t.min,
+  max: t.max,
+  taux: t.taux * 100,
+}))
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DÉCOTE IR — Source : RULES.ir.decote
 // ══════════════════════════════════════════════════════════════════════════════
 export const DECOTE_IR_2025 = {
-  // Célibataire, divorcé, séparé, veuf
   SEUL: {
-    SEUIL: 1929,      // Seuil de déclenchement
-    PLAFOND: 873,     // Décote maximale
-    TAUX: 0.4525      // Coefficient de réduction
+    SEUIL: RULES.ir.decote.seuil_celibataire,
+    PLAFOND: RULES.ir.decote.base_celibataire,
+    TAUX: RULES.ir.decote.coefficient,
   },
-  // Couple (marié ou pacsé)
   COUPLE: {
-    SEUIL: 3191,
-    PLAFOND: 1444,
-    TAUX: 0.4525
+    SEUIL: RULES.ir.decote.seuil_couple,
+    PLAFOND: RULES.ir.decote.base_couple,
+    TAUX: RULES.ir.decote.coefficient,
   }
-} as const
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
-// CEHR - Contribution Exceptionnelle Hauts Revenus - CGI art. 223 sexies
+// CEHR — Source : RULES.ir.cehr
 // ══════════════════════════════════════════════════════════════════════════════
 export const CEHR_2025 = {
-  // Célibataire
-  SEUL: [
-    { min: 0, max: 250000, taux: 0 },
-    { min: 250000, max: 500000, taux: 3 },   // 3%
-    { min: 500000, max: Infinity, taux: 4 }  // 4%
-  ],
-  // Couple (marié ou pacsé)
-  COUPLE: [
-    { min: 0, max: 500000, taux: 0 },
-    { min: 500000, max: 1000000, taux: 3 },  // 3%
-    { min: 1000000, max: Infinity, taux: 4 } // 4%
-  ]
-} as const
+  SEUL: RULES.ir.cehr.celibataire,
+  COUPLE: RULES.ir.cehr.couple,
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
-// PLAFONNEMENT QUOTIENT FAMILIAL 2025 - CGI art. 197 I-2°
+// PLAFONNEMENT QUOTIENT FAMILIAL — Source : RULES.ir.quotient_familial
 // ══════════════════════════════════════════════════════════════════════════════
 export const PLAFOND_QF_2025 = {
-  GENERAL: 1759,                  // Avantage max par demi-part supplémentaire
-  PARENT_ISOLE_PREMIERE: 4149,    // 1ère demi-part pour parent isolé
-  INVALIDITE: 3566,               // Demi-part pour invalidité
-  ANCIEN_COMBATTANT: 3566         // Demi-part ancien combattant > 74 ans
-} as const
+  GENERAL: RULES.ir.quotient_familial.plafond_demi_part,
+  PARENT_ISOLE_PREMIERE: RULES.ir.quotient_familial.demi_part_parent_isole,
+  INVALIDITE: RULES.ir.quotient_familial.plafond_demi_part_invalidite,
+  ANCIEN_COMBATTANT: RULES.ir.quotient_familial.plafond_demi_part_invalidite,
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
-// BARÈME IFI 2025
+// BARÈME IFI — Source : RULES.ifi
 // ══════════════════════════════════════════════════════════════════════════════
 
 export const BAREME_IFI = {
-  SEUIL: 1300000,
-  ABATTEMENT_RP: 0.30,
-  TRANCHES: [
-    { min: 0, max: 800000, taux: 0 },
-    { min: 800000, max: 1300000, taux: 0.50 },
-    { min: 1300000, max: 2570000, taux: 0.70 },
-    { min: 2570000, max: 5000000, taux: 1.00 },
-    { min: 5000000, max: 10000000, taux: 1.25 },
-    { min: 10000000, max: Infinity, taux: 1.50 },
-  ],
+  SEUIL: RULES.ifi.seuil_assujettissement,
+  ABATTEMENT_RP: RULES.ifi.abattement_rp,
+  TRANCHES: RULES.ifi.bareme.map(t => ({
+    min: t.min,
+    max: t.max,
+    taux: t.taux * 100,
+  })),
   DECOTE: {
-    MIN: 1300000,
-    MAX: 1400000,
-    FORMULE: (patrimoine: number) => 17500 - 0.0125 * patrimoine,
+    MIN: RULES.ifi.seuil_assujettissement,
+    MAX: RULES.ifi.decote.seuil,
+    FORMULE: (patrimoine: number) => RULES.ifi.decote.base - RULES.ifi.decote.taux * patrimoine,
   },
-} as const
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
-// PRÉLÈVEMENTS SOCIAUX
+// PRÉLÈVEMENTS SOCIAUX — Source : RULES.ps
 // ══════════════════════════════════════════════════════════════════════════════
 
 export const PRELEVEMENTS_SOCIAUX = {
-  TAUX_GLOBAL: 0.172,
-  CSG: 0.092,
-  CSG_DEDUCTIBLE: 0.068,
-  CRDS: 0.005,
-  PRELEVEMENT_SOLIDARITE: 0.075,
-} as const
+  // Revenus FINANCIERS (LMNP/BIC, dividendes, PV mobilières, crypto, PEA)
+  FINANCIER: {
+    TAUX_GLOBAL: RULES.ps.pfu_per_2026,
+    CSG: RULES.ps.csg,
+  },
+  // Revenus FONCIERS & PV IMMO & AV
+  FONCIER: {
+    TAUX_GLOBAL: RULES.ps.total,
+    CSG: RULES.ps.csg,
+  },
+  // Valeurs communes
+  CSG_DEDUCTIBLE: RULES.ps.csg_deductible,
+  CRDS: RULES.ps.crds,
+  PRELEVEMENT_SOLIDARITE: RULES.ps.solidarite,
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // LMNP / LMP
@@ -128,6 +119,8 @@ export const LMNP = {
   DUREE_AMORT_TRAVAUX: 10,
   PART_TERRAIN_DEFAULT: 15,
   SEUIL_RECETTES_LMNP: 23000,
+  // LF2025 : réintégration des amortissements dans le calcul de la PV
+  REINTEGRATION_AMORT_PV: true,
 } as const
 
 export const LMP = {
@@ -135,37 +128,37 @@ export const LMP = {
   // Condition LMP : recettes > 50% des revenus professionnels du foyer
   SEUIL_PART_REVENUS: 0.5,
   
-  // Cotisations SSI 2025 - Taux détaillés (source URSSAF)
+  // Cotisations SSI — Source : RULES.prevoyance_retraite.cotisations_tns
   SSI: {
     // Taux global selon niveau de bénéfice (35% bas revenus → 45% hauts revenus)
     TAUX_MIN: 0.35,
     TAUX_MAX: 0.45,
-    TAUX_MOYEN: 0.40, // Estimation moyenne pour calcul simplifié
+    TAUX_MOYEN: 0.40,
     
-    // Détail des cotisations (sur bénéfice net BIC)
-    MALADIE_TAUX_MIN: 0.065,   // 6,5% (revenus bas)
-    MALADIE_TAUX_MAX: 0.25,   // 25% (revenus élevés) - progressif
-    RETRAITE_BASE: 0.1775,    // 17,75%
-    RETRAITE_COMPLEMENTAIRE_MIN: 0.07, // 7%
-    RETRAITE_COMPLEMENTAIRE_MAX: 0.11, // 11%
-    INVALIDITE_DECES_MIN: 0.013, // 1,3%
-    INVALIDITE_DECES_MAX: 0.019, // 1,9%
-    ALLOCATIONS_FAMILIALES_MIN: 0.031, // 3,1%
-    ALLOCATIONS_FAMILIALES_MAX: 0.0525, // 5,25%
+    // Détail des cotisations — depuis RULES
+    MALADIE_TAUX_MIN: RULES.prevoyance_retraite.cotisations_tns.maladie_maternite.taux_au_dela_3pass,
+    MALADIE_TAUX_MAX: 0.25,
+    RETRAITE_BASE: RULES.prevoyance_retraite.cotisations_tns.retraite_base.taux_plafonne,
+    RETRAITE_COMPLEMENTAIRE_MIN: RULES.prevoyance_retraite.cotisations_tns.retraite_complementaire_rci.taux_tranche_1,
+    RETRAITE_COMPLEMENTAIRE_MAX: RULES.prevoyance_retraite.cotisations_tns.retraite_complementaire_rci.taux_tranche_2,
+    INVALIDITE_DECES_MIN: RULES.prevoyance_retraite.cotisations_tns.invalidite_deces.taux,
+    INVALIDITE_DECES_MAX: RULES.prevoyance_retraite.cotisations_tns.invalidite_deces.taux,
+    ALLOCATIONS_FAMILIALES_MIN: RULES.prevoyance_retraite.cotisations_tns.allocations_familiales.taux_normal,
+    ALLOCATIONS_FAMILIALES_MAX: 0.0525,
     
-    // CSG/CRDS calculée sur (bénéfice + cotisations obligatoires)
-    CSG_CRDS: 0.097, // 9,7%
+    // CSG/CRDS — depuis RULES
+    CSG_CRDS: RULES.prevoyance_retraite.cotisations_tns.csg_crds.csg_taux + RULES.prevoyance_retraite.cotisations_tns.csg_crds.crds_taux,
     
-    // Cotisations minimales annuelles (2025)
+    // Cotisations minimales annuelles — depuis RULES
     MINIMUM_MALADIE_IJ: 9,
-    MINIMUM_RETRAITE_BASE: 931,
-    MINIMUM_INVALIDITE_DECES: 69,
-    MINIMUM_CFP: 116,
+    MINIMUM_RETRAITE_BASE: RULES.prevoyance_retraite.cotisations_tns.cotisations_minimales.retraite_base_minimum,
+    MINIMUM_INVALIDITE_DECES: RULES.prevoyance_retraite.cotisations_tns.cotisations_minimales.invalidite_deces_minimum,
+    MINIMUM_CFP: RULES.prevoyance_retraite.cotisations_tns.cfp.commercant,
     MINIMUM_TOTAL: 1208,
     
-    // PASS 2025 (Plafond Annuel Sécurité Sociale)
-    PASS_2025: 46368,
-  },
+    // PASS — depuis RULES
+    PASS_2025: RULES.retraite.pass,
+  } as const,
   
   // Exonération plus-value professionnelle (art. 151 septies CGI)
   EXONERATION_PV_PRO_SEUIL: 90000,
@@ -178,16 +171,16 @@ export const LMP = {
 
 export const LOCATION_NUE = {
   MICRO_FONCIER: {
-    PLAFOND: 15000,
-    ABATTEMENT: 30,
+    PLAFOND: RULES.immobilier.micro_foncier.seuil,
+    ABATTEMENT: RULES.immobilier.micro_foncier.abattement * 100,
   },
   DEFICIT_FONCIER: {
-    PLAFOND_IMPUTATION_RG: 10700,
+    PLAFOND_IMPUTATION_RG: RULES.immobilier.deficit_foncier.plafond_imputation_revenu_global,
     PLAFOND_IMPUTATION_RG_RENOVATION_ENERGETIQUE: 21400,
-    DUREE_REPORT: 10,
+    DUREE_REPORT: RULES.immobilier.deficit_foncier.report_duree_ans,
     ENGAGEMENT_LOCATION: 3,
   },
-} as const
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // LOCATION SAISONNIÈRE
@@ -216,6 +209,11 @@ export const LOCATION_SAISONNIERE = {
 // PINEL 2025
 // ══════════════════════════════════════════════════════════════════════════════
 
+/**
+ * @deprecated Pinel a expiré le 31/12/2024. Conservé pour les simulations
+ * de biens acquis avant cette date. Pour les nouveaux investissements,
+ * utiliser le dispositif Jeanbrun (JEANBRUN ci-dessous).
+ */
 export const PINEL = {
   PLAFOND_INVESTISSEMENT: 300000,
   PLAFOND_M2: 5500,
@@ -244,6 +242,44 @@ export const PINEL = {
   ZONES_AUTORISEES_PLUS: ['A_BIS', 'A', 'B1'] as const,
   SURFACE_MIN_PINEL_PLUS: 28,
   ANNEE_FIN_STANDARD: 2024,
+  /** @deprecated Pinel expiré fin 2024 */
+  EXPIRE: true,
+} as const
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DISPOSITIF JEANBRUN 2026 — Nouveau statut bailleur privé
+// Remplace le Pinel. Amortissement fiscal sur revenus fonciers.
+// ══════════════════════════════════════════════════════════════════════════════
+
+export const JEANBRUN = {
+  ENGAGEMENT_LOCATION: 9,
+  NEUF: {
+    INTERMEDIAIRE: { TAUX_AMORTISSEMENT: 3.5, PLAFOND_ANNUEL: 8000 },
+    SOCIAL: { TAUX_AMORTISSEMENT: 4.5, PLAFOND_ANNUEL: 10000 },
+    TRES_SOCIAL: { TAUX_AMORTISSEMENT: 5.5, PLAFOND_ANNUEL: 12000 },
+  },
+  ANCIEN: {
+    INTERMEDIAIRE: { TAUX_AMORTISSEMENT: 3.0, PLAFOND_ANNUEL: 10700 },
+    SOCIAL: { TAUX_AMORTISSEMENT: 3.5, PLAFOND_ANNUEL: 10700 },
+    TRES_SOCIAL: { TAUX_AMORTISSEMENT: 4.0, PLAFOND_ANNUEL: 10700 },
+  },
+  PART_TERRAIN: 0.20,
+  BASE_AMORTISSABLE: 0.80,
+  CONDITIONS: {
+    TYPE_BIEN: 'collectif' as const,
+    SEUIL_TRAVAUX_ANCIEN: 0.30,
+    DPE_CIBLE: ['A', 'B'] as const,
+    RE2020_NEUF: true,
+  },
+  DECOTE_LOYER: {
+    INTERMEDIAIRE: 0.15,
+    SOCIAL: 0.30,
+    TRES_SOCIAL: 0.45,
+  },
+  DEFICIT_FONCIER: {
+    PLAFOND_RG: 10700,
+    PLAFOND_RG_RENOVATION_ENERGETIQUE: 21400,
+  },
 } as const
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -304,12 +340,13 @@ export const SCPI = {
 // ══════════════════════════════════════════════════════════════════════════════
 
 export const PLUS_VALUE_IMMOBILIERE = {
-  TAUX_IR: 19,
-  TAUX_PS: 17.2,
+  TAUX_IR: RULES.immobilier.plus_value.taux_ir * 100,
+  TAUX_PS: RULES.immobilier.plus_value.taux_ps * 100,
   ABATTEMENT_IR: {
-    DEBUT: 6, // année de début (après 5 ans)
-    TAUX_ANNUEL: 6, // % par an de 6 à 21
-    ANNEE_EXONERATION: 22,
+    DEBUT: 6,
+    TAUX_ANNUEL_6_21: 6,      // 6% par an de l'année 6 à 21
+    TAUX_ANNEE_22: 4,          // 4% la 22e année (complément → 100%)
+    ANNEE_EXONERATION: 22,     // Exonération IR à 22 ans (INCHANGÉ)
   },
   ABATTEMENT_PS: {
     DEBUT: 6,
@@ -337,23 +374,17 @@ export const PLUS_VALUE_IMMOBILIERE = {
 // ══════════════════════════════════════════════════════════════════════════════
 
 export const PLAFOND_NICHES = {
-  GLOBAL: 10000,
-  OUTRE_MER: 18000,
-  SOFICA: 18000,
-} as const
+  GLOBAL: RULES.ir.plafond_niches_fiscales,
+  OUTRE_MER: RULES.ir.plafond_niches_outremer,
+  SOFICA: RULES.ir.plafond_niches_outremer,
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // DÉMEMBREMENT (CGI art. 669)
 // ══════════════════════════════════════════════════════════════════════════════
 
-export const BAREME_DEMEMBREMENT = [
-  { ageMax: 20, usufruit: 90, nuePropriete: 10 },
-  { ageMax: 30, usufruit: 80, nuePropriete: 20 },
-  { ageMax: 40, usufruit: 70, nuePropriete: 30 },
-  { ageMax: 50, usufruit: 60, nuePropriete: 40 },
-  { ageMax: 60, usufruit: 50, nuePropriete: 50 },
-  { ageMax: 70, usufruit: 40, nuePropriete: 60 },
-  { ageMax: 80, usufruit: 30, nuePropriete: 70 },
-  { ageMax: 90, usufruit: 20, nuePropriete: 80 },
-  { ageMax: Infinity, usufruit: 10, nuePropriete: 90 },
-] as const
+export const BAREME_DEMEMBREMENT = RULES.demembrement.bareme_art669.map(t => ({
+  ageMax: t.age_max,
+  usufruit: t.usufruit,
+  nuePropriete: t.nue_propriete,
+}))

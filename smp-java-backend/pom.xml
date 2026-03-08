@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<groupId>com.alkaus.smp</groupId>
+	<artifactId>smp</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+	
+	<name>smp</name>
+	<description>Simulateurs de patrimoine</description>
+	
+	<packaging>pom</packaging>
+	
+	<!-- Modules -->
+	<modules>
+		<module>smp-domain</module>
+		<module>smp-application</module>
+		<module>smp-api</module>
+		<module>smp-infra</module>
+	</modules>
+	
+	<!-- Propriétés -->
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<java.version>17</java.version>
+		<spring.boot.version>3.5.5</spring.boot.version>
+		<lombok.version>1.18.38</lombok.version>
+		<mapstruct.version>1.6.3</mapstruct.version>
+		<commons-collections4.version>4.5.0</commons-collections4.version>	
+	</properties>
+	
+	<!-- Gestion des dépendances Spring boot -->
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>${spring.boot.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			
+			<dependency>
+      			<groupId>org.springdoc</groupId>
+				<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+				<version>2.8.9</version>
+   			</dependency>
+	
+			<dependency>
+				<groupId>org.projectlombok</groupId>
+            	<artifactId>lombok</artifactId>
+            	<version>${lombok.version}</version>
+        	</dependency>
+        	
+        	<dependency>
+		        <groupId>org.mapstruct</groupId>
+		        <artifactId>mapstruct</artifactId>
+		        <version>${mapstruct.version}</version>
+      		</dependency>
+      		
+        	<dependency>
+		        <groupId>org.mapstruct</groupId>
+		        <artifactId>mapstruct-processor</artifactId>
+		        <version>${mapstruct.version}</version>
+		        <scope>provided</scope>
+      		</dependency>
+      		
+      		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-collections4 -->
+			<dependency>
+			    <groupId>org.apache.commons</groupId>
+			    <artifactId>commons-collections4</artifactId>
+			    <version>${commons-collections4.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<build>
+		<pluginManagement>
+      		<plugins>
+      			<!-- Spring Boot (uniquement activé dans 'api') -->
+		        <plugin>
+		          <groupId>org.springframework.boot</groupId>
+		          <artifactId>spring-boot-maven-plugin</artifactId>
+		        </plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.10.1</version>
+					<configuration>
+						<release>${java.version}</release>
+					</configuration>
+				</plugin>
+        	<!-- autres plugins éventuellement -->
+      		</plugins>
+    	</pluginManagement>
+    	
+		<plugins>
+      	<!-- ✅ Enforcer global -->
+      		<plugin>
+        		<groupId>org.apache.maven.plugins</groupId>
+        		<artifactId>maven-enforcer-plugin</artifactId>
+        		<version>3.4.1</version>
+        		<dependencies>
+          			<dependency>
+            			<groupId>org.codehaus.mojo</groupId>
+            			<artifactId>extra-enforcer-rules</artifactId>
+            			<version>1.8.0</version>
+          			</dependency>
+        		</dependencies>
+        		<executions>
+          			<execution>
+            			<id>enforce</id>
+            			<goals><goal>enforce</goal></goals>
+            			<configuration>
+	              			<rules>
+	                			<!-- Java version minimale -->
+	                			<requireJavaVersion>
+	                  				<version>[${java.version},)</version>
+	                			</requireJavaVersion>
+	                			<!-- Interdiction des doublons de dépendances -->
+	                			<banDuplicatePomDependencyVersions/>
+	              			</rules>
+            			</configuration>
+      				</execution>
+        		</executions>
+  			</plugin>
+  			
+  			<plugin>
+          		<groupId>org.apache.maven.plugins</groupId>
+          		<artifactId>maven-surefire-plugin</artifactId>
+      			<version>3.2.5</version>
+			</plugin>
+
+        	<!-- Tests d'intégration (si besoin) -->
+        	<plugin>
+          		<groupId>org.apache.maven.plugins</groupId>
+          		<artifactId>maven-failsafe-plugin</artifactId>
+          	<version>3.2.5</version>
+        	</plugin>
+		</plugins>
+	</build>
+
+</project>

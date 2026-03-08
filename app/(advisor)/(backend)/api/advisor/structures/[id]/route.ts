@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
-
+import { logger } from '@/app/_common/lib/logger'
 // ============================================================================
 // DELETE - Supprimer une structure juridique
 // ============================================================================
@@ -78,7 +78,7 @@ export async function DELETE(
     })
 
   } catch (error) {
-    console.error('Erreur DELETE /structures/[id]:', error)
+    logger.error('Erreur DELETE /structures/[id]:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Erreur serveur', code: 'INTERNAL_ERROR' },
       { status: 500 }

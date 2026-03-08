@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { DashboardService } from '@/app/_common/lib/services/dashboard-service'
-
+import { logger } from '@/app/_common/lib/logger'
 export async function GET(request: NextRequest) {
   try {
     const context = await requireAuth(request); const { user } = context
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(celebrations)
   } catch (error) {
-    console.error('Error fetching celebrations:', error)
+    logger.error('Error fetching celebrations:', { error: error instanceof Error ? error.message : String(error) })
     // En cas d'erreur inattendue côté serveur, on renvoie simplement une liste vide
     // pour ne pas casser le dashboard ; aucune donnée mockée n'est injectée.
     return NextResponse.json({ events: [], error: 'Internal server error' }, { status: 200 })

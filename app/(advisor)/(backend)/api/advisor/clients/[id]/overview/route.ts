@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
+import { logger } from '@/app/_common/lib/logger'
 import { 
   calculateOverviewData 
 } from '@/app/_common/lib/services/overview-service'
@@ -68,7 +69,7 @@ export async function GET(
 
     return createSuccessResponse(overviewData)
   } catch (error) {
-    console.error('Get client overview error:', error)
+    logger.error('Get client overview error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

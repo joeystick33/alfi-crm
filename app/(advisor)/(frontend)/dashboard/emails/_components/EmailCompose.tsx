@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { X, Paperclip, Image, Link2, Smile, Minimize2, Maximize2, Send, Loader2 } from "lucide-react";
+import { useState, useCallback } from "react";
+import { X, Paperclip, Image, Link2, Smile, Minimize2, Maximize2, Send, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/app/_common/components/ui/Button";
 import { Input } from "@/app/_common/components/ui/Input";
 import { cn } from "@/lib/utils";
+import { useAI } from '@/app/(advisor)/(frontend)/hooks/useAI';
 
 interface EmailComposeProps {
   onClose: () => void;
@@ -21,6 +22,29 @@ export function EmailCompose({ onClose, onSend, replyTo, minimized, onToggleMini
   const [body, setBody] = useState(replyTo ? `\n\n---\nLe ${new Date().toLocaleDateString("fr-FR")}, ${replyTo.from} a écrit :\n${replyTo.body}` : "");
   const [showCc, setShowCc] = useState(false);
   const [sending, setSending] = useState(false);
+  const ai = useAI();
+  const [aiGenerating, setAiGenerating] = useState(false);
+
+  const handleAIGenerate = useCallback(async () => {
+    if (!subject.trim() && !to.trim()) return;
+    setAiGenerating(true);
+    try {
+      const result = await ai.generateEmail({
+        clientName: to.split('@')[0] || 'Client',
+        advisorName: 'Le conseiller',
+        cabinetName: 'Le cabinet',
+        emailType: 'custom',
+        context: subject || 'Email professionnel à un client',
+        tone: 'chaleureux',
+      });
+      if (result) {
+        if (result.subject && !subject.trim()) setSubject(result.subject);
+        setBody(result.body);
+      }
+    } finally {
+      setAiGenerating(false);
+    }
+  }, [subject, to, ai]);
 
   const handleSend = async () => {
     if (!to.trim() || !subject.trim()) return;
@@ -114,6 +138,18 @@ export function EmailCompose({ onClose, onSend, replyTo, minimized, onToggleMini
           <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500">
             <Smile className="h-4 w-4" />
           </Button>
+          {ai.isAvailable && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleAIGenerate}
+              disabled={aiGenerating}
+              className="h-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 gap-1 text-xs font-medium"
+            >
+              {aiGenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+              Rédiger par IA
+            </Button>
+          )}
         </div>
         <Button onClick={handleSend} disabled={sending || !to.trim()} className="bg-indigo-600 hover:bg-indigo-700">
           {sending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}

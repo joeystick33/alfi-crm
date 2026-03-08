@@ -1,0 +1,484 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdate": "2025-01-01",
+    "description": "Base de données des fournisseurs et produits financiers français pour CGP"
+  },
+  "providers": [
+    {
+      "name": "AXA France",
+      "siren": "310499959",
+      "type": "ASSUREUR",
+      "products": [
+        { "name": "Coralis", "code": "AXA-CORALIS", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "Arpèges", "code": "AXA-ARPEGES", "type": "ASSURANCE_VIE", "minInvestment": 5000 },
+        { "name": "Excelium", "code": "AXA-EXCELIUM", "type": "ASSURANCE_VIE", "minInvestment": 30000 },
+        { "name": "Odyssiel", "code": "AXA-ODYSSIEL", "type": "ASSURANCE_VIE", "minInvestment": 150000 },
+        { "name": "PER Matla", "code": "AXA-MATLA", "type": "PER_INDIVIDUEL", "minInvestment": 500 }
+      ]
+    },
+    {
+      "name": "Generali France",
+      "siren": "552062663",
+      "type": "ASSUREUR",
+      "products": [
+        { "name": "Himalia", "code": "GEN-HIMALIA", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "L'Épargne", "code": "GEN-EPARGNE", "type": "ASSURANCE_VIE", "minInvestment": 500 },
+        { "name": "Génération Vie", "code": "GEN-GENVIE", "type": "ASSURANCE_VIE", "minInvestment": 10000 },
+        { "name": "PER Generali Patrimoine", "code": "GEN-PER", "type": "PER_INDIVIDUEL", "minInvestment": 500 }
+      ]
+    },
+    {
+      "name": "Allianz Vie",
+      "siren": "340234962",
+      "type": "ASSUREUR",
+      "products": [
+        { "name": "Allianz Vie", "code": "ALZ-VIE", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "Gaipare II", "code": "ALZ-GAIPARE2", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "Allianz Excellence", "code": "ALZ-EXCELLENCE", "type": "ASSURANCE_VIE", "minInvestment": 50000 },
+        { "name": "PER Allianz", "code": "ALZ-PER", "type": "PER_INDIVIDUEL", "minInvestment": 500 }
+      ]
+    },
+    {
+      "name": "CNP Assurances",
+      "siren": "341737062",
+      "type": "ASSUREUR",
+      "products": [
+        { "name": "CNP Trésor Performance", "code": "CNP-TRESOR", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "CNP One", "code": "CNP-ONE", "type": "ASSURANCE_VIE", "minInvestment": 5000 },
+        { "name": "Nuances Plus", "code": "CNP-NUANCES", "type": "ASSURANCE_VIE", "minInvestment": 1000 }
+      ]
+    },
+    {
+      "name": "BNP Paribas Cardif",
+      "siren": "732028154",
+      "type": "ASSUREUR",
+      "products": [
+        { "name": "Cardif Multiplus Perspective", "code": "BNP-MULTI", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "BNP Paribas Multiplacements 2", "code": "BNP-MULTI2", "type": "ASSURANCE_VIE", "minInvestment": 5000 },
+        { "name": "Cardif Elite", "code": "BNP-ELITE", "type": "ASSURANCE_VIE", "minInvestment": 250000 },
+        { "name": "BNP Paribas Libertéa Vie", "code": "BNP-LIBERTEA", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "PER BNP Paribas", "code": "BNP-PER", "type": "PER_INDIVIDUEL", "minInvestment": 500 }
+      ]
+    },
+    {
+      "name": "Crédit Agricole Assurances",
+      "siren": "451746077",
+      "type": "ASSUREUR",
+      "products": [
+        { "name": "Predica Floriane 2", "code": "CA-FLORIANE2", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "Predica Espace Liberté", "code": "CA-ESPACE", "type": "ASSURANCE_VIE", "minInvestment": 5000 },
+        { "name": "LCL Vie", "code": "CA-LCLVIE", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "PER Crédit Agricole", "code": "CA-PER", "type": "PER_INDIVIDUEL", "minInvestment": 500 }
+      ]
+    },
+    {
+      "name": "Swiss Life France",
+      "siren": "320646573",
+      "type": "ASSUREUR",
+      "products": [
+        { "name": "SwissLife Strategic Premium", "code": "SL-STRATEGIC", "type": "ASSURANCE_VIE", "minInvestment": 30000 },
+        { "name": "SwissLife Wealth", "code": "SL-WEALTH", "type": "ASSURANCE_VIE", "minInvestment": 250000 },
+        { "name": "SwissLife Exclusive", "code": "SL-EXCLUSIVE", "type": "ASSURANCE_VIE", "minInvestment": 500000 },
+        { "name": "Darjeeling", "code": "SL-DARJEELING", "type": "ASSURANCE_VIE", "minInvestment": 100 },
+        { "name": "PER Swiss Life", "code": "SL-PER", "type": "PER_INDIVIDUEL", "minInvestment": 500 }
+      ]
+    },
+    {
+      "name": "AG2R La Mondiale",
+      "siren": "775685399",
+      "type": "ASSUREUR",
+      "products": [
+        { "name": "Terre de Vie", "code": "AG2R-TERREVIE", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "Vivaccio", "code": "AG2R-VIVACCIO", "type": "ASSURANCE_VIE", "minInvestment": 500 },
+        { "name": "Primonial Target", "code": "AG2R-TARGET", "type": "ASSURANCE_VIE", "minInvestment": 5000 },
+        { "name": "PER La Mondiale", "code": "AG2R-PER", "type": "PER_INDIVIDUEL", "minInvestment": 500 }
+      ]
+    },
+    {
+      "name": "Groupama Gan Vie",
+      "siren": "340427483",
+      "type": "ASSUREUR",
+      "products": [
+        { "name": "Chromatys", "code": "GAN-CHROMATYS", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "Gan Patrimoine", "code": "GAN-PATRIMOINE", "type": "ASSURANCE_VIE", "minInvestment": 5000 },
+        { "name": "Gan Eurocourtage", "code": "GAN-EURO", "type": "ASSURANCE_VIE", "minInvestment": 10000 },
+        { "name": "PER Groupama", "code": "GAN-PER", "type": "PER_INDIVIDUEL", "minInvestment": 500 }
+      ]
+    },
+    {
+      "name": "MACSF Épargne Retraite",
+      "siren": "403071095",
+      "type": "ASSUREUR",
+      "products": [
+        { "name": "RES Multisupport", "code": "MACSF-RES", "type": "ASSURANCE_VIE", "minInvestment": 500 },
+        { "name": "Acuity 2", "code": "MACSF-ACUITY2", "type": "ASSURANCE_VIE", "minInvestment": 5000 },
+        { "name": "MACSF PER", "code": "MACSF-PER", "type": "PER_INDIVIDUEL", "minInvestment": 500 }
+      ]
+    },
+    {
+      "name": "Apicil Épargne",
+      "siren": "440022935",
+      "type": "ASSUREUR",
+      "products": [
+        { "name": "Performance Absolue Vie", "code": "API-PERFABS", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "Frontière Efficiente", "code": "API-FRONTIERE", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "Intencial Liberalys Vie", "code": "API-LIBERALYS", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "PER Apicil", "code": "API-PER", "type": "PER_INDIVIDUEL", "minInvestment": 500 }
+      ]
+    },
+    {
+      "name": "Suravenir",
+      "siren": "330033127",
+      "type": "ASSUREUR",
+      "products": [
+        { "name": "Suravenir Rendement", "code": "SUR-RENDEMENT", "type": "ASSURANCE_VIE", "minInvestment": 100 },
+        { "name": "Suravenir Opportunités 2", "code": "SUR-OPPORT2", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "Linxea Avenir 2", "code": "SUR-LINXEA2", "type": "ASSURANCE_VIE", "minInvestment": 100 },
+        { "name": "Linxea Spirit 2", "code": "SUR-SPIRIT2", "type": "ASSURANCE_VIE", "minInvestment": 500 },
+        { "name": "Placement-direct Vie", "code": "SUR-PDVIE", "type": "ASSURANCE_VIE", "minInvestment": 500 },
+        { "name": "Fortuneo Vie", "code": "SUR-FORTUNEO", "type": "ASSURANCE_VIE", "minInvestment": 100 },
+        { "name": "Boursorama Vie", "code": "SUR-BOURSO", "type": "ASSURANCE_VIE", "minInvestment": 300 },
+        { "name": "Mon Petit Placement Vie", "code": "SUR-MPP", "type": "ASSURANCE_VIE", "minInvestment": 300 },
+        { "name": "Linxea PER", "code": "SUR-LINXEAPER", "type": "PER_INDIVIDUEL", "minInvestment": 100 },
+        { "name": "PER Placement-direct", "code": "SUR-PDPER", "type": "PER_INDIVIDUEL", "minInvestment": 500 }
+      ]
+    },
+    {
+      "name": "Spirica",
+      "siren": "487739963",
+      "type": "ASSUREUR",
+      "products": [
+        { "name": "Netlife 2", "code": "SPI-NETLIFE2", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "Arborescence Opportunités", "code": "SPI-ARBOR", "type": "ASSURANCE_VIE", "minInvestment": 500 },
+        { "name": "Meilleurtaux Liberté Vie", "code": "SPI-MLTAUX", "type": "ASSURANCE_VIE", "minInvestment": 500 },
+        { "name": "BforBank Vie", "code": "SPI-BFORBANK", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "Mes Placements Vie", "code": "SPI-MESPLAC", "type": "ASSURANCE_VIE", "minInvestment": 100 },
+        { "name": "Version Absolue 2", "code": "SPI-VERSION2", "type": "ASSURANCE_VIE", "minInvestment": 5000 },
+        { "name": "PER Meilleurtaux", "code": "SPI-MLTPER", "type": "PER_INDIVIDUEL", "minInvestment": 500 },
+        { "name": "PER Mes Placements", "code": "SPI-MESPER", "type": "PER_INDIVIDUEL", "minInvestment": 100 }
+      ]
+    },
+    {
+      "name": "Nortia",
+      "siren": "353115135",
+      "type": "PLATEFORME",
+      "products": [
+        { "name": "Nortia Selection", "code": "NOR-SELECT", "type": "ASSURANCE_VIE", "minInvestment": 5000 },
+        { "name": "Nortia Stratégies", "code": "NOR-STRAT", "type": "ASSURANCE_VIE", "minInvestment": 10000 }
+      ]
+    },
+    {
+      "name": "UAF Life Patrimoine",
+      "siren": "433912516",
+      "type": "PLATEFORME",
+      "products": [
+        { "name": "Netlife", "code": "UAF-NETLIFE", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "Arborescence Opportunités", "code": "UAF-ARBOR", "type": "ASSURANCE_VIE", "minInvestment": 500 },
+        { "name": "Version Absolue", "code": "UAF-VERSION", "type": "ASSURANCE_VIE", "minInvestment": 5000 }
+      ]
+    },
+    {
+      "name": "Primonial",
+      "siren": "484304696",
+      "type": "PLATEFORME",
+      "products": [
+        { "name": "Target +", "code": "PRI-TARGET", "type": "ASSURANCE_VIE", "minInvestment": 5000 },
+        { "name": "Sérénipierre", "code": "PRI-SERENI", "type": "ASSURANCE_VIE", "minInvestment": 10000 },
+        { "name": "Primonial Capi", "code": "PRI-CAPI", "type": "CAPITALISATION", "minInvestment": 10000 }
+      ]
+    },
+    {
+      "name": "Corum Asset Management",
+      "siren": "531636539",
+      "type": "SOCIETE_GESTION",
+      "products": [
+        { "name": "Corum Origin", "code": "CORUM-ORIGIN", "type": "SCPI", "minInvestment": 1135 },
+        { "name": "Corum XL", "code": "CORUM-XL", "type": "SCPI", "minInvestment": 195 },
+        { "name": "Corum Eurion", "code": "CORUM-EURION", "type": "SCPI", "minInvestment": 215 },
+        { "name": "Corum Life", "code": "CORUM-LIFE", "type": "ASSURANCE_VIE", "minInvestment": 50 }
+      ]
+    },
+    {
+      "name": "Sofidy",
+      "siren": "379990553",
+      "type": "SOCIETE_GESTION",
+      "products": [
+        { "name": "Immorente", "code": "SOF-IMMORENTE", "type": "SCPI", "minInvestment": 350 },
+        { "name": "Efimmo 1", "code": "SOF-EFIMMO", "type": "SCPI", "minInvestment": 246 },
+        { "name": "Sofidy Europe Invest", "code": "SOF-EUROPE", "type": "SCPI", "minInvestment": 250 },
+        { "name": "Sofipierre", "code": "SOF-SOFIPIERRE", "type": "SCPI", "minInvestment": 220 }
+      ]
+    },
+    {
+      "name": "Primonial REIM",
+      "siren": "531636521",
+      "type": "SOCIETE_GESTION",
+      "products": [
+        { "name": "Primovie", "code": "PRIM-PRIMOVIE", "type": "SCPI", "minInvestment": 203 },
+        { "name": "Primopierre", "code": "PRIM-PRIMOPIERRE", "type": "SCPI", "minInvestment": 208 },
+        { "name": "Patrimmo Commerce", "code": "PRIM-COMMERCE", "type": "SCPI", "minInvestment": 200 },
+        { "name": "Patrimmo Croissance", "code": "PRIM-CROISSANCE", "type": "SCPI", "minInvestment": 150 }
+      ]
+    },
+    {
+      "name": "Perial Asset Management",
+      "siren": "380723649",
+      "type": "SOCIETE_GESTION",
+      "products": [
+        { "name": "PFO2", "code": "PER-PFO2", "type": "SCPI", "minInvestment": 189 },
+        { "name": "PF Grand Paris", "code": "PER-PFGP", "type": "SCPI", "minInvestment": 503 },
+        { "name": "PF Hospitalité Europe", "code": "PER-PFHOSP", "type": "SCPI", "minInvestment": 200 }
+      ]
+    },
+    {
+      "name": "La Française REM",
+      "siren": "399922000",
+      "type": "SOCIETE_GESTION",
+      "products": [
+        { "name": "Épargne Foncière", "code": "LFR-EFONCIERE", "type": "SCPI", "minInvestment": 912 },
+        { "name": "LF Grand Paris Patrimoine", "code": "LFR-LFGPP", "type": "SCPI", "minInvestment": 300 },
+        { "name": "LF Europimmo", "code": "LFR-EUROPIMMO", "type": "SCPI", "minInvestment": 250 }
+      ]
+    },
+    {
+      "name": "BNP Paribas REIM",
+      "siren": "300794278",
+      "type": "SOCIETE_GESTION",
+      "products": [
+        { "name": "Accimmo Pierre", "code": "BNPR-ACCIMMO", "type": "SCPI", "minInvestment": 375 },
+        { "name": "France Investipierre", "code": "BNPR-INVESTI", "type": "SCPI", "minInvestment": 1000 }
+      ]
+    },
+    {
+      "name": "Amundi Immobilier",
+      "siren": "315429886",
+      "type": "SOCIETE_GESTION",
+      "products": [
+        { "name": "Rivoli Avenir Patrimoine", "code": "AMU-RIVOLI", "type": "SCPI", "minInvestment": 305 },
+        { "name": "Genepierre", "code": "AMU-GENEPIERRE", "type": "SCPI", "minInvestment": 450 },
+        { "name": "Edissimmo", "code": "AMU-EDISSIMMO", "type": "SCPI", "minInvestment": 237 }
+      ]
+    },
+    {
+      "name": "Advenis REIM",
+      "siren": "832434452",
+      "type": "SOCIETE_GESTION",
+      "products": [
+        { "name": "Eurovalys", "code": "ADV-EUROVALYS", "type": "SCPI", "minInvestment": 1025 },
+        { "name": "Elialys", "code": "ADV-ELIALYS", "type": "SCPI", "minInvestment": 1000 }
+      ]
+    },
+    {
+      "name": "Amundi",
+      "siren": "314222902",
+      "type": "SOCIETE_GESTION",
+      "products": [
+        { "name": "Amundi PEA", "code": "AMU-PEA", "type": "PEA", "minInvestment": 100 },
+        { "name": "Amundi ETF", "code": "AMU-ETF", "type": "COMPTE_TITRES", "minInvestment": 100 }
+      ]
+    },
+    {
+      "name": "Carmignac Gestion",
+      "siren": "349501676",
+      "type": "SOCIETE_GESTION",
+      "products": [
+        { "name": "Carmignac Patrimoine", "code": "CAR-PATRIMOINE", "type": "COMPTE_TITRES", "minInvestment": 100 },
+        { "name": "Carmignac Investissement", "code": "CAR-INVEST", "type": "COMPTE_TITRES", "minInvestment": 100 }
+      ]
+    },
+    {
+      "name": "Comgest",
+      "siren": "399920475",
+      "type": "SOCIETE_GESTION",
+      "products": [
+        { "name": "Comgest Monde", "code": "COM-MONDE", "type": "COMPTE_TITRES", "minInvestment": 100 },
+        { "name": "Comgest Growth Europe", "code": "COM-EUROPE", "type": "COMPTE_TITRES", "minInvestment": 100 }
+      ]
+    },
+    {
+      "name": "DNCA Investments",
+      "siren": "432518041",
+      "type": "SOCIETE_GESTION",
+      "products": [
+        { "name": "DNCA Invest Eurose", "code": "DNCA-EUROSE", "type": "COMPTE_TITRES", "minInvestment": 100 },
+        { "name": "DNCA Invest Centifolia", "code": "DNCA-CENTIF", "type": "COMPTE_TITRES", "minInvestment": 100 }
+      ]
+    },
+    {
+      "name": "Tikehau Capital",
+      "siren": "491909498",
+      "type": "SOCIETE_GESTION",
+      "products": [
+        { "name": "Tikehau SubFin Fund", "code": "TIK-SUBFIN", "type": "COMPTE_TITRES", "minInvestment": 1000 },
+        { "name": "Tikehau Short Duration", "code": "TIK-SHORT", "type": "COMPTE_TITRES", "minInvestment": 1000 }
+      ]
+    },
+    {
+      "name": "La Financière de l'Échiquier",
+      "siren": "352045673",
+      "type": "SOCIETE_GESTION",
+      "products": [
+        { "name": "Échiquier World Equity Growth", "code": "LFE-WORLD", "type": "COMPTE_TITRES", "minInvestment": 100 },
+        { "name": "Échiquier Agenor SRI Mid Cap", "code": "LFE-AGENOR", "type": "COMPTE_TITRES", "minInvestment": 100 }
+      ]
+    },
+    {
+      "name": "Boursorama",
+      "siren": "351058151",
+      "type": "BANQUE",
+      "products": [
+        { "name": "Boursorama Vie", "code": "BOUR-VIE", "type": "ASSURANCE_VIE", "minInvestment": 300 },
+        { "name": "PEA Boursorama", "code": "BOUR-PEA", "type": "PEA", "minInvestment": 1 },
+        { "name": "Compte-Titres Boursorama", "code": "BOUR-CTO", "type": "COMPTE_TITRES", "minInvestment": 1 },
+        { "name": "PER Boursorama", "code": "BOUR-PER", "type": "PER_INDIVIDUEL", "minInvestment": 150 }
+      ]
+    },
+    {
+      "name": "Fortuneo",
+      "siren": "384288953",
+      "type": "BANQUE",
+      "products": [
+        { "name": "Fortuneo Vie", "code": "FORT-VIE", "type": "ASSURANCE_VIE", "minInvestment": 100 },
+        { "name": "PEA Fortuneo", "code": "FORT-PEA", "type": "PEA", "minInvestment": 1 },
+        { "name": "Compte-Titres Fortuneo", "code": "FORT-CTO", "type": "COMPTE_TITRES", "minInvestment": 1 },
+        { "name": "PER Fortuneo", "code": "FORT-PER", "type": "PER_INDIVIDUEL", "minInvestment": 100 }
+      ]
+    },
+    {
+      "name": "Société Générale",
+      "siren": "552120222",
+      "type": "BANQUE",
+      "products": [
+        { "name": "Séquoia", "code": "SG-SEQUOIA", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "Ebène", "code": "SG-EBENE", "type": "ASSURANCE_VIE", "minInvestment": 5000 },
+        { "name": "PEA Société Générale", "code": "SG-PEA", "type": "PEA", "minInvestment": 100 },
+        { "name": "PER Société Générale", "code": "SG-PER", "type": "PER_INDIVIDUEL", "minInvestment": 500 }
+      ]
+    },
+    {
+      "name": "LCL",
+      "siren": "954509741",
+      "type": "BANQUE",
+      "products": [
+        { "name": "LCL Vie", "code": "LCL-VIE", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "Gulliver", "code": "LCL-GULLIVER", "type": "ASSURANCE_VIE", "minInvestment": 5000 },
+        { "name": "PEA LCL", "code": "LCL-PEA", "type": "PEA", "minInvestment": 100 },
+        { "name": "PER LCL", "code": "LCL-PER", "type": "PER_INDIVIDUEL", "minInvestment": 500 }
+      ]
+    },
+    {
+      "name": "BNP Paribas",
+      "siren": "662042449",
+      "type": "BANQUE",
+      "products": [
+        { "name": "BNP Paribas Multiplacements 2", "code": "BNP-BANK-MULTI2", "type": "ASSURANCE_VIE", "minInvestment": 5000 },
+        { "name": "BNP Paribas Avenir Retraite", "code": "BNP-AVENIR", "type": "PER_INDIVIDUEL", "minInvestment": 500 },
+        { "name": "PEA BNP Paribas", "code": "BNP-PEA", "type": "PEA", "minInvestment": 100 }
+      ]
+    },
+    {
+      "name": "Crédit Mutuel",
+      "siren": "588505354",
+      "type": "BANQUE",
+      "products": [
+        { "name": "Plan Assurance Vie", "code": "CM-PLANAV", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "Livret Assurance Vie", "code": "CM-LIVRET", "type": "ASSURANCE_VIE", "minInvestment": 500 },
+        { "name": "PEA Crédit Mutuel", "code": "CM-PEA", "type": "PEA", "minInvestment": 100 },
+        { "name": "PER Crédit Mutuel", "code": "CM-PER", "type": "PER_INDIVIDUEL", "minInvestment": 500 }
+      ]
+    },
+    {
+      "name": "Caisse d'Épargne",
+      "siren": "383680220",
+      "type": "BANQUE",
+      "products": [
+        { "name": "Millevie Essentielle", "code": "CE-MILLE", "type": "ASSURANCE_VIE", "minInvestment": 500 },
+        { "name": "Millevie Premium", "code": "CE-PREMIUM", "type": "ASSURANCE_VIE", "minInvestment": 5000 },
+        { "name": "PEA Caisse d'Épargne", "code": "CE-PEA", "type": "PEA", "minInvestment": 100 },
+        { "name": "PER Caisse d'Épargne", "code": "CE-PER", "type": "PER_INDIVIDUEL", "minInvestment": 500 }
+      ]
+    },
+    {
+      "name": "Malakoff Humanis",
+      "siren": "352415389",
+      "type": "ASSUREUR",
+      "products": [
+        { "name": "Avenir Santé", "code": "MH-SANTE", "type": "ASSURANCE_VIE", "minInvestment": 500 },
+        { "name": "PER Malakoff Humanis", "code": "MH-PER", "type": "PER_INDIVIDUEL", "minInvestment": 500 }
+      ]
+    },
+    {
+      "name": "April",
+      "siren": "309707727",
+      "type": "PLATEFORME",
+      "products": [
+        { "name": "April Mon Épargne", "code": "APR-EPARGNE", "type": "ASSURANCE_VIE", "minInvestment": 500 },
+        { "name": "April PER", "code": "APR-PER", "type": "PER_INDIVIDUEL", "minInvestment": 500 }
+      ]
+    },
+    {
+      "name": "Rothschild Martin Maurel",
+      "siren": "784393340",
+      "type": "BANQUE",
+      "products": [
+        { "name": "R-co Valor", "code": "RMM-VALOR", "type": "COMPTE_TITRES", "minInvestment": 5000 },
+        { "name": "R-co Conviction Equity Value Euro", "code": "RMM-CONVIC", "type": "COMPTE_TITRES", "minInvestment": 5000 }
+      ]
+    },
+    {
+      "name": "Edmond de Rothschild",
+      "siren": "572023498",
+      "type": "BANQUE",
+      "products": [
+        { "name": "EdR Fund Big Data", "code": "EDR-BIGDATA", "type": "COMPTE_TITRES", "minInvestment": 1000 },
+        { "name": "EdR Fund Healthcare", "code": "EDR-HEALTH", "type": "COMPTE_TITRES", "minInvestment": 1000 },
+        { "name": "EdR SICAV Euro Sustainable Equity", "code": "EDR-SUSTAIN", "type": "COMPTE_TITRES", "minInvestment": 1000 }
+      ]
+    },
+    {
+      "name": "ODDO BHF",
+      "siren": "652027384",
+      "type": "BANQUE",
+      "products": [
+        { "name": "ODDO BHF Avenir Europe", "code": "ODDO-AVENIR", "type": "COMPTE_TITRES", "minInvestment": 100 },
+        { "name": "ODDO BHF Génération", "code": "ODDO-GENERATION", "type": "COMPTE_TITRES", "minInvestment": 100 }
+      ]
+    },
+    {
+      "name": "Eres Group",
+      "siren": "402199178",
+      "type": "PLATEFORME",
+      "products": [
+        { "name": "Eres PER", "code": "ERES-PER", "type": "PER_INDIVIDUEL", "minInvestment": 500 },
+        { "name": "Eres PERECO", "code": "ERES-PERECO", "type": "PER_ENTREPRISE", "minInvestment": 0 }
+      ]
+    },
+    {
+      "name": "Patrimea",
+      "siren": "500207468",
+      "type": "PLATEFORME",
+      "products": [
+        { "name": "Patrimea Premium", "code": "PAT-PREMIUM", "type": "ASSURANCE_VIE", "minInvestment": 1000 },
+        { "name": "Patrimea PER", "code": "PAT-PER", "type": "PER_INDIVIDUEL", "minInvestment": 500 }
+      ]
+    },
+    {
+      "name": "Crystal Finance",
+      "siren": "790254823",
+      "type": "PLATEFORME",
+      "products": [
+        { "name": "Crystal Vie", "code": "CRY-VIE", "type": "ASSURANCE_VIE", "minInvestment": 1000 }
+      ]
+    },
+    {
+      "name": "Lazard Frères Gestion",
+      "siren": "352213552",
+      "type": "SOCIETE_GESTION",
+      "products": [
+        { "name": "Lazard Equity SRI", "code": "LAZ-SRI", "type": "COMPTE_TITRES", "minInvestment": 100 },
+        { "name": "Lazard Patrimoine SRI", "code": "LAZ-PATRIMOINE", "type": "COMPTE_TITRES", "minInvestment": 100 }
+      ]
+    }
+  ]
+}

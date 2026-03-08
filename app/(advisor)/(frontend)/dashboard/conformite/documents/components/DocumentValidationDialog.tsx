@@ -14,7 +14,8 @@ import { Textarea } from '@/app/_common/components/ui/Textarea'
 import { Label } from '@/app/_common/components/ui/Label'
 import { Badge } from '@/app/_common/components/ui/Badge'
 import { useValidateComplianceDocument } from '@/app/_common/hooks/api/use-compliance-api'
-import { CheckCircle, FileText, Calendar, User } from 'lucide-react'
+import { CheckCircle, FileText, Calendar } from 'lucide-react'
+import { ClientLink } from '@/app/_common/components/ClientLink'
 import {
   KYC_DOCUMENT_TYPE_LABELS,
   DOCUMENT_EXPIRATION_RULES,
@@ -105,12 +106,11 @@ export default function DocumentValidationDialog({
             </div>
 
             <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-200">
-              <div className="flex items-center gap-2 text-sm">
-                <User className="h-4 w-4 text-gray-400" />
-                <span className="text-gray-600">
-                  Client #{document.clientId.slice(0, 8)}
-                </span>
-              </div>
+              <ClientLink
+                clientId={document.clientId}
+                showAvatar={true}
+                avatarSize="sm"
+              />
               <div className="flex items-center gap-2 text-sm">
                 <Calendar className="h-4 w-4 text-gray-400" />
                 <span className="text-gray-600">

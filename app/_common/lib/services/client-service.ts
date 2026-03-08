@@ -226,7 +226,13 @@ export class ClientService {
             createdAt: 'desc'
           },
           take: 20
-        }
+        },
+        simulations: {
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: 20
+        },
       } : undefined
     })
 
@@ -281,6 +287,23 @@ export class ClientService {
       },
       data: {
         status: 'ARCHIVE',
+      },
+    })
+
+    if (count === 0) {
+      throw new Error('Client not found or access denied')
+    }
+  }
+
+  async restoreClient(id: string) {
+    const { count } = await this.prisma.client.updateMany({
+      where: {
+        id,
+        cabinetId: this.cabinetId,
+        status: 'ARCHIVE',
+      },
+      data: {
+        status: 'ACTIF',
       },
     })
 

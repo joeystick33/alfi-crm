@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { prisma } from '@/app/_common/lib/prisma'
-
+import { logger } from '@/app/_common/lib/logger'
 // Préférences de notification par défaut
 const DEFAULT_NOTIFICATION_PREFERENCES = {
   email: true,
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(notificationPreferences)
   } catch (error: any) {
-    console.error('Get notification preferences error:', error)
+    logger.error('Get notification preferences error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Unauthorized') {
       return NextResponse.json(
@@ -83,7 +83,7 @@ export async function PATCH(request: NextRequest) {
       notifications: updatedNotifications
     })
   } catch (error: any) {
-    console.error('Update notification preferences error:', error)
+    logger.error('Update notification preferences error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Unauthorized') {
       return NextResponse.json(

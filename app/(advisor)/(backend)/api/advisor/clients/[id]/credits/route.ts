@@ -8,7 +8,7 @@ import {
 } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { mapCreditType } from '@/app/_common/lib/enum-mappings'
-
+import { logger } from '@/app/_common/lib/logger'
 // Schéma de validation pour les crédits
 const createCreditSchema = z.object({
   libelle: z.string().min(1, 'Le libellé est requis'),
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     return createSuccessResponse(credits)
   } catch (error: any) {
-    console.error('Error fetching credits:', error)
+    logger.error('Error fetching credits:', { error: error instanceof Error ? error.message : String(error) })
     if (error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }
@@ -167,7 +167,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     return createSuccessResponse(credit, 201)
   } catch (error: any) {
-    console.error('Error creating credit:', error)
+    logger.error('Error creating credit:', { error: error instanceof Error ? error.message : String(error) })
     if (error instanceof z.ZodError) {
       return createErrorResponse(
         'Données invalides: ' + error.issues.map(e => e.message).join(', '),

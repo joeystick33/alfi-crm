@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { CampaignService } from '@/app/_common/lib/services/campaign-service'
 import { requireAuth, createErrorResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * POST /api/advisor/campaigns/[id]/cancel
  * Annuler une campagne planifiée ou en cours
@@ -28,7 +28,7 @@ export async function POST(
 
     return NextResponse.json(campaign)
   } catch (error: any) {
-    console.error(`Erreur POST /api/advisor/campaigns/${campaignId}/cancel:`, error)
+    logger.error(`Erreur POST /api/advisor/campaigns/${campaignId}/cancel:`, { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Campagne non trouvée') {
       return NextResponse.json(

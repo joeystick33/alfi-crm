@@ -1,7 +1,7 @@
 import { getPrismaClient } from '../prisma'
 import { AuthService } from './auth-service'
 import { createAdminClient } from '../supabase/server'
-
+import { logger } from '@/app/_common/lib/logger'
 export interface CreateCabinetInput {
     name: string
     slug: string
@@ -124,11 +124,11 @@ export class CabinetService {
             })
 
             if (authError && !authError.message.includes('already')) {
-                console.error('Erreur Supabase Auth:', authError)
+                logger.error('Erreur Supabase Auth: ' + authError.message)
                 // On ne bloque pas la création si Supabase échoue (on pourra réessayer ou le user le fera au login)
             }
         } catch (error) {
-            console.error('Erreur lors de la création Supabase:', error)
+            logger.error('Erreur lors de la création Supabase:', { error: error instanceof Error ? error.message : String(error) })
         }
 
         // 7. Mettre à jour l'usage du cabinet

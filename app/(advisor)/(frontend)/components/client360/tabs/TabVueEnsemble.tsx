@@ -64,6 +64,7 @@ import { useFiscaliteSummary } from '../../../hooks/useFiscaliteSummary'
 import { usePatrimoineSummary } from '../../../hooks/usePatrimoineSummary'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/app/_common/components/ui/Dialog'
 import ActifFormWizard from '../../patrimoine/ActifFormWizard'
+import { BilanPatrimonialWizard } from '../modals'
 
 // =============================================================================
 // Types
@@ -222,6 +223,7 @@ export function TabVueEnsemble({ clientId, client, wealth, onTabChange }: TabVue
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'monthly' | 'yearly'>('monthly')
   const [showActifModal, setShowActifModal] = useState(false)
+  const [showBilanWizard, setShowBilanWizard] = useState(false)
 
   // 🔌 HOOKS PARTAGÉS - Réutilisent la même logique que les autres tabs
   const budgetSummary = useBudgetSummary(
@@ -579,11 +581,12 @@ export function TabVueEnsemble({ clientId, client, wealth, onTabChange }: TabVue
           <Button
             variant="primary"
             size="sm"
-            onClick={() => handleQuickAction('generate-report')}
-            className="gap-2"
+            type="button"
+            onClick={() => setShowBilanWizard(true)}
+            className="gap-2 bg-[#7373FF] hover:bg-[#5c5ce6]"
           >
             <FileDown className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Rapport</span>
+            Créer Bilan
           </Button>
         </div>
       </header>
@@ -823,9 +826,9 @@ export function TabVueEnsemble({ clientId, client, wealth, onTabChange }: TabVue
             />
             <QuickActionButton
               icon={FileDown}
-              label="Générer un rapport"
-              description="Rapport patrimonial complet"
-              onClick={() => handleQuickAction('generate-report')}
+              label="Créer un bilan"
+              description="Bilan patrimonial complet"
+              onClick={() => setShowBilanWizard(true)}
             />
           </div>
         </CardContent>
@@ -855,6 +858,13 @@ export function TabVueEnsemble({ clientId, client, wealth, onTabChange }: TabVue
           />
         </DialogContent>
       </Dialog>
+
+      {/* Wizard Bilan Patrimonial */}
+      <BilanPatrimonialWizard
+        open={showBilanWizard}
+        onClose={() => setShowBilanWizard(false)}
+        clientId={clientId}
+      />
     </div>
   )
 }
@@ -1129,8 +1139,8 @@ function PatrimonyEvolutionChart({ data }: PatrimonyEvolutionChartProps) {
       </div>
 
       {/* Chart */}
-      <div className="h-56">
-        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+      <div style={{ width: '100%', height: 224 }}>
+        <ResponsiveContainer width="100%" height={224}>
           <AreaChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
             <defs>
               <linearGradient id="patrimoineGradient" x1="0" y1="0" x2="0" y2="1">

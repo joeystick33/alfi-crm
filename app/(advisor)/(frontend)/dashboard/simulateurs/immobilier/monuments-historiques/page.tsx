@@ -3,9 +3,13 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import Script from 'next/script'
 import { SimulatorGate } from '@/app/_common/components/FeatureGate'
 import { usePlotlyReady } from '../_hooks/usePlotlyReady'
+import {
+  Castle, User, Wrench, CreditCard, Wallet, FileText, Landmark,
+  BarChart3, TrendingUp, Target, Briefcase, CheckCircle, AlertTriangle,
+  Scale, RefreshCw,
+} from 'lucide-react'
 import { 
   DISPOSITIFS_FISCAUX_DISPLAY as DISPOSITIFS_FISCAUX, 
   calculIRDetaille, 
@@ -292,13 +296,12 @@ export default function MonumentsHistoriquesPage() {
 
   return (
     <SimulatorGate simulator="IMMOBILIER" showTeaser>
-      <Script src="https://cdn.plot.ly/plotly-2.27.0.min.js" strategy="afterInteractive" onLoad={handlePlotlyLoad} />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-amber-50 to-yellow-50">
         <main className="container mx-auto px-4 py-6 max-w-6xl">
           <Link href="/dashboard/simulateurs/immobilier" className="text-sm text-blue-800 hover:text-blue-700 mb-4 inline-flex items-center">← Simulateurs immobilier</Link>
           <div className="sim-card mb-6">
             <div className="flex items-center gap-4">
-              <span className="text-4xl">🏰</span>
+              <Castle className="w-9 h-9 text-amber-700" />
               <div><h1 className="text-2xl font-bold">Simulateur Monuments Historiques</h1><p className="text-gray-600">Bien classé/inscrit • Déduction 100% • Sans plafond</p></div>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
@@ -314,7 +317,7 @@ export default function MonumentsHistoriquesPage() {
 
               {/* ÉTAPE 1 : PROFIL CLIENT (OBLIGATOIRE selon standard) */}
               {step === 1 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-1">👤 Votre profil fiscal</h2>
+                <h2 className="text-lg font-bold mb-1 flex items-center gap-2"><User className="w-5 h-5" /> Votre profil fiscal</h2>
                 <p className="text-sm text-gray-500 mb-6">Ces informations permettent de calculer l'impact RÉEL sur votre IR et IFI</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="form-group"><label>Situation familiale</label><select value={situationFamiliale} onChange={e=>setSituationFamiliale(e.target.value as SituationFamiliale)}><option value="CELIBATAIRE">Célibataire</option><option value="MARIE_PACSE">Marié / Pacsé</option><option value="VEUF">Veuf</option></select></div>
@@ -342,7 +345,7 @@ export default function MonumentsHistoriquesPage() {
 
               {/* ÉTAPE 2 : BIEN IMMOBILIER */}
               {step === 2 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">🏰 Monument Historique</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Castle className="w-5 h-5" /> Monument Historique</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="form-group"><label>Date d'acquisition</label><input type="month" value={dateAcquisition} onChange={e=>setDateAcquisition(e.target.value)}/></div>
                   <div className="form-group"><label>Prix d'acquisition (€)</label><input type="number" value={prixAcquisition} onChange={e=>setPrixAcquisition(+e.target.value)}/></div>
@@ -352,12 +355,12 @@ export default function MonumentsHistoriquesPage() {
                   <div className="form-group"><label>Ouverture au public</label><select value={ouverturePublic} onChange={e=>setOuverturePublic(e.target.value as OuverturePublic)}><option value="OUI">Oui (50+ jours/an)</option><option value="PARTIEL">Partielle</option><option value="NON">Non</option></select></div>
                   {ouverturePublic !== 'NON' && <div className="form-group"><label>Visiteurs/an estimés</label><input type="number" value={nbVisiteurs} onChange={e=>setNbVisiteurs(+e.target.value)}/></div>}
                 </div>
-                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-amber-800 mb-2">📜 CGI art. 156-II-1° ter</h4><ul className="text-sm text-amber-700 space-y-1"><li>• <strong>Classé MH :</strong> protection maximale, travaux supervisés DRAC</li><li>• <strong>Inscrit :</strong> protection partielle, déclaration préalable ABF</li><li>• <strong>Ouverture au public :</strong> 50 jours/an dont 25 non ouvrables, ou 40 jours avril-septembre → déduction 100% + exonération IFI</li></ul></div>
+                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-amber-800 mb-2 flex items-center gap-2"><FileText className="w-4 h-4" /> CGI art. 156-II-1° ter</h4><ul className="text-sm text-amber-700 space-y-1"><li>• <strong>Classé MH :</strong> protection maximale, travaux supervisés DRAC</li><li>• <strong>Inscrit :</strong> protection partielle, déclaration préalable ABF</li><li>• <strong>Ouverture au public :</strong> 50 jours/an dont 25 non ouvrables, ou 40 jours avril-septembre → déduction 100% + exonération IFI</li></ul></div>
               </div>}
 
               {/* ÉTAPE 3 : TRAVAUX */}
               {step === 3 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">🔧 Travaux de restauration (SANS PLAFOND)</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Wrench className="w-5 h-5" /> Travaux de restauration (SANS PLAFOND)</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="form-group"><label>Année 1 (€)</label><input type="number" value={travauxAn1} onChange={e=>setTravauxAn1(+e.target.value)}/></div>
                   <div className="form-group"><label>Année 2 (€)</label><input type="number" value={travauxAn2} onChange={e=>setTravauxAn2(+e.target.value)}/></div>
@@ -375,14 +378,14 @@ export default function MonumentsHistoriquesPage() {
 
               {/* ÉTAPE 4 : FINANCEMENT */}
               {step === 4 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">💳 Financement</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><CreditCard className="w-5 h-5" /> Financement</h2>
                 
                 {/* Option achat comptant */}
                 <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6">
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input type="checkbox" checked={sansFinancement} onChange={(e) => { setSansFinancement(e.target.checked); if (e.target.checked) setApport(investTotal) }} className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"/>
                     <div>
-                      <span className="font-semibold text-slate-800">💵 Achat au comptant (sans financement)</span>
+                      <span className="font-semibold text-slate-800 flex items-center gap-2"><Wallet className="w-4 h-4" /> Achat au comptant (sans financement)</span>
                       <p className="text-sm text-slate-500">Cochez cette case si le client ne passe pas par un crédit immobilier</p>
                     </div>
                   </label>
@@ -390,7 +393,7 @@ export default function MonumentsHistoriquesPage() {
                 
                 {sansFinancement ? (
                   <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6 text-center">
-                    <div className="text-4xl mb-3">💰</div>
+                    <Wallet className="w-9 h-9 text-emerald-600 mb-3" />
                     <h3 className="font-bold text-emerald-800 text-lg mb-2">Achat au comptant</h3>
                     <p className="text-emerald-700">Investissement total : <strong className="text-xl">{fmtEur(investTotal)}</strong></p>
                   </div>
@@ -413,7 +416,7 @@ export default function MonumentsHistoriquesPage() {
 
               {/* ÉTAPE 5 : REVENUS LOCATIFS */}
               {step === 5 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">💰 Revenus locatifs</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Wallet className="w-5 h-5" /> Revenus locatifs</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="form-group"><label>Loyer mensuel (€)</label><input type="number" value={loyerMensuel} onChange={e=>setLoyerMensuel(+e.target.value)}/><span className="form-hint">Si location partielle</span></div>
                   <div className="form-group"><label>Charges locatives (€ / mois)</label><input type="number" value={chargesLocatives} onChange={e=>setChargesLocatives(+e.target.value)} min={0}/><span className="form-hint">Refacturées au locataire</span></div>
@@ -430,7 +433,7 @@ export default function MonumentsHistoriquesPage() {
 
               {/* ÉTAPE 6 : CHARGES MH */}
               {step === 6 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-1">📋 Charges MH (élevées)</h2>
+                <h2 className="text-lg font-bold mb-1 flex items-center gap-2"><FileText className="w-5 h-5" /> Charges MH (élevées)</h2>
                 <p className="text-sm text-gray-500 mb-6">Les MH ont des charges d'entretien très supérieures aux biens classiques</p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="form-group"><label>Entretien annuel (€)</label><input type="number" value={chargesEntretien} onChange={e=>setChargesEntretien(+e.target.value)}/><span className="form-hint">Très élevé pour MH</span></div>
@@ -447,7 +450,7 @@ export default function MonumentsHistoriquesPage() {
 
               {/* ÉTAPE 7 : PROJECTION */}
               {step === 7 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">🏛️ Projection</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Landmark className="w-5 h-5" /> Projection</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="form-group"><label>Durée détention (ans)</label><input type="number" value={dureeDetention} onChange={e=>setDureeDetention(+e.target.value)} min={15}/><span className="form-hint">Min 15 ans (exo PV)</span></div>
                   <div className="form-group"><label>Revalorisation bien (%/an)</label><input type="number" value={revalorisationBien} onChange={e=>setRevalorisationBien(+e.target.value)} step={0.1}/></div>
@@ -459,18 +462,18 @@ export default function MonumentsHistoriquesPage() {
                   <div><span className="text-amber-800">Revenu global</span><div className="font-bold text-lg">{fmtEur(revenuGlobal)}</div></div>
                   <div><span className="text-amber-800">Économie IR travaux</span><div className="font-bold text-lg text-emerald-600">{fmtEur(Math.round(travauxDeductibles * tmi / 100))}</div></div>
                 </div>
-                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-amber-800 mb-2">✨ Avantages exceptionnels MH</h4><ul className="text-sm text-amber-700 space-y-1">
-                  <li>• ✅ Déduction 100% travaux du revenu global <strong>sans plafond</strong></li>
-                  <li>• ✅ <strong>Hors plafond des niches fiscales</strong> (10 000 €)</li>
-                  <li>• ✅ Exonération IFI si ouvert au public</li>
-                  <li>• ✅ Abattement transmission 75% (Pacte Dutreil MH)</li>
-                  <li>• ✅ Exonération plus-value si conservation ≥15 ans</li>
+                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-amber-800 mb-2 flex items-center gap-2"><CheckCircle className="w-4 h-4" /> Avantages exceptionnels MH</h4><ul className="text-sm text-amber-700 space-y-1">
+                  <li>• Déduction 100% travaux du revenu global <strong>sans plafond</strong></li>
+                  <li>• <strong>Hors plafond des niches fiscales</strong> (10 000 €)</li>
+                  <li>• Exonération IFI si ouvert au public</li>
+                  <li>• Abattement transmission 75% (Pacte Dutreil MH)</li>
+                  <li>• Exonération plus-value si conservation ≥15 ans</li>
                 </ul></div>
               </div>}
 
               <div className="flex justify-between mt-8">
                 <button onClick={()=>setStep(Math.max(1,step-1))} disabled={step===1} className="btn-secondary disabled:opacity-50">← Précédent</button>
-                {step < 7 ? <button onClick={()=>setStep(step+1)} className="btn-primary-amber">Suivant →</button> : <button onClick={lancerSimulation} disabled={loading} className="btn-primary-amber">{loading ? '⏳' : '🧮 Analyser'}</button>}
+                {step < 7 ? <button onClick={()=>setStep(step+1)} className="btn-primary-amber">Suivant →</button> : <button onClick={lancerSimulation} disabled={loading} className="btn-primary-amber">{loading ? 'Calcul...' : 'Analyser'}</button>}
               </div>
             </div>
           ) : synthese && (
@@ -499,7 +502,7 @@ export default function MonumentsHistoriquesPage() {
                   </div>
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <div className="text-blue-600 text-xs mb-1">Exonération PV</div>
-                    <div className="font-bold text-lg text-blue-600">{synthese.pvExoneree ? '✅ Oui' : '❌ Non'}</div>
+                    <div className="font-bold text-lg text-blue-600">{synthese.pvExoneree ? 'Oui' : 'Non'}</div>
                     <div className="text-xs text-blue-400">{dureeDetention >= 15 ? '≥15 ans : exonérée' : `${15 - dureeDetention} ans restants`}</div>
                   </div>
                   <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
@@ -518,7 +521,7 @@ export default function MonumentsHistoriquesPage() {
                   </div>
                 </div>
                 <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                  <h4 className="font-semibold text-amber-800 mb-2">📊 Comprendre la fiscalité Monuments Historiques</h4>
+                  <h4 className="font-semibold text-amber-800 mb-2 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Comprendre la fiscalité Monuments Historiques</h4>
                   <div className="text-sm text-amber-700 space-y-1">
                     <p>• <strong>Déduction du revenu global</strong> : Les travaux ({fmtEur(travauxDeductibles)}) sont déductibles à 100% du revenu global, réduisant directement la base imposable.</p>
                     <p>• <strong>Sans aucun plafond</strong> : Contrairement au Malraux (400k€) ou Pinel, les MH n'ont AUCUN plafond de travaux ni de niches fiscales.</p>
@@ -570,7 +573,7 @@ export default function MonumentsHistoriquesPage() {
                 <p className="text-sm text-slate-600 mb-4">Ce graphique montre l'évolution du cash-flow (barres) et de l'économie d'IR (ligne) pendant les phases travaux et exploitation.</p>
                 <div ref={chartRef1}/>
                 <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                  <h4 className="font-semibold text-amber-800 mb-2">📊 Analyse du cash-flow</h4>
+                  <h4 className="font-semibold text-amber-800 mb-2 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Analyse du cash-flow</h4>
                   <p className="text-sm text-amber-700">Les premières années génèrent une forte économie d'IR grâce à la déduction des travaux. Ensuite, les revenus locatifs et/ou visites génèrent du cash-flow régulier.</p>
                 </div>
               </div>
@@ -580,14 +583,14 @@ export default function MonumentsHistoriquesPage() {
                 <p className="text-sm text-slate-600 mb-4">Ce graphique montre l'évolution de la valeur du monument et du capital net.</p>
                 <div ref={chartRef2}/>
                 <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-                  <h4 className="font-semibold text-emerald-800 mb-2">📊 Analyse patrimoniale</h4>
+                  <h4 className="font-semibold text-emerald-800 mb-2 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Analyse patrimoniale</h4>
                   <p className="text-sm text-emerald-700">Un Monument Historique {typeClassement === 'CLASSE' ? 'classé' : 'inscrit'} {ouverturePublic === 'OUI' ? 'ouvert au public' : ''} bénéficie d'une valorisation exceptionnelle et d'avantages successoraux majeurs (abattement 75%).</p>
                 </div>
               </div>
 
               {/* TABLEAU */}
               <div className="sim-card">
-                <h3 className="font-bold mb-4 text-slate-800">📈 Projection sur {dureeDetention} ans</h3>
+                <h3 className="font-bold mb-4 text-slate-800 flex items-center gap-2"><TrendingUp className="w-5 h-5" /> Projection sur {dureeDetention} ans</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
@@ -605,7 +608,7 @@ export default function MonumentsHistoriquesPage() {
                       {projections.map(p=>(
                         <tr key={p.annee} className={`border-b hover:bg-slate-50 ${p.phase === 'Travaux' ? 'bg-amber-50' : ''}`}>
                           <td className="py-2 px-2 font-medium">{p.annee}</td>
-                          <td className="py-2 px-2 text-center">{p.phase === 'Travaux' ? '🔧' : '🏰'}</td>
+                          <td className="py-2 px-2 text-center">{p.phase === 'Travaux' ? 'Travaux' : 'Exploit.'}</td>
                           <td className="py-2 px-2 text-right text-emerald-600">{p.revenus > 0 ? fmtEur(p.revenus) : '-'}</td>
                           <td className="py-2 px-2 text-right text-amber-600">{p.deductionRG > 0 ? fmtEur(p.deductionRG) : '-'}</td>
                           <td className="py-2 px-2 text-right text-amber-600 font-medium">{p.economieIR > 0 ? '+'+fmtEur(p.economieIR) : '-'}</td>
@@ -622,7 +625,7 @@ export default function MonumentsHistoriquesPage() {
               {/* AVIS PROFESSIONNEL AVEC SCORE GLOBAL */}
               {/* ═══════════════════════════════════════════════════════════════════════════ */}
               <div className="sim-card">
-                <h3 className="font-bold mb-6 text-xl text-slate-800">🎯 Synthèse et avis professionnel</h3>
+                <h3 className="font-bold mb-6 text-xl text-slate-800 flex items-center gap-2"><Target className="w-5 h-5" /> Synthèse et avis professionnel</h3>
                 
                 {(() => {
                   const levier = safeNumber(synthese.capFinal || synthese.valRev) / apport
@@ -714,7 +717,7 @@ export default function MonumentsHistoriquesPage() {
                         
                         {showScoreDetail && (
                           <div className="mt-3 bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm">
-                            <h5 className="font-bold text-slate-700 mb-3">📊 Méthode de calcul du score MH</h5>
+                            <h5 className="font-bold text-slate-700 mb-3 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Méthode de calcul du score MH</h5>
                             <p className="text-slate-600 mb-3">Score calculé sur 5 critères : TRI (2.5 pts), Éco. fiscale (2.5 pts), TMI (2 pts), Levier (1.5 pts), Type patrimoine (1.5 pts).</p>
                             <p className="text-slate-600">Le MH est optimisé pour TMI 41-45%. Avantages : hors plafond niches, abattement succession 75%, exonération IFI possible.</p>
                           </div>
@@ -725,21 +728,21 @@ export default function MonumentsHistoriquesPage() {
                 })()}
                 
                 <div className="bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-200 rounded-xl p-4">
-                  <h4 className="font-bold text-blue-800 mb-3">💼 Avis professionnel</h4>
+                  <h4 className="font-bold text-blue-800 mb-3 flex items-center gap-2"><Briefcase className="w-5 h-5" /> Avis professionnel</h4>
                   <div className="text-sm text-blue-700 space-y-3">
                     {tmi >= 41 && safeNumber(synthese.tri) > 5 ? (
                       <>
-                        <p><strong>✅ Opération exceptionnelle</strong> : Avec un TMI de {tmi}% et une économie d'IR de {fmtEur(synthese.totEconomie)} (hors plafond niches), cette opération MH est optimale.</p>
+                        <p><strong>Opération exceptionnelle</strong> : Avec un TMI de {tmi}% et une économie d'IR de {fmtEur(synthese.totEconomie)} (hors plafond niches), cette opération MH est optimale.</p>
                         <p>Le bien {typeClassement === 'CLASSE' ? 'classé Monument Historique' : 'inscrit à l\'Inventaire'} offre également un abattement successoral de 75%{ouverturePublic === 'OUI' ? ' et une exonération IFI grâce à l\'ouverture au public' : ''}.</p>
                       </>
                     ) : tmi >= 30 ? (
                       <>
-                        <p><strong>⚖️ Opération à évaluer</strong> : L'économie d'IR de {fmtEur(synthese.totEconomie)} est significative mais le TMI de {tmi}% n'est pas optimal pour un MH.</p>
+                        <p><strong>Opération à évaluer</strong> : L'économie d'IR de {fmtEur(synthese.totEconomie)} est significative mais le TMI de {tmi}% n'est pas optimal pour un MH.</p>
                         <p>Ce dispositif est particulièrement adapté aux TMI 41-45%. Effet fiscal : {fmtPct(safeNumber(synthese.totEconomie) / travauxTotal * 100)} du coût des travaux.</p>
                       </>
                     ) : (
                       <>
-                        <p><strong>⚠️ TMI insuffisant</strong> : Avec un TMI de {tmi}%, le Monuments Historiques n'est pas optimal.</p>
+                        <p><strong>TMI insuffisant</strong> : Avec un TMI de {tmi}%, le Monuments Historiques n'est pas optimal.</p>
                         <p>Ce dispositif d'exception nécessite des revenus très élevés (TMI 41-45%). Considérez plutôt le déficit foncier ou le Malraux.</p>
                       </>
                     )}
@@ -748,7 +751,7 @@ export default function MonumentsHistoriquesPage() {
                 </div>
               </div>
 
-              <div className="flex justify-center"><button onClick={() => setShowResults(false)} className="btn-primary">🔄 Nouvelle simulation</button></div>
+              <div className="flex justify-center"><button onClick={() => setShowResults(false)} className="btn-primary flex items-center gap-2"><RefreshCw className="w-4 h-4" /> Nouvelle simulation</button></div>
             </div>
           )}
         </main>

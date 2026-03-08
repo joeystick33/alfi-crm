@@ -103,23 +103,22 @@ export default function ManagementDashboardPage() {
         totalTasks: g.totalTasks,
         totalTasksDone: g.totalTasksDone,
         avgConversionRate: g.conversionRate,
-        trendCA: 12.5, // TODO: calculate from historical data
-        trendClients: 8.3,
+        trendCA: (g as any).trendCA ?? 0,
+        trendClients: (g as any).trendClients ?? 0,
       }
     }
-    // Demo fallback
     return {
-      totalCA: 487500,
-      totalCAObjectif: 600000,
-      totalClients: 156,
-      totalClientsNew: 23,
-      totalOpportunities: 45,
-      totalOpportunitiesWon: 18,
-      totalTasks: 89,
-      totalTasksDone: 67,
-      avgConversionRate: 40,
-      trendCA: 12.5,
-      trendClients: 8.3,
+      totalCA: 0,
+      totalCAObjectif: 0,
+      totalClients: 0,
+      totalClientsNew: 0,
+      totalOpportunities: 0,
+      totalOpportunitiesWon: 0,
+      totalTasks: 0,
+      totalTasksDone: 0,
+      avgConversionRate: 0,
+      trendCA: 0,
+      trendClients: 0,
     }
   }, [apiData])
 

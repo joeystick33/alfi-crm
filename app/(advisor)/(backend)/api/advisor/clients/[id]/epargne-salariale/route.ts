@@ -10,7 +10,7 @@ import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
 import { z } from 'zod'
 import { TypeEpargneSalariale } from '@prisma/client'
-
+import { logger } from '@/app/_common/lib/logger'
 const createEpargneSalarialeSchema = z.object({
   type: z.nativeEnum(TypeEpargneSalariale),
   libelle: z.string().min(1),
@@ -64,7 +64,7 @@ export async function GET(
       totals: { totalVerse, totalActuel, plusValue: totalActuel - totalVerse },
     })
   } catch (error: any) {
-    console.error('Error getting epargne salariale:', error)
+    logger.error('Error getting epargne salariale:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -115,7 +115,7 @@ export async function POST(
       message: 'Épargne salariale créée avec succès',
     }, 201)
   } catch (error: any) {
-    console.error('Error creating epargne salariale:', error)
+    logger.error('Error creating epargne salariale:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof z.ZodError) {
       return createErrorResponse('Validation error: ' + error.message, 400)

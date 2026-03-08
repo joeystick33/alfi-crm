@@ -1,7 +1,8 @@
  
 /**
  * API Route - Simulateur IR Complet
- * Calculs sécurisés côté serveur - Barème 2025
+ * Calculs sécurisés côté serveur - Barème 2026 (revenus 2025)
+ * LF2026 art. 2 ter — Revalorisation +0,9%
  * 
  * POST /api/advisor/simulators/ir
  */
@@ -9,46 +10,39 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
+import { logger } from '@/app/_common/lib/logger'
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
 
 // ══════════════════════════════════════════════════════════════════════════════
-// CONSTANTES FISCALES 2025
+// CONSTANTES FISCALES — Source : RULES (fiscal-rules.ts)
 // ══════════════════════════════════════════════════════════════════════════════
 
-const BAREME_IR_2025 = [
-  { min: 0, max: 11497, taux: 0 },
-  { min: 11497, max: 29315, taux: 11 },
-  { min: 29315, max: 83823, taux: 30 },
-  { min: 83823, max: 180294, taux: 41 },
-  { min: 180294, max: Infinity, taux: 45 },
-]
+const BAREME_IR_2025 = RULES.ir.bareme.map(t => ({
+  min: t.min,
+  max: t.max,
+  taux: t.taux * 100,
+}))
 
 const DECOTE_2025 = {
-  SEUL: { seuil: 1929, plafond: 873 },
-  COUPLE: { seuil: 3191, plafond: 1444 },
+  SEUL: { seuil: RULES.ir.decote.seuil_celibataire, plafond: RULES.ir.decote.base_celibataire },
+  COUPLE: { seuil: RULES.ir.decote.seuil_couple, plafond: RULES.ir.decote.base_couple },
 }
 
 const PLAFOND_QF_2025 = {
-  GENERAL: 1759,
-  PARENT_ISOLE: 4149,
+  GENERAL: RULES.ir.quotient_familial.plafond_demi_part,
+  PARENT_ISOLE: RULES.ir.quotient_familial.demi_part_parent_isole,
 }
 
-const ABATTEMENT_10 = { MIN: 495, MAX: 14171 }
-const ABATTEMENT_PENSIONS = { MIN: 442, MAX: 4321 }
-const PFU_TAUX = 0.30
-const PS_TAUX = 0.172 // 17.2%
+const ABATTEMENT_10 = { MIN: RULES.ir.abattement_10pct_salaires.plancher, MAX: RULES.ir.abattement_10pct_salaires.plafond }
+const ABATTEMENT_PENSIONS = { MIN: 446, MAX: 4360 } // Pension abatements (stable CGI structure)
+const PFU_TAUX = RULES.ps.pfu_ir + RULES.ps.pfu_per_2026 // IR + PS financiers
+const PS_TAUX_FINANCIER = RULES.ps.pfu_per_2026 // PS revenus financiers (LFSS 2026)
+const PS_TAUX_FONCIER = RULES.ps.total           // PS revenus fonciers, PV immo, AV
 
-// CEHR (Contribution Exceptionnelle sur les Hauts Revenus)
+// CEHR — Source : RULES.ir.cehr
 const CEHR = {
-  SEUL: [
-    { min: 0, max: 250000, taux: 0 },
-    { min: 250000, max: 500000, taux: 3 },
-    { min: 500000, max: Infinity, taux: 4 },
-  ],
-  COUPLE: [
-    { min: 0, max: 500000, taux: 0 },
-    { min: 500000, max: 1000000, taux: 3 },
-    { min: 1000000, max: Infinity, taux: 4 },
-  ],
+  SEUL: RULES.ir.cehr.celibataire.map(t => ({ min: t.min, max: t.max, taux: t.taux * 100 })),
+  COUPLE: RULES.ir.cehr.couple.map(t => ({ min: t.min, max: t.max, taux: t.taux * 100 })),
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -402,12 +396,12 @@ function simulerIR(input: IRInput) {
     const baseCapitaux = dividendesApresAbatt + input.interets + input.pvMobilieres
     // Ajouté au revenu imposable pour calcul IR
     irCapitaux = Math.round(baseCapitaux * (tmi / 100))
-    psCapitaux = Math.round(revenus_capitaux * PS_TAUX)
+    psCapitaux = Math.round(revenus_capitaux * PS_TAUX_FINANCIER)
   }
   
   // PV immobilières (toujours taxées séparément)
   const pvImmoPFU = Math.round(input.pvImmobilieres * 0.19) // IR à 19%
-  const pvImmoPS = Math.round(input.pvImmobilieres * PS_TAUX)
+  const pvImmoPS = Math.round(input.pvImmobilieres * PS_TAUX_FONCIER) // PV immo : 17,2% (exclue hausse LFSS 2026)
   
   // ═══════════════════════════════════════════════════════════════════════════
   // SYNTHÈSE
@@ -540,7 +534,7 @@ export async function POST(request: NextRequest) {
     
     return createSuccessResponse(result)
   } catch (error: any) {
-    console.error('Erreur simulation IR:', error)
+    logger.error('Erreur simulation IR:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la simulation: ' + (error.message || 'Erreur inconnue'), 500)
   }
 }

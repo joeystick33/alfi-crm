@@ -6,7 +6,7 @@ import { isRegularUser } from '@/app/_common/lib/auth-types'
 
 import { ReclamationService } from '@/app/_common/lib/services/reclamation-service'
 import { z } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 // Schéma de validation
 const createReclamationSchema = z.object({
   clientId: z.string().cuid(),
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
     const reclamations = await service.listReclamations(filters)
     return createSuccessResponse(reclamations)
   } catch (error: any) {
-    console.error('Error fetching reclamations:', error)
+    logger.error('Error fetching reclamations:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
 
     return createSuccessResponse(reclamation, 201)
   } catch (error: any) {
-    console.error('Error creating reclamation:', error)
+    logger.error('Error creating reclamation:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

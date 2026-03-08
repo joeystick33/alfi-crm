@@ -62,18 +62,6 @@ const TYPE_ICONS = {
   TASKS: CheckCircle,
 }
 
-const DEMO_OBJECTIFS: ObjectifData[] = [
-  // Objectifs Cabinet
-  { id: '1', type: 'CA', label: 'CA Mensuel Cabinet', target: 100000, current: 78000, unit: '€', period: 'Novembre 2024', status: 'ON_TRACK' },
-  { id: '2', type: 'CLIENTS', label: 'Nouveaux Clients', target: 20, current: 15, unit: 'clients', period: 'Novembre 2024', status: 'ON_TRACK' },
-  { id: '3', type: 'OPPORTUNITIES', label: 'Opportunités Gagnées', target: 15, current: 8, unit: 'opport.', period: 'Novembre 2024', status: 'AT_RISK' },
-  // Objectifs par conseiller
-  { id: '4', type: 'CA', label: 'CA Mensuel', target: 35000, current: 32000, unit: '€', period: 'Novembre 2024', conseillerId: '1', conseillerName: 'Marie Dupont', status: 'ON_TRACK' },
-  { id: '5', type: 'CA', label: 'CA Mensuel', target: 30000, current: 25000, unit: '€', period: 'Novembre 2024', conseillerId: '2', conseillerName: 'Pierre Martin', status: 'ON_TRACK' },
-  { id: '6', type: 'CA', label: 'CA Mensuel', target: 25000, current: 14000, unit: '€', period: 'Novembre 2024', conseillerId: '3', conseillerName: 'Lucas Bernard', status: 'BEHIND' },
-  { id: '7', type: 'CLIENTS', label: 'Nouveaux Clients', target: 8, current: 6, unit: 'clients', period: 'Novembre 2024', conseillerId: '1', conseillerName: 'Marie Dupont', status: 'ON_TRACK' },
-  { id: '8', type: 'CLIENTS', label: 'Nouveaux Clients', target: 6, current: 5, unit: 'clients', period: 'Novembre 2024', conseillerId: '2', conseillerName: 'Pierre Martin', status: 'ON_TRACK' },
-]
 
 export default function ObjectifsPage() {
   const [showNewForm, setShowNewForm] = useState(false)
@@ -105,7 +93,7 @@ export default function ObjectifsPage() {
         status: obj.status as ObjectifData['status'],
       }))
     }
-    return DEMO_OBJECTIFS
+    return []
   }, [apiData])
 
   const handleCreateObjectif = () => {
@@ -188,6 +176,24 @@ export default function ObjectifsPage() {
         </Button>
       </div>
 
+      {objectifs.length === 0 && (
+        <Card className="p-12 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 mb-4">
+            <Target className="h-8 w-8 text-blue-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-1">Aucun objectif défini</h3>
+          <p className="text-gray-500 mb-6 max-w-md mx-auto">
+            Définissez des objectifs pour le cabinet et vos conseillers afin de suivre les performances commerciales.
+          </p>
+          <Button onClick={() => setShowNewForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Créer un objectif
+          </Button>
+        </Card>
+      )}
+
+      {objectifs.length > 0 && (
+      <>
       {/* Objectifs Cabinet */}
       <div>
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -299,6 +305,8 @@ export default function ObjectifsPage() {
           ))}
         </div>
       </div>
+      </>
+      )}
 
       {/* Modal Nouvel Objectif */}
       {showNewForm && (

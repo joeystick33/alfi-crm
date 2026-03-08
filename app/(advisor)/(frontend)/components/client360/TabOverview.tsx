@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/_common/componen
 import { Badge } from '@/app/_common/components/ui/Badge'
 import { Skeleton } from '@/app/_common/components/ui/Skeleton'
 import { formatCurrency } from '@/app/_common/lib/utils'
+import { useAI } from '@/app/(advisor)/(frontend)/hooks/useAI'
 import {
   AlertCircle,
   CheckCircle,
@@ -13,7 +14,13 @@ import {
   Target,
   Shield,
   ChevronRight,
-  Info
+  Info,
+  Sparkles,
+  Loader2,
+  ThumbsUp,
+  ThumbsDown,
+  Lightbulb,
+  AlertTriangle as AlertTriangleIcon
 } from 'lucide-react'
 import type { ClientDetail, WealthSummary } from '@/app/_common/lib/api-types'
 import { SimulationHistory } from './SimulationHistory'
@@ -46,11 +53,22 @@ const ALERT_ICON_MAP: Record<string, typeof AlertCircle> = {
   INFO: Info
 }
 
+interface SWOTAnalysis {
+  forces: string[]
+  faiblesses: string[]
+  opportunites: string[]
+  menaces: string[]
+  scoreGlobal: number
+  prioriteAction: string
+}
+
 export function TabOverview({ clientId, client, wealth, onTabChange }: TabOverviewProps) {
   const [overviewData, setOverviewData] = useState<OverviewData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'monthly' | 'yearly'>('monthly')
+  const [swotAnalysis, setSwotAnalysis] = useState<SWOTAnalysis | null>(null)
+  const ai = useAI()
 
   // Fetch overview data
   const fetchOverviewData = useCallback(async () => {
@@ -249,6 +267,33 @@ export function TabOverview({ clientId, client, wealth, onTabChange }: TabOvervi
         </Card>
       )}
 
+      {/* AI SWOT Analysis */}
+      <AIAnalysisCard
+        client={client}
+        wealth={wealth}
+        indicators={indicators}
+        swotAnalysis={swotAnalysis}
+        onGenerate={async () => {
+          const result = await ai.analyzeProfile({
+            age: client.birthDate ? Math.floor((Date.now() - new Date(client.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 45,
+            situationFamiliale: client.maritalStatus || 'Non renseigné',
+            nbEnfants: client.numberOfChildren || 0,
+            profession: client.profession || 'Non renseigné',
+            revenuAnnuel: Number(client.annualIncome) || 0,
+            patrimoineNet: wealth?.patrimoineNet || patrimonyData.totalNet || 0,
+            patrimoineImmobilier: wealth?.allocationByCategory?.find(a => a.category === 'IMMOBILIER')?.value || 0,
+            patrimoineFinancier: wealth?.allocationByCategory?.find(a => a.category === 'FINANCIER')?.value || 0,
+            endettement: 0,
+            tauxEpargne: 0,
+            tmi: indicators.currentTaxation > 0 && Number(client.annualIncome) > 0 ? Math.round((indicators.currentTaxation / Number(client.annualIncome)) * 100) : 11,
+            ifiAssujetti: (wealth?.patrimoineNet || 0) > 1300000,
+          })
+          if (result) setSwotAnalysis(result)
+        }}
+        isLoading={ai.isLoading}
+        isAvailable={ai.isAvailable}
+      />
+
       {/* Alerts Section */}
       <AlertsSection alerts={alerts} clientId={clientId} />
 
@@ -424,6 +469,110 @@ function AlertsSection({ alerts, clientId: _clientId }: AlertsSectionProps) {
             )
           })}
         </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// AI SWOT Analysis Card
+interface AIAnalysisCardProps {
+  client: ClientDetail
+  wealth?: WealthSummary
+  indicators: { currentTaxation: number; taxableIncome: number; activeContractsCount: number; riskLevel: string; priorityObjectives: string[] }
+  swotAnalysis: SWOTAnalysis | null
+  onGenerate: () => void
+  isLoading: boolean
+  isAvailable: boolean
+}
+
+function AIAnalysisCard({ swotAnalysis, onGenerate, isLoading, isAvailable }: AIAnalysisCardProps) {
+  if (!isAvailable && !swotAnalysis) return null
+
+  const quadrants = swotAnalysis ? [
+    { title: 'Forces', items: swotAnalysis.forces, icon: ThumbsUp, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+    { title: 'Faiblesses', items: swotAnalysis.faiblesses, icon: ThumbsDown, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' },
+    { title: 'Opportunités', items: swotAnalysis.opportunites, icon: Lightbulb, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
+    { title: 'Menaces', items: swotAnalysis.menaces, icon: AlertTriangleIcon, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-200' },
+  ] : []
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-indigo-500" />
+            Analyse IA du profil
+          </span>
+          {!swotAnalysis && (
+            <button
+              onClick={onGenerate}
+              disabled={isLoading}
+              className="flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {isLoading ? 'Analyse en cours...' : 'Générer l\'analyse'}
+            </button>
+          )}
+          {swotAnalysis && (
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="bg-indigo-100 text-indigo-700">
+                Score : {swotAnalysis.scoreGlobal}/100
+              </Badge>
+              <button
+                onClick={onGenerate}
+                disabled={isLoading}
+                className="text-xs text-gray-400 hover:text-indigo-600 transition-colors disabled:opacity-50"
+              >
+                {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Régénérer'}
+              </button>
+            </div>
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {!swotAnalysis && !isLoading && (
+          <div className="text-center py-6 text-sm text-muted-foreground">
+            <Sparkles className="h-8 w-8 mx-auto text-indigo-200 mb-2" />
+            <p>Cliquez sur &quot;Générer l&apos;analyse&quot; pour obtenir une analyse SWOT</p>
+            <p className="text-xs mt-1">intelligente du profil patrimonial de ce client.</p>
+          </div>
+        )}
+
+        {isLoading && !swotAnalysis && (
+          <div className="flex items-center justify-center py-8 gap-3">
+            <Loader2 className="h-5 w-5 animate-spin text-indigo-500" />
+            <span className="text-sm text-muted-foreground">Analyse du profil en cours...</span>
+          </div>
+        )}
+
+        {swotAnalysis && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              {quadrants.map(q => (
+                <div key={q.title} className={`${q.bg} ${q.border} border rounded-xl p-3`}>
+                  <div className={`flex items-center gap-1.5 mb-2 ${q.color} font-semibold text-sm`}>
+                    <q.icon className="h-4 w-4" />
+                    {q.title}
+                  </div>
+                  <ul className="space-y-1">
+                    {q.items.slice(0, 4).map((item, i) => (
+                      <li key={i} className="text-xs text-gray-700 flex items-start gap-1.5">
+                        <span className={`mt-1.5 w-1 h-1 rounded-full ${q.color.replace('text-', 'bg-')} flex-shrink-0`} />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            {swotAnalysis.prioriteAction && (
+              <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3">
+                <p className="text-xs font-semibold text-indigo-700 mb-1">Action prioritaire</p>
+                <p className="text-sm text-indigo-900">{swotAnalysis.prioriteAction}</p>
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   )

@@ -1,6 +1,6 @@
 /**
  * Tax Calculator Service
- * Comprehensive tax calculation service with French tax law compliance (2024)
+ * Comprehensive tax calculation service with French tax law compliance
  * 
  * Supports:
  * - Income tax (Impôt sur le revenu)
@@ -10,6 +10,8 @@
  * - Inheritance tax (Droits de succession)
  * - Tax optimization strategies
  */
+
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
 
 // ============================================================================
 // Type Definitions
@@ -106,58 +108,49 @@ export interface TaxStrategy {
 
 // ============================================================================
 // Tax Brackets 2025 - Source: Althémis Chiffres-Clés Patrimoine 2025
-// CGI art. 197 - Imposition des revenus 2025
+// CGI art. 197 - Imposition des revenus 2025 (barème 2026 revalorisé +0,9%)
 // ============================================================================
 
-const INCOME_TAX_BRACKETS_2024: TaxBracket[] = [
-  { min: 0, max: 11497, rate: 0 },         // Tranche 0%
-  { min: 11497, max: 29315, rate: 0.11 },  // Tranche 11%
-  { min: 29315, max: 83823, rate: 0.30 },  // Tranche 30%
-  { min: 83823, max: 180294, rate: 0.41 }, // Tranche 41%
-  { min: 180294, max: null, rate: 0.45 }   // Tranche 45%
-];
+const INCOME_TAX_BRACKETS_2024: TaxBracket[] = RULES.ir.bareme.map(t => ({
+  min: t.min,
+  max: t.max === Infinity ? null : t.max,
+  rate: t.taux,
+}));
 
 // ============================================================================
-// Décote IR 2025 - CGI art. 197 I-4°
+// Décote IR 2026 - CGI art. 197 I-4° (revalorisation +0,9%)
 // Applicable si IR brut < seuil
 // ============================================================================
 const IR_DECOTE_2025 = {
-  // Célibataire, divorcé, séparé, veuf
   seul: {
-    seuil: 1929,      // Seuil de déclenchement
-    plafond: 873,     // Décote maximale
-    taux: 0.4525      // Coefficient de réduction
+    seuil: RULES.ir.decote.seuil_celibataire,
+    plafond: RULES.ir.decote.base_celibataire,
+    taux: RULES.ir.decote.coefficient,
   },
-  // Couple (marié ou pacsé)
   couple: {
-    seuil: 3191,
-    plafond: 1444,
-    taux: 0.4525
+    seuil: RULES.ir.decote.seuil_couple,
+    plafond: RULES.ir.decote.base_couple,
+    taux: RULES.ir.decote.coefficient,
   }
 };
 
 // ============================================================================
-// Plafonnement du Quotient Familial 2025 - CGI art. 197 I-2°
+// Plafonnement du Quotient Familial 2026 - CGI art. 197 I-2° (revalorisation +0,9%)
 // ============================================================================
 const PLAFOND_QF_2025 = {
-  // Avantage maximum par demi-part supplémentaire
-  parDemiPart: 1759,
-  // Cas particuliers
-  parentIsole: 4149,           // 1ère demi-part supplémentaire pour parent isolé
-  invalidite: 3566,            // Demi-part pour invalidité
-  ancienCombattant: 3566       // Demi-part ancien combattant > 74 ans
+  parDemiPart: RULES.ir.quotient_familial.plafond_demi_part,
+  parentIsole: RULES.ir.quotient_familial.demi_part_parent_isole,
+  invalidite: RULES.ir.quotient_familial.plafond_demi_part_invalidite,
+  ancienCombattant: RULES.ir.quotient_familial.plafond_demi_part_invalidite,
 };
 
 // CGI art. 977 - Barème IFI 2025
 // Seuil de déclenchement: 1 300 000 € (CGI art. 964)
-const WEALTH_TAX_BRACKETS_2024: TaxBracket[] = [
-  { min: 0, max: 800000, rate: 0 },
-  { min: 800000, max: 1300000, rate: 0.005 },   // 0.50%
-  { min: 1300000, max: 2570000, rate: 0.007 },  // 0.70%
-  { min: 2570000, max: 5000000, rate: 0.01 },   // 1.00%
-  { min: 5000000, max: 10000000, rate: 0.0125 },// 1.25%
-  { min: 10000000, max: null, rate: 0.015 }     // 1.50%
-];
+const WEALTH_TAX_BRACKETS_2024: TaxBracket[] = RULES.ifi.bareme.map(t => ({
+  min: t.min,
+  max: t.max === Infinity ? null : t.max,
+  rate: t.taux,
+}));
 
 // ============================================================================
 // Barèmes Donations & Successions 2025 - CGI art. 777
@@ -250,12 +243,12 @@ const INHERITANCE_ALLOWANCES: Record<string, number> = {
 // ============================================================================
 
 const LIFE_INSURANCE_TAX = {
-  allowancePerBeneficiary: 152500,  // Abattement par bénéficiaire
+  allowancePerBeneficiary: RULES.assurance_vie.deces.abattement_990i,
   brackets: [
-    { min: 0, max: 700000, rate: 0.20 },      // 20%
-    { min: 700000, max: null, rate: 0.3125 }  // 31.25%
+    { min: 0, max: RULES.assurance_vie.deces.seuil_990i, rate: RULES.assurance_vie.deces.taux_990i_1 },
+    { min: RULES.assurance_vie.deces.seuil_990i, max: null, rate: RULES.assurance_vie.deces.taux_990i_2 }
   ],
-  allowanceAfter70: 30500,  // Abattement global primes versées après 70 ans
+  allowanceAfter70: RULES.assurance_vie.deces.abattement_757b,
 };
 
 // ============================================================================
@@ -264,17 +257,11 @@ const LIFE_INSURANCE_TAX = {
 // ============================================================================
 
 // Usufruit viager selon l'âge de l'usufruitier
-const USUFRUCT_VALUATION = [
-  { maxAge: 20, usufruct: 0.90, bareOwnership: 0.10 },  // Moins de 21 ans révolus
-  { maxAge: 30, usufruct: 0.80, bareOwnership: 0.20 },  // Moins de 31 ans révolus
-  { maxAge: 40, usufruct: 0.70, bareOwnership: 0.30 },  // Moins de 41 ans révolus
-  { maxAge: 50, usufruct: 0.60, bareOwnership: 0.40 },  // Moins de 51 ans révolus
-  { maxAge: 60, usufruct: 0.50, bareOwnership: 0.50 },  // Moins de 61 ans révolus
-  { maxAge: 70, usufruct: 0.40, bareOwnership: 0.60 },  // Moins de 71 ans révolus
-  { maxAge: 80, usufruct: 0.30, bareOwnership: 0.70 },  // Moins de 81 ans révolus
-  { maxAge: 90, usufruct: 0.20, bareOwnership: 0.80 },  // Moins de 91 ans révolus
-  { maxAge: Infinity, usufruct: 0.10, bareOwnership: 0.90 }, // Plus de 91 ans révolus
-];
+const USUFRUCT_VALUATION = RULES.demembrement.bareme_art669.map(t => ({
+  maxAge: t.age_max,
+  usufruct: t.usufruit / 100,
+  bareOwnership: t.nue_propriete / 100,
+}));
 
 // Usufruit temporaire: 23% de la pleine propriété par période de 10 ans
 const TEMPORARY_USUFRUCT_RATE_PER_10_YEARS = 0.23;
@@ -286,40 +273,35 @@ const RIGHT_OF_USE_RATE = 0.60;
 // Taux et Constantes Diverses 2025
 // ============================================================================
 
-// Prélèvements sociaux
-const SOCIAL_CONTRIBUTIONS_RATE = 0.172; // 17.2% (CSG + CRDS + prélèvement solidarité)
+// Prélèvements sociaux — LFSS 2026 : système DUAL
+// 18,6% sur revenus financiers (dividendes, PV mobilières, LMNP/BIC, crypto, PEA)
+// 17,2% INCHANGÉ sur revenus fonciers, PV immobilières, assurance-vie
+const SOCIAL_CONTRIBUTIONS_RATE_FINANCIER = RULES.ps.pfu_per_2026;
+const SOCIAL_CONTRIBUTIONS_RATE_FONCIER = RULES.ps.total;
+const SOCIAL_CONTRIBUTIONS_RATE = RULES.ps.total; // Rétrocompatibilité — taux foncier par défaut
 
 // Prélèvement Forfaitaire Unique (PFU / Flat Tax)
-const FLAT_TAX_RATE = 0.30; // 30% (12.8% IR + 17.2% PS)
-const PFU_INCOME_TAX_RATE = 0.128; // 12.8% (part IR du PFU)
+const FLAT_TAX_RATE = RULES.ps.pfu_ir + RULES.ps.pfu_per_2026;
+const PFU_INCOME_TAX_RATE = RULES.ps.pfu_ir;
 
 // Contribution Exceptionnelle sur les Hauts Revenus (CEHR) - CGI art. 223 sexies
 const CEHR_BRACKETS = {
-  single: [
-    { min: 0, max: 250000, rate: 0 },
-    { min: 250000, max: 500000, rate: 0.03 },   // 3%
-    { min: 500000, max: null, rate: 0.04 }      // 4%
-  ],
-  couple: [
-    { min: 0, max: 500000, rate: 0 },
-    { min: 500000, max: 1000000, rate: 0.03 },  // 3%
-    { min: 1000000, max: null, rate: 0.04 }     // 4%
-  ]
+  single: RULES.ir.cehr.celibataire.map(t => ({ min: t.min, max: t.max === Infinity ? null : t.max, rate: t.taux })),
+  couple: RULES.ir.cehr.couple.map(t => ({ min: t.min, max: t.max === Infinity ? null : t.max, rate: t.taux })),
 };
 
 // Abattement résidence principale IFI - CGI art. 973 I
-const IFI_MAIN_RESIDENCE_ALLOWANCE = 0.30; // 30%
+const IFI_MAIN_RESIDENCE_ALLOWANCE = RULES.ifi.abattement_rp;
 
-// Seuil IFI - CGI art. 964
-const IFI_THRESHOLD = 1300000;
+// Seuil IFI
+const IFI_THRESHOLD = RULES.ifi.seuil_assujettissement;
 
-// Décote IFI si patrimoine entre 1.3M et 1.4M
-// Décote = 17 500 € - 1,25% × Patrimoine
+// Décote IFI
 const IFI_DISCOUNT = {
-  minThreshold: 1300000,
-  maxThreshold: 1400000,
-  baseAmount: 17500,
-  rate: 0.0125
+  minThreshold: RULES.ifi.seuil_assujettissement,
+  maxThreshold: RULES.ifi.decote.seuil,
+  baseAmount: RULES.ifi.decote.base,
+  rate: RULES.ifi.decote.taux,
 };
 
 // ============================================================================

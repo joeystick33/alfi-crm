@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/management/objectifs
  * Récupère les objectifs du cabinet et par conseiller
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
       })
     } catch (e) {
       // Objectif table might not exist, use calculated defaults
-      console.log('Objectif table not found, using calculated defaults')
+      logger.info('Objectif table not found, using calculated defaults')
     }
 
     // Get current values for CA and clients
@@ -216,7 +216,7 @@ export async function GET(request: NextRequest) {
       objectifs: [...cabinetObjectifs, ...conseillerObjectifs],
     })
   } catch (error) {
-    console.error('Error in GET /api/advisor/management/objectifs:', error)
+    logger.error('Error in GET /api/advisor/management/objectifs:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -264,7 +264,7 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString(),
     }, 201)
   } catch (error) {
-    console.error('Error in POST /api/advisor/management/objectifs:', error)
+    logger.error('Error in POST /api/advisor/management/objectifs:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

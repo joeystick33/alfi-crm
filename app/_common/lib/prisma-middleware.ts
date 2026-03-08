@@ -1,3 +1,18 @@
+import { logger, auditLogger } from './logger'
+import { PrismaClient } from '@prisma/client'
+
+const globalForAuditPrisma = globalThis as unknown as {
+  auditPrisma: PrismaClient | undefined
+}
+
+const globalPrisma = globalForAuditPrisma.auditPrisma ?? new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+})
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForAuditPrisma.auditPrisma = globalPrisma
+}
+
 /**
  * Liste des modèles qui ont un champ cabinetId
  * Ces modèles nécessitent une isolation par cabinet
@@ -11,11 +26,17 @@ const MODELS_WITH_CABINET_ID = [
   'Passif',
   'Contrat',
   'Document',
+  'DocumentTemplate',
+  'KYCDocument',
+  'KYCCheck',
   'Objectif',
   'Projet',
   'Opportunite',
   'Tache',
   'RendezVous',
+  'Event',
+  'AppointmentType',
+  'CalendarSync',
   'Email',
   'SyncedEmail',
   'EmailTemplate',
@@ -24,10 +45,12 @@ const MODELS_WITH_CABINET_ID = [
   'Template',
   'TimelineEvent',
   'Simulation',
+  'Consentement',
   'Reclamation',
   'AuditLog',
   'ExportJob',
   'CommercialAction',
+  'Entretien',
 ]
 
 /**
@@ -63,13 +86,14 @@ export function createTenantExtension(
             return query(args)
           }
 
+          // ── READ operations: inject cabinetId into where clause ──
           if (
             operation === 'findFirst' ||
             operation === 'findMany' ||
+            operation === 'findUnique' ||
             operation === 'count' ||
             operation === 'aggregate' ||
-            operation === 'deleteMany' ||
-            operation === 'updateMany'
+            operation === 'groupBy'
           ) {
             args = args || {}
             const where = (args.where as Record<string, unknown>) || {}
@@ -79,6 +103,23 @@ export function createTenantExtension(
             }
           }
 
+          // ── WRITE operations with where clause: inject cabinetId ──
+          if (
+            operation === 'update' ||
+            operation === 'delete' ||
+            operation === 'upsert' ||
+            operation === 'updateMany' ||
+            operation === 'deleteMany'
+          ) {
+            args = args || {}
+            const where = (args.where as Record<string, unknown>) || {}
+            args.where = {
+              ...where,
+              cabinetId,
+            }
+          }
+
+          // ── CREATE operations: inject cabinetId into data ──
           if (operation === 'create') {
             args = args || {}
             const data = (args.data as Record<string, unknown>) || {}
@@ -102,6 +143,12 @@ export function createTenantExtension(
                 cabinetId,
               }
             }
+          }
+
+          // ── UPSERT: also inject cabinetId into create data ──
+          if (operation === 'upsert' && args.create) {
+            const createData = (args.create as Record<string, unknown>) || {}
+            args.create = { ...createData, cabinetId }
           }
 
           return query(args)
@@ -214,9 +261,11 @@ export function createLoggingMiddleware() {
     const result = await next(params)
     const after = Date.now()
 
-    console.log(
-      `[Prisma] ${params.model}.${params.action} took ${after - before}ms`
-    )
+    logger.debug(`${params.model}.${params.action} took ${after - before}ms`, {
+      module: 'Prisma',
+      duration: after - before,
+      action: `${params.model}.${params.action}`,
+    })
 
     return result
   }
@@ -226,31 +275,70 @@ export function createLoggingMiddleware() {
  * Crée un middleware pour l'audit automatique des modifications
  * Enregistre automatiquement les changements dans AuditLog
  */
+/** Modèles sensibles nécessitant un audit systématique */
+const AUDITABLE_MODELS = [
+  'Client', 'Actif', 'Passif', 'Contrat', 'Document',
+  'KYCDocument', 'KYCCheck', 'Consentement', 'Reclamation',
+  'User', 'Entretien', 'Opportunite', 'Revenue', 'Expense', 'Credit',
+  'AffaireNouvelle', 'OperationGestion', 'RegulatoryGeneratedDocument',
+]
+
+/** Mappe les actions Prisma vers les types d'audit */
+function mapActionToAuditType(action: string): import('@prisma/client').$Enums.AuditAction {
+  if (action.startsWith('create')) return 'CREATION'
+  if (action.startsWith('update') || action === 'upsert') return 'MODIFICATION'
+  if (action.startsWith('delete')) return 'SUPPRESSION'
+  if (action.startsWith('find') || action === 'aggregate' || action === 'count') return 'CONSULTATION'
+  return 'CONSULTATION'
+}
+
 export function createAuditMiddleware(
   userId: string,
+  cabinetId?: string,
   ipAddress?: string,
   userAgent?: string
 ) {
-  return async (params: { model: string; action: string }, next: (params: { model: string; action: string }) => Promise<unknown>) => {
+  return async (params: { model: string; action: string; args?: any }, next: (params: any) => Promise<unknown>) => {
     const result = await next(params)
 
-    // Actions à auditer
-    const auditableActions = ['create', 'update', 'delete', 'createMany', 'updateMany', 'deleteMany']
-    
+    const auditableActions = ['create', 'update', 'delete', 'createMany', 'updateMany', 'deleteMany', 'upsert']
+
     if (
       params.model &&
       auditableActions.includes(params.action) &&
-      params.model !== 'AuditLog' // Éviter la récursion infinie
+      params.model !== 'AuditLog' &&
+      AUDITABLE_MODELS.includes(params.model)
     ) {
-      // TODO: Implémenter la création d'AuditLog
-      // Cela nécessite d'avoir accès au client Prisma
-      // Pour l'instant, on log juste l'action
-      console.log('[Audit]', {
-        userId,
-        action: params.action,
-        model: params.model,
-        timestamp: new Date().toISOString(),
-      })
+      // Extraire l'ID de l'entité modifiée si disponible
+      const entityId = (result as any)?.id
+        || params.args?.where?.id
+        || undefined
+
+      // Créer l'audit log de manière asynchrone (non-bloquant)
+      try {
+        await globalPrisma.auditLog.create({
+          data: {
+            cabinetId: cabinetId || '',
+            userId,
+            action: mapActionToAuditType(params.action),
+            entityType: params.model,
+            entityId: entityId ? String(entityId) : undefined,
+            ipAddress: ipAddress || undefined,
+            userAgent: userAgent || undefined,
+          },
+        })
+      } catch (auditError) {
+        // L'échec de l'audit ne doit jamais bloquer l'opération métier
+        logger.warn('Failed to create audit log entry', {
+          module: 'AuditMiddleware',
+          action: params.action,
+          metadata: {
+            model: params.model,
+            entityId,
+            error: auditError instanceof Error ? auditError.message : 'Unknown',
+          },
+        } as any)
+      }
     }
 
     return result

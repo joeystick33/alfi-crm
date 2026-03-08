@@ -33,7 +33,7 @@ import {
   PRELEVEMENTS_SOCIAUX,
 } from '../_shared/constants'
 import { saisonnierInputSchema, type SaisonnierInput } from '../_shared/validators'
-
+import { logger } from '@/app/_common/lib/logger'
 // ══════════════════════════════════════════════════════════════════════════════
 // FONCTION DE SIMULATION LOCATION SAISONNIÈRE
 // ══════════════════════════════════════════════════════════════════════════════
@@ -213,7 +213,7 @@ function simulerSaisonnier(input: SaisonnierInput) {
     if (input.regimeFiscal === 'MICRO_BIC' && !depassePlafond) {
       baseImposable = recettesBrutesAnnee * (1 - abattementMicroBIC / 100)
       ir = baseImposable * (tmi / 100)
-      ps = baseImposable * PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL
+      ps = baseImposable * PRELEVEMENTS_SOCIAUX.FINANCIER.TAUX_GLOBAL
       regimeApplique = 'MICRO_BIC'
     } else {
       // Régime réel (ou forcé si dépassement plafond)
@@ -237,7 +237,7 @@ function simulerSaisonnier(input: SaisonnierInput) {
         ps = 0 // PS inclus dans cotisations SSI
       } else {
         ir = baseImposable * (tmi / 100)
-        ps = baseImposable * PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL
+        ps = baseImposable * PRELEVEMENTS_SOCIAUX.FINANCIER.TAUX_GLOBAL
       }
     }
 
@@ -495,7 +495,7 @@ export async function POST(request: NextRequest) {
         400
       )
     }
-    console.error('Erreur simulateur saisonnier:', error)
+    logger.error('Erreur simulateur saisonnier:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la simulation', 500)
   }
 }

@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers';
 import { isRegularUser } from '@/app/_common/lib/auth-types';
 import { DashboardService } from '@/app/_common/lib/services/dashboard-service';
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/alerts
  * Agrège les alertes critiques pour le conseiller à partir de tâches, KYC et contrats.
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse(alertsData);
   } catch (error) {
-    console.error('Error fetching alerts:', error);
+    logger.error('Error fetching alerts:', { error: error instanceof Error ? error.message : String(error) });
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401);

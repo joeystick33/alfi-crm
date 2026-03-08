@@ -29,7 +29,9 @@ import {
   Ban,
   CheckCircle,
   Clock,
+  Loader2,
 } from 'lucide-react'
+import { useToast } from '@/app/_common/hooks/use-toast'
 
 interface UserData {
   id: string
@@ -53,7 +55,9 @@ const ROLE_CONFIG: Record<string, { label: string; color: string }> = {
 }
 
 export default function UsersPage() {
+  const { toast } = useToast()
   const [loading, setLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [users, setUsers] = useState<UserData[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
@@ -133,6 +137,83 @@ export default function UsersPage() {
     if (diff < 604800000) return `Il y a ${Math.floor(diff / 86400000)}j`
     
     return formatDate(dateString)
+  }
+
+  // Envoyer un email à l'utilisateur
+  const handleSendEmail = async (user: UserData) => {
+    setActionLoading(`email-${user.id}`)
+    try {
+      // Ouvrir le client email par défaut
+      window.location.href = `mailto:${user.email}?subject=Message depuis Aura CRM`
+      toast({ title: 'Email', description: `Ouverture du client email pour ${user.email}` })
+    } catch {
+      toast({ title: 'Erreur', variant: 'destructive' })
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  // Réinitialiser le mot de passe
+  const handleResetPassword = async (user: UserData) => {
+    setActionLoading(`reset-${user.id}`)
+    try {
+      const response = await fetch('/api/auth/reset-password-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: user.email }),
+      })
+      
+      if (response.ok) {
+        toast({ 
+          title: 'Email envoyé', 
+          description: `Un email de réinitialisation a été envoyé à ${user.email}` 
+        })
+      } else {
+        throw new Error('Erreur')
+      }
+    } catch {
+      toast({ 
+        title: 'Erreur', 
+        description: 'Impossible d\'envoyer l\'email de réinitialisation', 
+        variant: 'destructive' 
+      })
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  // Activer/Désactiver l'utilisateur
+  const handleToggleActive = async (user: UserData) => {
+    setActionLoading(`toggle-${user.id}`)
+    try {
+      const response = await fetch(`/api/superadmin/users/${user.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ isActive: !user.isActive }),
+      })
+      
+      if (response.ok) {
+        setUsers(prev => prev.map(u => 
+          u.id === user.id ? { ...u, isActive: !u.isActive } : u
+        ))
+        toast({ 
+          title: user.isActive ? 'Utilisateur désactivé' : 'Utilisateur activé', 
+          description: `${user.firstName} ${user.lastName} a été ${user.isActive ? 'désactivé' : 'activé'}` 
+        })
+      } else {
+        throw new Error('Erreur')
+      }
+    } catch {
+      toast({ 
+        title: 'Erreur', 
+        description: 'Impossible de modifier le statut de l\'utilisateur', 
+        variant: 'destructive' 
+      })
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   // Stats
@@ -340,14 +421,32 @@ export default function UsersPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="sm" title="Envoyer email">
-                        <Mail className="h-4 w-4" />
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        title="Envoyer email"
+                        onClick={() => handleSendEmail(user)}
+                        disabled={actionLoading === `email-${user.id}`}
+                      >
+                        {actionLoading === `email-${user.id}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
                       </Button>
-                      <Button variant="ghost" size="sm" title="Réinitialiser MDP">
-                        <Key className="h-4 w-4" />
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        title="Réinitialiser MDP"
+                        onClick={() => handleResetPassword(user)}
+                        disabled={actionLoading === `reset-${user.id}`}
+                      >
+                        {actionLoading === `reset-${user.id}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Key className="h-4 w-4" />}
                       </Button>
-                      <Button variant="ghost" size="sm" title={user.isActive ? 'Désactiver' : 'Activer'}>
-                        <Ban className={`h-4 w-4 ${user.isActive ? 'text-gray-400' : 'text-red-500'}`} />
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        title={user.isActive ? 'Désactiver' : 'Activer'}
+                        onClick={() => handleToggleActive(user)}
+                        disabled={actionLoading === `toggle-${user.id}`}
+                      >
+                        {actionLoading === `toggle-${user.id}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className={`h-4 w-4 ${user.isActive ? 'text-gray-400' : 'text-red-500'}`} />}
                       </Button>
                     </div>
                   </td>

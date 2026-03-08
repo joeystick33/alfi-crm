@@ -1,5 +1,5 @@
 import { google } from 'googleapis'
-
+import { logger } from '@/app/_common/lib/logger'
 export interface GmailTokens {
   accessToken: string
   refreshToken?: string
@@ -152,7 +152,7 @@ export class GmailService {
         const parsed = this.parseGmailMessage(fullMessage.data as unknown as Record<string, unknown>)
         parsedMessages.push(parsed)
       } catch (error: unknown) {
-        console.error(`Error fetching message ${message.id}:`, error)
+        logger.error(`Error fetching message ${message.id}:`, { error: error instanceof Error ? error.message : String(error) })
       }
     }
 
@@ -236,7 +236,7 @@ export class GmailService {
       })
       return true
     } catch (error: unknown) {
-      console.error('Error marking email as read:', error)
+      logger.error('Error marking email as read:', { error: error instanceof Error ? error.message : String(error) })
       return false
     }
   }

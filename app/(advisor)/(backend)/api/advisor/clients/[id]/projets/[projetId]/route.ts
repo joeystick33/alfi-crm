@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { ProjetService } from '@/app/_common/lib/services/projet-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 function parseNumberFR(value: unknown): number | null {
   if (value === null || value === undefined) return null
   if (typeof value === 'number') return Number.isFinite(value) ? value : null
@@ -50,7 +50,7 @@ export async function GET(
 
     return createSuccessResponse(projet)
   } catch (error: any) {
-    console.error('Get projet error:', error)
+    logger.error('Get projet error:', { error: error instanceof Error ? error.message : String(error) })
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }
@@ -140,7 +140,7 @@ export async function PUT(
 
     return createSuccessResponse(updated)
   } catch (error: any) {
-    console.error('Update projet error:', error)
+    logger.error('Update projet error:', { error: error instanceof Error ? error.message : String(error) })
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }
@@ -181,7 +181,7 @@ export async function DELETE(
 
     return createSuccessResponse({ success: true })
   } catch (error: any) {
-    console.error('Delete projet error:', error)
+    logger.error('Delete projet error:', { error: error instanceof Error ? error.message : String(error) })
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }

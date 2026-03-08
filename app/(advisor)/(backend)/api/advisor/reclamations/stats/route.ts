@@ -5,7 +5,7 @@ import { isRegularUser } from '@/app/_common/lib/auth-types'
 
 
 import { ReclamationService } from '@/app/_common/lib/services/reclamation-service'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/reclamations/stats
  * Récupère les statistiques des réclamations
@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
     const stats = await service.getReclamationStats()
     return NextResponse.json(stats)
   } catch (error: any) {
-    console.error('Error fetching reclamation stats:', error)
+    logger.error('Error fetching reclamation stats:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }

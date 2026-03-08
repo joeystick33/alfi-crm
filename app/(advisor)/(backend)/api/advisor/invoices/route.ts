@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { InvoiceService } from '@/app/_common/lib/services/invoice-service'
+import { logger } from '@/app/_common/lib/logger'
 import {
   normalizeInvoiceCreatePayload,
   parseInvoiceFilters,
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse(result)
   } catch (error) {
-    console.error('Error in GET /api/advisor/invoices:', error)
+    logger.error('Error in GET /api/advisor/invoices:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest) {
 
     return createSuccessResponse(invoice, 201)
   } catch (error) {
-    console.error('Error in POST /api/advisor/invoices:', error)
+    logger.error('Error in POST /api/advisor/invoices:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -86,12 +87,12 @@ export async function POST(request: NextRequest) {
     
     // Zod validation error handled in normalizeInvoiceCreatePayload but re-throwing here for visibility
     if (error instanceof Error && error.message.startsWith('Validation échouée')) {
-      console.error('Validation details:', error.message)
+      logger.error('Validation details: ' + error.message)
       return createErrorResponse(error.message, 400)
     }
     
     if (error instanceof Error) {
-      console.error('Generic error details:', error.message, error.stack)
+      logger.error('Generic error details: ' + error.message)
       return createErrorResponse(error.message, 400)
     }
     

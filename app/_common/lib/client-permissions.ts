@@ -7,6 +7,7 @@
 
 import { prisma } from '@/app/_common/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server';
+import { getAuthContext } from '@/app/_common/lib/auth-helpers';
 
 export interface ClientPermissionCheck {
   clientId: string;
@@ -108,6 +109,32 @@ export async function requireClientPortalAccess(
   request: NextRequest,
   clientId: string
 ): Promise<NextResponse | null> {
+  const authContext = await getAuthContext(request);
+  const authUser = authContext?.user as unknown as Record<string, unknown> | undefined;
+  const authenticatedClientId =
+    typeof authUser?.prismaClientId === 'string' ? authUser.prismaClientId : null;
+  const isClientUser = authUser?.isClient === true || authUser?.role === 'CLIENT';
+
+  if (!authContext || !isClientUser || !authenticatedClientId) {
+    return NextResponse.json(
+      {
+        error: 'Authentication required',
+        code: 'UNAUTHORIZED',
+      },
+      { status: 401 }
+    );
+  }
+
+  if (authenticatedClientId !== clientId) {
+    return NextResponse.json(
+      {
+        error: 'Access denied: client mismatch',
+        code: 'CLIENT_MISMATCH',
+      },
+      { status: 403 }
+    );
+  }
+
   const permissionCheck = await verifyClientPortalAccess(clientId);
 
   if (!permissionCheck.hasAccess) {

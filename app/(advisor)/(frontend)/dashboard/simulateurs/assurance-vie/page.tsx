@@ -3,8 +3,14 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import Link from 'next/link'
-import Script from 'next/script'
 import { SimulatorGate } from '@/app/_common/components/FeatureGate'
+import { usePlotlyReady } from '../immobilier/_hooks/usePlotlyReady'
+import { ExportSimulationActions } from '@/app/(advisor)/(frontend)/components/simulateurs/ExportSimulationActions'
+import {
+  TrendingDown, Wallet, Scale, BarChart3, Target, TrendingUp,
+  DollarSign, Lightbulb, AlertTriangle, CheckCircle, Printer,
+  Calculator, Brain, Users, FileText, Puzzle, Trash2, Plus,
+} from 'lucide-react'
 
 const fmtEur = (n: number | null | undefined) => Number(n ?? 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' €'
 const fmtPct = (n: number | null | undefined) => Number(n ?? 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + '%'
@@ -16,6 +22,7 @@ async function fetchAPI(endpoint: string, data: Record<string, unknown>) {
 }
 
 export default function AssuranceViePage() {
+  usePlotlyReady()
   const [tab, setTab] = useState<'frais' | 'rachat' | 'deces'>('frais')
   const [reduceMotion, setReduceMotion] = useState(false)
 
@@ -35,7 +42,6 @@ export default function AssuranceViePage() {
 
   return (
     <SimulatorGate simulator="ASSURANCE_VIE" showTeaser>
-      <Script src="https://cdn.plot.ly/plotly-2.27.0.min.js" strategy="afterInteractive" />
       <div className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen">
         <main className="container mx-auto px-4 py-8 max-w-7xl">
           <Link href="/dashboard/simulateurs" className="text-sm text-gray-500 hover:text-gray-700 mb-6 inline-block">← Retour aux simulateurs</Link>
@@ -43,7 +49,7 @@ export default function AssuranceViePage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {(['frais', 'rachat', 'deces'] as const).map((t) => (
                 <button key={t} onClick={() => setTab(t)} className={`w-full px-6 py-3 rounded-xl font-semibold transition-all ${tab === t ? 'bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-lg' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}>
-                  {t === 'frais' ? '📉 Impact des frais' : t === 'rachat' ? '💰 Simulation rachat' : '⚖️ Transmission décès'}
+                  {t === 'frais' ? 'Impact des frais' : t === 'rachat' ? 'Simulation rachat' : 'Transmission décès'}
                 </button>
               ))}
             </div>
@@ -89,11 +95,11 @@ function TabFrais({ r }: { r: boolean }) {
   useEffect(() => { if (!res?.frais_data || !feesRef.current) return; const P = (window as { Plotly?: { newPlot: (...args: unknown[]) => void } }).Plotly; if (!P) return; const fraisData = res.frais_data as Record<string, unknown>[]; P.newPlot(feesRef.current, [{ labels: fraisData.map((d) => d.name), values: fraisData.map((d) => d.value), type: 'pie', hole: 0.58, marker: { colors: ['#60a5fa', '#34d399', '#fbbf24'] } }], { title: 'Répartition des frais', height: 320, margin: { t: 50, r: 20, b: 20, l: 20 }, annotations: [{ x: 0.5, y: 0.5, showarrow: false, text: `Total<br>${fmtEur(res.total_frais as number)}`, font: { size: 14 } }], paper_bgcolor: 'transparent' }, { displayModeBar: false, responsive: true }) }, [res])
   return (
     <div className="w-full max-w-6xl mx-auto bg-white rounded-xl shadow-xl p-8">
-      <h2 className="text-3xl font-bold mb-4 text-gray-800">💰 Impact des frais sur votre assurance vie</h2>
+      <h2 className="text-3xl font-bold mb-4 text-gray-800 flex items-center gap-3"><TrendingDown className="w-8 h-8 text-blue-600" /> Impact des frais sur votre assurance vie</h2>
       <p className="text-gray-600 mb-8 text-lg">Analysez l'impact réel des frais sur votre épargne et optimisez votre allocation d'actifs.</p>
       {error && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">{error}</div>}
       <div className="allocation-card mb-6">
-        <h3 className="text-xl font-semibold mb-4 text-gray-800">📊 Paramètres du contrat</h3>
+        <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-blue-600" /> Paramètres du contrat</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div><label className="block text-sm font-medium text-gray-700 mb-2">Durée: <span className="font-bold text-blue-600">{p.duree}</span> ans</label><input type="range" className="smooth-slider w-full" min={5} max={99} value={p.duree} onChange={h('duree')} /></div>
           <div><label className="block text-sm font-medium text-gray-700 mb-2">Versement initial (€)</label><input type="number" className="input-field" value={p.versement_initial} min={0} step={100} onChange={h('versement_initial')} /></div>
@@ -101,7 +107,7 @@ function TabFrais({ r }: { r: boolean }) {
         </div>
       </div>
       <div className="allocation-card mb-6">
-        <h3 className="text-xl font-semibold mb-4 text-gray-800">🎯 Répartition d'actifs</h3>
+        <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2"><Target className="w-5 h-5 text-blue-600" /> Répartition d'actifs</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div><label className="block text-sm font-medium text-gray-700 mb-2">UC: <span className="font-bold text-green-600">{p.pct_uc}</span>%</label><input type="range" className="smooth-slider w-full" min={0} max={100} value={p.pct_uc} onChange={h('pct_uc')} /></div>
           <div><label className="block text-sm font-medium text-gray-700 mb-2">GSM: <span className="font-bold text-purple-600">{p.pct_gsm}</span>%</label><input type="range" className="smooth-slider w-full" min={0} max={100} value={p.pct_gsm} onChange={h('pct_gsm')} /></div>
@@ -109,7 +115,7 @@ function TabFrais({ r }: { r: boolean }) {
         </div>
       </div>
       <div className="allocation-card mb-6">
-        <h3 className="text-xl font-semibold mb-4 text-gray-800">📈 Rendements & 💸 Frais</h3>
+        <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-blue-600" /> Rendements & Frais</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div><label className="block text-sm font-medium text-gray-700 mb-2">Rdt Euros (%)</label><input type="number" className="input-field" value={p.rendement_euros} step={0.1} onChange={h('rendement_euros')} /></div>
           <div><label className="block text-sm font-medium text-gray-700 mb-2">Rdt UC (%)</label><input type="number" className="input-field" value={p.rendement_uc} step={0.1} onChange={h('rendement_uc')} /></div>
@@ -120,19 +126,19 @@ function TabFrais({ r }: { r: boolean }) {
           <div><label className="block text-sm font-medium text-gray-700 mb-2">Arbitrages/an</label><input type="number" className="input-field" value={p.nb_arbitrages_par_an} step={1} onChange={h('nb_arbitrages_par_an')} /></div>
         </div>
       </div>
-      <div className="text-center mb-6"><button className="btn-primary" onClick={submit} disabled={loading}>{loading ? '⏳ Calcul...' : "🚀 Calculer l'impact"}</button></div>
+      <div className="text-center mb-6"><button className="btn-primary" onClick={submit} disabled={loading}>{loading ? 'Calcul en cours...' : "Calculer l'impact"}</button></div>
       {res && (
         <div className="result-card">
-          <h3 className="text-2xl font-bold mb-6 text-gray-800">📊 Résultats</h3>
+          <h3 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2"><BarChart3 className="w-6 h-6 text-blue-600" /> Résultats</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-green-50 p-6 rounded-lg border border-green-200"><h4 className="font-semibold text-green-800 mb-2">Capital sans frais</h4><div className="text-2xl font-bold text-green-600">{fmtEur(res.capital_sans_frais)}</div></div>
             <div className="bg-red-50 p-6 rounded-lg border border-red-200"><h4 className="font-semibold text-red-800 mb-2">Capital avec frais</h4><div className="text-2xl font-bold text-red-600">{fmtEur(res.capital_avec_frais)}</div></div>
             <div className="bg-orange-50 p-6 rounded-lg border border-orange-200"><h4 className="font-semibold text-orange-800 mb-2">Coût des frais</h4><div className="text-2xl font-bold text-orange-600">{fmtEur(res.difference)}</div><div className="text-sm text-orange-600 mt-1">Impact: {fmtPct(res.impact_sur_rendement)}</div></div>
           </div>
-          <div className="mb-6"><h4 className="text-xl font-semibold mb-4 text-gray-800">📈 Évolution</h4><div ref={chartRef} style={{ height: 400 }} /></div>
-          <div className="mb-6"><h4 className="text-xl font-semibold mb-4 text-gray-800">🧩 Répartition</h4><div ref={feesRef} style={{ height: 320 }} /></div>
-          <div className="mb-8 bg-white p-6 rounded-lg border"><h4 className="text-xl font-semibold mb-4 text-gray-800">🧠 Analyse</h4><p className="text-gray-700">Sans frais: {fmtEur(res.capital_sans_frais)} vs avec frais: {fmtEur(res.capital_avec_frais)}. Coût cumulé: {fmtEur(res.difference)}.</p><ul className="list-disc pl-6 mt-2 text-gray-700"><li>Négociez les frais sur versements (0% possible)</li><li>Privilégiez les UC à faible coût (ETF)</li><li>Limitez la GSM si frais &gt; 1.5%/an</li></ul></div>
-          <div className="text-center"><button onClick={() => window.print()} className="btn-secondary">🖨️ Imprimer</button></div>
+          <div className="mb-6"><h4 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-blue-600" /> Évolution</h4><div ref={chartRef} style={{ height: 400 }} /></div>
+          <div className="mb-6"><h4 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2"><Puzzle className="w-5 h-5 text-blue-600" /> Répartition</h4><div ref={feesRef} style={{ height: 320 }} /></div>
+          <div className="mb-8 bg-white p-6 rounded-lg border"><h4 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2"><Brain className="w-5 h-5 text-blue-600" /> Analyse</h4><p className="text-gray-700">Sans frais: {fmtEur(res.capital_sans_frais)} vs avec frais: {fmtEur(res.capital_avec_frais)}. Coût cumulé: {fmtEur(res.difference)}.</p><ul className="list-disc pl-6 mt-2 text-gray-700"><li>Négociez les frais sur versements (0% possible)</li><li>Privilégiez les UC à faible coût (ETF)</li><li>Limitez la GSM si frais &gt; 1.5%/an</li></ul></div>
+          <div className="text-center"><button onClick={() => window.print()} className="btn-secondary flex items-center gap-2 mx-auto"><Printer className="w-4 h-4" /> Imprimer</button></div>
         </div>
       )}
     </div>
@@ -153,11 +159,11 @@ function TabRachat({ r }: { r: boolean }) {
   useEffect(() => { if (!res || !chartRef.current) return; const P = (window as { Plotly?: { newPlot: (...args: unknown[]) => void } }).Plotly; if (!P) return; P.newPlot(chartRef.current, [{ x: ['Net PFU', 'Net IR'], y: [res.net_pfu, res.net_ir], type: 'bar', marker: { color: ['#10b981', '#3b82f6'] } }], { title: 'Montants nets perçus', height: 280, margin: { t: 40, r: 20, b: 40, l: 60 }, yaxis: { tickformat: ',.0f' }, paper_bgcolor: 'transparent' }, { displayModeBar: false, responsive: true }) }, [res])
   return (
     <div className="w-full max-w-6xl mx-auto bg-white rounded-xl shadow-xl p-8">
-      <h2 className="text-3xl font-bold mb-4 text-gray-800">💰 Simulation fiscale de rachat</h2>
+      <h2 className="text-3xl font-bold mb-4 text-gray-800 flex items-center gap-3"><Wallet className="w-8 h-8 text-blue-600" /> Simulation fiscale de rachat</h2>
       <p className="text-gray-600 mb-8 text-lg">Optimisez la fiscalité de votre rachat en comparant le PFU/PFL et le barème IR.</p>
       {error && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">{error}</div>}
       <div className="allocation-card mb-6">
-        <h3 className="text-xl font-semibold mb-4 text-gray-800">📋 Caractéristiques du contrat</h3>
+        <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2"><FileText className="w-5 h-5 text-blue-600" /> Caractéristiques du contrat</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div><label className="block text-sm font-medium text-gray-700 mb-2">Valeur du contrat (€)</label><input type="number" className="input-field" value={p.valeur_contrat} min={0} step={100} onChange={h('valeur_contrat')} /></div>
           <div><label className="block text-sm font-medium text-gray-700 mb-2">Total versements (€)</label><input type="number" className="input-field" value={p.versements} min={0} step={100} onChange={h('versements')} /></div>
@@ -175,7 +181,7 @@ function TabRachat({ r }: { r: boolean }) {
         )}
       </div>
       <div className="allocation-card mb-6">
-        <h3 className="text-xl font-semibold mb-4 text-gray-800">🧾 Situation fiscale</h3>
+        <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2"><Calculator className="w-5 h-5 text-blue-600" /> Situation fiscale</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div><label className="block text-sm font-medium text-gray-700 mb-2">Mode TMI</label><select className="input-field" value={mode} onChange={(e) => setMode(e.target.value)}><option value="automatique">Automatique</option><option value="manuel">Manuel</option></select></div>
           {mode === 'manuel' && <div><label className="block text-sm font-medium text-gray-700 mb-2">TMI (%)</label><input type="number" className="input-field" value={p.tmi} min={0} max={45} onChange={h('tmi')} /></div>}
@@ -188,18 +194,18 @@ function TabRachat({ r }: { r: boolean }) {
           </div>
         )}
       </div>
-      <div className="text-center mb-6"><button className="btn-primary" onClick={submit} disabled={loading}>{loading ? '⏳ Calcul...' : "🧮 Calculer l'optimisation"}</button></div>
+      <div className="text-center mb-6"><button className="btn-primary" onClick={submit} disabled={loading}>{loading ? 'Calcul en cours...' : "Calculer l'optimisation"}</button></div>
       {res && (
         <div className="result-card">
-          <h3 className="text-2xl font-bold mb-6 text-gray-800">📊 Résultats</h3>
-          <div className="bg-blue-50 border border-blue-200 p-6 rounded-lg mb-6"><div className="text-blue-800 font-semibold mb-2">💡 Recommandation</div><div className="text-blue-700">{res.message}</div></div>
+          <h3 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2"><BarChart3 className="w-6 h-6 text-blue-600" /> Résultats</h3>
+          <div className="bg-blue-50 border border-blue-200 p-6 rounded-lg mb-6"><div className="text-blue-800 font-semibold mb-2 flex items-center gap-2"><Lightbulb className="w-4 h-4" /> Recommandation</div><div className="text-blue-700">{res.message}</div></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-green-50 p-6 rounded-lg border border-green-200"><h4 className="font-semibold text-green-800 mb-2">Prélèvements sociaux</h4><div className="text-2xl font-bold text-green-600">{fmtEur(res.pso)}</div><div className="text-sm text-green-600 mt-1">17,2% sur plus-values</div></div>
             <div className="bg-blue-50 p-6 rounded-lg border border-blue-200"><h4 className="font-semibold text-blue-800 mb-2">Abattement (&gt;8 ans)</h4><div className="text-sm text-blue-700">Droit: {fmtEur(res.abattement_max)} • Utilisé: {fmtEur(res.abattement)}</div><div className="w-full h-3 bg-blue-100 rounded-full mt-2"><div className="h-3 bg-blue-600 rounded-full" style={{ width: `${res.abattement_max > 0 ? Math.min(100, (res.abattement / res.abattement_max) * 100) : 0}%` }} /></div></div>
             <div className="bg-orange-50 p-6 rounded-lg border border-orange-200"><h4 className="font-semibold text-orange-800 mb-2">Gains imposables</h4><div className="text-2xl font-bold text-orange-600">{fmtEur(res.base_taxable)}</div><div className="text-sm text-orange-600 mt-1">TMI: {fmtPct(res.tmi_calculee)}</div></div>
           </div>
           <div className="mb-8 bg-white p-6 rounded-lg border">
-            <h4 className="text-xl font-semibold mb-4 text-gray-800">📈 Comparaison PFU vs IR</h4>
+            <h4 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-blue-600" /> Comparaison PFU vs IR</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
               <div><div className="font-semibold mb-2">Option PFU/PFL</div><div>Gains: {fmtEur(res.part_interets)}</div><div>Impôt PFU: {fmtEur(res.impot_pfu)}</div><div className="font-bold mt-1 text-green-600">Net: {fmtEur(res.net_pfu)}</div></div>
               <div><div className="font-semibold mb-2">Option Barème IR</div><div>Base IR: {fmtEur(res.base_taxable)}</div><div>Impôt IR: {fmtEur(res.impot_ir)}</div><div className="font-bold mt-1 text-blue-600">Net: {fmtEur(res.net_ir)}</div></div>
@@ -207,10 +213,10 @@ function TabRachat({ r }: { r: boolean }) {
             <div className="mt-6" ref={chartRef} style={{ height: 280 }} />
             <div className="mt-4 grid grid-cols-2 gap-4 text-sm"><div className="text-green-700">Économie PFU: {fmtEur(res.economie_pfu)}</div><div className="text-blue-700">Économie IR: {fmtEur(res.economie_ir)}</div></div>
           </div>
-          {res.alertes?.length > 0 && <div className="mb-6"><h4 className="text-xl font-semibold mb-4 text-orange-600">⚠️ Alertes</h4><ul className="list-disc pl-6">{res.alertes.map((a: string, i: number) => <li key={i} className="text-orange-700">{a}</li>)}</ul></div>}
-          {res.conseils?.length > 0 && <div className="mb-8"><h4 className="text-xl font-semibold mb-4 text-green-600">💡 Conseils</h4><ul className="list-disc pl-6">{res.conseils.map((c: string, i: number) => <li key={i} className="text-green-700">{c}</li>)}</ul></div>}
+          {res.alertes?.length > 0 && <div className="mb-6"><h4 className="text-xl font-semibold mb-4 text-orange-600 flex items-center gap-2"><AlertTriangle className="w-5 h-5" /> Alertes</h4><ul className="list-disc pl-6">{res.alertes.map((a: string, i: number) => <li key={i} className="text-orange-700">{a}</li>)}</ul></div>}
+          {res.conseils?.length > 0 && <div className="mb-8"><h4 className="text-xl font-semibold mb-4 text-green-600 flex items-center gap-2"><Lightbulb className="w-5 h-5" /> Conseils</h4><ul className="list-disc pl-6">{res.conseils.map((c: string, i: number) => <li key={i} className="text-green-700">{c}</li>)}</ul></div>}
           <div className="mb-8"><button className="text-sm text-gray-700 underline" onClick={() => setShowGlossary(v => !v)}>{showGlossary ? 'Masquer' : 'Glossaire (PFU, IR, TMI)'}</button>{showGlossary && <ul className="mt-2 text-sm text-gray-700 list-disc pl-6"><li><b>PFU</b>: impôt forfaitaire (taux fixe)</li><li><b>IR</b>: barème progressif</li><li><b>TMI</b>: tranche marginale</li><li><b>PS</b>: 17,2% sur gains</li></ul>}</div>
-          <div className="text-center"><button onClick={() => window.print()} className="btn-secondary">🖨️ Imprimer</button></div>
+          <div className="text-center"><button onClick={() => window.print()} className="btn-secondary flex items-center gap-2 mx-auto"><Printer className="w-4 h-4" /> Imprimer</button></div>
         </div>
       )}
     </div>
@@ -243,11 +249,11 @@ function TabDeces() {
   }
   return (
     <div className="w-full max-w-6xl mx-auto bg-white rounded-xl shadow-xl p-8">
-      <h2 className="text-3xl font-bold mb-4 text-gray-800">👨‍👩‍👧‍👦 Simulation des droits de succession</h2>
+      <h2 className="text-3xl font-bold mb-4 text-gray-800 flex items-center gap-3"><Users className="w-8 h-8 text-blue-600" /> Simulation des droits de succession</h2>
       <p className="text-gray-600 mb-8 text-lg">Analysez l'impact fiscal de la transmission selon les régimes 990I et 757B.</p>
       {error && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">{error}</div>}
       <div className="allocation-card mb-6">
-        <h3 className="text-xl font-semibold mb-4 text-gray-800">📋 Caractéristiques du contrat</h3>
+        <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2"><FileText className="w-5 h-5 text-blue-600" /> Caractéristiques du contrat</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div><label className="block text-sm font-medium text-gray-700 mb-2">Valeur contrat (€)</label><input type="number" className="input-field" value={p.valeur_contrat} min={0} step={1000} onChange={h('valeur_contrat')} /></div>
           <div><label className="block text-sm font-medium text-gray-700 mb-2">Primes avant 70 ans (€)</label><input type="number" className="input-field" value={p.primes_avant_70} min={0} step={1000} onChange={h('primes_avant_70')} /></div>
@@ -268,29 +274,29 @@ function TabDeces() {
       </div>
       {p.clause_type === 'personnalisee' && (
         <div className="allocation-card mb-6">
-          <h3 className="text-xl font-semibold mb-4 text-gray-800">👥 Bénéficiaires</h3>
+          <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2"><Users className="w-5 h-5 text-blue-600" /> Bénéficiaires</h3>
           {benefs.map((b) => (
             <div key={b.id} className="border border-gray-200 rounded-lg p-4 mb-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div><label className="block text-sm font-medium text-gray-700 mb-2">Nom</label><input type="text" className="input-field" value={b.nom} onChange={(e) => updB(b.id, 'nom', e.target.value)} /></div>
                 <div><label className="block text-sm font-medium text-gray-700 mb-2">Lien</label><select className="input-field" value={b.lien_parente} onChange={(e) => updB(b.id, 'lien_parente', e.target.value)}>{lienOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
                 <div><label className="block text-sm font-medium text-gray-700 mb-2">Quotité (%)</label><input type="number" className="input-field" value={b.quotite} min={0} max={100} onChange={(e) => updB(b.id, 'quotite', Number(e.target.value))} /></div>
-                <div className="flex items-end"><button className="btn-secondary w-full" onClick={() => remB(b.id)}>🗑️</button></div>
+                <div className="flex items-end"><button className="btn-secondary w-full flex items-center justify-center" onClick={() => remB(b.id)}><Trash2 className="w-4 h-4" /></button></div>
               </div>
             </div>
           ))}
-          <div className="flex items-center justify-between"><button className="btn-secondary" onClick={addB}>➕ Ajouter</button><span className="text-sm text-gray-600">Total: {benefs.reduce((s, b) => s + Number(b.quotite), 0)}%</span></div>
+          <div className="flex items-center justify-between"><button className="btn-secondary flex items-center gap-2" onClick={addB}><Plus className="w-4 h-4" /> Ajouter</button><span className="text-sm text-gray-600">Total: {benefs.reduce((s, b) => s + Number(b.quotite), 0)}%</span></div>
         </div>
       )}
-      <div className="text-center mb-6"><button className="btn-primary" onClick={submit} disabled={loading}>{loading ? '⏳ Calcul...' : '⚖️ Calculer les droits'}</button></div>
+      <div className="text-center mb-6"><button className="btn-primary" onClick={submit} disabled={loading}>{loading ? 'Calcul en cours...' : 'Calculer les droits'}</button></div>
       {res && (
         <div className="result-card">
-          <h3 className="text-2xl font-bold mb-6 text-gray-800">⚖️ Résultats</h3>
+          <h3 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2"><Scale className="w-6 h-6 text-blue-600" /> Résultats</h3>
           {res.messages?.length > 0 && <div className="bg-blue-50 border border-blue-200 p-6 rounded-lg mb-6 text-blue-800">{res.messages.map((m: string, i: number) => <p key={i}>{m}</p>)}</div>}
-          {res.alertes?.length > 0 && <div className="bg-orange-50 border border-orange-200 p-6 rounded-lg mb-6"><h4 className="font-semibold text-orange-800 mb-2">⚠️ Points d'attention</h4>{res.alertes.map((a: string, i: number) => <p key={i} className="text-orange-700">{a}</p>)}</div>}
-          {res.primes_exonerees > 0 && <div className="bg-green-50 border border-green-200 p-6 rounded-lg mb-6"><h4 className="font-semibold text-green-800 mb-2">✅ Primes exonérées</h4><p className="text-green-700">{fmtEur(res.primes_exonerees)} de primes versées avant le 13/10/1998 sont totalement exonérées (contrat avant 1991).</p></div>}
+          {res.alertes?.length > 0 && <div className="bg-orange-50 border border-orange-200 p-6 rounded-lg mb-6"><h4 className="font-semibold text-orange-800 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Points d'attention</h4>{res.alertes.map((a: string, i: number) => <p key={i} className="text-orange-700">{a}</p>)}</div>}
+          {res.primes_exonerees > 0 && <div className="bg-green-50 border border-green-200 p-6 rounded-lg mb-6"><h4 className="font-semibold text-green-800 mb-2 flex items-center gap-2"><CheckCircle className="w-4 h-4" /> Primes exonérées</h4><p className="text-green-700">{fmtEur(res.primes_exonerees)} de primes versées avant le 13/10/1998 sont totalement exonérées (contrat avant 1991).</p></div>}
           <div className="mb-8">
-            <h4 className="text-xl font-semibold mb-4 text-gray-800">👥 Par bénéficiaire</h4>
+            <h4 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2"><Users className="w-5 h-5 text-blue-600" /> Par bénéficiaire</h4>
             {res.resultats?.map((b: any, i: number) => (
               <div key={i} className="bg-gray-50 p-6 rounded-lg border mb-4">
                 <div className="flex justify-between items-center mb-4"><h5 className="text-lg font-semibold">{b.nom}</h5><span className="text-sm text-gray-600">{b.lien_parente} | {b.quotite}%</span></div>
@@ -301,7 +307,7 @@ function TabDeces() {
                   <div><div className="text-sm text-gray-600">Net</div><div className="text-lg font-bold text-blue-600">{fmtEur(b.montant_net)}</div></div>
                   <div><div className="text-sm text-gray-600">Taux</div><div className="text-lg font-bold text-orange-600">{fmtPct(b.taux_imposition)}</div></div>
                 </div>
-                {b.is_exonere_tepa && <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-400 text-green-800"><b>✅ Exonération TEPA</b> - Conjoint totalement exonéré</div>}
+                {b.is_exonere_tepa && <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-400 text-green-800"><b className="flex items-center gap-1"><CheckCircle className="w-4 h-4 inline" /> Exonération TEPA</b> - Conjoint totalement exonéré</div>}
               </div>
             ))}
           </div>
@@ -310,13 +316,13 @@ function TabDeces() {
             <div className="bg-green-50 p-6 rounded-lg border border-green-200"><h4 className="font-semibold text-green-800 mb-2">Total net</h4><div className="text-2xl font-bold text-green-600">{fmtEur(res.total_net)}</div></div>
           </div>
           <div className="mb-8 bg-white p-6 rounded-lg border">
-            <h4 className="text-xl font-semibold mb-4 text-gray-800">📚 Régimes fiscaux</h4>
+            <h4 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2"><FileText className="w-5 h-5 text-blue-600" /> Régimes fiscaux</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div className="bg-blue-50 p-4 rounded-lg"><b>Art. 990 I</b> (primes avant 70 ans)<br />• Abattement: 152 500 €/bénéficiaire<br />• Taux: 20% puis 31.25% au-delà de 700k€</div>
               <div className="bg-yellow-50 p-4 rounded-lg"><b>Art. 757 B</b> (primes après 70 ans)<br />• Abattement global: 30 500 €<br />• Droits de succession classiques sur primes</div>
             </div>
           </div>
-          <div className="text-center"><button onClick={() => window.print()} className="btn-secondary">🖨️ Imprimer</button></div>
+          <div className="text-center"><button onClick={() => window.print()} className="btn-secondary flex items-center gap-2 mx-auto"><Printer className="w-4 h-4" /> Imprimer</button></div>
         </div>
       )}
     </div>

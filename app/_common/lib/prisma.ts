@@ -19,6 +19,7 @@ type TenantClient = PrismaClient & {
 
 /**
  * Retourne un client Prisma étendu pour un cabinet donné.
+ * Injecte automatiquement l'isolation applicative (where cabinetId).
  */
 export function getPrismaClient(cabinetId: string, isSuperAdmin: boolean = false) {
   if (!isSuperAdmin && !cabinetId) {
@@ -27,9 +28,10 @@ export function getPrismaClient(cabinetId: string, isSuperAdmin: boolean = false
 
   const baseClient: TenantClient = prisma
 
+  // Extension: isolation applicative (where cabinetId injections)
   return baseClient.$extends(
     createTenantExtension(cabinetId, isSuperAdmin)
-  ) as PrismaClient
+  ) as unknown as PrismaClient
 }
 
 /**

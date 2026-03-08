@@ -4,7 +4,7 @@ import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { prisma } from '@/app/_common/lib/prisma'
 import { createAdminClient } from '@/app/_common/lib/supabase/server'
 import { UserService } from '@/app/_common/lib/services/user-service'
-
+import { logger } from '@/app/_common/lib/logger'
 export async function POST(request: NextRequest) {
   try {
     const context = await requireAuth(request); const { user } = context
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (authError) {
-      console.error('Erreur Supabase Auth:', authError)
+      logger.error('Erreur Supabase Auth: ' + authError.message)
       // On continue, l'utilisateur se créera à la première connexion
     }
 
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
       user: newUser
     })
   } catch (error: any) {
-    console.error('Create user error:', error)
+    logger.error('Create user error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Unauthorized') {
       return NextResponse.json(

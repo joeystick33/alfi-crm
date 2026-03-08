@@ -14,9 +14,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/app/_common/
 import { formatCurrency, formatPercentage, formatDate } from '@/app/_common/lib/utils'
 import { formatLabel, formatAssetType } from '@/app/_common/lib/labels'
 import { useToast } from '@/app/_common/hooks/use-toast'
-import { Wallet, Home, Briefcase, TrendingUp, TrendingDown, Plus, RefreshCw, FileDown, Edit, Trash2, PiggyBank, CreditCard, BarChart3, ChevronDown, Loader2 } from 'lucide-react'
+import { Wallet, Home, Briefcase, TrendingUp, TrendingDown, Plus, RefreshCw, Edit, Trash2, PiggyBank, CreditCard, BarChart3, ChevronDown, Loader2, ClipboardList } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
-import { PatrimoineFormModal, type PatrimoineFormType } from '../modals'
+import { PatrimoineFormModal, type PatrimoineFormType, BilanPatrimonialWizard } from '../modals'
 import { ActifFormWizard } from '../../patrimoine/ActifFormWizard'
 import { PassifFormWizard } from '../../patrimoine/PassifFormWizard'
 import type { ClientDetail, WealthSummary } from '@/app/_common/lib/api-types'
@@ -436,8 +436,8 @@ function RepartitionImmobilierCGP({ segmentation }: { segmentation: Segmentation
         <h4 className="text-sm font-semibold text-gray-900">Répartition Immobilier</h4>
       </div>
       <div className="flex items-center gap-4">
-        <div className="h-24 w-24">
-          <ResponsiveContainer width="100%" height="100%">
+        <div style={{ width: 96, height: 96 }}>
+          <ResponsiveContainer width={96} height={96}>
             <PieChart>
               <Pie data={chartData} cx="50%" cy="50%" innerRadius={20} outerRadius={40} paddingAngle={2} dataKey="value">
                 {chartData.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
@@ -486,8 +486,8 @@ function RepartitionFinancierCGP({ segmentation }: { segmentation: SegmentationC
         <h4 className="text-sm font-semibold text-gray-900">Répartition Épargne</h4>
       </div>
       <div className="flex items-center gap-4">
-        <div className="h-24 w-24">
-          <ResponsiveContainer width="100%" height="100%">
+        <div style={{ width: 96, height: 96 }}>
+          <ResponsiveContainer width={96} height={96}>
             <PieChart>
               <Pie data={chartData} cx="50%" cy="50%" innerRadius={20} outerRadius={40} paddingAngle={2} dataKey="value">
                 {chartData.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
@@ -537,8 +537,8 @@ function RepartitionPassifsCGP({ segmentation }: { segmentation: SegmentationCGP
         <h4 className="text-sm font-semibold text-gray-900">Structure Endettement</h4>
       </div>
       <div className="flex items-center gap-4">
-        <div className="h-24 w-24">
-          <ResponsiveContainer width="100%" height="100%">
+        <div style={{ width: 96, height: 96 }}>
+          <ResponsiveContainer width={96} height={96}>
             <PieChart>
               <Pie data={chartData} cx="50%" cy="50%" innerRadius={20} outerRadius={40} paddingAngle={2} dataKey="value">
                 {chartData.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
@@ -886,9 +886,7 @@ export function TabPatrimoineReporting({ clientId, client, wealth }: TabPatrimoi
     setLoading(false)
   }
 
-  const handleExportPDF = () => {
-    toast({ title: 'Export PDF', description: 'Fonctionnalité en cours de développement' })
-  }
+  const [showBilanWizard, setShowBilanWizard] = useState(false)
 
   return (
     <div className="space-y-5">
@@ -915,9 +913,15 @@ export function TabPatrimoineReporting({ clientId, client, wealth }: TabPatrimoi
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleExportPDF} className="h-8 gap-1.5">
-            <FileDown className="h-4 w-4" />
-            <span className="hidden sm:inline">Export</span>
+          <Button 
+            type="button"
+            onClick={() => {
+              setShowBilanWizard(true)
+            }} 
+            className="h-9 px-4 gap-2 bg-[#7373FF] hover:bg-[#5c5ce6] text-white font-medium shadow-sm"
+          >
+            <ClipboardList className="h-4 w-4" />
+            Créer Bilan
           </Button>
           <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading} className="h-8 gap-1.5">
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
@@ -1257,6 +1261,13 @@ export function TabPatrimoineReporting({ clientId, client, wealth }: TabPatrimoi
           }}
         />
       )}
+
+      {/* Wizard Bilan Patrimonial */}
+      <BilanPatrimonialWizard
+        open={showBilanWizard}
+        onClose={() => setShowBilanWizard(false)}
+        clientId={clientId}
+      />
     </div>
   )
 }

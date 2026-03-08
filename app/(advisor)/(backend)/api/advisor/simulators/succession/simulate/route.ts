@@ -2,7 +2,7 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
-
+import { logger } from '@/app/_common/lib/logger'
 const successionSimulationSchema = z.object({
     assets: z.array(
         z.object({
@@ -25,7 +25,7 @@ const successionSimulationSchema = z.object({
     ).min(1).max(20),
 })
 
-// French inheritance tax brackets and allowances (2024)
+// French inheritance tax brackets and allowances (2026 — inchangé)
 const ALLOWANCES: Record<string, number> = {
   spouse: 80724,
   child: 100000,
@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
       }
     })
   } catch (error: any) {
-    console.error('Error in succession simulation:', error)
+    logger.error('Error in succession simulation:', { error: error instanceof Error ? error.message : String(error) })
     if (error instanceof z.ZodError) {
       return createErrorResponse('Validation error: ' + error.message, 400)
     }

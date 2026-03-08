@@ -32,6 +32,19 @@ import {
   Lightbulb,
   FolderOpen,
   Building2,
+  Mic,
+  ShieldCheck,
+  ClipboardList,
+  AlertTriangle,
+  FileSearch,
+  TrendingUp,
+  PieChart,
+  Receipt,
+  Megaphone,
+  Activity,
+  Handshake,
+  Landmark,
+  Gauge,
 } from 'lucide-react'
 
 // =============================================================================
@@ -82,6 +95,19 @@ const mainNavigation: NavItem[] = [
     ]
   },
   {
+    id: 'patrimoine',
+    label: 'Patrimoine',
+    href: '/dashboard/patrimoine',
+    icon: Landmark,
+    children: [
+      { id: 'patrimoine-vue', label: 'Vue globale', href: '/dashboard/patrimoine', icon: PieChart },
+      { id: 'patrimoine-actifs', label: 'Actifs', href: '/dashboard/patrimoine/actifs', icon: TrendingUp },
+      { id: 'patrimoine-passifs', label: 'Passifs', href: '/dashboard/patrimoine/passifs', icon: Receipt },
+      { id: 'patrimoine-contrats', label: 'Contrats', href: '/dashboard/patrimoine/contrats', icon: FileText },
+      { id: 'patrimoine-perf', label: 'Performance', href: '/dashboard/patrimoine/performance', icon: BarChart3 },
+    ]
+  },
+  {
     id: 'outils',
     label: 'Outils',
     href: '/dashboard/calculateurs',
@@ -100,7 +126,45 @@ const mainNavigation: NavItem[] = [
     children: [
       { id: 'agenda', label: 'Agenda', href: '/dashboard/agenda', icon: Calendar },
       { id: 'taches', label: 'Tâches', href: '/dashboard/taches', icon: CheckSquare },
+      { id: 'entretiens', label: 'Entretiens', href: '/dashboard/entretiens', icon: Mic },
       { id: 'emails', label: 'Emails', href: '/dashboard/emails', icon: Mail },
+    ]
+  },
+  {
+    id: 'commercial',
+    label: 'Commercial',
+    href: '/dashboard/campagnes',
+    icon: Megaphone,
+    children: [
+      { id: 'campagnes', label: 'Campagnes', href: '/dashboard/campagnes', icon: Megaphone },
+      { id: 'campagnes-actives', label: 'Actives', href: '/dashboard/campagnes/actives', icon: Activity },
+      { id: 'mes-actions', label: 'Mes actions', href: '/dashboard/mes-actions', icon: Target },
+      { id: 'apporteurs', label: 'Apporteurs', href: '/dashboard/apporteurs', icon: Handshake },
+    ]
+  },
+  {
+    id: 'operations',
+    label: 'Opérations',
+    href: '/dashboard/operations',
+    icon: ClipboardList,
+    children: [
+      { id: 'operations-vue', label: 'Vue globale', href: '/dashboard/operations', icon: ClipboardList },
+      { id: 'affaires-nouvelles', label: 'Affaires nouvelles', href: '/dashboard/operations/affaires-nouvelles', icon: TrendingUp },
+      { id: 'operations-en-cours', label: 'En cours', href: '/dashboard/operations/en-cours', icon: Activity },
+      { id: 'operations-gestion', label: 'Gestion', href: '/dashboard/operations/gestion', icon: FileSearch },
+      { id: 'pilotage', label: 'Pilotage', href: '/dashboard/pilotage', icon: Gauge },
+    ]
+  },
+  {
+    id: 'conformite',
+    label: 'Conformité',
+    href: '/dashboard/conformite',
+    icon: ShieldCheck,
+    children: [
+      { id: 'conformite-vue', label: 'Dashboard', href: '/dashboard/conformite', icon: ShieldCheck },
+      { id: 'kyc', label: 'KYC', href: '/dashboard/kyc', icon: FileSearch },
+      { id: 'alertes', label: 'Alertes', href: '/dashboard/conformite/alertes', icon: AlertTriangle },
+      { id: 'reclamations', label: 'Réclamations', href: '/dashboard/reclamations', icon: ClipboardList },
     ]
   },
   {

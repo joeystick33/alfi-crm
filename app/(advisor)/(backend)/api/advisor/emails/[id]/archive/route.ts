@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma, setRLSContext } from "@/app/_common/lib/prisma";
 import { requireAuth } from "@/app/_common/lib/auth-helpers";
 import { isRegularUser } from "@/app/_common/lib/auth-types";
-
+import { logger } from '@/app/_common/lib/logger'
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const context = await requireAuth(req);
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (error?.message === "Unauthorized") {
       return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
     }
-    console.error("[Email Archive Error]:", error);
+    logger.error("[Email Archive Error]:", { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

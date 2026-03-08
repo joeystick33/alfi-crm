@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server';
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers';
 import { isRegularUser } from '@/app/_common/lib/auth-types';
 import { OpportuniteService } from '@/app/_common/lib/services/opportunite-service';
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/opportunities
  * Fetch opportunities for the advisor with aggregated statistics
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
       requiresAction,
     });
   } catch (error) {
-    console.error('Error fetching opportunities:', error);
+    logger.error('Error fetching opportunities:', { error: error instanceof Error ? error.message : String(error) });
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401);

@@ -142,7 +142,7 @@ export function useProviders(
     queryKey: providersQueryKeys.providerList(filters),
     queryFn: () => {
       const queryString = buildQueryString(filters || {})
-      return api.get<{ data: Provider[] }>(`/v1/operations/providers${queryString}`)
+      return api.get<{ data: Provider[] }>(`/advisor/providers${queryString}`)
     },
     ...options,
   })
@@ -157,7 +157,10 @@ export function useProvider(
 ) {
   return useQuery({
     queryKey: providersQueryKeys.provider(id),
-    queryFn: () => api.get<Provider>(`/v1/operations/providers/${id}`),
+    queryFn: async (): Promise<Provider> => {
+      const response = await api.get<{ data?: Provider } | Provider>(`/advisor/providers/${id}`)
+      return (response as { data?: Provider })?.data || (response as Provider)
+    },
     enabled: !!id,
     ...options,
   })
@@ -173,7 +176,9 @@ export function useCreateProvider(
 
   return useMutation({
     mutationFn: (data: CreateProviderRequest) =>
-      api.post<Provider>('/v1/operations/providers', data),
+      api
+        .post<{ data?: Provider } | Provider>('/advisor/providers', data)
+        .then((res) => (res as { data?: Provider })?.data || (res as Provider)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: providersQueryKeys.providers })
       queryClient.invalidateQueries({ queryKey: providersQueryKeys.providerStats })
@@ -196,7 +201,9 @@ export function useUpdateProvider(
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateProviderRequest }) =>
-      api.patch<Provider>(`/v1/operations/providers/${id}`, data),
+      api
+        .put<{ data?: Provider } | Provider>(`/advisor/providers/${id}`, data)
+        .then((res) => (res as { data?: Provider })?.data || (res as Provider)),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: providersQueryKeys.provider(id) })
       queryClient.invalidateQueries({ queryKey: providersQueryKeys.providers })
@@ -220,7 +227,9 @@ export function useToggleProviderFavorite(
 
   return useMutation({
     mutationFn: (id: string) =>
-      api.post<Provider>(`/v1/operations/providers/${id}/toggle-favorite`),
+      api
+        .post<{ data?: Provider } | Provider>(`/advisor/providers/${id}/toggle-favorite`)
+        .then((res) => (res as { data?: Provider })?.data || (res as Provider)),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: providersQueryKeys.provider(id) })
       queryClient.invalidateQueries({ queryKey: providersQueryKeys.providers })
@@ -242,7 +251,7 @@ export function useDeleteProvider(
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: string) => api.delete(`/v1/operations/providers/${id}`).then(() => {}),
+    mutationFn: (id: string) => api.delete(`/advisor/providers/${id}`).then(() => {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: providersQueryKeys.providers })
       queryClient.invalidateQueries({ queryKey: providersQueryKeys.providerStats })
@@ -270,7 +279,7 @@ export function useProducts(
     queryKey: providersQueryKeys.productList(filters),
     queryFn: () => {
       const queryString = buildQueryString(filters || {})
-      return api.get<{ data: Product[] }>(`/v1/operations/products${queryString}`)
+      return api.get<{ data: Product[] }>(`/advisor/products${queryString}`)
     },
     ...options,
   })
@@ -285,7 +294,12 @@ export function useProviderProducts(
 ) {
   return useQuery({
     queryKey: providersQueryKeys.providerProducts(providerId),
-    queryFn: () => api.get<{ data: Product[] }>(`/v1/operations/providers/${providerId}/products`),
+    queryFn: async () => {
+      const response = await api.get<{ data?: Product[] } | { data: Product[] }>(
+        `/advisor/providers/${providerId}/products`
+      )
+      return response as { data: Product[] }
+    },
     enabled: !!providerId,
     ...options,
   })
@@ -300,7 +314,7 @@ export function useProduct(
 ) {
   return useQuery({
     queryKey: providersQueryKeys.product(id),
-    queryFn: () => api.get<Product>(`/v1/operations/products/${id}`),
+    queryFn: () => api.get<Product>(`/advisor/products/${id}`),
     enabled: !!id,
     ...options,
   })
@@ -316,7 +330,9 @@ export function useCreateProduct(
 
   return useMutation({
     mutationFn: (data: CreateProductRequest) =>
-      api.post<Product>(`/v1/operations/providers/${data.providerId}/products`, data),
+      api
+        .post<{ data?: Product } | Product>(`/advisor/providers/${data.providerId}/products`, data)
+        .then((res) => (res as { data?: Product })?.data || (res as Product)),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: providersQueryKeys.products })
       queryClient.invalidateQueries({ 
@@ -342,7 +358,9 @@ export function useUpdateProduct(
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateProductRequest }) =>
-      api.patch<Product>(`/v1/operations/products/${id}`, data),
+      api
+        .put<{ data?: Product } | Product>(`/advisor/products/${id}`, data)
+        .then((res) => (res as { data?: Product })?.data || (res as Product)),
     onSuccess: (result, { id }) => {
       queryClient.invalidateQueries({ queryKey: providersQueryKeys.product(id) })
       queryClient.invalidateQueries({ queryKey: providersQueryKeys.products })
@@ -368,7 +386,9 @@ export function useToggleProductActive(
 
   return useMutation({
     mutationFn: (id: string) =>
-      api.post<Product>(`/v1/operations/products/${id}/toggle-active`),
+      api
+        .post<{ data?: Product } | Product>(`/advisor/products/${id}/toggle-active`)
+        .then((res) => (res as { data?: Product })?.data || (res as Product)),
     onSuccess: (result, id) => {
       queryClient.invalidateQueries({ queryKey: providersQueryKeys.product(id) })
       queryClient.invalidateQueries({ queryKey: providersQueryKeys.products })
@@ -394,7 +414,7 @@ export function useDeleteProduct(
 
   return useMutation({
     mutationFn: ({ id }: { id: string; providerId: string }) => 
-      api.delete(`/v1/operations/products/${id}`).then(() => {}),
+      api.delete(`/advisor/products/${id}`).then(() => {}),
     onSuccess: (_, { providerId }) => {
       queryClient.invalidateQueries({ queryKey: providersQueryKeys.products })
       queryClient.invalidateQueries({ 
@@ -422,7 +442,7 @@ export function useProviderStats(
 ) {
   return useQuery({
     queryKey: providersQueryKeys.providerStats,
-    queryFn: () => api.get<ProviderStats>('/v1/operations/providers/stats'),
+    queryFn: () => api.get<ProviderStats>('/advisor/providers/stats'),
     staleTime: 1000 * 60 * 5, // 5 minutes
     ...options,
   })

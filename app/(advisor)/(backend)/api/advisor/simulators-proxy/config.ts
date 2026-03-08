@@ -12,7 +12,7 @@ export interface BackendConfig {
   healthEndpoint: string
   endpoints: {
     path: string
-    method: 'GET' | 'POST' | 'PUT' | 'SUPPRESSION'
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'SUPPRESSION'
     description: string
   }[]
 }

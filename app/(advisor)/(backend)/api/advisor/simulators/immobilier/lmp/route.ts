@@ -33,9 +33,10 @@ import {
 import {
   LMNP,
   LMP,
+  PRELEVEMENTS_SOCIAUX,
 } from '../_shared/constants'
 import { lmpInputSchema, type LMPInput } from '../_shared/validators'
-
+import { logger } from '@/app/_common/lib/logger'
 // ══════════════════════════════════════════════════════════════════════════════
 // FONCTION DE SIMULATION LMP
 // ══════════════════════════════════════════════════════════════════════════════
@@ -214,10 +215,10 @@ async function simulerLMP(input: LMPInput) {
       if (apiSSIResult && apiSSIResult.cotisationsTotal > 0 && beneficeEstimeAn1 > 0) {
         useApiSSI = true
         tauxSSIEffectif = apiSSIResult.cotisationsTotal / beneficeEstimeAn1
-        console.log(`[LMP] API URSSAF utilisée - Taux effectif: ${(tauxSSIEffectif * 100).toFixed(1)}%`)
+        logger.info(`[LMP] API URSSAF utilisée - Taux effectif: ${(tauxSSIEffectif * 100).toFixed(1)}%`)
       }
     } catch (error) {
-      console.warn('[LMP] API URSSAF indisponible, utilisation du calcul local')
+      logger.warn('[LMP] API URSSAF indisponible, utilisation du calcul local')
     }
   }
 
@@ -409,9 +410,9 @@ async function simulerLMP(input: LMPInput) {
     const pvLTImposable = pvLT * (1 - tauxExoneration / 100)
     
     // PVCT : IR au barème (~30%) + CS (~45%) sur la part non exonérée - simplification
-    impotPVCT = Math.round(pvCTImposable * (tmi / 100 + 0.172)) // IR + PS 17.2%
-    // PVLT : 19% + 17.2% = 36.2%
-    impotPVLT = Math.round(pvLTImposable * 0.362)
+    impotPVCT = Math.round(pvCTImposable * (tmi / 100 + PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL)) // IR + PS
+    // PVLT : 19% + PS
+    impotPVLT = Math.round(pvLTImposable * (0.19 + PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL))
     impotPV = impotPVCT + impotPVLT
   } else {
     // Pas d'exonération 151 septies
@@ -424,9 +425,9 @@ async function simulerLMP(input: LMPInput) {
     } else {
       // Imposition normale
       // PVCT : IR au barème + PS 17.2%
-      impotPVCT = Math.round(pvCT * (tmi / 100 + 0.172))
-      // PVLT : 19% + 17.2% = 36.2%
-      impotPVLT = Math.round(pvLT * 0.362)
+      impotPVCT = Math.round(pvCT * (tmi / 100 + PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL))
+      // PVLT : 19% + PS
+      impotPVLT = Math.round(pvLT * (0.19 + PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL))
       impotPV = impotPVCT + impotPVLT
     }
   }
@@ -711,7 +712,7 @@ export async function POST(request: NextRequest) {
         400
       )
     }
-    console.error('Erreur simulateur LMP:', error)
+    logger.error('Erreur simulateur LMP:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la simulation', 500)
   }
 }

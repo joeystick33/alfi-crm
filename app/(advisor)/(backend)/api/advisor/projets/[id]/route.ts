@@ -4,7 +4,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse, checkPermissio
 import { ProjetService } from '@/app/_common/lib/services/projet-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { normalizeProjetUpdatePayload } from '../utils'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/projets/[id]
  * Récupère un projet par ID
@@ -39,7 +39,7 @@ export async function GET(
 
     return createSuccessResponse(projet)
   } catch (error: any) {
-    console.error('Error in GET /api/projets/[id]:', error)
+    logger.error('Error in GET /api/projets/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -79,7 +79,7 @@ export async function PATCH(
 
     return createSuccessResponse(projet)
   } catch (error: any) {
-    console.error('Error in PATCH /api/projets/[id]:', error)
+    logger.error('Error in PATCH /api/projets/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error) {
       if (error.message === 'Unauthorized') {
@@ -124,7 +124,7 @@ export async function DELETE(
 
     return createSuccessResponse({ success: true })
   } catch (error: any) {
-    console.error('Error in DELETE /api/projets/[id]:', error)
+    logger.error('Error in DELETE /api/projets/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

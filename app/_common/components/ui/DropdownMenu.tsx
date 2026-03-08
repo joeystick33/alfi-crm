@@ -2,11 +2,14 @@
 'use client'
 
 import * as React from 'react'
+import { createPortal } from 'react-dom'
 import { cn } from '@/app/_common/lib/utils'
 
 interface DropdownMenuContextValue {
   open: boolean
   setOpen: (open: boolean) => void
+  triggerEl: HTMLElement | null
+  setTriggerEl: (el: HTMLElement | null) => void
 }
 
 const DropdownMenuContext = React.createContext<DropdownMenuContextValue | undefined>(undefined)
@@ -25,9 +28,10 @@ export interface DropdownMenuProps {
 
 export function DropdownMenu({ children }: DropdownMenuProps) {
   const [open, setOpen] = React.useState(false)
+  const [triggerEl, setTriggerEl] = React.useState<HTMLElement | null>(null)
 
   return (
-    <DropdownMenuContext.Provider value={{ open, setOpen }}>
+    <DropdownMenuContext.Provider value={{ open, setOpen, triggerEl, setTriggerEl }}>
       <div className="relative inline-block">{children}</div>
     </DropdownMenuContext.Provider>
   )
@@ -39,15 +43,19 @@ export interface DropdownMenuTriggerProps {
 }
 
 export function DropdownMenuTrigger({ children, asChild }: DropdownMenuTriggerProps) {
-  const { open, setOpen } = useDropdownMenu()
+  const { open, setOpen, setTriggerEl } = useDropdownMenu()
 
-  const handleClick = () => {
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setTriggerEl(event.currentTarget)
     setOpen(!open)
   }
 
   if (asChild && React.isValidElement(children)) {
     return React.cloneElement(children as React.ReactElement<any>, {
-      onClick: handleClick,
+      onClick: (event: React.MouseEvent<HTMLElement>) => {
+        handleClick(event)
+        ;(children as any).props?.onClick?.(event)
+      },
       'aria-expanded': open,
       'aria-haspopup': 'true',
     })
@@ -56,7 +64,7 @@ export function DropdownMenuTrigger({ children, asChild }: DropdownMenuTriggerPr
   return (
     <button
       type="button"
-      onClick={handleClick}
+      onClick={(event) => handleClick(event as unknown as React.MouseEvent<HTMLElement>)}
       aria-expanded={open}
       aria-haspopup="true"
       className="inline-flex items-center justify-center"
@@ -77,12 +85,16 @@ export function DropdownMenuContent({
   align = 'start',
   className,
 }: DropdownMenuContentProps) {
-  const { open, setOpen } = useDropdownMenu()
+  const { open, setOpen, triggerEl } = useDropdownMenu()
   const ref = React.useRef<HTMLDivElement>(null)
+  const [style, setStyle] = React.useState<React.CSSProperties | null>(null)
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
+      const target = event.target as Node
+      if (ref.current && ref.current.contains(target)) return
+      if (triggerEl && triggerEl.contains(target)) return
+      if (ref.current && !ref.current.contains(target)) {
         setOpen(false)
       }
     }
@@ -102,28 +114,80 @@ export function DropdownMenuContent({
       document.removeEventListener('mousedown', handleClickOutside)
       document.removeEventListener('keydown', handleEscape)
     }
-  }, [open, setOpen])
+  }, [open, setOpen, triggerEl])
+
+  const computePosition = () => {
+    if (!triggerEl) return
+    const triggerRect = triggerEl.getBoundingClientRect()
+    const contentEl = ref.current
+    if (!contentEl) return
+
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+
+    const contentRect = contentEl.getBoundingClientRect()
+
+    let left = triggerRect.left
+    const top = Math.min(triggerRect.bottom + 8, viewportHeight - 8)
+
+    if (align === 'center') {
+      left = triggerRect.left + triggerRect.width / 2 - contentRect.width / 2
+    }
+    if (align === 'end') {
+      left = triggerRect.right - contentRect.width
+    }
+
+    const minLeft = 8
+    const maxLeft = viewportWidth - contentRect.width - 8
+    left = Math.max(minLeft, Math.min(left, maxLeft))
+
+    setStyle({
+      position: 'fixed',
+      top,
+      left,
+      zIndex: 9999,
+    })
+  }
+
+  React.useLayoutEffect(() => {
+    if (!open) return
+    setStyle({ position: 'fixed', top: 0, left: 0, zIndex: 9999, visibility: 'hidden' })
+  }, [open])
+
+  React.useLayoutEffect(() => {
+    if (!open) return
+    computePosition()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, align, triggerEl])
+
+  React.useEffect(() => {
+    if (!open) return
+    const onScroll = () => computePosition()
+    const onResize = () => computePosition()
+    window.addEventListener('scroll', onScroll, true)
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('scroll', onScroll, true)
+      window.removeEventListener('resize', onResize)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, align, triggerEl])
 
   if (!open) return null
 
-  const alignmentClasses = {
-    start: 'left-0',
-    center: 'left-1/2 -translate-x-1/2',
-    end: 'right-0',
-  }
-
-  return (
+  return createPortal(
     <div
       ref={ref}
+      style={style ?? undefined}
       className={cn(
-        'absolute z-50 mt-2 min-w-[12rem] overflow-hidden rounded-lg border border-border bg-background shadow-lg',
+        'min-w-[12rem] overflow-hidden rounded-lg border border-border bg-background shadow-lg',
         'animate-in fade-in-0 zoom-in-95',
-        alignmentClasses[align],
         className
       )}
     >
       <div className="p-1">{children}</div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

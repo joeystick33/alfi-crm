@@ -4,7 +4,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { ActifService } from '@/app/_common/lib/services/actif-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { z } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 const updateActifSchema = z.object({
   // Identification
   name: z.string().min(1).optional(),
@@ -75,7 +75,7 @@ export async function GET(
 
     return createSuccessResponse(actif)
   } catch (error: any) {
-    console.error('Error fetching actif:', error)
+    logger.error('Error fetching actif:', { error: error instanceof Error ? error.message : String(error) })
     if (error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }
@@ -121,7 +121,7 @@ export async function PUT(
       message: 'Actif mis à jour avec succès',
     })
   } catch (error: any) {
-    console.error('Error updating actif:', error)
+    logger.error('Error updating actif:', { error: error instanceof Error ? error.message : String(error) })
     if (error instanceof z.ZodError) {
       return createErrorResponse('Données invalides: ' + error.issues.map(e => e.message).join(', '), 400)
     }
@@ -168,7 +168,7 @@ export async function DELETE(
       id: actifId,
     })
   } catch (error: any) {
-    console.error('Error deleting actif:', error)
+    logger.error('Error deleting actif:', { error: error instanceof Error ? error.message : String(error) })
     if (error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }

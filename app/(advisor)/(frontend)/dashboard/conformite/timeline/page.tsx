@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from 'react'
+import { Suspense, useState, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { 
   useComplianceTimeline,
@@ -224,6 +224,14 @@ function FilterDropdown({
   )
 }
 
+export default function TimelinePage() {
+  return (
+    <Suspense fallback={null}>
+      <TimelinePageInner />
+    </Suspense>
+  )
+}
+
 // ============================================================================
 // Timeline Event Card Component
 // ============================================================================
@@ -316,7 +324,7 @@ function TimelineEventCard({
 
 function TimelineSkeleton() {
   return (
-    <div className="space-y-4">
+    <div className="p-6 space-y-6">
       {[1, 2, 3, 4].map((i) => (
         <div key={i} className="relative flex gap-4">
           <div className="flex flex-col items-center">
@@ -370,7 +378,7 @@ function DateGroupHeader({ date }: { date: string }) {
 // Main Page Component
 // ============================================================================
 
-export default function TimelinePage() {
+function TimelinePageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   

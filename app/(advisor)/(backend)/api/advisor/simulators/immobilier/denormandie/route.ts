@@ -36,7 +36,7 @@ import {
   PLAFOND_NICHES,
 } from '../_shared/constants'
 import { denormandieInputSchema, type DenormandieInput } from '../_shared/validators'
-
+import { logger } from '@/app/_common/lib/logger'
 // ══════════════════════════════════════════════════════════════════════════════
 // SCHÉMA DE VALIDATION
 // ══════════════════════════════════════════════════════════════════════════════
@@ -169,7 +169,7 @@ function simulerDenormandie(input: DenormandieInput) {
 
     // IR et PS sur revenus fonciers
     const ir = revenuFoncier > 0 ? revenuFoncier * (tmi / 100) : 0
-    const ps = revenuFoncier > 0 ? revenuFoncier * PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL : 0
+    const ps = revenuFoncier > 0 ? revenuFoncier * PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL : 0
 
     // Réduction Denormandie (si engagement actif)
     const reductionDenormandie = engagementActif ? reductionAnnuelle : 0
@@ -418,7 +418,7 @@ export async function POST(request: NextRequest) {
         400
       )
     }
-    console.error('Erreur simulateur Denormandie:', error)
+    logger.error('Erreur simulateur Denormandie:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la simulation', 500)
   }
 }

@@ -611,7 +611,7 @@ export default function OperationsDashboardPage() {
           icon={Euro}
           subtitle="Montant en cours"
           color="emerald"
-          onClick={() => router.push('/dashboard/operations/pilotage')}
+          onClick={() => router.push('/dashboard/pilotage')}
           loading={statsLoading}
         />
         <KPICard

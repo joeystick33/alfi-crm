@@ -69,105 +69,24 @@ const STATUS_CONFIG = {
   ANNULE: { label: 'Annulée', color: 'bg-red-100 text-red-700' },
 }
 
-const DEMO_REUNIONS: Reunion[] = [
-  {
-    id: '1',
-    title: 'Point Hebdo Équipe',
-    type: 'TEAM',
-    status: 'PLANIFIE',
-    date: '2024-11-29',
-    time: '10:00',
-    duration: 60,
-    location: 'Salle de réunion A',
-    participants: [
-      { id: '1', firstName: 'Marie', lastName: 'Dupont' },
-      { id: '2', firstName: 'Pierre', lastName: 'Martin' },
-      { id: '3', firstName: 'Lucas', lastName: 'Bernard' },
-      { id: '4', firstName: 'Sophie', lastName: 'Laurent' },
-    ],
-    agenda: [
-      'Revue des objectifs de la semaine',
-      'Pipeline commercial',
-      'Points bloquants',
-      'Actions pour la semaine prochaine',
-    ],
-    recurring: 'WEEKLY',
-    createdAt: '2024-01-01',
-  },
-  {
-    id: '2',
-    title: '1-to-1 Marie Dupont',
-    type: 'ONE_TO_ONE',
-    status: 'PLANIFIE',
-    date: '2024-12-02',
-    time: '14:00',
-    duration: 45,
-    videoLink: 'https://meet.google.com/xxx',
-    participants: [{ id: '1', firstName: 'Marie', lastName: 'Dupont' }],
-    agenda: [
-      'Revue performances',
-      'Objectifs du mois',
-      'Formation produits',
-      'Questions / Préoccupations',
-    ],
-    recurring: 'BIWEEKLY',
-    createdAt: '2024-01-15',
-  },
-  {
-    id: '3',
-    title: '1-to-1 Pierre Martin',
-    type: 'ONE_TO_ONE',
-    status: 'PLANIFIE',
-    date: '2024-12-03',
-    time: '11:00',
-    duration: 45,
-    location: 'Bureau',
-    participants: [{ id: '2', firstName: 'Pierre', lastName: 'Martin' }],
-    agenda: [
-      'Point sur les clients difficiles',
-      'Objectifs de fin d\'année',
-    ],
-    recurring: 'BIWEEKLY',
-    createdAt: '2024-01-15',
-  },
-  {
-    id: '4',
-    title: 'Formation SCPI',
-    type: 'TRAINING',
-    status: 'TERMINE',
-    date: '2024-11-20',
-    time: '09:00',
-    duration: 180,
-    location: 'Salle de conférence',
-    participants: [
-      { id: '1', firstName: 'Marie', lastName: 'Dupont' },
-      { id: '2', firstName: 'Pierre', lastName: 'Martin' },
-    ],
-    notes: 'Formation complète sur les nouveaux produits SCPI. Tous les participants ont validé les connaissances.',
-    createdAt: '2024-11-01',
-  },
-  {
-    id: '5',
-    title: '1-to-1 Lucas Bernard',
-    type: 'ONE_TO_ONE',
-    status: 'TERMINE',
-    date: '2024-11-22',
-    time: '15:00',
-    duration: 45,
-    location: 'Bureau',
-    participants: [{ id: '3', firstName: 'Lucas', lastName: 'Bernard' }],
-    notes: 'Discussion sur les objectifs en retard. Plan d\'action défini pour rattraper le CA. Lucas doit se concentrer sur les clients premium.',
-    createdAt: '2024-01-15',
-  },
-]
 
 export default function ReunionsPage() {
   const [showNewForm, setShowNewForm] = useState(false)
   const [activeTab, setActiveTab] = useState('upcoming')
   const [selectedReunion, setSelectedReunion] = useState<Reunion | null>(null)
 
+  // New reunion form state
+  const [newTitle, setNewTitle] = useState('')
+  const [newType, setNewType] = useState<'TEAM' | 'ONE_TO_ONE' | 'TRAINING' | 'OTHER'>('TEAM')
+  const [newDate, setNewDate] = useState('')
+  const [newTime, setNewTime] = useState('')
+  const [newDuration, setNewDuration] = useState('45')
+  const [newLocation, setNewLocation] = useState('')
+  const [newAgenda, setNewAgenda] = useState('')
+  const [newRecurrence, setNewRecurrence] = useState('')
+
   // Fetch reunions from API
-  const { data: apiData, isLoading } = useManagementReunions({
+  const { data: apiData, isLoading, refetch } = useManagementReunions({
     upcoming: activeTab === 'upcoming',
   })
   const createReunionMutation = useCreateManagementReunion()
@@ -196,7 +115,7 @@ export default function ReunionsPage() {
         createdAt: reunion.createdAt,
       }))
     }
-    return DEMO_REUNIONS
+    return []
   }, [apiData])
 
   const formatDate = (dateString: string) => {
@@ -456,70 +375,131 @@ export default function ReunionsPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label>Titre</Label>
-                <Input placeholder="Ex: Point Hebdo Équipe" className="mt-1" />
-              </div>
-
-              <div>
-                <Label>Type</Label>
-                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1">
-                  <option value="TEAM">Réunion équipe</option>
-                  <option value="ONE_TO_ONE">1-to-1</option>
-                  <option value="TRAINING">Formation</option>
-                  <option value="OTHER">Autre</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              <form onSubmit={async (e) => {
+                e.preventDefault()
+                if (!newTitle.trim() || !newDate) return
+                await createReunionMutation.mutateAsync({
+                  title: newTitle.trim(),
+                  type: newType,
+                  date: newDate,
+                  time: newTime,
+                  duration: parseInt(newDuration) || 45,
+                  location: newLocation.trim() || undefined,
+                  agenda: newAgenda.trim() ? newAgenda.trim().split('\n').filter(Boolean) : undefined,
+                  recurring: newRecurrence || undefined,
+                })
+                setNewTitle(''); setNewType('TEAM'); setNewDate(''); setNewTime('')
+                setNewDuration('45'); setNewLocation(''); setNewAgenda(''); setNewRecurrence('')
+                setShowNewForm(false)
+                refetch()
+              }} className="space-y-4">
                 <div>
-                  <Label>Date</Label>
-                  <Input type="date" className="mt-1" />
+                  <Label>Titre *</Label>
+                  <Input
+                    placeholder="Ex: Point Hebdo Équipe"
+                    className="mt-1"
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    required
+                  />
                 </div>
+
                 <div>
-                  <Label>Heure</Label>
-                  <Input type="time" className="mt-1" />
+                  <Label>Type</Label>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1"
+                    value={newType}
+                    onChange={(e) => setNewType(e.target.value as typeof newType)}
+                  >
+                    <option value="TEAM">Réunion équipe</option>
+                    <option value="ONE_TO_ONE">1-to-1</option>
+                    <option value="TRAINING">Formation</option>
+                    <option value="OTHER">Autre</option>
+                  </select>
                 </div>
-              </div>
 
-              <div>
-                <Label>Durée (minutes)</Label>
-                <Input type="number" placeholder="45" defaultValue="45" className="mt-1" />
-              </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Date *</Label>
+                    <Input
+                      type="date"
+                      className="mt-1"
+                      value={newDate}
+                      onChange={(e) => setNewDate(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label>Heure</Label>
+                    <Input
+                      type="time"
+                      className="mt-1"
+                      value={newTime}
+                      onChange={(e) => setNewTime(e.target.value)}
+                    />
+                  </div>
+                </div>
 
-              <div>
-                <Label>Lieu / Lien visio</Label>
-                <Input placeholder="Salle A ou lien Google Meet" className="mt-1" />
-              </div>
+                <div>
+                  <Label>Durée (minutes)</Label>
+                  <Input
+                    type="number"
+                    placeholder="45"
+                    className="mt-1"
+                    value={newDuration}
+                    onChange={(e) => setNewDuration(e.target.value)}
+                  />
+                </div>
 
-              <div>
-                <Label>Ordre du jour</Label>
-                <Textarea
-                  placeholder="Un point par ligne..."
-                  rows={4}
-                  className="mt-1"
-                />
-              </div>
+                <div>
+                  <Label>Lieu / Lien visio</Label>
+                  <Input
+                    placeholder="Salle A ou lien Google Meet"
+                    className="mt-1"
+                    value={newLocation}
+                    onChange={(e) => setNewLocation(e.target.value)}
+                  />
+                </div>
 
-              <div>
-                <Label>Récurrence</Label>
-                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1">
-                  <option value="">Aucune</option>
-                  <option value="WEEKLY">Hebdomadaire</option>
-                  <option value="BIWEEKLY">Bi-hebdomadaire</option>
-                  <option value="MONTHLY">Mensuelle</option>
-                </select>
-              </div>
+                <div>
+                  <Label>Ordre du jour</Label>
+                  <Textarea
+                    placeholder="Un point par ligne..."
+                    rows={4}
+                    className="mt-1"
+                    value={newAgenda}
+                    onChange={(e) => setNewAgenda(e.target.value)}
+                  />
+                </div>
 
-              <div className="flex gap-3 pt-4">
-                <Button variant="outline" onClick={() => setShowNewForm(false)} className="flex-1">
-                  Annuler
-                </Button>
-                <Button className="flex-1">
-                  <Save className="h-4 w-4 mr-2" />
-                  Créer
-                </Button>
-              </div>
+                <div>
+                  <Label>Récurrence</Label>
+                  <select
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-1"
+                    value={newRecurrence}
+                    onChange={(e) => setNewRecurrence(e.target.value)}
+                  >
+                    <option value="">Aucune</option>
+                    <option value="WEEKLY">Hebdomadaire</option>
+                    <option value="BIWEEKLY">Bi-hebdomadaire</option>
+                    <option value="MONTHLY">Mensuelle</option>
+                  </select>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setShowNewForm(false)} className="flex-1">
+                    Annuler
+                  </Button>
+                  <Button type="submit" className="flex-1" disabled={createReunionMutation.isPending || !newTitle.trim() || !newDate}>
+                    {createReunionMutation.isPending ? (
+                      <Clock className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4 mr-2" />
+                    )}
+                    Créer
+                  </Button>
+                </div>
+              </form>
             </CardContent>
           </Card>
         </div>

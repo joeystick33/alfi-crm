@@ -44,13 +44,13 @@ export function ModernDonutChart({ data, title, formatValue, colors }: ModernDon
     };
 
     return (
-        <div className="w-full h-full min-h-[300px] relative">
+        <div className="w-full relative" style={{ minHeight: 300 }}>
             {title && (
                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4 text-center">
                     {title}
                 </h3>
             )}
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                     <defs>
                         {data.map((_, index) => {

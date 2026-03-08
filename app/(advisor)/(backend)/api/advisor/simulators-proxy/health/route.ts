@@ -7,15 +7,18 @@
  * Mode PROD: Vérifie vraiment les backends externes
  */
 
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { checkAllBackendsHealth, getStartupInstructions } from '../proxy'
 import { BACKEND_CONFIGS } from '../config'
-
+import { requireAuth } from '@/app/_common/lib/auth-helpers'
+import { logger } from '@/app/_common/lib/logger'
 // Toujours vérifier les vrais backends
 const USE_MOCK_STATUS = false
 
-export async function GET(_request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    await requireAuth(request)
+
     let results: any[]
 
     // Vérifier vraiment les backends
@@ -48,7 +51,13 @@ export async function GET(_request: Request) {
       mode: USE_MOCK_STATUS ? 'development' : 'production',
     })
   } catch (error: any) {
-    console.error('[Health Check All] Error:', error)
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+    logger.error('[Health Check All] Error:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }

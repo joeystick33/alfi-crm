@@ -10,7 +10,7 @@
 ### 1. Précision Fiscale
 - **Aucune approximation** : tous les calculs doivent être conformes au CGI
 - **Sources citées** : chaque règle fiscale doit référencer l'article de loi
-- **Données 2025** : utiliser `parameters-2025.ts` pour les barèmes
+- **Données 2025** : utiliser `parameters.ts` pour les barèmes
 
 ### 2. Transparence
 - **Calculs explicables** : tout résultat doit pouvoir être justifié étape par étape
@@ -576,7 +576,7 @@ const calculScore = (synthese) => {
 
 - **Backend LMNP** : `/app/(advisor)/(backend)/api/advisor/simulators/immobilier/lmnp/route.ts`
 - **Frontend LMNP** : `/app/(advisor)/(frontend)/dashboard/simulateurs/immobilier/lmnp/page.tsx`
-- **Paramètres fiscaux** : `/app/(advisor)/(frontend)/dashboard/simulateurs/parameters-2025.ts`
+- **Paramètres fiscaux** : `/app/(advisor)/(frontend)/dashboard/simulateurs/parameters.ts`
 - **Ce document** : `/app/(advisor)/(frontend)/dashboard/simulateurs/STANDARD-SIMULATEURS-V2.md`
 
 ---

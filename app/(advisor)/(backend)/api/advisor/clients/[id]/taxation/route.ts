@@ -10,7 +10,7 @@ import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
 import { clientTaxationSchema } from '@/app/_common/lib/validation-schemas'
 import { ZodError } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 // ============================================================================
 // GET /api/advisor/clients/[id]/taxation
 // Récupère la fiscalité d'un client
@@ -61,7 +61,7 @@ export async function GET(
 
     return NextResponse.json({ data: taxation }, { status: 200 })
   } catch (error: any) {
-    console.error('GET /api/advisor/clients/[id]/taxation error:', error)
+    logger.error('GET /api/advisor/clients/[id]/taxation error:', { error: error instanceof Error ? error.message : String(error) })
 
     return NextResponse.json(
       {
@@ -137,7 +137,7 @@ export async function POST(
 
     return NextResponse.json({ data: taxation }, { status: 201 })
   } catch (error: any) {
-    console.error('POST /api/advisor/clients/[id]/taxation error:', error)
+    logger.error('POST /api/advisor/clients/[id]/taxation error:', { error: error instanceof Error ? error.message : String(error) })
 
     // Erreur de validation Zod
     if (error instanceof ZodError) {
@@ -217,7 +217,7 @@ export async function PATCH(
 
     return NextResponse.json({ data: taxation }, { status: 200 })
   } catch (error: any) {
-    console.error('PATCH /api/advisor/clients/[id]/taxation error:', error)
+    logger.error('PATCH /api/advisor/clients/[id]/taxation error:', { error: error instanceof Error ? error.message : String(error) })
 
     // Erreur de validation Zod
     if (error instanceof ZodError) {
@@ -294,7 +294,7 @@ export async function DELETE(
       throw error
     }
   } catch (error: any) {
-    console.error('DELETE /api/advisor/clients/[id]/taxation error:', error)
+    logger.error('DELETE /api/advisor/clients/[id]/taxation error:', { error: error instanceof Error ? error.message : String(error) })
 
     return NextResponse.json(
       {

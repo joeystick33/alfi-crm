@@ -1,8 +1,10 @@
 "use client"
 
-import { useState, useMemo } from 'react'
+import { Suspense, useState, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useAffaires } from '@/app/_common/hooks/api/use-operations-api'
+import { useAffaires, useDeleteAffaire } from '@/app/_common/hooks/api/use-operations-api'
+import { useToast } from '@/app/_common/hooks/use-toast'
+import { ConfirmDialog } from '@/app/_common/components/ui/ConfirmDialog'
 import { useProviders } from '@/app/_common/hooks/api/use-providers-api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/_common/components/ui/Card'
 import { Badge } from '@/app/_common/components/ui/Badge'
@@ -32,12 +34,12 @@ import {
   Trash2,
   Calendar,
   Building2,
-  User,
   Euro,
   ArrowUpDown,
   X,
   FileText,
 } from 'lucide-react'
+import { ClientLink } from '@/app/_common/components/ClientLink'
 import {
   AFFAIRE_STATUS,
   AFFAIRE_STATUS_LABELS,
@@ -116,6 +118,14 @@ function FilterDropdown({
   )
 }
 
+export default function AffairesNouvellesPage() {
+  return (
+    <Suspense fallback={null}>
+      <AffairesNouvellesPageInner />
+    </Suspense>
+  )
+}
+
 // ============================================================================
 // Table Header Component
 // ============================================================================
@@ -177,12 +187,11 @@ function AffaireRow({
         </button>
       </td>
       <td className="px-4 py-3">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-gray-100 rounded-lg">
-            <User className="h-3.5 w-3.5 text-gray-500" />
-          </div>
-          <span className="text-sm text-gray-900">Client #{affaire.clientId.slice(0, 8)}</span>
-        </div>
+        <ClientLink
+          clientId={affaire.clientId}
+          showAvatar={true}
+          avatarSize="sm"
+        />
       </td>
       <td className="px-4 py-3">
         <span className="text-sm text-gray-700">
@@ -248,7 +257,7 @@ function AffaireRow({
 
 function TableSkeleton() {
   return (
-    <div className="space-y-3">
+    <div className="p-6 space-y-6">
       {[1, 2, 3, 4, 5].map((i) => (
         <div key={i} className="flex items-center gap-4 px-4 py-3">
           <Skeleton className="h-4 w-24" />
@@ -269,7 +278,7 @@ function TableSkeleton() {
 // Main Page Component
 // ============================================================================
 
-export default function AffairesNouvellesPage() {
+function AffairesNouvellesPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   
@@ -286,6 +295,39 @@ export default function AffairesNouvellesPage() {
   
   const [sortField, setSortField] = useState<SortField>('createdAt')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
+  
+  // État pour la suppression
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [affaireToDelete, setAffaireToDelete] = useState<string | null>(null)
+  const { toast } = useToast()
+  const deleteMutation = useDeleteAffaire({
+    onSuccess: () => {
+      toast({
+        title: 'Affaire supprimée',
+        description: 'L\'affaire a été supprimée avec succès.',
+      })
+      setDeleteDialogOpen(false)
+      setAffaireToDelete(null)
+    },
+    onError: (error) => {
+      toast({
+        title: 'Erreur',
+        description: error.message || 'Impossible de supprimer l\'affaire.',
+        variant: 'destructive',
+      })
+    },
+  })
+
+  const handleDeleteClick = (affaireId: string) => {
+    setAffaireToDelete(affaireId)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (affaireToDelete) {
+      await deleteMutation.mutateAsync(affaireToDelete)
+    }
+  }
 
   // Fetch data
   const { data: affairesData, isLoading: affairesLoading } = useAffaires({
@@ -633,7 +675,7 @@ export default function AffairesNouvellesPage() {
                       providerName={providerMap.get(affaire.providerId) || 'N/A'}
                       onView={() => router.push(`/dashboard/operations/affaires-nouvelles/${affaire.id}`)}
                       onEdit={() => router.push(`/dashboard/operations/affaires-nouvelles/${affaire.id}/edit`)}
-                      onDelete={() => {/* TODO: Implement delete confirmation */}}
+                      onDelete={() => handleDeleteClick(affaire.id)}
                     />
                   ))}
                 </tbody>
@@ -649,6 +691,20 @@ export default function AffairesNouvellesPage() {
           {filteredAffaires.length} affaire{filteredAffaires.length > 1 ? 's' : ''} trouvée{filteredAffaires.length > 1 ? 's' : ''}
         </p>
       )}
+
+      {/* Modal de confirmation de suppression */}
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Supprimer l'affaire"
+        description="Êtes-vous sûr de vouloir supprimer cette affaire ? Cette action est irréversible."
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setAffaireToDelete(null)}
+        variant="danger"
+        loading={deleteMutation.isPending}
+      />
     </div>
   )
 }

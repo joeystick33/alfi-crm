@@ -7,7 +7,7 @@ import {
 } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { mapExpenseCategory } from '@/app/_common/lib/enum-mappings'
-
+import { logger } from '@/app/_common/lib/logger'
 // ============================================
 // Routes pour une charge spécifique
 // Les valeurs sont uniformes: Frontend = Prisma = Supabase
@@ -59,7 +59,7 @@ export async function GET(
 
     return createSuccessResponse(mapDbToFrontend(expense))
   } catch (error: any) {
-    console.error('Error fetching expense:', error)
+    logger.error('Error fetching expense:', { error: error instanceof Error ? error.message : String(error) })
     if (error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }
@@ -132,7 +132,7 @@ export async function PUT(
 
     return createSuccessResponse(mapDbToFrontend(updatedExpense))
   } catch (error: any) {
-    console.error('Error updating expense:', error)
+    logger.error('Error updating expense:', { error: error instanceof Error ? error.message : String(error) })
     if (error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }
@@ -178,7 +178,7 @@ export async function DELETE(
 
     return createSuccessResponse({ message: 'Expense deleted successfully', id: deletedExpense.id })
   } catch (error: any) {
-    console.error('Error deleting expense:', error)
+    logger.error('Error deleting expense:', { error: error instanceof Error ? error.message : String(error) })
     if (error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }

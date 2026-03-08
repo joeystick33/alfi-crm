@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BudgetCalculator } from '@/app/_common/lib/services/calculators/budget-calculator';
-
+import { logger } from '@/app/_common/lib/logger'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       data: result
     });
   } catch (error) {
-    console.error('Budget analysis error:', error);
+    logger.error('Budget analysis error:', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { 
         error: 'Failed to analyze budget',

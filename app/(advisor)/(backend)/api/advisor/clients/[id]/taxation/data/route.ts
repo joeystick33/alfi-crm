@@ -9,7 +9,7 @@ import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
 import { buildFiscaliteData } from '@/app/_common/lib/services/taxation-data-service'
 import type { TaxSimulation } from '@/app/_common/types/client360'
-
+import { logger } from '@/app/_common/lib/logger'
 // ============================================================================
 // GET /api/advisor/clients/[id]/taxation/data
 // Returns complete FiscaliteData for Client360 TabFiscalite
@@ -169,7 +169,7 @@ export async function GET(
 
     return NextResponse.json({ data: fiscaliteData }, { status: 200 })
   } catch (error: any) {
-    console.error('GET /api/advisor/clients/[id]/taxation/data error:', error)
+    logger.error('GET /api/advisor/clients/[id]/taxation/data error:', { error: error instanceof Error ? error.message : String(error) })
 
     return NextResponse.json(
       {
@@ -248,7 +248,7 @@ export async function PUT(
       message: 'Données fiscales mises à jour',
     }, { status: 200 })
   } catch (error: any) {
-    console.error('PUT /api/advisor/clients/[id]/taxation/data error:', error)
+    logger.error('PUT /api/advisor/clients/[id]/taxation/data error:', { error: error instanceof Error ? error.message : String(error) })
 
     return NextResponse.json(
       {

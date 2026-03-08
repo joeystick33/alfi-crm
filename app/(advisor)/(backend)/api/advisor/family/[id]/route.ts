@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
 import { z } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 // ============================================================================
 // Validation Schema
 // ============================================================================
@@ -75,7 +75,7 @@ export async function GET(
     })
 
   } catch (error) {
-    console.error('Erreur GET /family/[id]:', error)
+    logger.error('Erreur GET /family/[id]:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Erreur serveur', code: 'INTERNAL_ERROR' },
       { status: 500 }
@@ -170,7 +170,7 @@ export async function PATCH(
     })
 
   } catch (error) {
-    console.error('Erreur PATCH /family/[id]:', error)
+    logger.error('Erreur PATCH /family/[id]:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Erreur serveur', code: 'INTERNAL_ERROR' },
       { status: 500 }
@@ -227,7 +227,7 @@ export async function DELETE(
     })
 
   } catch (error) {
-    console.error('Erreur DELETE /family/[id]:', error)
+    logger.error('Erreur DELETE /family/[id]:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Erreur serveur', code: 'INTERNAL_ERROR' },
       { status: 500 }

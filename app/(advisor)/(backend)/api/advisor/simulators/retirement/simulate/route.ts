@@ -1,7 +1,7 @@
  
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * Simulateur de Retraite Privée
  * 
@@ -251,7 +251,7 @@ export async function POST(request: NextRequest) {
       }
     })
   } catch (error: any) {
-    console.error('Error in retirement simulation:', error)
+    logger.error('Error in retirement simulation:', { error: error instanceof Error ? error.message : String(error) })
     if (error instanceof z.ZodError) {
       return NextResponse.json({ success: false, error: 'Validation error: ' + error.message }, { status: 400 })
     }

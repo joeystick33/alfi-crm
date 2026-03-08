@@ -30,7 +30,7 @@ import {
   LMP,
 } from '../_shared/constants'
 import { colocationInputSchema, type ColocationInput } from '../_shared/validators'
-
+import { logger } from '@/app/_common/lib/logger'
 // ══════════════════════════════════════════════════════════════════════════════
 // FONCTION DE SIMULATION COLOCATION
 // ══════════════════════════════════════════════════════════════════════════════
@@ -195,7 +195,7 @@ function simulerColocation(input: ColocationInput) {
       if (regimeApplique === 'MICRO_BIC') {
         baseImposable = loyerBrutAnnee * (1 - LMNP.ABATTEMENT_MICRO_BIC / 100)
         ir = baseImposable * (tmi / 100)
-        ps = baseImposable * PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL
+        ps = baseImposable * PRELEVEMENTS_SOCIAUX.FINANCIER.TAUX_GLOBAL // Meublé = BIC → 18,6% (LFSS 2026)
       } else {
         // Réel
         const chargesDeductibles = chargesAnnuelles + interetsAnnuels + assuranceMensuelle * 12
@@ -214,7 +214,7 @@ function simulerColocation(input: ColocationInput) {
           ir = baseImposable * (tmi / 100)
         } else {
           ir = baseImposable * (tmi / 100)
-          ps = baseImposable * PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL
+          ps = baseImposable * PRELEVEMENTS_SOCIAUX.FINANCIER.TAUX_GLOBAL // Meublé = BIC → 18,6% (LFSS 2026)
         }
       }
     } else {
@@ -222,14 +222,14 @@ function simulerColocation(input: ColocationInput) {
       if (regimeApplique === 'MICRO_FONCIER') {
         baseImposable = loyerBrutAnnee * (1 - LOCATION_NUE.MICRO_FONCIER.ABATTEMENT / 100)
         ir = baseImposable * (tmi / 100)
-        ps = baseImposable * PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL
+        ps = baseImposable * PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL // Foncier → 17,2% (inchangé LFSS 2026)
       } else {
         // Réel foncier
         const chargesDeductibles = chargesAnnuelles + interetsAnnuels + assuranceMensuelle * 12
         const revenuFoncier = loyerActuel - chargesDeductibles
         baseImposable = Math.max(0, revenuFoncier)
         ir = baseImposable * (tmi / 100)
-        ps = baseImposable * PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL
+        ps = baseImposable * PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL // Foncier → 17,2% (inchangé LFSS 2026)
       }
     }
 
@@ -484,7 +484,7 @@ export async function POST(request: NextRequest) {
         400
       )
     }
-    console.error('Erreur simulateur colocation:', error)
+    logger.error('Erreur simulateur colocation:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la simulation', 500)
   }
 }

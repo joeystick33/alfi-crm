@@ -3,9 +3,12 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import Script from 'next/script'
 import { SimulatorGate } from '@/app/_common/components/FeatureGate'
 import { usePlotlyReady } from '../_hooks/usePlotlyReady'
+import {
+  Landmark, User, Wrench, CreditCard, Wallet, FileText, Home,
+  BarChart3, TrendingUp, Target, Briefcase, AlertTriangle, RefreshCw, BookOpen,
+} from 'lucide-react'
 import { 
   DISPOSITIFS_FISCAUX_DISPLAY as DISPOSITIFS_FISCAUX, 
   calculIRDetaille, 
@@ -270,13 +273,12 @@ export default function MalrauxPage() {
 
   return (
     <SimulatorGate simulator="IMMOBILIER" showTeaser>
-      <Script src="https://cdn.plot.ly/plotly-2.27.0.min.js" strategy="afterInteractive" onLoad={handlePlotlyLoad} />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-red-50 to-orange-50">
         <main className="container mx-auto px-4 py-6 max-w-6xl">
           <Link href="/dashboard/simulateurs/immobilier" className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-flex items-center">← Simulateurs immobilier</Link>
           <div className="sim-card mb-6">
             <div className="flex items-center gap-4">
-              <span className="text-4xl">🏛️</span>
+              <Landmark className="w-9 h-9 text-red-700" />
               <div><h1 className="text-2xl font-bold">Simulateur Loi Malraux</h1><p className="text-gray-600">Restauration patrimoine • Secteurs protégés • Réduction IR</p></div>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
@@ -292,7 +294,7 @@ export default function MalrauxPage() {
 
               {/* ÉTAPE 1 : PROFIL CLIENT (OBLIGATOIRE selon standard) */}
               {step === 1 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-1">👤 Votre profil fiscal</h2>
+                <h2 className="text-lg font-bold mb-1 flex items-center gap-2"><User className="w-5 h-5" /> Votre profil fiscal</h2>
                 <p className="text-sm text-gray-500 mb-6">La loi Malraux offre une réduction d'IR - vérifiez que vous avez assez d'impôt à réduire</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="form-group"><label>Situation familiale</label><select value={situationFamiliale} onChange={e=>setSituationFamiliale(e.target.value as SituationFamiliale)}><option value="CELIBATAIRE">Célibataire</option><option value="MARIE_PACSE">Marié / Pacsé</option><option value="VEUF">Veuf</option></select></div>
@@ -320,7 +322,7 @@ export default function MalrauxPage() {
 
               {/* ÉTAPE 2 : BIEN EN SECTEUR PROTÉGÉ */}
               {step === 2 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">🏛️ Bien en secteur protégé</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Landmark className="w-5 h-5" /> Bien en secteur protégé</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="form-group"><label>Date d'acquisition</label><input type="month" value={dateAcquisition} onChange={e=>setDateAcquisition(e.target.value)}/></div>
                   <div className="form-group"><label>Prix d'acquisition (€)</label><input type="number" value={prixAcquisition} onChange={e=>setPrixAcquisition(+e.target.value)}/></div>
@@ -328,12 +330,12 @@ export default function MalrauxPage() {
                   <div className="form-group"><label>Frais notaire (€)</label><input type="number" value={fraisNotaire} onChange={e=>setFraisNotaire(+e.target.value)}/></div>
                   <div className="form-group col-span-2"><label>Type de secteur protégé</label><select value={typeSecteur} onChange={e=>setTypeSecteur(e.target.value as TypeSecteur)} className="text-lg"><option value="SPR">SPR avec PSMV (30% de réduction)</option><option value="QAD">Quartier Ancien Dégradé (22% de réduction)</option></select></div>
                 </div>
-                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-red-800 mb-2">📜 Loi Malraux - CGI art. 199 tervicies</h4><ul className="text-sm text-red-700 space-y-1"><li>• <strong>SPR + PSMV :</strong> Site Patrimonial Remarquable avec Plan de Sauvegarde et de Mise en Valeur → <strong>30%</strong></li><li>• <strong>QAD :</strong> Quartier Ancien Dégradé ou convention NPNRU → <strong>22%</strong></li><li>• Travaux supervisés par l'Architecte des Bâtiments de France (ABF)</li></ul></div>
+                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-red-800 mb-2 flex items-center gap-2"><BookOpen className="w-4 h-4" /> Loi Malraux - CGI art. 199 tervicies</h4><ul className="text-sm text-red-700 space-y-1"><li>• <strong>SPR + PSMV :</strong> Site Patrimonial Remarquable avec Plan de Sauvegarde et de Mise en Valeur → <strong>30%</strong></li><li>• <strong>QAD :</strong> Quartier Ancien Dégradé ou convention NPNRU → <strong>22%</strong></li><li>• Travaux supervisés par l'Architecte des Bâtiments de France (ABF)</li></ul></div>
               </div>}
 
               {/* ÉTAPE 3 : TRAVAUX */}
               {step === 3 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">🔧 Travaux de restauration (plafond {fmtEur(M.PLAFOND_TRAVAUX)} sur 4 ans)</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Wrench className="w-5 h-5" /> Travaux de restauration (plafond {fmtEur(M.PLAFOND_TRAVAUX)} sur 4 ans)</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="form-group"><label>Année 1 (€)</label><input type="number" value={travauxAn1} onChange={e=>setTravauxAn1(+e.target.value)}/><span className="form-hint text-red-600">Réd: {fmtEur(Math.round(Math.min(travauxAn1, M.PLAFOND_TRAVAUX) * tauxReduction / 100))}</span></div>
                   <div className="form-group"><label>Année 2 (€)</label><input type="number" value={travauxAn2} onChange={e=>setTravauxAn2(+e.target.value)}/></div>
@@ -346,20 +348,20 @@ export default function MalrauxPage() {
                     <div><span className="text-gray-500">Base plafonnée</span><div className="font-bold text-lg">{fmtEur(travauxPlafonne)}</div></div>
                     <div><span className="text-gray-500">Réduction totale</span><div className="font-bold text-2xl text-red-600">{fmtEur(Math.round(reductionTotale))}</div></div>
                   </div>
-                  {travauxTotal > M.PLAFOND_TRAVAUX && <p className="text-sm text-amber-700 mt-2">⚠️ Travaux au-delà du plafond de {fmtEur(M.PLAFOND_TRAVAUX)} : l'excédent de {fmtEur(travauxTotal - M.PLAFOND_TRAVAUX)} ne génère pas de réduction</p>}
+                  {travauxTotal > M.PLAFOND_TRAVAUX && <p className="text-sm text-amber-700 mt-2">Travaux au-delà du plafond de {fmtEur(M.PLAFOND_TRAVAUX)} : l'excédent de {fmtEur(travauxTotal - M.PLAFOND_TRAVAUX)} ne génère pas de réduction</p>}
                 </div>
               </div>}
 
               {/* ÉTAPE 4 : FINANCEMENT */}
               {step === 4 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">💳 Financement</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><CreditCard className="w-5 h-5" /> Financement</h2>
                 
                 {/* Option achat comptant */}
                 <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6">
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input type="checkbox" checked={sansFinancement} onChange={(e) => { setSansFinancement(e.target.checked); if (e.target.checked) setApport(investTotal) }} className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"/>
                     <div>
-                      <span className="font-semibold text-slate-800">💵 Achat au comptant (sans financement)</span>
+                      <span className="font-semibold text-slate-800 flex items-center gap-2"><Wallet className="w-4 h-4" /> Achat au comptant (sans financement)</span>
                       <p className="text-sm text-slate-500">Cochez cette case si le client ne passe pas par un crédit immobilier</p>
                     </div>
                   </label>
@@ -367,7 +369,7 @@ export default function MalrauxPage() {
                 
                 {sansFinancement ? (
                   <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6 text-center">
-                    <div className="text-4xl mb-3">💰</div>
+                    <Wallet className="w-9 h-9 text-emerald-600 mb-3" />
                     <h3 className="font-bold text-emerald-800 text-lg mb-2">Achat au comptant</h3>
                     <p className="text-emerald-700">Investissement total : <strong className="text-xl">{fmtEur(investTotal)}</strong></p>
                   </div>
@@ -390,7 +392,7 @@ export default function MalrauxPage() {
 
               {/* ÉTAPE 5 : REVENUS LOCATIFS */}
               {step === 5 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">💰 Revenus locatifs (après travaux)</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Wallet className="w-5 h-5" /> Revenus locatifs (après travaux)</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="form-group"><label>Loyer mensuel (€)</label><input type="number" value={loyerMensuel} onChange={e=>setLoyerMensuel(+e.target.value)}/></div>
                   <div className="form-group"><label>Charges locatives (€ / mois)</label><input type="number" value={chargesLocatives} onChange={e=>setChargesLocatives(+e.target.value)} min={0}/><span className="form-hint">Récupérées auprès du locataire</span></div>
@@ -407,7 +409,7 @@ export default function MalrauxPage() {
 
               {/* ÉTAPE 6 : CHARGES */}
               {step === 6 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-1">📋 Charges déductibles</h2>
+                <h2 className="text-lg font-bold mb-1 flex items-center gap-2"><FileText className="w-5 h-5" /> Charges déductibles</h2>
                 <p className="text-sm text-gray-500 mb-6">Charges estimées après travaux</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="form-group"><label>Taxe foncière (€)</label><input type="number" value={taxeFonciere} onChange={e=>setTaxeFonciere(+e.target.value)}/></div>
@@ -423,7 +425,7 @@ export default function MalrauxPage() {
 
               {/* ÉTAPE 7 : PROJECTION */}
               {step === 7 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">🏛️ Projection</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Landmark className="w-5 h-5" /> Projection</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="form-group"><label>Durée détention (ans)</label><input type="number" value={dureeDetention} onChange={e=>setDureeDetention(+e.target.value)} min={9}/><span className="form-hint">Min 9 ans obligatoire</span></div>
                   <div className="form-group"><label>Revalorisation bien (%/an)</label><input type="number" value={revalorisationBien} onChange={e=>setRevalorisationBien(+e.target.value)} step={0.1}/></div>
@@ -435,18 +437,18 @@ export default function MalrauxPage() {
                   <div><span className="text-gray-500">Réduction totale</span><div className="font-bold text-lg text-red-600">{fmtEur(Math.round(reductionTotale))}</div></div>
                   <div><span className="text-gray-500">Taux réduction</span><div className="font-bold text-lg text-red-600">{tauxReduction}%</div></div>
                 </div>
-                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-red-800 mb-2">⚠️ Avantages et obligations Malraux</h4><ul className="text-sm text-red-700 space-y-1">
-                  <li>• ✅ <strong>HORS plafond niches fiscales</strong> (10 000 €) - cumulable avec Pinel, PER, etc.</li>
-                  <li>• ✅ Réduction = {tauxReduction}% des travaux plafonnés à {fmtEur(M.PLAFOND_TRAVAUX)}</li>
-                  <li>• ⚠️ Location nue pendant <strong>9 ans minimum</strong> après travaux</li>
-                  <li>• ⚠️ Travaux validés par l'Architecte des Bâtiments de France (ABF)</li>
-                  <li>• ⚠️ Durée travaux : généralement 2 à 4 ans</li>
+                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-red-800 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Avantages et obligations Malraux</h4><ul className="text-sm text-red-700 space-y-1">
+                  <li>• <strong>HORS plafond niches fiscales</strong> (10 000 €) - cumulable avec Pinel, PER, etc.</li>
+                  <li>• Réduction = {tauxReduction}% des travaux plafonnés à {fmtEur(M.PLAFOND_TRAVAUX)}</li>
+                  <li>• Location nue pendant <strong>9 ans minimum</strong> après travaux</li>
+                  <li>• Travaux validés par l'Architecte des Bâtiments de France (ABF)</li>
+                  <li>• Durée travaux : généralement 2 à 4 ans</li>
                 </ul></div>
               </div>}
 
               <div className="flex justify-between mt-8">
                 <button onClick={()=>setStep(Math.max(1,step-1))} disabled={step===1} className="btn-secondary disabled:opacity-50">← Précédent</button>
-                {step < 7 ? <button onClick={()=>setStep(step+1)} className="btn-primary-red">Suivant →</button> : <button onClick={lancerSimulation} disabled={loading} className="btn-primary-red">{loading ? '⏳' : '🧮 Analyser'}</button>}
+                {step < 7 ? <button onClick={()=>setStep(step+1)} className="btn-primary-red">Suivant →</button> : <button onClick={lancerSimulation} disabled={loading} className="btn-primary-red">{loading ? 'Calcul...' : 'Analyser'}</button>}
               </div>
             </div>
           ) : synthese && (
@@ -493,7 +495,7 @@ export default function MalrauxPage() {
                   </div>
                 </div>
                 <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <h4 className="font-semibold text-red-800 mb-2">📊 Comprendre la fiscalité Malraux</h4>
+                  <h4 className="font-semibold text-red-800 mb-2 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Comprendre la fiscalité Malraux</h4>
                   <div className="text-sm text-red-700 space-y-1">
                     <p>• <strong>Hors plafond niches</strong> : La réduction Malraux n'est PAS soumise au plafond de 10 000 €/an, contrairement au Pinel/Denormandie.</p>
                     <p>• <strong>Réduction directe</strong> : {fmtPct(tauxReduction)} des travaux éligibles ({fmtEur(travauxPlafonne)}) = {fmtEur(synthese.reductionTotale)} de réduction d'IR.</p>
@@ -545,7 +547,7 @@ export default function MalrauxPage() {
                 <p className="text-sm text-slate-600 mb-4">Ce graphique montre l'évolution du cash-flow (barres) et de la réduction d'impôt Malraux (ligne rouge) pendant les phases travaux et exploitation.</p>
                 <div ref={chartRef1}/>
                 <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <h4 className="font-semibold text-red-800 mb-2">📊 Analyse du cash-flow</h4>
+                  <h4 className="font-semibold text-red-800 mb-2 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Analyse du cash-flow</h4>
                   <p className="text-sm text-red-700">Les premières années (phase travaux) génèrent la réduction Malraux ({fmtEur(synthese.reductionTotale)} sur 4 ans max). Ensuite, les loyers prennent le relais pour générer du cash-flow positif.</p>
                 </div>
               </div>
@@ -555,14 +557,14 @@ export default function MalrauxPage() {
                 <p className="text-sm text-slate-600 mb-4">Ce graphique montre l'évolution de la valeur du bien restauré et du capital net.</p>
                 <div ref={chartRef2}/>
                 <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-                  <h4 className="font-semibold text-emerald-800 mb-2">📊 Analyse patrimoniale</h4>
+                  <h4 className="font-semibold text-emerald-800 mb-2 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Analyse patrimoniale</h4>
                   <p className="text-sm text-emerald-700">Le bien en secteur protégé ({typeSecteur === 'SPR' ? 'SPR avec PSMV' : 'QAD'}) bénéficie d'une valorisation potentielle supérieure grâce à la qualité de la restauration et l'emplacement exceptionnel.</p>
                 </div>
               </div>
 
               {/* TABLEAU */}
               <div className="sim-card">
-                <h3 className="font-bold mb-4 text-slate-800">📈 Projection sur {dureeDetention} ans</h3>
+                <h3 className="font-bold mb-4 text-slate-800 flex items-center gap-2"><TrendingUp className="w-5 h-5" /> Projection sur {dureeDetention} ans</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
@@ -579,7 +581,7 @@ export default function MalrauxPage() {
                       {projections.map(p=>(
                         <tr key={p.annee} className={`border-b hover:bg-slate-50 ${p.phase === 'Travaux' ? 'bg-amber-50' : ''}`}>
                           <td className="py-2 px-2 font-medium">{p.annee}</td>
-                          <td className="py-2 px-2 text-center">{p.phase === 'Travaux' ? '🔧' : '🏠'}</td>
+                          <td className="py-2 px-2 text-center">{p.phase === 'Travaux' ? 'Travaux' : 'Exploit.'}</td>
                           <td className="py-2 px-2 text-right text-emerald-600">{p.loyerNet > 0 ? fmtEur(p.loyerNet) : '-'}</td>
                           <td className="py-2 px-2 text-right text-red-600 font-medium">{p.reductionMalraux > 0 ? '+'+fmtEur(p.reductionMalraux) : '-'}</td>
                           <td className={`py-2 px-2 text-right font-medium ${p.cfApres >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{p.cfApres >= 0 ? '+' : ''}{fmtEur(p.cfApres)}</td>
@@ -595,7 +597,7 @@ export default function MalrauxPage() {
               {/* AVIS PROFESSIONNEL AVEC SCORE GLOBAL */}
               {/* ═══════════════════════════════════════════════════════════════════════════ */}
               <div className="sim-card">
-                <h3 className="font-bold mb-6 text-xl text-slate-800">🎯 Synthèse et avis professionnel</h3>
+                <h3 className="font-bold mb-6 text-xl text-slate-800 flex items-center gap-2"><Target className="w-5 h-5" /> Synthèse et avis professionnel</h3>
                 
                 {(() => {
                   const levier = safeNumber(synthese.capFinal || synthese.valRev) / apport
@@ -689,7 +691,7 @@ export default function MalrauxPage() {
                         
                         {showScoreDetail && (
                           <div className="mt-3 bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm">
-                            <h5 className="font-bold text-slate-700 mb-3">📊 Méthode de calcul du score Malraux</h5>
+                            <h5 className="font-bold text-slate-700 mb-3 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Méthode de calcul du score Malraux</h5>
                             <p className="text-slate-600 mb-3">Score calculé sur 5 critères : TRI (2.5 pts), Cash-flow (2 pts), Réduction ({typeSecteur === 'SPR' ? '30%' : '22%'}) (2.5 pts), Levier (1.5 pts), TMI (1.5 pts).</p>
                             <p className="text-slate-600">Le Malraux est optimisé pour les TMI élevés (41-45%). La réduction est hors plafond des niches fiscales.</p>
                           </div>
@@ -700,21 +702,21 @@ export default function MalrauxPage() {
                 })()}
                 
                 <div className="bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-200 rounded-xl p-4">
-                  <h4 className="font-bold text-blue-800 mb-3">💼 Avis professionnel</h4>
+                  <h4 className="font-bold text-blue-800 mb-3 flex items-center gap-2"><Briefcase className="w-5 h-5" /> Avis professionnel</h4>
                   <div className="text-sm text-blue-700 space-y-3">
                     {safeNumber(synthese.tri) > 5 && tmi >= 30 ? (
                       <>
-                        <p><strong>✅ Opération très intéressante</strong> : Avec un TMI de {tmi}% et une réduction Malraux de {fmtEur(synthese.reductionTotale)} (hors plafond niches), cette opération est optimale pour les contribuables fortement imposés.</p>
+                        <p><strong>Opération très intéressante</strong> : Avec un TMI de {tmi}% et une réduction Malraux de {fmtEur(synthese.reductionTotale)} (hors plafond niches), cette opération est optimale pour les contribuables fortement imposés.</p>
                         <p>Le patrimoine en secteur protégé ({typeSecteur === 'SPR' ? 'SPR avec PSMV' : 'QAD'}) offre un excellent potentiel de valorisation. Capital net final : {fmtEur(synthese.capFinal || synthese.valRev)}.</p>
                       </>
                     ) : tmi >= 30 ? (
                       <>
-                        <p><strong>⚖️ Opération à évaluer</strong> : La réduction Malraux de {fmtEur(synthese.reductionTotale)} sur travaux de {fmtEur(travauxTotal)} est significative ({fmtPct(safeNumber(synthese.reductionTotale) / travauxTotal * 100)}).</p>
+                        <p><strong>Opération à évaluer</strong> : La réduction Malraux de {fmtEur(synthese.reductionTotale)} sur travaux de {fmtEur(travauxTotal)} est significative ({fmtPct(safeNumber(synthese.reductionTotale) / travauxTotal * 100)}).</p>
                         <p>Vérifiez la qualité de l'emplacement et le potentiel locatif après travaux. Les délais ABF (2-4 ans) sont à anticiper.</p>
                       </>
                     ) : (
                       <>
-                        <p><strong>⚠️ TMI insuffisant</strong> : Avec un TMI de {tmi}%, le Malraux n'est pas optimal. Ce dispositif est conçu pour les TMI 41-45%.</p>
+                        <p><strong>TMI insuffisant</strong> : Avec un TMI de {tmi}%, le Malraux n'est pas optimal. Ce dispositif est conçu pour les TMI 41-45%.</p>
                         <p>Considérez plutôt le Denormandie (même avantage, zones moins contraintes) ou le déficit foncier pour votre profil fiscal.</p>
                       </>
                     )}
@@ -723,7 +725,7 @@ export default function MalrauxPage() {
                 </div>
               </div>
 
-              <div className="flex justify-center"><button onClick={() => setShowResults(false)} className="btn-primary">🔄 Nouvelle simulation</button></div>
+              <div className="flex justify-center"><button onClick={() => setShowResults(false)} className="btn-primary flex items-center gap-2"><RefreshCw className="w-4 h-4" /> Nouvelle simulation</button></div>
             </div>
           )}
         </main>

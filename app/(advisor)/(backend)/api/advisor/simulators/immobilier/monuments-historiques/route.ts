@@ -33,7 +33,7 @@ import {
   PRELEVEMENTS_SOCIAUX,
 } from '../_shared/constants'
 import { monumentsHistoriquesInputSchema, type MonumentsHistoriquesInput } from '../_shared/validators'
-
+import { logger } from '@/app/_common/lib/logger'
 // ══════════════════════════════════════════════════════════════════════════════
 // FONCTION DE SIMULATION MONUMENTS HISTORIQUES
 // ══════════════════════════════════════════════════════════════════════════════
@@ -176,7 +176,7 @@ function simulerMonumentsHistoriques(input: MonumentsHistoriquesInput) {
 
     // IR et PS sur revenus fonciers nets (après déductions MH)
     const ir = revenuFoncierNet > 0 ? revenuFoncierNet * (tmi / 100) : 0
-    const ps = revenuFoncierNet > 0 ? revenuFoncierNet * PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL : 0
+    const ps = revenuFoncierNet > 0 ? revenuFoncierNet * PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL : 0
 
     irCumule += ir
     psCumule += ps
@@ -410,7 +410,7 @@ export async function POST(request: NextRequest) {
         400
       )
     }
-    console.error('Erreur simulateur MH:', error)
+    logger.error('Erreur simulateur MH:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la simulation', 500)
   }
 }

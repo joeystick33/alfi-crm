@@ -30,7 +30,7 @@ import {
   PRELEVEMENTS_SOCIAUX,
 } from '../_shared/constants'
 import { nueProprieteInputSchema, type NueProprieteInput } from '../_shared/validators'
-
+import { logger } from '@/app/_common/lib/logger'
 // ══════════════════════════════════════════════════════════════════════════════
 // FONCTION DE SIMULATION NUE-PROPRIÉTÉ
 // ══════════════════════════════════════════════════════════════════════════════
@@ -164,7 +164,7 @@ function simulerNuePropriete(input: NueProprieteInput) {
       revenuFoncier = Math.max(0, loyer - chargesDeductibles)
       
       ir = revenuFoncier * (tmi / 100)
-      ps = revenuFoncier * PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL
+      ps = revenuFoncier * PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL
     }
 
     irCumule += ir
@@ -409,7 +409,7 @@ export async function POST(request: NextRequest) {
         400
       )
     }
-    console.error('Erreur simulateur nue-propriété:', error)
+    logger.error('Erreur simulateur nue-propriété:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la simulation', 500)
   }
 }

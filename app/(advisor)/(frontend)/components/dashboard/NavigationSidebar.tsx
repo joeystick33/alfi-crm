@@ -31,6 +31,7 @@ import {
   AlertTriangle,
   FileSignature,
   FolderOpen,
+  Mic,
   PiggyBank,
   Building,
   Percent,
@@ -95,12 +96,11 @@ const navigationStructure: NavItem[] = [
       { name: 'Mes prospects', href: '/dashboard/prospects', icon: UserPlus },
       { name: 'Mes prospects archivés', href: '/dashboard/prospects?status=PERDU', icon: Archive },
       {
-        name: 'Mes dossiers',
-        icon: FolderOpen,
+        name: 'Mes entretiens',
+        icon: Mic,
         children: [
-          { name: 'Vue liste', href: '/dashboard/dossiers', icon: Layers },
-          { name: 'Vue Kanban', href: '/dashboard/dossiers/kanban', icon: Kanban },
-          { name: 'Dossiers archivés', href: '/dashboard/dossiers/archives', icon: Archive },
+          { name: 'Tous les entretiens', href: '/dashboard/entretiens', icon: Layers },
+          { name: 'Nouvel entretien', href: '/dashboard/entretiens/nouveau', icon: UserPlus },
         ]
       },
     ]
@@ -111,18 +111,19 @@ const navigationStructure: NavItem[] = [
     name: 'Actions commerciales',
     icon: Target,
     children: [
-      { name: 'Actions commerciales', href: '/dashboard/clients/actions', icon: Zap },
-      { name: 'Opportunités détectées', href: '/dashboard/clients/opportunites', icon: Lightbulb },
+      { name: 'Mes actions', href: '/dashboard/clients/actions', icon: Zap },
+      { name: 'Pipeline opportunités', href: '/dashboard/opportunites', icon: Lightbulb },
+      { name: 'Opportunités détectées', href: '/dashboard/clients/opportunites', icon: Target },
       {
-        name: 'Campagnes & Actions',
-        icon: Zap,
+        name: 'Campagnes',
+        icon: Mail,
         children: [
           { name: 'Campagnes en cours', href: '/dashboard/campagnes/actives', icon: Zap },
+          { name: 'Toutes les campagnes', href: '/dashboard/campagnes', icon: Mail },
           { name: 'Scénarios automatiques', href: '/dashboard/scenarios', icon: Sparkles },
           { name: 'Templates emails', href: '/dashboard/templates/emails', icon: Mail },
         ]
       },
-      { name: 'Opportunités', href: '/dashboard/opportunites', icon: Lightbulb },
     ]
   },
 
@@ -190,7 +191,6 @@ const navigationStructure: NavItem[] = [
       { name: 'Affaires nouvelles', href: '/dashboard/operations/affaires-nouvelles', icon: TrendingUp },
       { name: 'Affaires en cours', href: '/dashboard/operations/en-cours', icon: Activity },
       { name: 'Opérations gestion', href: '/dashboard/operations/gestion', icon: Settings },
-      { name: 'Pilotage', href: '/dashboard/operations/pilotage', icon: Target },
     ]
   },
 
@@ -490,10 +490,24 @@ export function NavigationSidebar() {
           })}
         </nav>
 
-        {/* Footer avec Paramètres et Profil - DARK THEME */}
+        {/* Footer avec Paramètres, IA et Profil - DARK THEME */}
         <div className="mt-auto border-t border-[#ffffff0d]">
-          {/* Bouton Paramètres */}
+          {/* Bouton AURA */}
           <div className="px-2 pt-2">
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('toggle-ai-panel'))}
+              className="group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-slate-400 hover:bg-white/5 hover:text-white"
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 group-hover:from-indigo-500/30 group-hover:to-purple-500/30 transition-all">
+                <Sparkles className="h-4 w-4 text-indigo-400 group-hover:text-indigo-300 transition-colors" />
+              </div>
+              <span className="text-[13px] font-medium">AURA</span>
+              <kbd className="ml-auto text-[10px] text-slate-500 bg-white/5 px-1.5 py-0.5 rounded font-mono">⌘I</kbd>
+            </button>
+          </div>
+
+          {/* Bouton Paramètres */}
+          <div className="px-2">
             <Link
               href="/dashboard/settings"
               className={cn(

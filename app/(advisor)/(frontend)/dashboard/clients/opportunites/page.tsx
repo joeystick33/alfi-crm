@@ -56,7 +56,9 @@ export default function OpportunitesDetecteesPage() {
         params.limit = String(currentFilters.limit)
       }
 
-      const response = await api.get<Record<string, unknown>>('/opportunites', { signal }) as any
+      const query = new URLSearchParams(params).toString()
+      const endpoint = query ? `/advisor/opportunites?${query}` : '/advisor/opportunites'
+      const response = await api.get<Record<string, unknown>>(endpoint, { signal }) as any
 
       setOpportunities(response?.opportunites || response || [])
       setStats(response?.stats || null)

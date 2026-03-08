@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ScenarioService } from '@/app/_common/lib/services/scenario-service'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/scenarios/stats
  * Obtenir les statistiques globales des scénarios
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(stats)
   } catch (error: any) {
-    console.error('Erreur GET /api/advisor/scenarios/stats:', error)
+    logger.error('Erreur GET /api/advisor/scenarios/stats:', { error: error instanceof Error ? error.message : String(error) })
 
     return NextResponse.json(
       { error: error.message || 'Erreur serveur' },

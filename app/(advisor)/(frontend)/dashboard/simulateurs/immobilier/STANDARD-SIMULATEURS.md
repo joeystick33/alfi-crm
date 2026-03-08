@@ -38,7 +38,7 @@ import {
   calculNombreParts, calculIRDetaille, calculIFI, BAREME_IFI,
   // Types
   type ClasseDPE 
-} from '../parameters-immobilier-2025'
+} from '../parameters-immobilier'
 ```
 
 ### 2. FONCTIONS UTILITAIRES

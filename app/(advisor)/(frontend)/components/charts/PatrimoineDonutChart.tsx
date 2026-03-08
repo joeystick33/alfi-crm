@@ -136,7 +136,7 @@ export function PatrimoineDonutChart({
     <div className={cn('flex flex-col items-center', className)}>
       {/* Chart */}
       <div className="relative" style={{ width: dim.width, height: dim.height }}>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width={dim.width} height={dim.height}>
           <PieChart>
             <Pie
               data={filteredData}

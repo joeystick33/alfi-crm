@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/_common/lib/prisma'
 import { getAuthUser } from '@/app/_common/lib/auth-helpers'
 import { isSuperAdmin, isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 interface Alert {
   id: string
   type: 'contract_expiry' | 'no_contact' | 'opportunity' | 'risk'
@@ -192,7 +192,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(alerts.slice(0, 20))
   } catch (error) {
-    console.error('Erreur alerts portfolio:', error)
+    logger.error('Erreur alerts portfolio:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500 }

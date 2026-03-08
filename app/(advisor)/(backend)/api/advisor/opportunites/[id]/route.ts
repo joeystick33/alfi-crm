@@ -4,7 +4,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { OpportuniteService } from '@/app/_common/lib/services/opportunite-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { normalizeOpportuniteUpdatePayload } from '../utils'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/opportunites/[id]
  * Récupérer une opportunité par ID
@@ -36,7 +36,7 @@ export async function GET(
 
     return createSuccessResponse(opportunite)
   } catch (error: any) {
-    console.error('Error in GET /api/opportunites/[id]:', error)
+    logger.error('Error in GET /api/opportunites/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -80,7 +80,7 @@ export async function PATCH(
     // Return formatted response
     return createSuccessResponse(opportunite)
   } catch (error: any) {
-    console.error('Error in PATCH /api/opportunites/[id]:', error)
+    logger.error('Error in PATCH /api/opportunites/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -128,7 +128,7 @@ export async function DELETE(
     // Return success response
     return createSuccessResponse({ success: true })
   } catch (error: any) {
-    console.error('Error in DELETE /api/opportunites/[id]:', error)
+    logger.error('Error in DELETE /api/opportunites/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

@@ -669,13 +669,46 @@ async function main() {
         postalCode: '75008',
         country: 'France'
       },
-      plan: 'BUSINESS',
+      plan: 'PREMIUM',
       status: 'ACTIVE',
       subscriptionStart: getDate(0, 0, 1),
       subscriptionEnd: getDate(1, 11, 31),
       quotas: { maxUsers: 10, maxClients: 500, maxStorage: 10737418240 },
       usage: { users: 2, clients: 10, storage: 0 },
-      features: { advancedReporting: true, apiAccess: true, customBranding: true }
+      features: {
+        simulators: {
+          SIM_RETIREMENT: true,
+          SIM_PER: true,
+          SIM_PER_TNS: true,
+          SIM_ASSURANCE_VIE: true,
+          SIM_IMMOBILIER: true,
+          SIM_SUCCESSION: true,
+          SIM_PREVOYANCE: true,
+          SIM_DONATION: true,
+          SIM_EPARGNE: true,
+          SIM_PTZ: true,
+          SIM_CAPACITE_EMPRUNT: true,
+          SIM_MENSUALITE: true,
+        },
+        calculators: {
+          CALC_INCOME_TAX: true,
+          CALC_WEALTH_TAX: true,
+          CALC_CAPITAL_GAINS: true,
+          CALC_DONATION: true,
+          CALC_INHERITANCE: true,
+          CALC_DEBT_CAPACITY: true,
+          CALC_BUDGET: true,
+        },
+        modules: {
+          MOD_EXPORT_PDF: true,
+          MOD_EXPORT_EXCEL: true,
+          MOD_API_ACCESS: true,
+          MOD_WHITE_LABEL: true,
+          MOD_CLIENT_PORTAL: true,
+          MOD_NOTIFICATIONS: true,
+          MOD_HISTORY: true,
+        },
+      }
     }
   });
 

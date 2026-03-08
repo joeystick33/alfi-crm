@@ -4,7 +4,7 @@ import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { InvoiceService } from '@/app/_common/lib/services/invoice-service'
 import { z } from 'zod'
 import { createInvoiceItemSchema } from '../../utils'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * POST /api/advisor/invoices/[id]/items
  * Add item to invoice
@@ -50,7 +50,7 @@ export async function POST(
 
     return createSuccessResponse(created, 201)
   } catch (error) {
-    console.error('Error in POST /api/advisor/invoices/[id]/items:', error)
+    logger.error('Error in POST /api/advisor/invoices/[id]/items:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -105,7 +105,7 @@ export async function DELETE(
       message: 'Ligne supprimée avec succès',
     })
   } catch (error) {
-    console.error('Error in DELETE /api/advisor/invoices/[id]/items:', error)
+    logger.error('Error in DELETE /api/advisor/invoices/[id]/items:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { prisma } from '@/app/_common/lib/prisma'
+import { logger } from '@/app/_common/lib/logger'
 import {
   calculateWealthMetrics,
   detectWealthAlerts,
@@ -160,7 +161,7 @@ export async function GET(
     })
 
   } catch (error) {
-    console.error('Erreur GET /wealth/metrics:', error)
+    logger.error('Erreur GET /wealth/metrics:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Erreur serveur', code: 'INTERNAL_ERROR' },
       { status: 500 }

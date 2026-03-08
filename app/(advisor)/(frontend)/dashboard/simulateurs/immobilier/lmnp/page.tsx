@@ -2,9 +2,14 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import Script from 'next/script'
 import { SimulatorGate } from '@/app/_common/components/FeatureGate'
 import { usePlotlyReady } from '../_hooks/usePlotlyReady'
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
+import {
+  Sofa, User, Calendar, BookOpen, CreditCard, Wallet, BarChart3,
+  Lightbulb, AlertTriangle, CheckCircle, XCircle, FileText,
+  Building2, TrendingUp, Target, ArrowRight,
+} from 'lucide-react'
 
 // ══════════════════════════════════════════════════════════════════════════════
 // CONSTANTES D'AFFICHAGE UNIQUEMENT (pas de formules de calcul)
@@ -322,13 +327,13 @@ export default function LMNPPage() {
       const newExpl: string[] = []
       
       // Générer les conseils
-      newConseils.push('⚠️ LF 2024 : Depuis le 01/02/2025, les amortissements LMNP sont RÉINTÉGRÉS dans le calcul de la plus-value à la revente.')
+      newConseils.push('LF 2024 : Depuis le 01/02/2025, les amortissements LMNP sont RÉINTÉGRÉS dans le calcul de la plus-value à la revente.')
       if (result.synthese.amortCumule > 0) {
-        newConseils.push(`📊 Impact sur votre projet : ${fmtEur(result.synthese.amortCumule)} d'amortissements seront réintégrés.`)
+        newConseils.push(`Impact sur votre projet : ${fmtEur(result.synthese.amortCumule)} d'amortissements seront réintégrés.`)
       }
-      newConseils.push('💡 Exonération IR après 22 ans, PS après 30 ans.')
+      newConseils.push('Exonération IR après 22 ans, PS après 30 ans.')
       if (result.synthese.amortDiffereRestant > 0) {
-        newConseils.push(`📋 Amortissement différé : ${fmtEur(result.synthese.amortDiffereRestant)} déductible sans limite de temps.`)
+        newConseils.push(`Amortissement différé : ${fmtEur(result.synthese.amortDiffereRestant)} déductible sans limite de temps.`)
       }
       
       // Générer les explications détaillées
@@ -572,18 +577,17 @@ export default function LMNPPage() {
 
   return (
     <SimulatorGate simulator="IMMOBILIER" showTeaser>
-      <Script src="https://cdn.plot.ly/plotly-2.27.0.min.js" strategy="afterInteractive" onLoad={handlePlotlyLoad} />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-sky-50">
         <main className="container mx-auto px-4 py-6 max-w-6xl">
           <Link href="/dashboard/simulateurs/immobilier" className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-flex items-center">← Simulateurs immobilier</Link>
-          <div className="sim-card mb-6"><div className="flex items-center gap-4"><span className="text-4xl">🛋️</span><div><h1 className="text-2xl font-bold">Simulateur LMNP</h1><p className="text-gray-600">Loueur Meublé Non Professionnel • Amortissement comptable</p></div></div><div className="flex gap-2 mt-3"><span className="badge-blue">BIC</span><span className="badge-green">Amortissement</span></div></div>
+          <div className="sim-card mb-6"><div className="flex items-center gap-4"><Sofa className="w-9 h-9 text-blue-700" /><div><h1 className="text-2xl font-bold">Simulateur LMNP</h1><p className="text-gray-600">Loueur Meublé Non Professionnel • Amortissement comptable</p></div></div><div className="flex gap-2 mt-3"><span className="badge-blue">BIC</span><span className="badge-green">Amortissement</span></div></div>
 
           {!showResults ? (
             <div className="sim-card">
               <div className="mb-6"><div className="flex justify-between text-sm mb-2"><span>Étape {step}/7</span><span>{Math.round(step/7*100)}%</span></div><div className="h-2 bg-gray-200 rounded-full"><div className="h-full bg-blue-600 rounded-full transition-all" style={{width:`${step/7*100}%`}}/></div></div>
 
               {step === 1 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">👤 Profil client</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><User className="w-5 h-5" /> Profil client</h2>
                 <p className="text-gray-600 mb-4">Pour calculer l'impact fiscal réel, nous avons besoin de votre situation actuelle.</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="form-group"><label>Situation familiale</label><select value={situationFamiliale} onChange={e=>setSituationFamiliale(e.target.value as SituationFamilialeSimulateur)}><option value="CELIBATAIRE">Célibataire</option><option value="MARIE_PACSE">Marié / Pacsé</option><option value="VEUF">Veuf</option></select></div>
@@ -598,21 +602,21 @@ export default function LMNPPage() {
                 <div className="info-box mt-4 grid grid-cols-3 gap-4 text-sm">
                   <div><span className="text-gray-500">Parts fiscales</span><div className="font-bold text-lg">{getDisplayNombreParts({situationFamiliale, enfantsACharge, enfantsGardeAlternee, parentIsole})}</div></div>
                   <div><span className="text-gray-500">Revenu imposable</span><div className="font-bold text-lg">{fmtEur(revenusSalaires + revenusBICExistants)}</div></div>
-                  <div><span className="text-gray-500">Patrimoine net IFI</span><div className={`font-bold text-lg ${(patrimoineImmobilierExistant - dettesImmobilieres) > 1300000 ? 'text-orange-600' : 'text-green-600'}`}>{fmtEur(patrimoineImmobilierExistant - dettesImmobilieres)}</div></div>
+                  <div><span className="text-gray-500">Patrimoine net IFI</span><div className={`font-bold text-lg ${(patrimoineImmobilierExistant - dettesImmobilieres) > RULES.ifi.seuil_assujettissement ? 'text-orange-600' : 'text-green-600'}`}>{fmtEur(patrimoineImmobilierExistant - dettesImmobilieres)}</div></div>
                 </div>
                 <div className="pedagogy-box mt-4"><p className="text-sm text-blue-700"><strong>Pourquoi ces informations ?</strong> Elles permettent de calculer l'impact RÉEL sur votre IR (barème progressif) et votre IFI, pas juste une estimation avec un TMI fixe.</p></div>
               </div>}
 
               {step === 2 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">🛋️ Bien meublé</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Sofa className="w-5 h-5" /> Bien meublé</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="form-group col-span-2 md:col-span-1"><label>📅 Date d'acquisition</label><input type="month" value={dateAcquisition} onChange={e=>setDateAcquisition(e.target.value)} className="w-full"/><span className="form-hint">Pour calcul abattements PV</span></div>
+                  <div className="form-group col-span-2 md:col-span-1"><label className="flex items-center gap-1"><Calendar className="w-3 h-3" /> Date d'acquisition</label><input type="month" value={dateAcquisition} onChange={e=>setDateAcquisition(e.target.value)} className="w-full"/><span className="form-hint">Pour calcul abattements PV</span></div>
                   <div className="form-group"><label>Prix d'achat (€)</label><input type="number" value={prixAchat} onChange={e=>setPrixAchat(+e.target.value)}/></div>
                   <div className="form-group"><label>Frais notaire (€)</label><input type="number" value={fraisNotaire} onChange={e=>setFraisNotaire(+e.target.value)}/><span className="form-hint">~8% ancien, ~3% neuf</span></div>
                   <div className="form-group"><label>Travaux (€)</label><input type="number" value={travaux} onChange={e=>setTravaux(+e.target.value)}/></div>
                   <div className="form-group"><label>Mobilier (€)</label><input type="number" value={mobilier} onChange={e=>setMobilier(+e.target.value)}/><span className="form-hint">Amort. 5-10 ans</span></div>
                   <div className="form-group"><label>Part terrain (%)</label><input type="number" value={partTerrain} onChange={e=>setPartTerrain(+e.target.value)} min={5} max={40}/><span className="form-hint">Non amortissable</span></div>
-                  <div className="form-group"><label>DPE</label><select value={dpe} onChange={e=>setDpe(e.target.value as ClasseDPE)}><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F⚠️</option><option value="G">G🚨</option></select></div>
+                  <div className="form-group"><label>DPE</label><select value={dpe} onChange={e=>setDpe(e.target.value as ClasseDPE)}><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F (passoire)</option><option value="G">G (passoire)</option></select></div>
                 </div>
                 
                 <div className="info-box mt-4 grid grid-cols-4 gap-4 text-sm">
@@ -622,10 +626,10 @@ export default function LMNPPage() {
                   <div><span className="text-gray-500">Exonération PV IR</span><div className="font-bold text-blue-600">{anneeExonerationIR}</div></div>
                 </div>
                 
-                <div className="pedagogy-box mt-4"><p className="text-sm text-blue-700"><strong>📚 Mobilier obligatoire :</strong> literie, plaques, frigo, table, chaises, rangements, luminaires....</p></div></div>}
+                <div className="pedagogy-box mt-4"><p className="text-sm text-blue-700"><strong>Mobilier obligatoire :</strong> literie, plaques, frigo, table, chaises, rangements, luminaires....</p></div></div>}
 
               {step === 3 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">💳 Financement</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><CreditCard className="w-5 h-5" /> Financement</h2>
                 
                 {/* Option achat comptant */}
                 <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6">
@@ -642,7 +646,7 @@ export default function LMNPPage() {
                       className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                     />
                     <div>
-                      <span className="font-semibold text-slate-800">💵 Achat au comptant (sans financement)</span>
+                      <span className="font-semibold text-slate-800 flex items-center gap-2"><Wallet className="w-4 h-4" /> Achat au comptant (sans financement)</span>
                       <p className="text-sm text-slate-500">Cochez cette case si le client ne passe pas par un crédit immobilier</p>
                     </div>
                   </label>
@@ -650,7 +654,7 @@ export default function LMNPPage() {
                 
                 {sansFinancement ? (
                   <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6 text-center">
-                    <div className="text-4xl mb-3">💰</div>
+                    <Wallet className="w-9 h-9 text-emerald-600 mb-3" />
                     <h3 className="font-bold text-emerald-800 text-lg mb-2">Achat au comptant</h3>
                     <p className="text-emerald-700">Investissement total : <strong className="text-xl">{fmtEur(investTotal)}</strong></p>
                     <p className="text-sm text-emerald-600 mt-2">Pas de crédit, pas d'intérêts, pas de mensualités. Cash-flow simplifié.</p>
@@ -668,7 +672,7 @@ export default function LMNPPage() {
                     
                     {/* DÉTAIL DU CRÉDIT */}
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-                      <h3 className="font-semibold text-blue-800 mb-3">📊 SYNTHÈSE DU CRÉDIT</h3>
+                      <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> SYNTHÈSE DU CRÉDIT</h3>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div className="bg-white p-3 rounded-lg"><div className="text-gray-500 text-xs">Montant emprunté</div><div className="font-bold text-lg">{fmtEur(montantEmprunte)}</div></div>
                         <div className="bg-white p-3 rounded-lg"><div className="text-gray-500 text-xs">Mensualité totale</div><div className="font-bold text-lg text-blue-600">{fmtEur(Math.round(mensualite))}</div><div className="text-xs text-gray-400">{fmtEur(Math.round(mensHorsAss))} + {fmtEur(Math.round(assMens))} ass.</div></div>
@@ -684,11 +688,11 @@ export default function LMNPPage() {
                     </div>
                     
                     <div className="pedagogy-box mt-4">
-                      <h4 className="font-semibold text-blue-800 mb-2">💡 ANALYSE DU FINANCEMENT</h4>
+                      <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><Lightbulb className="w-4 h-4" /> ANALYSE DU FINANCEMENT</h4>
                       <div className="text-sm text-blue-700 space-y-1">
-                        <p>• <strong>LTV {fmtPct(montantEmprunte/investTotal*100)}</strong> : {montantEmprunte/investTotal > 0.9 ? '⚠️ Levier élevé, risque accru mais potentiel de rentabilité maximisé' : montantEmprunte/investTotal > 0.7 ? '✅ Bon équilibre entre effet de levier et sécurité' : '📊 Apport confortable, risque maîtrisé'}</p>
+                        <p>• <strong>LTV {fmtPct(montantEmprunte/investTotal*100)}</strong> : {montantEmprunte/investTotal > 0.9 ? 'Levier élevé, risque accru mais potentiel de rentabilité maximisé' : montantEmprunte/investTotal > 0.7 ? 'Bon équilibre entre effet de levier et sécurité' : 'Apport confortable, risque maîtrisé'}</p>
                         <p>• <strong>Coût du crédit</strong> : Le crédit vous coûtera {fmtEur(Math.round(coutTotalCredit))} sur {dureeCredit} ans, soit {fmtPct(coutTotalCredit/montantEmprunte*100)} du capital emprunté.</p>
-                        <p>• <strong>Effort mensuel</strong> : {mensualite > loyerMensuel ? `⚠️ Mensualité (${fmtEur(Math.round(mensualite))}) > loyer (${fmtEur(loyerMensuel)}) = effort de ${fmtEur(Math.round(mensualite - loyerMensuel))}/mois` : `✅ Loyer (${fmtEur(loyerMensuel)}) > mensualité (${fmtEur(Math.round(mensualite))}) = cash-flow positif potentiel`}</p>
+                        <p>• <strong>Effort mensuel</strong> : {mensualite > loyerMensuel ? `Mensualité (${fmtEur(Math.round(mensualite))}) > loyer (${fmtEur(loyerMensuel)}) = effort de ${fmtEur(Math.round(mensualite - loyerMensuel))}/mois` : `Loyer (${fmtEur(loyerMensuel)}) > mensualité (${fmtEur(Math.round(mensualite))}) = cash-flow positif potentiel`}</p>
                       </div>
                     </div>
                   </>
@@ -697,7 +701,7 @@ export default function LMNPPage() {
 
               {step === 4 && (
                 <div className="animate-fadeIn">
-                  <h2 className="text-lg font-bold mb-4">💰 Revenus</h2>
+                  <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Wallet className="w-5 h-5" /> Revenus</h2>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div className="form-group">
                       <label>Type meublé</label>
@@ -738,7 +742,7 @@ export default function LMNPPage() {
                     <div>
                       <span className="text-gray-500">Seuil LMNP</span>
                       <div className={`font-bold ${loyerAnnuel > 23000 ? 'text-orange-600' : 'text-green-600'}`}>
-                        {loyerAnnuel > 23000 ? '⚠️ Dépassé' : '✅ OK'}
+                        {loyerAnnuel > 23000 ? 'Dépassé' : 'OK'}
                       </div>
                       <div className="text-xs text-gray-400">Max 23 000 €</div>
                     </div>
@@ -746,7 +750,7 @@ export default function LMNPPage() {
                   {loyerAnnuel > 23000 && (
                     <div className="alert-warning mt-4">
                       <p className="text-sm">
-                        ⚠️ Recettes &gt; 23 000 € : si elles dépassent aussi vos revenus d'activité ({fmtEur(revenusSalaires)}),
+                        Recettes &gt; 23 000 € : si elles dépassent aussi vos revenus d'activité ({fmtEur(revenusSalaires)}),
                         vous basculez en <strong>LMP</strong> (régime professionnel).
                       </p>
                     </div>
@@ -755,11 +759,11 @@ export default function LMNPPage() {
               )}
 
               {step === 5 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">📋 Charges détaillées</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><FileText className="w-5 h-5" /> Charges détaillées</h2>
                 
                 {/* CHARGES COURANTES ANNUELLES */}
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                  <h3 className="font-semibold text-green-800 mb-3">💚 CHARGES COURANTES ANNUELLES</h3>
+                  <h3 className="font-semibold text-green-800 mb-3">CHARGES COURANTES ANNUELLES</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="form-group"><label>Frais gestion (%)</label><input type="number" value={fraisGestionPct} onChange={e=>setFraisGestionPct(+e.target.value)} step={0.5} min={0} max={15}/><span className="form-hint">Si gestion déléguée (6-10%)</span></div>
                     <div className="form-group"><label>Taxe foncière (€)</label><input type="number" value={taxeFonciere} onChange={e=>setTaxeFonciere(+e.target.value)}/></div>
@@ -778,7 +782,7 @@ export default function LMNPPage() {
                 
                 {/* CHARGES EXCEPTIONNELLES ANNÉE 1 */}
                 <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-orange-800 mb-3">🟠 CHARGES EXCEPTIONNELLES ANNÉE 1</h3>
+                  <h3 className="font-semibold text-orange-800 mb-3">CHARGES EXCEPTIONNELLES ANNÉE 1</h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     <div className="form-group"><label>Frais garantie (€)</label><input type="number" value={fraisGarantie} onChange={e=>setFraisGarantie(+e.target.value)}/><span className="form-hint">Crédit logement ou hypothèque</span></div>
                     <div className="form-group"><label>Frais dossier bancaire (€)</label><input type="number" value={fraisDossierBancaire} onChange={e=>setFraisDossierBancaire(+e.target.value)}/></div>
@@ -800,12 +804,12 @@ export default function LMNPPage() {
 
               {step === 6 && (
                 <div className="animate-fadeIn">
-                  <h2 className="text-lg font-bold mb-4">🏛️ Fiscalité BIC</h2>
+                  <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Building2 className="w-5 h-5" /> Fiscalité BIC</h2>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div className="form-group">
                       <label>Régime fiscal</label>
                       <select value={regimeFiscal} onChange={e=>setRegimeFiscal(e.target.value)}>
-                        <option value="MICRO_BIC" disabled={!eligibleMicro}>Micro-BIC ({abattMicro}%){!eligibleMicro?' ❌':''}</option>
+                        <option value="MICRO_BIC" disabled={!eligibleMicro}>Micro-BIC ({abattMicro}%){!eligibleMicro?' (non éligible)':''}</option>
                         <option value="REEL">Réel simplifié</option>
                       </select>
                     </div>
@@ -848,11 +852,11 @@ export default function LMNPPage() {
                 </div>
               )}
 
-              {step === 7 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4">📈 Projection & Revente</h2><div className="grid grid-cols-3 gap-4"><div className="form-group"><label>Durée (ans)</label><input type="number" value={dureeDetention} onChange={e=>setDureeDetention(+e.target.value)} min={1} max={40}/></div><div className="form-group"><label>Revalo bien (%)</label><input type="number" value={revalorisationBien} onChange={e=>setRevalorisationBien(+e.target.value)} step={0.1}/></div><div className="form-group"><label>Frais revente (%)</label><input type="number" value={fraisRevente} onChange={e=>setFraisRevente(+e.target.value)} step={0.5}/></div></div><div className="alert-warning mt-4"><h4 className="font-semibold mb-2">⚠️ NOUVEAUTÉ LF 2024 - PLUS-VALUE LMNP</h4><p className="text-sm">Depuis le <strong>1er février 2025</strong>, les amortissements pratiqués en LMNP sont <strong>RÉINTÉGRÉS</strong> dans le calcul de la plus-value à la revente.</p><p className="text-sm mt-2">Concrètement : votre plus-value imposable sera majorée du montant total des amortissements déduits pendant la location.</p><div className="mt-3 p-3 bg-white/50 rounded-lg text-sm"><div className="grid grid-cols-2 gap-2"><div><span className="text-gray-600">Abattement IR ({dureeDetention} ans) :</span></div><div className="font-bold">{getDisplayAbattementPVIR(dureeDetention)}% {getDisplayAbattementPVIR(dureeDetention) >= 100 ? '✅ Exonéré' : ''}</div><div><span className="text-gray-600">Abattement PS ({dureeDetention} ans) :</span></div><div className="font-bold">{getDisplayAbattementPVPS(dureeDetention).toFixed(1)}% {getDisplayAbattementPVPS(dureeDetention) >= 100 ? '✅ Exonéré' : ''}</div></div></div></div><div className="pedagogy-box mt-4"><h4 className="font-semibold text-blue-800 mb-2">📚 Références juridiques</h4><ul className="text-xs text-blue-700 space-y-1"><li>• CGI art. 150 VB modifié (prix d'acquisition)</li><li>• CGI art. 150 VC (abattements durée détention)</li><li>• LF 2024 art. 30 (réintégration amortissements)</li></ul></div></div>}
+              {step === 7 && <div className="animate-fadeIn"><h2 className="text-lg font-bold mb-4 flex items-center gap-2"><TrendingUp className="w-5 h-5" /> Projection & Revente</h2><div className="grid grid-cols-3 gap-4"><div className="form-group"><label>Durée (ans)</label><input type="number" value={dureeDetention} onChange={e=>setDureeDetention(+e.target.value)} min={1} max={40}/></div><div className="form-group"><label>Revalo bien (%)</label><input type="number" value={revalorisationBien} onChange={e=>setRevalorisationBien(+e.target.value)} step={0.1}/></div><div className="form-group"><label>Frais revente (%)</label><input type="number" value={fraisRevente} onChange={e=>setFraisRevente(+e.target.value)} step={0.5}/></div></div><div className="alert-warning mt-4"><h4 className="font-semibold mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> NOUVEAUTÉ LF 2024 - PLUS-VALUE LMNP</h4><p className="text-sm">Depuis le <strong>1er février 2025</strong>, les amortissements pratiqués en LMNP sont <strong>RÉINTÉGRÉS</strong> dans le calcul de la plus-value à la revente.</p><p className="text-sm mt-2">Concrètement : votre plus-value imposable sera majorée du montant total des amortissements déduits pendant la location.</p><div className="mt-3 p-3 bg-white/50 rounded-lg text-sm"><div className="grid grid-cols-2 gap-2"><div><span className="text-gray-600">Abattement IR ({dureeDetention} ans) :</span></div><div className="font-bold">{getDisplayAbattementPVIR(dureeDetention)}% {getDisplayAbattementPVIR(dureeDetention) >= 100 ? 'Exonéré' : ''}</div><div><span className="text-gray-600">Abattement PS ({dureeDetention} ans) :</span></div><div className="font-bold">{getDisplayAbattementPVPS(dureeDetention).toFixed(1)}% {getDisplayAbattementPVPS(dureeDetention) >= 100 ? 'Exonéré' : ''}</div></div></div></div><div className="pedagogy-box mt-4"><h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><BookOpen className="w-4 h-4" /> Références juridiques</h4><ul className="text-xs text-blue-700 space-y-1"><li>• CGI art. 150 VB modifié (prix d'acquisition)</li><li>• CGI art. 150 VC (abattements durée détention)</li><li>• LF 2024 art. 30 (réintégration amortissements)</li></ul></div></div>}
 
               <div className="flex justify-between mt-8">
                 <button onClick={()=>setStep(Math.max(1,step-1))} disabled={step===1} className="btn-secondary disabled:opacity-50">← Précédent</button>
-                {step < 7 ? <button onClick={()=>setStep(step+1)} className="btn-primary">Suivant →</button> : <button onClick={lancerSimulation} disabled={loading} className="btn-primary">{loading?'⏳':'🧮 Analyser'}</button>}
+                {step < 7 ? <button onClick={()=>setStep(step+1)} className="btn-primary">Suivant →</button> : <button onClick={lancerSimulation} disabled={loading} className="btn-primary">{loading?'Calcul...':'Analyser'}</button>}
               </div>
             </div>
           ) : synthese && (
@@ -886,7 +890,7 @@ export default function LMNPPage() {
                   </div>
                 </div>
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h4 className="font-semibold text-blue-800 mb-2">📊 Comprendre votre fiscalité LMNP</h4>
+                  <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Comprendre votre fiscalité LMNP</h4>
                   <div className="text-sm text-blue-700 space-y-1">
                     <p>• <strong>IR actuel</strong> : {synthese.profilClient?.irAvant > 0 ? `Vous payez déjà ${fmtEur(synthese.profilClient.irAvant)} d'IR sur vos revenus existants de ${fmtEur(synthese.profilClient.revenuTotalAvant)}.` : `Vous n'avez pas d'IR à payer car vos revenus déclarés (${fmtEur(synthese.profilClient?.revenuTotalAvant || 0)}) sont sous le seuil d'imposition.`}</p>
                     {synthese.profilClient?.plafonnementQF > 0 && (
@@ -1018,7 +1022,7 @@ export default function LMNPPage() {
                 {/* Indicateurs clés */}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm mb-4">
                   <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg"><div className="text-slate-500 text-xs">Valeur estimée</div><div className="font-bold text-slate-800">{fmtEur(synthese.valRev)}</div></div>
-                  <div className="p-3 bg-amber-50 border border-amber-300 rounded-lg"><div className="text-amber-600 text-xs font-medium">⚠️ Amort. réintégrés</div><div className="font-bold text-amber-700">{fmtEur(synthese.amortReintegres || 0)}</div></div>
+                  <div className="p-3 bg-amber-50 border border-amber-300 rounded-lg"><div className="text-amber-600 text-xs font-medium">Amort. réintégrés</div><div className="font-bold text-amber-700">{fmtEur(synthese.amortReintegres || 0)}</div></div>
                   <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg"><div className="text-slate-500 text-xs">PV brute</div><div className="font-bold text-emerald-600">+{fmtEur(synthese.pvBrute)}</div></div>
                   <div className="p-3 bg-red-50 border border-red-200 rounded-lg"><div className="text-red-500 text-xs">Impôt PV total</div><div className="font-bold text-red-600">{fmtEur(synthese.pvCalc.impotTotal)}</div></div>
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg"><div className="text-blue-600 text-xs">Capital net final</div><div className="font-bold text-blue-700">{fmtEur(synthese.capFinal)}</div></div>
@@ -1102,7 +1106,7 @@ export default function LMNPPage() {
                       {/* Comparaison avec/sans réforme */}
                       {synthese.amortReintegres > 0 && (
                         <div className="text-xs text-amber-700 bg-amber-50 p-3 rounded-lg">
-                          💡 <strong>Impact réforme LF 2024</strong> : Sans réintégration des amortissements, la PV brute aurait été de {fmtEur(synthese.pvCalc?.plusValueBruteSansReforme || 0)} au lieu de {fmtEur(synthese.pvBrute)} (surcoût fiscal estimé : ~{fmtEur(Math.round((synthese.pvBrute - (synthese.pvCalc?.plusValueBruteSansReforme || 0)) * 0.36))})
+                          <strong>Impact réforme LF 2024</strong> : Sans réintégration des amortissements, la PV brute aurait été de {fmtEur(synthese.pvCalc?.plusValueBruteSansReforme || 0)} au lieu de {fmtEur(synthese.pvBrute)} (surcoût fiscal estimé : ~{fmtEur(Math.round((synthese.pvBrute - (synthese.pvCalc?.plusValueBruteSansReforme || 0)) * 0.36))})
                         </div>
                       )}
                     </div>
@@ -1111,7 +1115,7 @@ export default function LMNPPage() {
                 
                 {/* Alerte réforme LF 2024 */}
                 <div className="bg-amber-50 border-l-4 border-amber-500 rounded-r-lg p-4">
-                  <h4 className="font-bold text-amber-800 mb-2">⚠️ Impact de la réforme LF 2024 (art. 30)</h4>
+                  <h4 className="font-bold text-amber-800 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Impact de la réforme LF 2024 (art. 30)</h4>
                   <p className="text-sm text-amber-700 mb-2">
                     Depuis le <strong>1er février 2025</strong>, les amortissements comptables pratiqués en LMNP sont <strong>réintégrés</strong> au prix d'acquisition pour le calcul de la plus-value.
                   </p>
@@ -1130,7 +1134,7 @@ export default function LMNPPage() {
                     </div>
                     {synthese.amortReintegres > 0 && (
                       <div className="mt-3 pt-3 border-t border-amber-200 text-amber-800">
-                        <strong>Surcoût fiscal estimé :</strong> ~{fmtEur(Math.round((synthese.amortReintegres || 0) * 0.362))} (IR 19% + PS 17.2% avant abattements)
+                        <strong>Surcoût fiscal estimé :</strong> ~{fmtEur(Math.round((synthese.amortReintegres || 0) * (RULES.immobilier.plus_value.taux_ir + RULES.immobilier.plus_value.taux_ps)))} (IR {RULES.immobilier.plus_value.taux_ir * 100}% + PS {RULES.immobilier.plus_value.taux_ps * 100}% avant abattements)
                       </div>
                     )}
                   </div>
@@ -1222,7 +1226,7 @@ export default function LMNPPage() {
               {/* AVIS PROFESSIONNEL FINAL */}
               {/* ═══════════════════════════════════════════════════════════════════════════ */}
               <div className="sim-card">
-                <h3 className="font-bold mb-6 text-xl text-slate-800">🎯 Synthèse et avis professionnel</h3>
+                <h3 className="font-bold mb-6 text-xl text-slate-800 flex items-center gap-2"><Target className="w-5 h-5" /> Synthèse et avis professionnel</h3>
                 
                 {/* Score global - Système de notation équilibré (base 0) */}
                 {(() => {
@@ -1361,7 +1365,7 @@ export default function LMNPPage() {
                         
                         {showScoreDetail && (
                           <div className="mt-3 bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm">
-                            <h5 className="font-bold text-slate-700 mb-3">📊 Méthode de calcul du score (base 0, max 10)</h5>
+                            <h5 className="font-bold text-slate-700 mb-3 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Méthode de calcul du score (base 0, max 10)</h5>
                             <p className="text-slate-600 mb-3">Le score est calculé en additionnant des points selon 5 critères clés d'un investissement LMNP :</p>
                             
                             <div className="overflow-x-auto">
@@ -1480,28 +1484,28 @@ export default function LMNPPage() {
                 {/* Recommandation finale */}
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
                   <h4 className="font-bold text-blue-800 mb-3 flex items-center gap-2">
-                    <span className="text-lg">📋</span> Recommandation personnalisée
+                    <FileText className="w-5 h-5" /> Recommandation personnalisée
                   </h4>
                   <div className="text-sm text-slate-700 leading-relaxed space-y-3">
                     {synthese.tri >= 6 && synthese.cfMoyMois >= 0 ? (
                       <>
                         <p>Cette opération présente un <strong className="text-emerald-600">excellent profil rendement/risque</strong>. Avec un TRI de <strong>{fmtPct(synthese.tri)}</strong> et un cash-flow positif, elle s'autofinance tout en constituant un patrimoine de <strong>{fmtEur(synthese.capFinal)}</strong>.</p>
                         <div className="bg-white rounded-lg p-3 border border-blue-100">
-                          <strong className="text-blue-700">👉 Stratégie recommandée :</strong> Conserver le bien au minimum <strong>{Math.max(22, dureeCredit)} ans</strong> pour bénéficier de l'exonération d'IR sur la plus-value et du remboursement complet du crédit.
+                          <strong className="text-blue-700 flex items-center gap-1"><ArrowRight className="w-4 h-4" /> Stratégie recommandée :</strong> Conserver le bien au minimum <strong>{Math.max(22, dureeCredit)} ans</strong> pour bénéficier de l'exonération d'IR sur la plus-value et du remboursement complet du crédit.
                         </div>
                       </>
                     ) : synthese.tri >= 4 ? (
                       <>
                         <p>Cette opération présente un <strong className="text-blue-600">bon potentiel patrimonial</strong> avec un TRI de <strong>{fmtPct(synthese.tri)}</strong>. {synthese.cfMoyMois < 0 ? <>L'effort mensuel de <strong>{fmtEur(Math.abs(synthese.cfMoyMois))}</strong> est à prévoir mais reste gérable sur la durée.</> : <>Le cash-flow est équilibré.</>}</p>
                         <div className="bg-white rounded-lg p-3 border border-blue-100">
-                          <strong className="text-blue-700">👉 Stratégie recommandée :</strong> Privilégier une détention longue (22+ ans) pour optimiser la fiscalité. Capital potentiel à terme : <strong>{fmtEur(synthese.capFinal)}</strong>.
+                          <strong className="text-blue-700 flex items-center gap-1"><ArrowRight className="w-4 h-4" /> Stratégie recommandée :</strong> Privilégier une détention longue (22+ ans) pour optimiser la fiscalité. Capital potentiel à terme : <strong>{fmtEur(synthese.capFinal)}</strong>.
                         </div>
                       </>
                     ) : (
                       <>
                         <p>Cette opération peut être <strong className="text-amber-600">optimisée</strong>. Avec un TRI de <strong>{fmtPct(synthese.tri)}</strong>, des ajustements permettraient d'améliorer la rentabilité.</p>
                         <div className="bg-white rounded-lg p-3 border border-blue-100">
-                          <strong className="text-blue-700">👉 Pistes d'amélioration :</strong>
+                          <strong className="text-blue-700 flex items-center gap-1"><ArrowRight className="w-4 h-4" /> Pistes d'amélioration :</strong>
                           <ul className="mt-2 space-y-1 ml-4">
                             <li>• Renégocier le prix d'achat (-5 à -10%)</li>
                             <li>• Vérifier le potentiel locatif du bien</li>

@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { DocumentTemplateService } from '@/app/_common/lib/services/document-template-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 const GenerateDocumentSchema = z.object({
   variableValues: z.record(z.string(), z.any()),
   documentName: z.string().optional(),
@@ -45,7 +45,7 @@ export async function POST(
 
     return createSuccessResponse(document, 201)
   } catch (error) {
-    console.error('Error in POST /api/advisor/documents/templates/[id]/generate:', error)
+    logger.error('Error in POST /api/advisor/documents/templates/[id]/generate:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof z.ZodError) {
       const details = error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', ')

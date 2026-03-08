@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { ContractsDataService } from '@/app/_common/lib/services/contracts-data-service'
-
+import { logger } from '@/app/_common/lib/logger'
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -31,7 +31,7 @@ export async function GET(
       data
     })
   } catch (error) {
-    console.error('Error fetching contracts data:', error)
+    logger.error('Error fetching contracts data:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Client not found') {
       return NextResponse.json(

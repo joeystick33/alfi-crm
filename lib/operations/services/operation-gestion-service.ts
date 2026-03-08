@@ -121,6 +121,21 @@ async function generateOperationReference(cabinetId: string): Promise<string> {
   return `OG-${year}-${paddedSequence}`
 }
 
+async function generateAffaireReference(cabinetId: string): Promise<string> {
+  const year = new Date().getFullYear()
+  const count = await prisma.affaireNouvelle.count({
+    where: {
+      cabinetId,
+      reference: {
+        startsWith: `AN-${year}-`,
+      },
+    },
+  })
+  const sequenceNumber = count + 1
+  const paddedSequence = sequenceNumber.toString().padStart(4, '0')
+  return `AN-${year}-${paddedSequence}`
+}
+
 // ============================================================================
 // Operation Gestion Service
 // ============================================================================
@@ -137,15 +152,110 @@ export async function createOperation(
     // Validate input
     const validatedInput = createOperationGestionSchema.parse(input)
 
-    // Verify the affaire origine exists
+    let affaireOrigineId = validatedInput.affaireOrigineId
+
     const affaireOrigine = await prisma.affaireNouvelle.findUnique({
-      where: { id: validatedInput.affaireOrigineId },
+      where: { id: affaireOrigineId },
+      select: { id: true },
     })
 
     if (!affaireOrigine) {
-      return {
-        success: false,
-        error: 'Affaire d\'origine non trouvée',
+      const contrat = await prisma.contrat.findFirst({
+        where: {
+          id: affaireOrigineId,
+          cabinetId: validatedInput.cabinetId,
+          clientId: validatedInput.clientId,
+        },
+      })
+
+      if (!contrat) {
+        return {
+          success: false,
+          error: 'Affaire d\'origine non trouvée',
+        }
+      }
+
+      const resolvedProductType =
+        contrat.type === 'ASSURANCE_VIE'
+          ? 'ASSURANCE_VIE'
+          : contrat.type === 'EPARGNE_RETRAITE'
+            ? 'PER_INDIVIDUEL'
+            : null
+
+      if (!resolvedProductType) {
+        return {
+          success: false,
+          error: 'Type de contrat incompatible avec une opération de gestion',
+        }
+      }
+
+      let provider = await prisma.operationProvider.findFirst({
+        where: {
+          cabinetId: validatedInput.cabinetId,
+          name: {
+            equals: contrat.provider,
+            mode: 'insensitive',
+          },
+        },
+      })
+
+      if (!provider) {
+        provider = await prisma.operationProvider.create({
+          data: {
+            cabinetId: validatedInput.cabinetId,
+            name: contrat.provider,
+            type: 'ASSUREUR',
+            conventionStatus: 'ACTIVE',
+            isFavorite: false,
+          },
+        })
+      }
+
+      const existingAffaire = await prisma.affaireNouvelle.findFirst({
+        where: {
+          cabinetId: validatedInput.cabinetId,
+          clientId: validatedInput.clientId,
+          providerId: provider.id,
+          status: 'VALIDE',
+          productType: resolvedProductType as any,
+        },
+        select: { id: true },
+        orderBy: { createdAt: 'desc' },
+      })
+
+      if (existingAffaire) {
+        affaireOrigineId = existingAffaire.id
+      } else {
+        const reference = await generateAffaireReference(validatedInput.cabinetId)
+        const amount = contrat.value ? new Prisma.Decimal(contrat.value) : new Prisma.Decimal(0)
+
+        const createdAffaire = await prisma.affaireNouvelle.create({
+          data: {
+            cabinetId: validatedInput.cabinetId,
+            reference,
+            clientId: validatedInput.clientId,
+            productType: resolvedProductType as any,
+            providerId: provider.id,
+            productId: null,
+            status: 'VALIDE',
+            source: 'CLIENT_EXISTANT',
+            estimatedAmount: amount,
+            actualAmount: amount,
+            targetDate: null,
+            productDetails: null,
+            entryFees: null,
+            managementFees: null,
+            expectedCommission: null,
+            lastActivityAt: new Date(),
+            pausedAt: null,
+            pauseReason: null,
+            rejectionReason: null,
+            cancellationReason: null,
+            createdById: validatedInput.createdById,
+          },
+        })
+
+        affaireOrigineId = createdAffaire.id
       }
     }
 
@@ -159,7 +269,7 @@ export async function createOperation(
         reference,
         clientId: validatedInput.clientId,
         contractId: validatedInput.contractId,
-        affaireOrigineId: validatedInput.affaireOrigineId,
+        affaireOrigineId,
         type: validatedInput.type as OperationGestionType,
         status: 'BROUILLON',
         amount: validatedInput.amount ?? null,

@@ -5,28 +5,61 @@ export type AuthUser = SessionData
 import { getPermissions } from './permissions'
 import { createClient } from './supabase/server'
 import { createClient as createBrowserClient } from '@supabase/supabase-js'
+import { logger } from './logger'
+import jwt from 'jsonwebtoken'
+import { cookies } from 'next/headers'
+
+const JWT_SECRET = process.env.NEXTAUTH_SECRET
+if (!JWT_SECRET) {
+  logger.error('NEXTAUTH_SECRET is not set — JWT auth will be unavailable. Set this env var in production.', { module: 'AUTH' })
+}
+const JWT_COOKIE_NAME = 'aura-session'
 
 // Allowlist emails reconnus comme SuperAdmin (fallback quand le flag Supabase n'est pas présent)
-const SUPERADMIN_ALLOWLIST = (process.env.SUPERADMIN_EMAILS ?? 'admin@alfi.fr,superadmin@alfi.app')
+// SECURITY: No default — must be explicitly configured via env var
+const SUPERADMIN_ALLOWLIST = (process.env.SUPERADMIN_EMAILS ?? '')
   .split(',')
   .map(e => e.trim().toLowerCase())
   .filter(Boolean)
 
 /**
- * Extrait le contexte d'authentification depuis la requête
- * Utilise Supabase pour récupérer la session
- * Supporte le mode localStorage (token Bearer) pour le développement multi-IP
+ * Lit le cookie JWT local (fallback quand Supabase Auth est inaccessible).
+ */
+async function tryJwtFromCookies(): Promise<{ id: string; email: string; user_metadata: Record<string, unknown> } | null> {
+  try {
+    if (!JWT_SECRET) return null
+    const cookieStore = await cookies()
+    const token = cookieStore.get(JWT_COOKIE_NAME)?.value
+    if (!token) return null
+
+    const decoded = jwt.verify(token, JWT_SECRET) as {
+      sub: string
+      email: string
+      user_metadata: Record<string, unknown>
+    }
+    return {
+      id: decoded.sub,
+      email: decoded.email,
+      user_metadata: decoded.user_metadata || {},
+    }
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Extrait le contexte d'authentification depuis la requête.
+ * Priorité : Bearer header → Supabase cookies → JWT local cookie (fallback).
  */
 export async function getAuthContext(request?: NextRequest): Promise<AuthContext | null> {
   let user = null
   let error = null
 
-  // Essayer d'abord de lire le token depuis l'Authorization header (mode localStorage)
+  // 1. Essayer le token Bearer (mode localStorage / dev multi-IP)
   const authHeader = request?.headers.get('authorization')
   if (authHeader?.startsWith('Bearer ')) {
     const token = authHeader.substring(7)
     try {
-      // Créer un client Supabase et vérifier le token
       const supabase = createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -38,16 +71,40 @@ export async function getAuthContext(request?: NextRequest): Promise<AuthContext
         error = tokenError
       }
     } catch (e) {
-      console.error('Error validating Bearer token:', e)
+      logger.error('Error validating Bearer token', { error: e instanceof Error ? e.message : String(e), module: 'AUTH' })
     }
   }
 
-  // Fallback sur les cookies si pas de token Bearer
+  // 2. Fallback Supabase cookies
   if (!user) {
-    const supabase = await createClient()
-    const result = await supabase.auth.getUser()
-    user = result.data?.user
-    error = result.error
+    try {
+      const supabase = await createClient()
+      const result = await supabase.auth.getUser()
+      user = result.data?.user
+      error = result.error
+    } catch {
+      // Supabase inaccessible
+    }
+  }
+
+  // 3. Fallback JWT local cookie (quand Supabase est down)
+  if (!user) {
+    const jwtUser = request
+      ? (() => {
+          if (!JWT_SECRET) return null
+          const token = request.cookies.get(JWT_COOKIE_NAME)?.value
+          if (!token) return null
+          try {
+            const decoded = jwt.verify(token, JWT_SECRET) as { sub: string; email: string; user_metadata: Record<string, unknown> }
+            return { id: decoded.sub, email: decoded.email, user_metadata: decoded.user_metadata || {} }
+          } catch { return null }
+        })()
+      : await tryJwtFromCookies()
+
+    if (jwtUser) {
+      user = jwtUser as any
+      error = null
+    }
   }
 
   if (error || !user) {
@@ -72,14 +129,27 @@ export async function getAuthContext(request?: NextRequest): Promise<AuthContext
   if ((!prismaUserId || (!cabinetIdMeta && !isSuperAdminMeta)) && user.email) {
     try {
       const prisma = getPrismaClient('', true)
+      const email = user.email.trim()
       // D'abord tenter de retrouver un superadmin par email pour les comptes où le flag metadata manque
-      const superAdmin = await prisma.superAdmin.findUnique({ where: { email: user.email.toLowerCase() } })
+      const superAdmin = await prisma.superAdmin.findFirst({
+        where: {
+          email: {
+            equals: email,
+            mode: 'insensitive',
+          },
+        },
+      })
       if (superAdmin) {
         prismaUserId = superAdmin.id
         isSuperAdminMeta = true
       } else {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: user.email.toLowerCase() },
+        const dbUser = await prisma.user.findFirst({
+          where: {
+            email: {
+              equals: email,
+              mode: 'insensitive',
+            },
+          },
           select: { id: true, cabinetId: true }
         })
         if (dbUser) {
@@ -90,7 +160,7 @@ export async function getAuthContext(request?: NextRequest): Promise<AuthContext
         }
       }
     } catch (fallbackError) {
-      console.error('Failed to resolve Prisma user from Supabase session:', fallbackError)
+      logger.error('Failed to resolve Prisma user from Supabase session', { error: fallbackError instanceof Error ? fallbackError.message : String(fallbackError), module: 'AUTH' })
     }
   }
 

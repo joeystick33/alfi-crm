@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { EmailTemplateService } from '@/app/_common/lib/services/email-template-service'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
-
+import { logger } from '@/app/_common/lib/logger'
 // Schéma validation création template
 const CreateEmailTemplateSchema = z.object({
   name: z.string().min(1, 'Le nom est requis').max(200, 'Le nom est trop long'),
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result)
   } catch (error: any) {
-    console.error('Erreur GET /api/advisor/email-templates:', error)
+    logger.error('Erreur GET /api/advisor/email-templates:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(template, { status: 201 })
   } catch (error: any) {
-    console.error('Erreur POST /api/advisor/email-templates:', error)
+    logger.error('Erreur POST /api/advisor/email-templates:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

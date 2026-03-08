@@ -1,8 +1,122 @@
- 
 import { createClient, createAdminClient } from '@/app/_common/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { AuthService } from '@/app/_common/lib/services/auth-service'
+import jwt from 'jsonwebtoken'
 
+const JWT_SECRET = process.env.NEXTAUTH_SECRET
+const JWT_COOKIE_NAME = 'aura-session'
+const JWT_EXPIRY = '7d'
+
+// ── Types ──
+interface UserPayload {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  role: string
+  cabinetId?: string
+  cabinetName?: string
+  permissions: string[]
+  avatar?: string
+  isSuperAdmin: boolean
+  isClient?: boolean
+  prismaUserId?: string
+  prismaClientId?: string
+  conseillerId?: string | null
+}
+
+// ── Helper : créer un cookie JWT de session ──
+function createSessionCookie(response: NextResponse, payload: UserPayload): void {
+  if (!JWT_SECRET) {
+    console.warn('[AUTH] NEXTAUTH_SECRET not set — skipping JWT cookie creation')
+    return
+  }
+  const token = jwt.sign(
+    {
+      sub: payload.id,
+      email: payload.email,
+      user_metadata: {
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        role: payload.role,
+        cabinetId: payload.cabinetId || '',
+        isSuperAdmin: payload.isSuperAdmin,
+        isClient: payload.isClient || false,
+        prismaUserId: payload.prismaUserId || payload.id,
+        prismaClientId: payload.prismaClientId,
+        permissions: payload.permissions,
+        avatar: payload.avatar,
+        cabinetName: payload.cabinetName,
+        conseillerId: payload.conseillerId,
+      },
+      iat: Math.floor(Date.now() / 1000),
+    },
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRY }
+  )
+
+  response.cookies.set(JWT_COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 7 * 24 * 60 * 60, // 7 jours
+  })
+}
+
+// ── Helper : tenter la synchronisation Supabase Auth (non bloquant) ──
+async function trySupabaseSync(
+  email: string,
+  password: string,
+  metadata: Record<string, unknown>
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabaseAdmin = createAdminClient()
+    const emailLower = email.toLowerCase()
+
+    // Chercher ou créer l'utilisateur dans Supabase
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers()
+    const existingUser = existingUsers?.users?.find(
+      (u: { email?: string }) => u.email?.toLowerCase() === emailLower
+    )
+
+    if (existingUser) {
+      await supabaseAdmin.auth.admin.updateUserById(existingUser.id, {
+        password,
+        user_metadata: metadata,
+      })
+    } else {
+      const { error: createError } = await supabaseAdmin.auth.admin.createUser({
+        email: emailLower,
+        password,
+        email_confirm: true,
+        user_metadata: metadata,
+      })
+      if (createError) {
+        console.warn('[Auth] Supabase user creation warning:', createError.message)
+      }
+    }
+
+    // Créer la session Supabase
+    const supabase = await createClient()
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: emailLower,
+      password,
+    })
+
+    if (signInError) {
+      return { success: false, error: signInError.message }
+    }
+
+    return { success: true }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err)
+    console.warn('[Auth] Supabase sync failed (using JWT fallback):', message)
+    return { success: false, error: message }
+  }
+}
+
+// ── POST /api/auth/login ──
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json()
@@ -14,266 +128,130 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 1. Try to login as SuperAdmin
+    // ═══ 1. SuperAdmin ═══
     const superAdmin = await AuthService.loginSuperAdmin(email, password)
-
     if (superAdmin) {
-      // Synchroniser l'utilisateur dans Supabase Auth
-      const supabaseAdmin = createAdminClient()
-      const emailLower = email.toLowerCase()
-
-      // Chercher si l'utilisateur existe déjà dans Supabase
-      const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers()
-      const existingUser = existingUsers?.users?.find(u => u.email?.toLowerCase() === emailLower)
-
-      if (existingUser) {
-        // Mettre à jour le mot de passe et les métadonnées
-        await supabaseAdmin.auth.admin.updateUserById(existingUser.id, {
-          password,
-          user_metadata: {
-            firstName: superAdmin.firstName,
-            lastName: superAdmin.lastName,
-            role: superAdmin.role,
-            isSuperAdmin: true,
-            prismaUserId: superAdmin.id,
-          }
-        })
-      } else {
-        // Créer le nouvel utilisateur
-        const { error: createError } = await supabaseAdmin.auth.admin.createUser({
-          email: emailLower,
-          password,
-          email_confirm: true,
-          user_metadata: {
-            firstName: superAdmin.firstName,
-            lastName: superAdmin.lastName,
-            role: superAdmin.role,
-            isSuperAdmin: true,
-            prismaUserId: superAdmin.id,
-          }
-        })
-
-        if (createError) {
-          console.error('Erreur création Supabase:', createError)
-        }
+      const userData: UserPayload = {
+        ...superAdmin,
+        isSuperAdmin: true,
+        prismaUserId: superAdmin.id,
       }
 
-      // Créer la session Supabase
-      const supabase = await createClient()
-      console.log('LoginAPI: Attempting Supabase signIn for', email)
-
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: emailLower,
-        password,
+      const supabaseResult = await trySupabaseSync(email, password, {
+        firstName: superAdmin.firstName,
+        lastName: superAdmin.lastName,
+        role: superAdmin.role,
+        isSuperAdmin: true,
+        prismaUserId: superAdmin.id,
       })
 
-      if (signInError) {
-        console.error('Erreur connexion Supabase:', signInError)
-        return NextResponse.json(
-          { error: 'Erreur lors de la création de la session' },
-          { status: 500 }
-        )
-      }
-
-      console.log('LoginAPI: Supabase session created successfully', signInData.session ? 'YES' : 'NO')
-
-      return NextResponse.json({
+      const response = NextResponse.json({
         success: true,
-        user: {
-          ...superAdmin,
-          isSuperAdmin: true,
-          prismaUserId: superAdmin.id,
-        }
+        user: userData,
+        authMode: supabaseResult.success ? 'supabase' : 'jwt-fallback',
       })
+
+      // Toujours créer le cookie JWT (fallback garanti)
+      createSessionCookie(response, userData)
+      return response
     }
 
-    // 2. Try to login as regular User
+    // ═══ 2. User (cabinet) ═══
     try {
       const user = await AuthService.loginUser(email, password)
-
       if (user) {
-        // Synchroniser l'utilisateur dans Supabase Auth
-        const supabaseAdmin = createAdminClient()
-        const emailLower = email.toLowerCase()
-
-        // Chercher si l'utilisateur existe déjà dans Supabase
-        const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers()
-        const existingUser = existingUsers?.users?.find(u => u.email?.toLowerCase() === emailLower)
-
-        if (existingUser) {
-          // Mettre à jour le mot de passe et les métadonnées
-          await supabaseAdmin.auth.admin.updateUserById(existingUser.id, {
-            password,
-            user_metadata: {
-              firstName: user.firstName,
-              lastName: user.lastName,
-              role: user.role,
-              cabinetId: user.cabinetId,
-              isSuperAdmin: false,
-              prismaUserId: user.id,
-            }
-          })
-        } else {
-          // Créer le nouvel utilisateur
-          const { error: createError } = await supabaseAdmin.auth.admin.createUser({
-            email: emailLower,
-            password,
-            email_confirm: true,
-            user_metadata: {
-              firstName: user.firstName,
-              lastName: user.lastName,
-              role: user.role,
-              cabinetId: user.cabinetId,
-              isSuperAdmin: false,
-              prismaUserId: user.id,
-            }
-          })
-
-          if (createError) {
-            console.error('Erreur création Supabase:', createError)
-          }
+        const userData: UserPayload = {
+          ...user,
+          isSuperAdmin: false,
+          prismaUserId: user.id,
         }
 
-        // Créer la session Supabase
-        const supabase = await createClient()
-        console.log('LoginAPI: Attempting Supabase signIn for user', email)
-
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email: emailLower,
-          password,
+        const supabaseResult = await trySupabaseSync(email, password, {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          cabinetId: user.cabinetId,
+          isSuperAdmin: false,
+          prismaUserId: user.id,
         })
 
-        if (signInError) {
-          console.error('Erreur connexion Supabase:', signInError)
-          return NextResponse.json(
-            { error: 'Erreur lors de la création de la session' },
-            { status: 500 }
-          )
-        }
-
-        console.log('LoginAPI: Supabase session created successfully for user', signInData.session ? 'YES' : 'NO')
-
-        return NextResponse.json({
+        const response = NextResponse.json({
           success: true,
-          user: {
-            ...user,
-            isSuperAdmin: false,
-            prismaUserId: user.id,
-          }
-        })
-      }
-    } catch (error: any) {
-      // Catch specific errors from AuthService (e.g. "Cabinet is not active")
-      if (error.message === 'Cabinet is not active' || error.message === 'User is not active') {
-        return NextResponse.json(
-          { error: error.message },
-          { status: 403 }
-        )
-      }
-      throw error // Re-throw other errors
-    }
-
-    // 3. Try to login as Client (portal)
-    try {
-      const client = await AuthService.loginClient(email, password)
-
-      if (client) {
-        // Synchroniser le client dans Supabase Auth
-        const supabaseAdmin = createAdminClient()
-        const emailLower = email.toLowerCase()
-
-        // Chercher si l'utilisateur existe déjà dans Supabase
-        const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers()
-        const existingUser = existingUsers?.users?.find(u => u.email?.toLowerCase() === emailLower)
-
-        if (existingUser) {
-          // Mettre à jour le mot de passe et les métadonnées
-          await supabaseAdmin.auth.admin.updateUserById(existingUser.id, {
-            password,
-            user_metadata: {
-              firstName: client.firstName,
-              lastName: client.lastName,
-              role: 'CLIENT',
-              cabinetId: client.cabinetId,
-              conseillerId: client.conseillerId,
-              isSuperAdmin: false,
-              isClient: true,
-              prismaClientId: client.id,
-            }
-          })
-        } else {
-          // Créer le nouvel utilisateur
-          const { error: createError } = await supabaseAdmin.auth.admin.createUser({
-            email: emailLower,
-            password,
-            email_confirm: true,
-            user_metadata: {
-              firstName: client.firstName,
-              lastName: client.lastName,
-              role: 'CLIENT',
-              cabinetId: client.cabinetId,
-              conseillerId: client.conseillerId,
-              isSuperAdmin: false,
-              isClient: true,
-              prismaClientId: client.id,
-            }
-          })
-
-          if (createError) {
-            console.error('Erreur création Supabase client:', createError)
-          }
-        }
-
-        // Créer la session Supabase
-        const supabase = await createClient()
-        console.log('LoginAPI: Attempting Supabase signIn for client', email)
-
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email: emailLower,
-          password,
+          user: userData,
+          authMode: supabaseResult.success ? 'supabase' : 'jwt-fallback',
         })
 
-        if (signInError) {
-          console.error('Erreur connexion Supabase client:', signInError)
-          return NextResponse.json(
-            { error: 'Erreur lors de la création de la session' },
-            { status: 500 }
-          )
-        }
-
-        console.log('LoginAPI: Supabase session created successfully for client', signInData.session ? 'YES' : 'NO')
-
-        return NextResponse.json({
-          success: true,
-          user: {
-            ...client,
-            role: 'CLIENT',
-            isSuperAdmin: false,
-            isClient: true,
-            prismaClientId: client.id,
-          }
-        })
+        createSessionCookie(response, userData)
+        return response
       }
-    } catch (error: any) {
-      if (error.message === 'Client account is not active') {
-        return NextResponse.json(
-          { error: error.message },
-          { status: 403 }
-        )
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : ''
+      if (message === 'Cabinet is not active' || message === 'User is not active') {
+        return NextResponse.json({ error: message }, { status: 403 })
       }
       throw error
     }
 
-    // If neither SuperAdmin, User, nor Client found/valid
+    // ═══ 3. Client (portal) ═══
+    try {
+      const client = await AuthService.loginClient(email, password)
+      if (client) {
+        const userData: UserPayload = {
+          id: client.id,
+          email: client.email,
+          firstName: client.firstName,
+          lastName: client.lastName,
+          role: 'CLIENT',
+          cabinetId: client.cabinetId,
+          permissions: [],
+          isSuperAdmin: false,
+          isClient: true,
+          prismaClientId: client.id,
+          conseillerId: client.conseillerId,
+        }
+
+        const supabaseResult = await trySupabaseSync(email, password, {
+          firstName: client.firstName,
+          lastName: client.lastName,
+          role: 'CLIENT',
+          cabinetId: client.cabinetId,
+          conseillerId: client.conseillerId,
+          isSuperAdmin: false,
+          isClient: true,
+          prismaClientId: client.id,
+        })
+
+        const response = NextResponse.json({
+          success: true,
+          user: userData,
+          authMode: supabaseResult.success ? 'supabase' : 'jwt-fallback',
+        })
+
+        createSessionCookie(response, userData)
+        return response
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : ''
+      if (message === 'Client account is not active') {
+        return NextResponse.json({ error: message }, { status: 403 })
+      }
+      throw error
+    }
+
+    // Aucun compte trouvé
     return NextResponse.json(
       { error: 'Invalid credentials' },
       { status: 401 }
     )
 
-  } catch (error: any) {
-    console.error('Login error:', error)
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
+    console.error('Login error:', message)
     return NextResponse.json(
-      { error: 'An error occurred during login' },
+      {
+        error: 'An error occurred during login',
+        ...(process.env.NODE_ENV !== 'production' ? { details: message } : {}),
+      },
       { status: 500 }
     )
   }

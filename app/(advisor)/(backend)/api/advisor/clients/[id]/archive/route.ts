@@ -7,7 +7,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { ClientService } from '@/app/_common/lib/services/client-service'
-
+import { logger } from '@/app/_common/lib/logger'
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -29,7 +29,45 @@ export async function POST(
       message: 'Client archived successfully' 
     })
   } catch (error: any) {
-    console.error('Error archiving client:', error)
+    logger.error('Error archiving client:', { error: error instanceof Error ? error.message : String(error) })
+    
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return createErrorResponse('Unauthorized', 401)
+    }
+    
+    if (error instanceof Error && error.message.includes('not found')) {
+      return createErrorResponse('Client not found', 404)
+    }
+    
+    return createErrorResponse('Internal server error', 500)
+  }
+}
+
+/**
+ * DELETE - Restaure un client archivé (désarchive)
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const context = await requireAuth(request)
+    const { user } = context
+    const { id } = await params
+
+    if (!isRegularUser(user)) {
+      return createErrorResponse('Invalid user type', 400)
+    }
+
+    const service = new ClientService(context.cabinetId, user.id, user.role, context.isSuperAdmin)
+    await service.restoreClient(id)
+
+    return createSuccessResponse({ 
+      success: true, 
+      message: 'Client restored successfully' 
+    })
+  } catch (error: any) {
+    logger.error('Error restoring client:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

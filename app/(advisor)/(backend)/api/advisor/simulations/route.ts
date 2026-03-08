@@ -4,7 +4,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { SimulationService } from '@/app/_common/lib/services/simulation-service'
 import { parseSimulationFilters, normalizeSimulationCreatePayload } from './utils'
-
+import { logger } from '@/app/_common/lib/logger'
 export async function GET(request: NextRequest) {
   try {
     // Authenticate and extract context
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     // Return formatted response
     return createSuccessResponse(simulations)
   } catch (error: any) {
-    console.error('Error in GET /api/simulations:', error)
+    logger.error('Error in GET /api/simulations:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     // Return formatted response with 201 status
     return createSuccessResponse(simulation, 201)
   } catch (error: any) {
-    console.error('Error in POST /api/simulations:', error)
+    logger.error('Error in POST /api/simulations:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { prisma } from '@/app/_common/lib/prisma'
 import { z } from 'zod'
+import { logger } from '@/app/_common/lib/logger'
 import {
   buildAssetLiabilityLinks,
   validateAssetLiabilityLink,
@@ -131,7 +132,7 @@ export async function GET(
     })
 
   } catch (error) {
-    console.error('Erreur GET /wealth/links:', error)
+    logger.error('Erreur GET /wealth/links:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Erreur serveur', code: 'INTERNAL_ERROR' },
       { status: 500 }
@@ -281,7 +282,7 @@ export async function POST(
     })
 
   } catch (error) {
-    console.error('Erreur POST /wealth/links:', error)
+    logger.error('Erreur POST /wealth/links:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Erreur serveur', code: 'INTERNAL_ERROR' },
       { status: 500 }
@@ -406,7 +407,7 @@ export async function DELETE(
     })
 
   } catch (error) {
-    console.error('Erreur DELETE /wealth/links:', error)
+    logger.error('Erreur DELETE /wealth/links:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Erreur serveur', code: 'INTERNAL_ERROR' },
       { status: 500 }

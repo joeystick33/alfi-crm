@@ -4,7 +4,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { ObjectifService } from '@/app/_common/lib/services/objectif-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { parseObjectifFilters } from './utils'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/objectifs
  * Liste des objectifs avec filtres
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse(objectifs)
   } catch (error: any) {
-    console.error('Error in GET /api/objectifs:', error)
+    logger.error('Error in GET /api/objectifs:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
 
     return createSuccessResponse(objectif, 201)
   } catch (error: any) {
-    console.error('Error in POST /api/objectifs:', error)
+    logger.error('Error in POST /api/objectifs:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

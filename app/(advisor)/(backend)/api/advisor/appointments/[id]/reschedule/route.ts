@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { RendezVousService } from '@/app/_common/lib/services/rendez-vous-service'
-
+import { logger } from '@/app/_common/lib/logger'
 const rescheduleSchema = z.object({
   newStartDate: z.string().transform(val => new Date(val)),
   newEndDate: z.string().transform(val => new Date(val)),
@@ -104,7 +104,7 @@ export async function POST(
       throw serviceError
     }
   } catch (error: any) {
-    console.error('Error rescheduling appointment:', error)
+    logger.error('Error rescheduling appointment:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof z.ZodError) {
       return createErrorResponse('Données invalides: ' + error.message, 400)

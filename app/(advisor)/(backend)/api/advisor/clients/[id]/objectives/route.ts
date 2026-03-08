@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { ObjectivesDataService } from '@/app/_common/lib/services/objectives-data-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/clients/[id]/objectives
  * 
@@ -37,7 +37,7 @@ export async function GET(
 
     return createSuccessResponse(data)
   } catch (error) {
-    console.error('Get objectives data error:', error)
+    logger.error('Get objectives data error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

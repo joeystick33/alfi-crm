@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/management/actions
  * Récupère les actions commerciales du cabinet
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse({ actions })
   } catch (error) {
-    console.error('Error in GET /api/advisor/management/actions:', error)
+    logger.error('Error in GET /api/advisor/management/actions:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString().split('T')[0],
     }, 201)
   } catch (error) {
-    console.error('Error in POST /api/advisor/management/actions:', error)
+    logger.error('Error in POST /api/advisor/management/actions:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

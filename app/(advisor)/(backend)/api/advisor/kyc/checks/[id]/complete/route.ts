@@ -3,7 +3,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { KYCService } from '@/app/_common/lib/services/kyc-service'
 import { z } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 // Schéma de validation
 const completeKYCCheckSchema = z.object({
   findings: z.string().min(1),
@@ -49,7 +49,7 @@ export async function POST(
 
     return createSuccessResponse(check)
   } catch (error) {
-    console.error('Error completing KYC check:', error)
+    logger.error('Error completing KYC check:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof z.ZodError) {
       return createErrorResponse(`Validation error: ${JSON.stringify(error.issues)}`, 400)

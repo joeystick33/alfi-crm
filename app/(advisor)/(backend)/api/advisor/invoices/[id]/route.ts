@@ -4,7 +4,7 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { InvoiceService } from '@/app/_common/lib/services/invoice-service'
 import { normalizeInvoiceUpdatePayload } from '../utils'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/invoices/[id]
  * Get invoice by ID
@@ -39,7 +39,7 @@ export async function GET(
 
     return createSuccessResponse(invoice)
   } catch (error) {
-    console.error('Error in GET /api/advisor/invoices/[id]:', error)
+    logger.error('Error in GET /api/advisor/invoices/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -94,7 +94,7 @@ export async function PATCH(
 
     return createSuccessResponse(updated)
   } catch (error) {
-    console.error('Error in PATCH /api/advisor/invoices/[id]:', error)
+    logger.error('Error in PATCH /api/advisor/invoices/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -149,7 +149,7 @@ export async function DELETE(
       message: 'Facture supprimée avec succès',
     })
   } catch (error) {
-    console.error('Error in DELETE /api/advisor/invoices/[id]:', error)
+    logger.error('Error in DELETE /api/advisor/invoices/[id]:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

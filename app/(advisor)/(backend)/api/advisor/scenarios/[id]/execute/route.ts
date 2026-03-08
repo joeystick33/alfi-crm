@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { ScenarioService } from '@/app/_common/lib/services/scenario-service'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
-
+import { logger } from '@/app/_common/lib/logger'
 // Schéma validation exécution
 const ExecuteScenarioSchema = z.object({
   clientIds: z.array(z.string()).min(1, 'Au moins un client est requis'),
@@ -38,7 +38,7 @@ export async function POST(
 
     return NextResponse.json(result)
   } catch (error: any) {
-    console.error(`Erreur POST /api/advisor/scenarios/${scenarioId}/execute:`, error)
+    logger.error(`Erreur POST /api/advisor/scenarios/${scenarioId}/execute:`, { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

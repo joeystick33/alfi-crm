@@ -1,0 +1,79 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+  
+	<parent>
+    	<groupId>com.alkaus.smp</groupId>
+    	<artifactId>smp</artifactId>
+    	<version>1.0.0-SNAPSHOT</version>
+  	</parent>
+
+  	<artifactId>smp-infra</artifactId>
+  	<packaging>jar</packaging>
+
+  	<dependencies>
+    <!-- Dépend en aval de l’application (use cases/services) -->
+    	<dependency>
+      		<groupId>com.alkaus.smp</groupId>
+      		<artifactId>smp-domain</artifactId>
+      		<version>${project.version}</version>
+    	</dependency>
+    	
+		 <!-- Spring pour @Repository, @Component, etc. -->
+	    <dependency>
+	        <groupId>org.springframework</groupId>
+	        <artifactId>spring-context</artifactId>
+	    </dependency>
+	    
+    	<dependency>
+    		<groupId>com.fasterxml.jackson.dataformat</groupId>
+      		<artifactId>jackson-dataformat-yaml</artifactId>
+    	</dependency>
+    	
+    	<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+		</dependency>
+		
+		<!-- Tests JUnit 5 -->
+    	<dependency>
+	    	<groupId>org.springframework.boot</groupId>
+	      	<artifactId>spring-boot-starter-test</artifactId>
+	      	<scope>test</scope>
+	    </dependency>
+	    
+	    <dependency>
+    		<groupId>org.assertj</groupId>
+   			<artifactId>assertj-core</artifactId>
+    		<scope>test</scope>
+  		</dependency>
+
+    <!-- (Optionnel plus tard) Spring Data JPA / JDBC / MapStruct / PostgreSQL, etc. -->
+    <!--
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mapstruct</groupId>
+      <artifactId>mapstruct</artifactId>
+    </dependency>
+    -->
+  	</dependencies>
+
+  	<build>
+    	<plugins>
+     	 <!-- hérite compiler via pluginManagement parent -->
+	      	<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+	        	<artifactId>maven-compiler-plugin</artifactId>
+	      	</plugin>
+    	</plugins>
+  	</build>
+</project>

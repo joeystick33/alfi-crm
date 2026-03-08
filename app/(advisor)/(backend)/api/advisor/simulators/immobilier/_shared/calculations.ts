@@ -566,7 +566,7 @@ export function verifierPlafondNiches(
 // ══════════════════════════════════════════════════════════════════════════════
 
 import { LMP } from './constants'
-
+import { logger } from '@/app/_common/lib/logger'
 export interface SSICalculResult {
   estLMP: boolean
   cotisationsTotal: number
@@ -741,14 +741,14 @@ export async function calculSSIViaAPIURSSAF(
     })
     
     if (!response.ok) {
-      console.warn('[SSI] API URSSAF indisponible (status: ' + response.status + '), utilisation du calcul local')
+      logger.warn('[SSI] API URSSAF indisponible (status: ' + response.status + '), utilisation du calcul local')
       return null
     }
     
     // Vérifier que la réponse est du JSON
     const contentType = response.headers.get('content-type')
     if (!contentType || !contentType.includes('application/json')) {
-      console.warn('[SSI] API URSSAF: réponse non-JSON, utilisation du calcul local')
+      logger.warn('[SSI] API URSSAF: réponse non-JSON, utilisation du calcul local')
       return null
     }
     
@@ -773,7 +773,7 @@ export async function calculSSIViaAPIURSSAF(
       netApresCotisations: Math.round(data.revenuNet || (beneficeNet - (data.cotisations?.total || 0))),
     }
   } catch (error) {
-    console.warn('Erreur appel API URSSAF:', error)
+    logger.warn('Erreur appel API URSSAF:', error)
     return null
   }
 }

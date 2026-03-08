@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
 import { z } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 // Beneficiary schema
 const beneficiarySchema = z.object({
   name: z.string().min(1),
@@ -136,7 +136,7 @@ export async function GET(
     })
 
   } catch (error) {
-    console.error('Erreur GET /contracts:', error)
+    logger.error('Erreur GET /contracts:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Erreur serveur', code: 'INTERNAL_ERROR' }, { status: 500 })
   }
 }
@@ -200,7 +200,7 @@ export async function POST(
     }, { status: 201 })
 
   } catch (error) {
-    console.error('Erreur POST /contracts:', error)
+    logger.error('Erreur POST /contracts:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Erreur serveur', code: 'INTERNAL_ERROR' }, { status: 500 })
   }
 }
@@ -272,7 +272,7 @@ export async function PUT(
     })
 
   } catch (error) {
-    console.error('Erreur PUT /contracts:', error)
+    logger.error('Erreur PUT /contracts:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Erreur serveur', code: 'INTERNAL_ERROR' }, { status: 500 })
   }
 }
@@ -323,7 +323,7 @@ export async function DELETE(
     })
 
   } catch (error) {
-    console.error('Erreur DELETE /contracts:', error)
+    logger.error('Erreur DELETE /contracts:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Erreur serveur', code: 'INTERNAL_ERROR' }, { status: 500 })
   }
 }

@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, createErrorResponse } from '@/app/_common/lib/auth-helpers'
 import { createSynthesisService } from '@/app/_common/lib/services/synthesis-service'
-
+import { logger } from '@/app/_common/lib/logger'
 // =============================================================================
 // GET /api/advisor/synthesis/[clientId]
 // Récupère la synthèse calculée d'un client
@@ -39,7 +39,7 @@ export async function GET(
       data: synthesis,
     })
   } catch (error: unknown) {
-    console.error('GET /api/advisor/synthesis/[clientId] error:', error)
+    logger.error('GET /api/advisor/synthesis/[clientId] error:', { error: error instanceof Error ? error.message : String(error) })
     
     const errorMessage = error instanceof Error ? error.message : 'Erreur serveur'
     
@@ -87,7 +87,7 @@ export async function POST(
       data: synthesis,
     })
   } catch (error: unknown) {
-    console.error('POST /api/advisor/synthesis/[clientId] error:', error)
+    logger.error('POST /api/advisor/synthesis/[clientId] error:', { error: error instanceof Error ? error.message : String(error) })
     
     const errorMessage = error instanceof Error ? error.message : 'Erreur serveur'
     

@@ -19,6 +19,7 @@ import { Badge } from '@/app/_common/components/ui/Badge'
 import { Skeleton } from '@/app/_common/components/ui/Skeleton'
 import { cn, formatCurrency, formatDate } from '@/app/_common/lib/utils'
 import { useToast } from '@/app/_common/hooks/use-toast'
+import { useClientContrats } from '@/app/_common/hooks/use-api'
 import {
   useAffaires,
   useAffairesEnCours,
@@ -116,6 +117,12 @@ export function TabOperationsIntegration({ clientId, client, onTabChange }: TabO
   const { toast } = useToast()
   const [refreshing, setRefreshing] = useState(false)
 
+  const {
+    data: contratsData,
+    isLoading: contratsLoading,
+    refetch: refetchContrats,
+  } = useClientContrats(clientId)
+
   // Fetch operations data
   const { data: affairesData, isLoading: affairesLoading, refetch: refetchAffaires } = useAffaires(
     { clientId },
@@ -136,7 +143,17 @@ export function TabOperationsIntegration({ clientId, client, onTabChange }: TabO
     { enabled: true }
   )
 
-  const isLoading = affairesLoading || enCoursLoading || operationsLoading || statsLoading
+  const isLoading = affairesLoading || enCoursLoading || operationsLoading || statsLoading || contratsLoading
+
+  const contrats = useMemo(() => (Array.isArray(contratsData) ? contratsData : []), [contratsData])
+
+  const contratsSummary = useMemo(() => {
+    const totalValue = contrats.reduce((sum, c: any) => sum + Number(c?.value ?? 0), 0)
+    return {
+      totalContracts: contrats.length,
+      totalValue,
+    }
+  }, [contrats])
 
   // Calculate portfolio summary
   const portfolioSummary = useMemo(() => {
@@ -188,6 +205,7 @@ export function TabOperationsIntegration({ clientId, client, onTabChange }: TabO
         refetchEnCours(),
         refetchOperations(),
         refetchStats(),
+        refetchContrats(),
       ])
       toast({ title: 'Données actualisées' })
     } catch {
@@ -195,7 +213,7 @@ export function TabOperationsIntegration({ clientId, client, onTabChange }: TabO
     } finally {
       setRefreshing(false)
     }
-  }, [refetchAffaires, refetchEnCours, refetchOperations, refetchStats, toast])
+  }, [refetchAffaires, refetchEnCours, refetchOperations, refetchStats, refetchContrats, toast])
 
   // Navigate to tab
   const navigateToTab = useCallback((tabId: string) => {
@@ -244,12 +262,12 @@ export function TabOperationsIntegration({ clientId, client, onTabChange }: TabO
             <div>
               <h3 className="text-lg font-semibold text-gray-900">Portefeuille client</h3>
               <p className="text-sm text-gray-600 mt-1">
-                {portfolioSummary.totalContracts} contrat{portfolioSummary.totalContracts > 1 ? 's' : ''} actif{portfolioSummary.totalContracts > 1 ? 's' : ''}
+                {contratsSummary.totalContracts} contrat{contratsSummary.totalContracts > 1 ? 's' : ''}
               </p>
             </div>
             <div className="text-right">
               <p className="text-3xl font-bold text-gray-900">
-                {formatCurrency(portfolioSummary.totalValue)}
+                {formatCurrency(contratsSummary.totalValue)}
               </p>
               <p className="text-sm text-gray-500">Encours total</p>
             </div>
@@ -296,6 +314,67 @@ export function TabOperationsIntegration({ clientId, client, onTabChange }: TabO
               Voir les contrats
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Contracts list */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-gray-600" />
+              Contrats détenus
+            </CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => navigateToTab('contrats')}>
+              Voir tout <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {contrats.length === 0 ? (
+            <div className="text-center py-6 text-gray-500">
+              <FileText className="h-10 w-10 mx-auto mb-2 text-gray-300" />
+              <p>Aucun contrat enregistré pour ce client</p>
+              <Button size="sm" variant="outline" className="mt-3" onClick={() => navigateToTab('contrats')}>
+                Ajouter un contrat
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {contrats.slice(0, 5).map((c: any) => (
+                <div
+                  key={c.id}
+                  className="flex items-center justify-between p-3 rounded-lg border bg-gray-50"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {c.name || 'Contrat'}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {c.provider || 'Fournisseur'}
+                      {c.contractNumber ? ` • ${c.contractNumber}` : ''}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-gray-900">
+                        {formatCurrency(Number(c.value ?? 0))}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {c.startDate ? formatDate(c.startDate) : ''}
+                      </p>
+                    </div>
+                    <Link href={`/dashboard/operations/gestion/nouvelle?clientId=${clientId}&contractId=${c.id}`}>
+                      <Button size="sm" variant="outline">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Opération
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 

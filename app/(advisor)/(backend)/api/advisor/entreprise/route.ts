@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import EntrepriseService from '@/lib/services/entreprise'
-
+import { logger } from '@/app/_common/lib/logger'
 // ══════════════════════════════════════════════════════════════════════════════
 // SCHEMAS
 // ══════════════════════════════════════════════════════════════════════════════
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('[API Entreprise] Erreur GET:', error)
+    logger.error('[API Entreprise] Erreur GET:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { success: false, error: 'Erreur serveur' },
       { status: 500 }
@@ -212,7 +212,7 @@ export async function POST(request: NextRequest) {
     )
     
   } catch (error) {
-    console.error('[API Entreprise] Erreur POST:', error)
+    logger.error('[API Entreprise] Erreur POST:', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { success: false, error: 'Erreur serveur' },
       { status: 500 }

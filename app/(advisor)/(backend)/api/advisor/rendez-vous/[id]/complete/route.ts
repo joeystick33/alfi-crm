@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { RendezVousService } from '@/app/_common/lib/services/rendez-vous-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * POST /api/rendez-vous/[id]/complete
  * Marquer un rendez-vous comme terminé
@@ -32,7 +32,7 @@ export async function POST(
 
     return createSuccessResponse(rendezvous)
   } catch (error) {
-    console.error('Error in POST /api/rendez-vous/[id]/complete:', error)
+    logger.error('Error in POST /api/rendez-vous/[id]/complete:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

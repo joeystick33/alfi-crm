@@ -1,30 +1,76 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { AuthUser } from '@/app/_common/lib/auth-helpers'
 
+let cachedSessionUser: AuthUser | null | undefined
+let inflightSessionRequest: Promise<AuthUser | null> | null = null
+
+async function requestSession(): Promise<AuthUser | null> {
+  const response = await fetch('/api/auth/session', { credentials: 'include' })
+  if (!response.ok) {
+    throw new Error(`Session request failed (${response.status})`)
+  }
+
+  const data = (await response.json()) as { user?: AuthUser | null }
+  return data.user ?? null
+}
+
+async function loadSession(options?: { force?: boolean }): Promise<AuthUser | null> {
+  const force = options?.force === true
+
+  if (!force && cachedSessionUser !== undefined) {
+    return cachedSessionUser
+  }
+
+  if (!force && inflightSessionRequest) {
+    return inflightSessionRequest
+  }
+
+  inflightSessionRequest = requestSession()
+    .then(user => {
+      cachedSessionUser = user
+      return user
+    })
+    .catch(error => {
+      cachedSessionUser = null
+      throw error
+    })
+    .finally(() => {
+      inflightSessionRequest = null
+    })
+
+  return inflightSessionRequest
+}
+
+function clearSessionCache(nextUser?: AuthUser | null) {
+  cachedSessionUser = nextUser
+  inflightSessionRequest = null
+}
+
 export function useAuth() {
-  const [user, setUser] = useState<AuthUser | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [user, setUser] = useState<AuthUser | null>(() => cachedSessionUser ?? null)
+  const [isLoading, setIsLoading] = useState(() => cachedSessionUser === undefined)
   const router = useRouter()
 
-  useEffect(() => {
-    async function fetchSession() {
-      try {
-        const response = await fetch('/api/auth/session')
-        const data = await response.json()
-        setUser(data.user || null)
-      } catch (error) {
-        console.error('Failed to fetch session:', error)
-        setUser(null)
-      } finally {
-        setIsLoading(false)
-      }
+  const syncSession = useCallback(async (force = false) => {
+    setIsLoading(true)
+    try {
+      const nextUser = await loadSession({ force })
+      setUser(nextUser)
+    } catch (error) {
+      console.error('Failed to fetch session:', error)
+      setUser(null)
+    } finally {
+      setIsLoading(false)
     }
-
-    fetchSession()
   }, [])
+
+  useEffect(() => {
+    if (cachedSessionUser !== undefined) return
+    void syncSession()
+  }, [syncSession])
 
   const isAuthenticated = !!user
   const isSuperAdmin = user && 'isSuperAdmin' in user ? (user.isSuperAdmin as boolean) : false
@@ -50,7 +96,8 @@ export function useAuth() {
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' })
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+      clearSessionCache(null)
       setUser(null)
       router.push('/login')
       router.refresh()
@@ -60,17 +107,8 @@ export function useAuth() {
   }
 
   const refreshSession = () => {
-    async function fetchSession() {
-      try {
-        const response = await fetch('/api/auth/session')
-        const data = await response.json()
-        setUser(data.user || null)
-      } catch (error) {
-        console.error('Failed to fetch session:', error)
-        setUser(null)
-      }
-    }
-    fetchSession()
+    clearSessionCache()
+    void syncSession(true)
   }
 
   return {

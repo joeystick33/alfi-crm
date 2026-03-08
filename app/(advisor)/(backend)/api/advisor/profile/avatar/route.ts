@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { prisma } from '@/app/_common/lib/prisma'
 import { createClient, createAdminClient } from '@/app/_common/lib/supabase/server'
-
+import { logger } from '@/app/_common/lib/logger'
 // Types de fichiers acceptés pour les avatars
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const MAX_SIZE = 5 * 1024 * 1024 // 5 MB
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   try {
     // Validation des variables d'environnement Supabase
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.error('Avatar upload error: Supabase env vars missing')
+      logger.error('Avatar upload error: Supabase env vars missing')
       return NextResponse.json(
         { error: 'Configuration Supabase manquante' },
         { status: 500 }
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
       })
 
     if (uploadError) {
-      console.error('Upload error:', uploadError)
+      logger.error('Upload error: ' + uploadError.message)
       return NextResponse.json(
         { error: uploadError.message || 'Erreur lors de l\'upload du fichier' },
         { status: 500 }
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error: any) {
-    console.error('Avatar upload error:', error)
+    logger.error('Avatar upload error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Unauthorized') {
       return NextResponse.json(
@@ -154,7 +154,7 @@ export async function DELETE(request: NextRequest) {
     })
 
   } catch (error: any) {
-    console.error('Avatar delete error:', error)
+    logger.error('Avatar delete error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error.message === 'Unauthorized') {
       return NextResponse.json(

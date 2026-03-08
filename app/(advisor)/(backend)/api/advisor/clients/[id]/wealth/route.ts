@@ -4,7 +4,7 @@ import { WealthCalculationService } from '@/app/_common/lib/services/wealth-calc
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
 import type { WealthSummary } from '@/app/_common/lib/api-types'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * Transforms wealth data from service format to API response format
  */
@@ -129,7 +129,7 @@ export async function GET(
 
     return createSuccessResponse(wealthSummary)
   } catch (error: unknown) {
-    console.error('Get client wealth error:', error)
+    logger.error('Get client wealth error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -196,7 +196,7 @@ export async function POST(
       message: 'Wealth recalculated successfully',
     })
   } catch (error: unknown) {
-    console.error('Recalculate wealth error:', error)
+    logger.error('Recalculate wealth error:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

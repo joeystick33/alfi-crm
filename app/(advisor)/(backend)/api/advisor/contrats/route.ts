@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { ContratService } from '@/app/_common/lib/services/contrat-service'
-
+import { logger } from '@/app/_common/lib/logger'
 export async function GET(request: NextRequest) {
     try {
         const context = await requireAuth(request)
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
         const data = await service.listContratsWithClients(filters)
         return createSuccessResponse(data)
     } catch (error: any) {
-        console.error('Error listing contrats:', error)
+        logger.error('Error listing contrats:', { error: error instanceof Error ? error.message : String(error) })
         if (error instanceof Error && error.message === 'Unauthorized') {
             return createErrorResponse('Unauthorized', 401)
         }
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
         const data = await service.createContrat(body)
         return createSuccessResponse(data)
     } catch (error: any) {
-        console.error('Error creating contrat:', error)
+        logger.error('Error creating contrat:', { error: error instanceof Error ? error.message : String(error) })
         if (error instanceof Error && error.message === 'Unauthorized') {
             return createErrorResponse('Unauthorized', 401)
         }

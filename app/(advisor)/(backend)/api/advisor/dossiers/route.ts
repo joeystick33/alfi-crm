@@ -3,13 +3,15 @@ import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { DossierService } from '@/app/_common/lib/services/dossier-service'
 import { z } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 const createDossierSchema = z.object({
   clientId: z.string().min(1, 'Client requis'),
   conseillerId: z.string().optional(),
   nom: z.string().min(1, 'Nom du dossier requis'),
   description: z.string().optional(),
-  type: z.enum(['PATRIMOINE', 'SUCCESSION', 'RETRAITE', 'INVESTISSEMENT', 'FISCAL', 'IMMOBILIER', 'ASSURANCE', 'CONSEIL', 'AUDIT', 'FORMATION', 'AUTRE']),
+  categorie: z.enum(['PATRIMOINE', 'SUCCESSION', 'RETRAITE', 'INVESTISSEMENT', 'IMMOBILIER', 'CREDIT', 'ASSURANCE_PERSONNES', 'ASSURANCE_BIENS', 'ASSURANCE_PRO', 'ENTREPRISE', 'AUTRE']),
+  type: z.string(), // Accept any type string, will be validated by Prisma
+  status: z.enum(['EN_ATTENTE', 'EN_COURS', 'A_VALIDER', 'VALIDE', 'REJETE', 'TERMINE', 'BROUILLON', 'ACTIF', 'SUSPENDU', 'CLOTURE', 'ARCHIVE', 'ANNULE']).optional(),
   priorite: z.enum(['BASSE', 'NORMALE', 'HAUTE', 'URGENTE']).optional(),
   dateCloturePrevu: z.string().optional().transform(val => val ? new Date(val) : undefined),
   montantEstime: z.number().optional(),
@@ -18,6 +20,7 @@ const createDossierSchema = z.object({
   risques: z.string().optional(),
   recommandations: z.string().optional(),
   tags: z.array(z.string()).optional(),
+  notes: z.string().optional(),
 })
 
 function parseFilters(searchParams: URLSearchParams) {
@@ -76,7 +79,7 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse(result)
   } catch (error) {
-    console.error('Error in GET /api/advisor/dossiers:', error)
+    logger.error('Error in GET /api/advisor/dossiers:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -125,7 +128,7 @@ export async function POST(request: NextRequest) {
 
     return createSuccessResponse(dossier, 201)
   } catch (error) {
-    console.error('Error in POST /api/advisor/dossiers:', error)
+    logger.error('Error in POST /api/advisor/dossiers:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

@@ -5,7 +5,7 @@ import { TacheService } from '@/app/_common/lib/services/tache-service';
 import { isRegularUser } from '@/app/_common/lib/auth-types';
 import { z } from 'zod';
 import { TacheType, TacheStatus, TachePriority } from '@prisma/client';
-
+import { logger } from '@/app/_common/lib/logger'
 // Type for task returned by TacheService
 interface TaskItem {
   id: string;
@@ -198,7 +198,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('Error fetching tasks:', error);
+    logger.error('Error fetching tasks:', { error: error instanceof Error ? error.message : String(error) });
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401);
     }
@@ -246,7 +246,7 @@ export async function POST(request: NextRequest) {
     }, 201);
 
   } catch (error: any) {
-    console.error('Error creating task:', error);
+    logger.error('Error creating task:', { error: error instanceof Error ? error.message : String(error) });
 
     if (error instanceof z.ZodError) {
       return createErrorResponse('Données invalides', 400);

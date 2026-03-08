@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { PatrimoineService } from '@/app/_common/lib/services/patrimoine-service'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/patrimoine/stats
  * Récupère les statistiques du patrimoine (global ou par client)
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse(stats)
   } catch (error: any) {
-    console.error('Erreur récupération stats patrimoine:', error)
+    logger.error('Erreur récupération stats patrimoine:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse(
       error.message || 'Erreur lors de la récupération des statistiques',
       500

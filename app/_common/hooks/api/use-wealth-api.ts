@@ -97,7 +97,27 @@ export function useCreateActif(
 export function useClientContrats(clientId: string) {
   return useQuery({
     queryKey: ['clients', clientId, 'contrats'],
-    queryFn: () => api.get<Contrat[]>(`/advisor/clients/${clientId}/contrats`),
+    queryFn: async (): Promise<Contrat[]> => {
+      const response = await api.get<
+        | Contrat[]
+        | { data?: { contrats?: Contrat[] } | Contrat[] }
+        | { contrats?: Contrat[] }
+      >(`/advisor/clients/${clientId}/contrats`)
+
+      if (Array.isArray(response)) return response
+
+      const topLevel = response as { contrats?: Contrat[] }
+      if (Array.isArray(topLevel.contrats)) return topLevel.contrats
+
+      const wrapped = response as { data?: { contrats?: Contrat[] } | Contrat[] }
+      if (Array.isArray(wrapped.data)) return wrapped.data
+      if (wrapped.data && !Array.isArray(wrapped.data)) {
+        const inner = wrapped.data as { contrats?: Contrat[] }
+        if (Array.isArray(inner.contrats)) return inner.contrats
+      }
+
+      return []
+    },
     enabled: !!clientId,
   })
 }
@@ -108,7 +128,27 @@ export function useCreateContrat(
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ clientId, data }) => api.post<Contrat>(`/advisor/clients/${clientId}/contrats`, data),
+    mutationFn: async ({ clientId, data }) => {
+      const response = await api.post<
+        | Contrat
+        | { data?: { contrat?: Contrat } | Contrat }
+        | { contrat?: Contrat }
+      >(`/advisor/clients/${clientId}/contrats`, data)
+
+      if ((response as { id?: string })?.id) return response as Contrat
+
+      const topLevel = response as { contrat?: Contrat }
+      if (topLevel.contrat) return topLevel.contrat
+
+      const wrapped = response as { data?: { contrat?: Contrat } | Contrat }
+      if (wrapped.data && (wrapped.data as { id?: string })?.id) return wrapped.data as Contrat
+      if (wrapped.data && !(wrapped.data as { id?: string })?.id) {
+        const inner = wrapped.data as { contrat?: Contrat }
+        if (inner.contrat) return inner.contrat
+      }
+
+      throw new Error('Réponse API inattendue lors de la création du contrat')
+    },
     onSuccess: (_, { clientId }) => {
       queryClient.invalidateQueries({ queryKey: ['clients', clientId, 'contrats'] })
       queryClient.invalidateQueries({ queryKey: ['clients', clientId, 'wealth'] })

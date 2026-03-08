@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/mes-actions
  * Récupère les actions commerciales personnelles du conseiller connecté
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
 
     return createSuccessResponse({ actions })
   } catch (error) {
-    console.error('Error in GET /api/advisor/mes-actions:', error)
+    logger.error('Error in GET /api/advisor/mes-actions:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
       createdAt: task.createdAt.toISOString().split('T')[0],
     }, 201)
   } catch (error) {
-    console.error('Error in POST /api/advisor/mes-actions:', error)
+    logger.error('Error in POST /api/advisor/mes-actions:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -181,7 +181,7 @@ export async function PATCH(request: NextRequest) {
 
     return createSuccessResponse({ success: true })
   } catch (error) {
-    console.error('Error in PATCH /api/advisor/mes-actions:', error)
+    logger.error('Error in PATCH /api/advisor/mes-actions:', { error: error instanceof Error ? error.message : String(error) })
     
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

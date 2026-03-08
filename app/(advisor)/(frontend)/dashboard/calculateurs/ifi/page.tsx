@@ -3,6 +3,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
 import {
   SEUIL_IFI_2025,
   BAREME_IFI_2025,
@@ -10,7 +11,7 @@ import {
   PLAFONNEMENT_IFI_2025,
   calculerIFINet,
   calculerPlafondDettes,
-} from './parameters-ifi-2025'
+} from './parameters-ifi'
 
 const fmtEur = (n: number) => Math.round(n).toLocaleString('fr-FR') + ' €'
 const fmtPct = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + '%'
@@ -63,7 +64,7 @@ export default function IFIPage() {
                          scpiOpci + sciParts + autresImmeubles
   
   // Abattement RP (30%)
-  const abattementRP = residencePrincipale * 0.30
+  const abattementRP = residencePrincipale * RULES.ifi.abattement_rp
   
   // Exonérations
   const exonerationBoisForets = boisForets <= 101897 

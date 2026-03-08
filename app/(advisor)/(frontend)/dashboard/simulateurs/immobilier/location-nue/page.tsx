@@ -2,9 +2,14 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import Script from 'next/script'
 import { SimulatorGate } from '@/app/_common/components/FeatureGate'
 import { usePlotlyReady } from '../_hooks/usePlotlyReady'
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
+import {
+  Home, User, Calendar, CreditCard, Wallet, Lightbulb, BarChart3,
+  FileText, BookOpen, Building2, TrendingUp, Target, CheckCircle,
+  XCircle, ArrowRight, RefreshCw,
+} from 'lucide-react'
 import {
   LOCATION_NUE_DISPLAY as LOCATION_NUE,
   calculAbattementPVIR, 
@@ -208,7 +213,7 @@ export default function LocationNuePage() {
       })
 
       const data = await response.json()
-      console.log('Réponse API:', data)
+      
       if (!response.ok) throw new Error(data.error || data.message || 'Erreur lors de la simulation')
       
       const result = data.data
@@ -351,14 +356,13 @@ export default function LocationNuePage() {
 
   return (
     <SimulatorGate simulator="IMMOBILIER" showTeaser>
-      <Script src="https://cdn.plot.ly/plotly-2.27.0.min.js" strategy="afterInteractive" onLoad={handlePlotlyLoad} />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
         <main className="container mx-auto px-4 py-6 max-w-6xl">
           <Link href="/dashboard/simulateurs/immobilier" className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-flex items-center">← Simulateurs immobilier</Link>
           
           <div className="sim-card mb-6">
             <div className="flex items-center gap-4">
-              <span className="text-4xl">🏠</span>
+              <Home className="w-9 h-9 text-blue-700" />
               <div>
                 <h1 className="text-2xl font-bold">Simulateur Location Nue</h1>
                 <p className="text-gray-600">Revenus fonciers • Micro-foncier ou Réel • Déficit foncier</p>
@@ -389,7 +393,7 @@ export default function LocationNuePage() {
                 {/* ÉTAPE 1 : PROFIL CLIENT */}
                 {step === 1 && (
                   <div className="animate-fadeIn">
-                    <h2 className="text-lg font-bold mb-4">👤 Profil client</h2>
+                    <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><User className="w-5 h-5" /> Profil client</h2>
                     <p className="text-gray-600 mb-4">Pour calculer l'impact fiscal réel, nous avons besoin de votre situation actuelle.</p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div className="form-group">
@@ -436,7 +440,7 @@ export default function LocationNuePage() {
                       <div><span className="text-gray-500">Parts fiscales</span><div className="font-bold text-lg">{nombreParts}</div></div>
                       <div><span className="text-gray-500">Revenu imposable</span><div className="font-bold text-lg">{fmtEur(revenuTotalAvant)}</div></div>
                       <div><span className="text-gray-500">TMI</span><div className="font-bold text-lg text-blue-600">{tmi}%</div></div>
-                      <div><span className="text-gray-500">Patrimoine net IFI</span><div className={`font-bold text-lg ${(patrimoineImmobilierExistant - dettesImmobilieres) > 1300000 ? 'text-orange-600' : 'text-green-600'}`}>{fmtEur(patrimoineImmobilierExistant - dettesImmobilieres)}</div></div>
+                      <div><span className="text-gray-500">Patrimoine net IFI</span><div className={`font-bold text-lg ${(patrimoineImmobilierExistant - dettesImmobilieres) > RULES.ifi.seuil_assujettissement ? 'text-orange-600' : 'text-green-600'}`}>{fmtEur(patrimoineImmobilierExistant - dettesImmobilieres)}</div></div>
                     </div>
                     <div className="pedagogy-box mt-4">
                       <p className="text-sm text-blue-700"><strong>Pourquoi ces informations ?</strong> Elles permettent de calculer l'impact RÉEL sur votre IR (barème progressif) et votre IFI, pas juste une estimation avec un TMI fixe.</p>
@@ -454,7 +458,7 @@ export default function LocationNuePage() {
                 <div className="flex justify-between mt-8">
                   <button onClick={prevStep} disabled={step === 1} className="btn-secondary disabled:opacity-50">← Précédent</button>
                   {step < 7 ? <button onClick={nextStep} className="btn-primary">Suivant →</button>
-                    : <button onClick={lancerSimulation} disabled={loading} className="btn-primary">{loading ? '⏳ Calcul...' : '🧮 Lancer l\'analyse'}</button>}
+                    : <button onClick={lancerSimulation} disabled={loading} className="btn-primary">{loading ? 'Calcul...' : 'Lancer l\'analyse'}</button>}
                 </div>
               </div>
             </>
@@ -491,16 +495,16 @@ export default function LocationNuePage() {
 function Step1({ dateAcquisition, setDateAcquisition, prixAchat, setPrixAchat, fraisNotaire, setFraisNotaire, fraisAgence, setFraisAgence, travaux, setTravaux, surface, setSurface, dpe, setDpe, investissementTotal, rendementBrut, anneeExonerationIR }: any) {
   return (
     <div className="animate-fadeIn">
-      <h2 className="text-lg font-bold mb-1">🏠 Caractéristiques du bien</h2>
+      <h2 className="text-lg font-bold mb-1 flex items-center gap-2"><Home className="w-5 h-5" /> Caractéristiques du bien</h2>
       <p className="text-sm text-gray-500 mb-6">Décrivez le bien à acquérir</p>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="form-group"><label>📅 Date d'acquisition</label><input type="month" value={dateAcquisition} onChange={e => setDateAcquisition(e.target.value)} /><span className="form-hint">Pour calcul abattements PV</span></div>
+        <div className="form-group"><label className="flex items-center gap-1"><Calendar className="w-3 h-3" /> Date d'acquisition</label><input type="month" value={dateAcquisition} onChange={e => setDateAcquisition(e.target.value)} /><span className="form-hint">Pour calcul abattements PV</span></div>
         <div className="form-group"><label>Prix d'acquisition (€)</label><input type="number" value={prixAchat} onChange={e => setPrixAchat(+e.target.value)} /><span className="form-hint">Prix net vendeur</span></div>
         <div className="form-group"><label>Frais de notaire (€)</label><input type="number" value={fraisNotaire} onChange={e => setFraisNotaire(+e.target.value)} /><span className="form-hint">~8% ancien, ~3% neuf</span></div>
         <div className="form-group"><label>Frais d'agence (€)</label><input type="number" value={fraisAgence} onChange={e => setFraisAgence(+e.target.value)} /></div>
         <div className="form-group"><label>Travaux (€)</label><input type="number" value={travaux} onChange={e => setTravaux(+e.target.value)} /><span className="form-hint">Déductibles en réel</span></div>
         <div className="form-group"><label>Surface (m²)</label><input type="number" value={surface} onChange={e => setSurface(+e.target.value)} /></div>
-        <div className="form-group"><label>Classe DPE</label><select value={dpe} onChange={e => setDpe(e.target.value)}><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F ⚠️</option><option value="G">G 🚨</option></select></div>
+        <div className="form-group"><label>Classe DPE</label><select value={dpe} onChange={e => setDpe(e.target.value)}><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F (passoire)</option><option value="G">G (passoire)</option></select></div>
       </div>
       <div className="info-box mt-6 grid grid-cols-4 gap-4 text-sm">
         <div><span className="text-gray-500">Investissement total</span><div className="font-bold text-lg">{fmtEur(investissementTotal)}</div></div>
@@ -516,7 +520,7 @@ function Step1({ dateAcquisition, setDateAcquisition, prixAchat, setPrixAchat, f
 function Step2({ sansFinancement, setSansFinancement, apport, setApport, tauxCredit, setTauxCredit, dureeCredit, setDureeCredit, assuranceCredit, setAssuranceCredit, montantEmprunte, mensualiteCredit, investissementTotal }: any) {
   return (
     <div className="animate-fadeIn">
-      <h2 className="text-lg font-bold mb-1">💳 Financement</h2>
+      <h2 className="text-lg font-bold mb-1 flex items-center gap-2"><CreditCard className="w-5 h-5" /> Financement</h2>
       <p className="text-sm text-gray-500 mb-6">Paramètres du crédit immobilier</p>
       
       {/* Option achat comptant */}
@@ -532,7 +536,7 @@ function Step2({ sansFinancement, setSansFinancement, apport, setApport, tauxCre
             className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
           />
           <div>
-            <span className="font-semibold text-slate-800">💵 Achat au comptant (sans financement)</span>
+            <span className="font-semibold text-slate-800 flex items-center gap-2"><Wallet className="w-4 h-4" /> Achat au comptant (sans financement)</span>
             <p className="text-sm text-slate-500">Cochez cette case si le client ne passe pas par un crédit immobilier</p>
           </div>
         </label>
@@ -540,7 +544,7 @@ function Step2({ sansFinancement, setSansFinancement, apport, setApport, tauxCre
       
       {sansFinancement ? (
         <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6 text-center">
-          <div className="text-4xl mb-3">💰</div>
+          <Wallet className="w-9 h-9 text-emerald-600 mb-3" />
           <h3 className="font-bold text-emerald-800 text-lg mb-2">Achat au comptant</h3>
           <p className="text-emerald-700">Investissement total : <strong className="text-xl">{fmtEur(investissementTotal)}</strong></p>
           <p className="text-sm text-emerald-600 mt-2">Pas de crédit, pas d'intérêts déductibles. Fiscalité simplifiée.</p>
@@ -559,8 +563,8 @@ function Step2({ sansFinancement, setSansFinancement, apport, setApport, tauxCre
             <div><span className="text-gray-500">LTV</span><div className="font-bold text-lg">{investissementTotal > 0 ? fmtPct(montantEmprunte / investissementTotal * 100) : '-'}</div></div>
           </div>
           <div className="pedagogy-box mt-4">
-            <p className="text-sm text-blue-700 mb-2">💡 <strong>Intérêts déductibles :</strong> En régime réel, les intérêts d'emprunt et l'assurance sont intégralement déductibles des revenus fonciers.</p>
-            <p className="text-sm text-blue-700">💡 <strong>CSG déductible N+1 :</strong> Sur les revenus fonciers au réel, 6,8% de la CSG payée est déductible du revenu imposable l'année suivante.</p>
+            <p className="text-sm text-blue-700 mb-2"><strong>Intérêts déductibles :</strong> En régime réel, les intérêts d'emprunt et l'assurance sont intégralement déductibles des revenus fonciers.</p>
+            <p className="text-sm text-blue-700"><strong>CSG déductible N+1 :</strong> Sur les revenus fonciers au réel, 6,8% de la CSG payée est déductible du revenu imposable l'année suivante.</p>
           </div>
         </>
       )}
@@ -572,7 +576,7 @@ function Step2({ sansFinancement, setSansFinancement, apport, setApport, tauxCre
 function Step3({ loyerMensuel, setLoyerMensuel, vacanceSemaines, setVacanceSemaines, revalorisationLoyer, setRevalorisationLoyer, loyerAnnuelBrut, loyerAnnuelNet, tauxVacance, rendementBrut }: any) {
   return (
     <div className="animate-fadeIn">
-      <h2 className="text-lg font-bold mb-1">💰 Revenus locatifs</h2>
+      <h2 className="text-lg font-bold mb-1 flex items-center gap-2"><Wallet className="w-5 h-5" /> Revenus locatifs</h2>
       <p className="text-sm text-gray-500 mb-6">Estimation des loyers</p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="form-group"><label>Loyer mensuel HC (€)</label><input type="number" value={loyerMensuel} onChange={e => setLoyerMensuel(+e.target.value)} /></div>
@@ -593,7 +597,7 @@ function Step3({ loyerMensuel, setLoyerMensuel, vacanceSemaines, setVacanceSemai
 function Step4({ taxeFonciere, setTaxeFonciere, chargesCopro, setChargesCopro, assurancePNO, setAssurancePNO, assuranceGLI, setAssuranceGLI, fraisGestion, setFraisGestion, provisionTravaux, setProvisionTravaux, fraisProcedure, setFraisProcedure, travauxAmelioration, setTravauxAmelioration, totalCharges, chargesExceptionnellesAn1, loyerAnnuelNet }: any) {
   return (
     <div className="animate-fadeIn">
-      <h2 className="text-lg font-bold mb-1">📋 Charges déductibles (CGI art. 31)</h2>
+      <h2 className="text-lg font-bold mb-1 flex items-center gap-2"><FileText className="w-5 h-5" /> Charges déductibles (CGI art. 31)</h2>
       <p className="text-sm text-gray-500 mb-6">Charges non récupérables déductibles en régime réel</p>
       
       {/* CHARGES COURANTES */}
@@ -623,10 +627,10 @@ function Step4({ taxeFonciere, setTaxeFonciere, chargesCopro, setChargesCopro, a
       
       {/* PÉDAGOGIE */}
       <div className="pedagogy-box mt-4">
-        <h4 className="font-semibold text-blue-800 mb-2">📚 Charges déductibles vs non déductibles</h4>
+        <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><BookOpen className="w-4 h-4" /> Charges déductibles vs non déductibles</h4>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <p className="font-medium text-emerald-700 mb-1">✅ Déductibles (art. 31 CGI)</p>
+            <p className="font-medium text-emerald-700 mb-1">Déductibles (art. 31 CGI)</p>
             <ul className="text-blue-700 space-y-0.5 text-xs">
               <li>• Intérêts d'emprunt + assurance</li>
               <li>• Taxe foncière (hors TEOM)</li>
@@ -638,7 +642,7 @@ function Step4({ taxeFonciere, setTaxeFonciere, chargesCopro, setChargesCopro, a
             </ul>
           </div>
           <div>
-            <p className="font-medium text-red-600 mb-1">❌ Non déductibles</p>
+            <p className="font-medium text-red-600 mb-1">Non déductibles</p>
             <ul className="text-slate-600 space-y-0.5 text-xs">
               <li>• Travaux construction/agrandissement</li>
               <li>• Capital remboursé du crédit</li>
@@ -657,13 +661,13 @@ function Step4({ taxeFonciere, setTaxeFonciere, chargesCopro, setChargesCopro, a
 function Step5({ regimeFiscal, setRegimeFiscal, tmi, irAvant, revenuTotalAvant, ifiAvant, deficitAnterieur, setDeficitAnterieur, eligibleMicroFoncier, loyerAnnuelNet, totalCharges }: any) {
   return (
     <div className="animate-fadeIn">
-      <h2 className="text-lg font-bold mb-1">🏛️ Fiscalité</h2>
+      <h2 className="text-lg font-bold mb-1 flex items-center gap-2"><Building2 className="w-5 h-5" /> Fiscalité</h2>
       <p className="text-sm text-gray-500 mb-6">Régime fiscal et déficit antérieur</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="form-group">
           <label>Régime fiscal</label>
           <select value={regimeFiscal} onChange={e => setRegimeFiscal(e.target.value)}>
-            <option value="MICRO_FONCIER" disabled={!eligibleMicroFoncier}>Micro-foncier (abatt. 30%){!eligibleMicroFoncier ? ' ❌' : ''}</option>
+            <option value="MICRO_FONCIER" disabled={!eligibleMicroFoncier}>Micro-foncier (abatt. 30%){!eligibleMicroFoncier ? ' (non éligible)' : ''}</option>
             <option value="REEL">Régime réel</option>
           </select>
           {!eligibleMicroFoncier && <span className="form-hint text-orange-600">Revenus {">"} 15 000 € : réel obligatoire</span>}
@@ -677,7 +681,7 @@ function Step5({ regimeFiscal, setRegimeFiscal, tmi, irAvant, revenuTotalAvant, 
         <div><span className="text-gray-500">IFI actuel</span><div className={`font-bold text-lg ${ifiAvant?.assujetti ? 'text-orange-600' : 'text-green-600'}`}>{ifiAvant?.assujetti ? fmtEur(ifiAvant.impotNet) : 'Non assujetti'}</div></div>
       </div>
       <div className="pedagogy-box mt-6">
-        <h4 className="font-semibold text-blue-800 mb-2">📊 Comparaison rapide (année 1)</h4>
+        <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Comparaison rapide (année 1)</h4>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="bg-white/50 p-3 rounded-lg">
             <div className="font-medium">Micro-foncier</div>
@@ -687,7 +691,7 @@ function Step5({ regimeFiscal, setRegimeFiscal, tmi, irAvant, revenuTotalAvant, 
           <div className="bg-white/50 p-3 rounded-lg">
             <div className="font-medium">Régime réel</div>
             <div>Charges déductibles : {fmtEur(Math.round(totalCharges))} + intérêts</div>
-            <div className="text-green-600 font-medium">{totalCharges > loyerAnnuelNet * 0.3 ? '✅ Plus avantageux' : 'Équivalent ou moins'}</div>
+            <div className="text-green-600 font-medium">{totalCharges > loyerAnnuelNet * 0.3 ? 'Plus avantageux' : 'Équivalent ou moins'}</div>
             <div className="text-xs text-gray-500 mt-1">+ CSG déductible N+1 (6,8%)</div>
           </div>
         </div>
@@ -702,7 +706,7 @@ function Step6({ dureeDetention, setDureeDetention, revalorisationBien, setReval
   const abattPS = calculAbattementPVPS(dureeDetention)
   return (
     <div className="animate-fadeIn">
-      <h2 className="text-lg font-bold mb-1">📈 Projection & Revente</h2>
+      <h2 className="text-lg font-bold mb-1 flex items-center gap-2"><TrendingUp className="w-5 h-5" /> Projection & Revente</h2>
       <p className="text-sm text-gray-500 mb-6">Horizon d'investissement et hypothèses</p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="form-group"><label>Durée de détention (années)</label><input type="number" value={dureeDetention} onChange={e => setDureeDetention(+e.target.value)} min={1} max={40} /></div>
@@ -710,10 +714,10 @@ function Step6({ dureeDetention, setDureeDetention, revalorisationBien, setReval
         <div className="form-group"><label>Frais de revente (%)</label><input type="number" value={fraisRevente} onChange={e => setFraisRevente(+e.target.value)} step={0.5} /></div>
       </div>
       <div className="pedagogy-box mt-6">
-        <h4 className="font-semibold text-blue-800 mb-2">📊 Abattements plus-value à {dureeDetention} ans</h4>
+        <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Abattements plus-value à {dureeDetention} ans</h4>
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><span className="text-gray-600">Abattement IR :</span> <strong className={abattIR >= 100 ? 'text-green-600' : ''}>{fmtPct(abattIR)}</strong> {abattIR >= 100 && '✅ Exonéré'}</div>
-          <div><span className="text-gray-600">Abattement PS :</span> <strong className={abattPS >= 100 ? 'text-green-600' : ''}>{fmtPct(abattPS)}</strong> {abattPS >= 100 && '✅ Exonéré'}</div>
+          <div><span className="text-gray-600">Abattement IR :</span> <strong className={abattIR >= 100 ? 'text-green-600' : ''}>{fmtPct(abattIR)}</strong> {abattIR >= 100 && 'Exonéré'}</div>
+          <div><span className="text-gray-600">Abattement PS :</span> <strong className={abattPS >= 100 ? 'text-green-600' : ''}>{fmtPct(abattPS)}</strong> {abattPS >= 100 && 'Exonéré'}</div>
         </div>
         <p className="text-xs text-blue-600 mt-2">Exonération IR totale après 22 ans • Exonération PS totale après 30 ans</p>
       </div>
@@ -759,7 +763,7 @@ function Results({ synthese, projections, explications, alertes, conseils, duree
           </div>
         </div>
         <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <h4 className="font-semibold text-blue-800 mb-2">📊 Comprendre la fiscalité foncière</h4>
+          <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Comprendre la fiscalité foncière</h4>
           <div className="text-sm text-blue-700 space-y-1">
             <p>• <strong>IR actuel</strong> : {pc.irAvant > 0 ? `Vous payez ${fmtEur(pc.irAvant)} d'IR sur vos revenus de ${fmtEur(pc.revenuTotalAvant)}.` : `Pas d'IR actuellement sur vos revenus déclarés.`}</p>
             <p>• <strong>Régime {s.regimeFiscal === 'MICRO_FONCIER' ? 'Micro-foncier' : 'Réel'}</strong> : {s.regimeFiscal === 'MICRO_FONCIER' ? 'Abattement forfaitaire de 30% sur les loyers.' : 'Déduction des charges réelles (intérêts, travaux, charges...).'}</p>
@@ -817,7 +821,7 @@ function Results({ synthese, projections, explications, alertes, conseils, duree
 
       {/* TIMELINE DES ÉVÉNEMENTS */}
       <div className="sim-card">
-        <h3 className="font-bold mb-4 text-slate-800">📅 Timeline des événements clés</h3>
+        <h3 className="font-bold mb-4 text-slate-800 flex items-center gap-2"><Calendar className="w-5 h-5" /> Timeline des événements clés</h3>
         <div className="relative">
           <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-blue-200" />
           <div className="space-y-4">
@@ -825,35 +829,35 @@ function Results({ synthese, projections, explications, alertes, conseils, duree
               <div className="absolute left-2.5 w-3 h-3 bg-blue-600 rounded-full border-2 border-white" />
               <div className="flex-1 bg-blue-50 p-3 rounded-lg border border-blue-200">
                 <div className="font-semibold text-blue-800">{s.anneeAcquisition}</div>
-                <div className="text-sm text-blue-700">🏠 Acquisition du bien • Investissement {fmtEur(s.investissementTotal)}</div>
+                <div className="text-sm text-blue-700">Acquisition du bien • Investissement {fmtEur(s.investissementTotal)}</div>
               </div>
             </div>
             <div className="relative flex items-start pl-10">
               <div className="absolute left-2.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white" />
               <div className="flex-1 bg-emerald-50 p-3 rounded-lg border border-emerald-200">
                 <div className="font-semibold text-emerald-800">{s.anneeFinCredit}</div>
-                <div className="text-sm text-emerald-700">✅ Fin du crédit immobilier • Plus de mensualités</div>
+                <div className="text-sm text-emerald-700">Fin du crédit immobilier • Plus de mensualités</div>
               </div>
             </div>
             <div className="relative flex items-start pl-10">
               <div className="absolute left-2.5 w-3 h-3 bg-amber-500 rounded-full border-2 border-white" />
               <div className="flex-1 bg-amber-50 p-3 rounded-lg border border-amber-200">
                 <div className="font-semibold text-amber-800">{s.anneeExonerationIR}</div>
-                <div className="text-sm text-amber-700">🎯 Exonération PV IR (22 ans de détention)</div>
+                <div className="text-sm text-amber-700">Exonération PV IR (22 ans de détention)</div>
               </div>
             </div>
             <div className="relative flex items-start pl-10">
               <div className="absolute left-2.5 w-3 h-3 bg-purple-500 rounded-full border-2 border-white" />
               <div className="flex-1 bg-slate-50 p-3 rounded-lg border border-slate-200">
                 <div className="font-semibold text-slate-800">{s.anneeExonerationPS}</div>
-                <div className="text-sm text-slate-700">🎯 Exonération PV PS (30 ans de détention)</div>
+                <div className="text-sm text-slate-700">Exonération PV PS (30 ans de détention)</div>
               </div>
             </div>
             {s.anneeRevente && <div className="relative flex items-start pl-10">
               <div className="absolute left-2.5 w-3 h-3 bg-red-500 rounded-full border-2 border-white" />
               <div className="flex-1 bg-red-50 p-3 rounded-lg border border-red-200">
                 <div className="font-semibold text-red-800">{s.anneeRevente}</div>
-                <div className="text-sm text-red-700">📤 Revente simulée • Valeur {fmtEur(s.valeurRevente)}</div>
+                <div className="text-sm text-red-700">Revente simulée • Valeur {fmtEur(s.valeurRevente)}</div>
               </div>
             </div>}
           </div>
@@ -892,7 +896,7 @@ function Results({ synthese, projections, explications, alertes, conseils, duree
 
       {/* PLUS-VALUE */}
       <div className="sim-card">
-        <h3 className="font-bold mb-4 text-slate-800">📊 Plus-value à la revente ({dureeDetention} ans)</h3>
+        <h3 className="font-bold mb-4 text-slate-800 flex items-center gap-2"><BarChart3 className="w-5 h-5" /> Plus-value à la revente ({dureeDetention} ans)</h3>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm mb-4">
           <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg"><div className="text-slate-500 text-xs">Valeur estimée</div><div className="font-bold text-slate-800">{fmtEur(s.valeurRevente)}</div></div>
           <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg"><div className="text-emerald-600 text-xs">PV brute</div><div className="font-bold text-emerald-600">+{fmtEur(s.pvBrute)}</div></div>
@@ -906,7 +910,7 @@ function Results({ synthese, projections, explications, alertes, conseils, duree
           onClick={() => setShowDetailPV(!showDetailPV)}
           className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 mb-3"
         >
-          {showDetailPV ? '▼ Masquer' : '▶ Afficher'} le détail du calcul (CGI art. 150 VB)
+          {showDetailPV ? 'Masquer' : 'Analyser'} le détail du calcul (CGI art. 150 VB)
         </button>
         
         {showDetailPV && (
@@ -949,7 +953,7 @@ function Results({ synthese, projections, explications, alertes, conseils, duree
         )}
         
         <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700 mt-3">
-          <p className="text-xs">💡 Exonération IR après 22 ans • Exonération PS après 30 ans • Forfait 15% travaux si détention {">"} 5 ans</p>
+          <p className="text-xs">Exonération IR après 22 ans • Exonération PS après 30 ans • Forfait 15% travaux si détention {">"} 5 ans</p>
         </div>
       </div>
 
@@ -991,7 +995,7 @@ function Results({ synthese, projections, explications, alertes, conseils, duree
 
       {/* SYNTHÈSE ET AVIS PROFESSIONNEL */}
       <div className="sim-card">
-        <h3 className="font-bold mb-6 text-xl text-slate-800">🎯 Synthèse et avis professionnel</h3>
+        <h3 className="font-bold mb-6 text-xl text-slate-800 flex items-center gap-2"><Target className="w-5 h-5" /> Synthèse et avis professionnel</h3>
         
         {/* Score global - Système de notation équilibré (base 0) */}
         {(() => {
@@ -1112,7 +1116,7 @@ function Results({ synthese, projections, explications, alertes, conseils, duree
                 
                 {showScoreDetail && (
                   <div className="mt-3 bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm">
-                    <h5 className="font-bold text-slate-700 mb-3">📊 Méthode de calcul du score (base 0, max 10)</h5>
+                    <h5 className="font-bold text-slate-700 mb-3 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Méthode de calcul du score (base 0, max 10)</h5>
                     <p className="text-slate-600 mb-3">Le score est calculé en additionnant des points selon 5 critères clés d'un investissement locatif :</p>
                     
                     <div className="overflow-x-auto">
@@ -1219,28 +1223,28 @@ function Results({ synthese, projections, explications, alertes, conseils, duree
         {/* Recommandation finale */}
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
           <h4 className="font-bold text-blue-800 mb-3 flex items-center gap-2">
-            <span className="text-lg">📋</span> Recommandation personnalisée
+            <FileText className="w-5 h-5" /> Recommandation personnalisée
           </h4>
           <div className="text-sm text-slate-700 leading-relaxed space-y-3">
             {s.tri >= 6 && s.cfMoyenMois >= 0 ? (
               <>
                 <p>Cette opération présente un <strong className="text-emerald-600">excellent profil rendement/risque</strong>. Avec un TRI de <strong>{fmtPct(s.tri)}</strong> et un cash-flow positif, elle s'autofinance tout en constituant un patrimoine de <strong>{fmtEur(s.capitalFinal)}</strong>.</p>
                 <div className="bg-white rounded-lg p-3 border border-blue-100">
-                  <strong className="text-blue-700">👉 Stratégie recommandée :</strong> Conserver le bien au minimum <strong>{Math.max(22, dureeCredit)} ans</strong> pour bénéficier de l'exonération d'IR sur la plus-value.
+                  <strong className="text-blue-700 flex items-center gap-1"><ArrowRight className="w-4 h-4" /> Stratégie recommandée :</strong> Conserver le bien au minimum <strong>{Math.max(22, dureeCredit)} ans</strong> pour bénéficier de l'exonération d'IR sur la plus-value.
                 </div>
               </>
             ) : s.tri >= 4 ? (
               <>
                 <p>Cette opération présente un <strong className="text-blue-600">bon potentiel patrimonial</strong> avec un TRI de <strong>{fmtPct(s.tri)}</strong>. {s.cfMoyenMois < 0 ? <>L'effort mensuel de <strong>{fmtEur(Math.abs(s.cfMoyenMois))}</strong> est à prévoir mais reste gérable.</> : <>Le cash-flow est équilibré.</>}</p>
                 <div className="bg-white rounded-lg p-3 border border-blue-100">
-                  <strong className="text-blue-700">👉 Stratégie recommandée :</strong> Privilégier une détention longue (22+ ans) pour optimiser la fiscalité. Étudiez aussi la possibilité de passer en LMNP pour bénéficier des amortissements.
+                  <strong className="text-blue-700 flex items-center gap-1"><ArrowRight className="w-4 h-4" /> Stratégie recommandée :</strong> Privilégier une détention longue (22+ ans) pour optimiser la fiscalité. Étudiez aussi la possibilité de passer en LMNP pour bénéficier des amortissements.
                 </div>
               </>
             ) : (
               <>
                 <p>Cette opération peut être <strong className="text-amber-600">optimisée</strong>. Avec un TRI de <strong>{fmtPct(s.tri)}</strong>, des ajustements permettraient d'améliorer la rentabilité.</p>
                 <div className="bg-white rounded-lg p-3 border border-blue-100">
-                  <strong className="text-blue-700">👉 Pistes d'amélioration :</strong>
+                  <strong className="text-blue-700 flex items-center gap-1"><ArrowRight className="w-4 h-4" /> Pistes d'amélioration :</strong>
                   <ul className="mt-2 space-y-1 ml-4">
                     <li>• Renégocier le prix d'achat (-5 à -10%)</li>
                     <li>• Passer en location meublée (LMNP) pour les amortissements</li>
@@ -1253,12 +1257,12 @@ function Results({ synthese, projections, explications, alertes, conseils, duree
         </div>
         
         <div className="mt-4 p-3 bg-slate-100 rounded-lg text-xs text-slate-600">
-          <strong>💡 Location nue vs LMNP :</strong> La location nue offre une stabilité locative (baux 3 ans) mais une fiscalité moins favorable (pas d'amortissement). Pour optimiser, envisagez le passage en meublé si compatible avec le marché local.
+          <strong>Location nue vs LMNP :</strong> La location nue offre une stabilité locative (baux 3 ans) mais une fiscalité moins favorable (pas d'amortissement). Pour optimiser, envisagez le passage en meublé si compatible avec le marché local.
         </div>
       </div>
 
       <div className="flex justify-center gap-4">
-        <button onClick={onReset} className="btn-primary">🔄 Nouvelle simulation</button>
+        <button onClick={onReset} className="btn-primary flex items-center gap-2"><RefreshCw className="w-4 h-4" /> Nouvelle simulation</button>
       </div>
     </div>
   )

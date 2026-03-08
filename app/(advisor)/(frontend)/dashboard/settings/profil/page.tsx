@@ -468,10 +468,10 @@ export default function ProfilPage() {
             </div>
             <div className="p-4 bg-gray-50 rounded-xl">
               <p className="text-xs text-gray-500 mb-1">Plan</p>
-              <p className="text-sm font-medium text-gray-900 flex items-center gap-2">
+              <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
                 {getPlanLabel(profile.cabinet?.plan)}
                 <Badge variant="success" size="xs">{profile.cabinet?.status || 'Actif'}</Badge>
-              </p>
+              </div>
             </div>
           </div>
         </CardContent>

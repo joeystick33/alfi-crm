@@ -6,7 +6,7 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
-
+import { logger } from '@/app/_common/lib/logger'
 const fraisInputSchema = z.object({
   duree: z.number().min(1).max(99).default(15),
   versement_initial: z.number().min(0).default(10000),
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return createErrorResponse(`Données invalides: ${error.issues.map(e => e.message).join(', ')}`, 400)
     }
-    console.error('Erreur simulateur frais AV:', error)
+    logger.error('Erreur simulateur frais AV:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la simulation', 500)
   }
 }

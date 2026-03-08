@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
-
+import { logger } from '@/app/_common/lib/logger'
+import { RULES } from '@/app/_common/lib/rules/fiscal-rules'
 const taxCompareSchema = z.object({
     income: z.number().positive('Le revenu doit être positif'),
     currentDeductions: z.number().min(0, 'Les déductions doivent être positives'),
@@ -10,15 +11,13 @@ const taxCompareSchema = z.object({
 })
 
 /**
- * Barème progressif de l'impôt sur le revenu 2024
+ * Barème progressif de l'impôt sur le revenu 2026 (revenus 2025)
+ * LF2026 art. 2 ter — Revalorisation +0,9%
  */
-const TAX_BRACKETS_2024 = [
-    { limit: 11294, rate: 0 },
-    { limit: 28797, rate: 0.11 },
-    { limit: 82341, rate: 0.30 },
-    { limit: 177106, rate: 0.41 },
-    { limit: Infinity, rate: 0.45 }
-]
+const TAX_BRACKETS_2024 = RULES.ir.bareme.map(t => ({
+    limit: t.max,
+    rate: t.taux,
+}))
 
 interface TaxStrategy {
     strategyName: string
@@ -263,7 +262,7 @@ export async function POST(request: NextRequest) {
 
         return createSuccessResponse(result)
     } catch (error) {
-        console.error('Error in tax strategy comparison:', error)
+        logger.error('Error in tax strategy comparison:', { error: error instanceof Error ? error.message : String(error) })
         if (error instanceof z.ZodError) {
             return createErrorResponse('Validation error: ' + error.message, 400)
         }

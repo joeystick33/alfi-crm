@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectiveCalculator } from '@/app/_common/lib/services/calculators/objective-calculator';
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * POST /api/calculators/objectives/single
  * Calculate required contributions for a single financial objective
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error calculating single objective:', error);
+    logger.error('Error calculating single objective:', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { 
         error: 'Calculation Error', 

@@ -8,7 +8,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, createErrorResponse, createSuccessResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
-
+import { logger } from '@/app/_common/lib/logger'
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -53,7 +53,7 @@ export async function GET(
       count: documents.length,
     })
   } catch (error: any) {
-    console.error('Error getting declarations:', error)
+    logger.error('Error getting declarations:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
@@ -138,7 +138,7 @@ export async function POST(
       message: 'Déclaration créée avec succès',
     }, 201)
   } catch (error: any) {
-    console.error('Error creating declaration:', error)
+    logger.error('Error creating declaration:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

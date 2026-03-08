@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, createErrorResponse } from '@/app/_common/lib/auth-helpers'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
 import { prisma } from '@/app/_common/lib/prisma'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * API Mon Portefeuille - Stats et revue portefeuille du conseiller
  * GET /api/advisor/mon-portefeuille
@@ -203,7 +203,7 @@ export async function GET(request: NextRequest) {
       }))
     })
   } catch (error: any) {
-    console.error('Error fetching portfolio:', error)
+    logger.error('Error fetching portfolio:', { error: error instanceof Error ? error.message : String(error) })
     if (error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)
     }

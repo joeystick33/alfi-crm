@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, createErrorResponse } from '@/app/_common/lib/auth-helpers'
 import { SignatureService } from '@/app/_common/lib/services/signature-service'
 import { isRegularUser } from '@/app/_common/lib/auth-types'
-
+import { logger } from '@/app/_common/lib/logger'
 /**
  * GET /api/advisor/documents/signatures/stats
  * Récupère les statistiques globales des workflows de signature
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     // Retourne directement l'objet de stats (sans wrapper data)
     return NextResponse.json(stats)
   } catch (error) {
-    console.error('Error in GET /api/advisor/documents/signatures/stats:', error)
+    logger.error('Error in GET /api/advisor/documents/signatures/stats:', { error: error instanceof Error ? error.message : String(error) })
 
     if (error instanceof Error && error.message === 'Unauthorized') {
       return createErrorResponse('Unauthorized', 401)

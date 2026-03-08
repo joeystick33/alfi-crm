@@ -3,9 +3,12 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import Script from 'next/script'
 import { SimulatorGate } from '@/app/_common/components/FeatureGate'
 import { usePlotlyReady } from '../_hooks/usePlotlyReady'
+import {
+  Hammer, User, Home, Wrench, CreditCard, Wallet, FileText, Landmark,
+  BarChart3, TrendingUp, Target, Briefcase, AlertTriangle, RefreshCw, BookOpen,
+} from 'lucide-react'
 import { 
   DISPOSITIFS_FISCAUX_DISPLAY as DISPOSITIFS_FISCAUX, 
   calculIRDetaille, 
@@ -329,13 +332,12 @@ export default function DenormandiePage() {
 
   return (
     <SimulatorGate simulator="IMMOBILIER" showTeaser>
-      <Script src="https://cdn.plot.ly/plotly-2.27.0.min.js" strategy="afterInteractive" onLoad={handlePlotlyLoad} />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-sky-50">
         <main className="container mx-auto px-4 py-6 max-w-6xl">
           <Link href="/dashboard/simulateurs/immobilier" className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-flex items-center">← Simulateurs immobilier</Link>
           <div className="sim-card mb-6">
             <div className="flex items-center gap-4">
-              <span className="text-4xl">🔨</span>
+              <Hammer className="w-9 h-9 text-blue-700" />
               <div>
                 <h1 className="text-2xl font-bold">Simulateur Denormandie</h1>
                 <p className="text-gray-600">Ancien avec travaux • Centre-ville • Réduction IR</p>
@@ -354,7 +356,7 @@ export default function DenormandiePage() {
 
               {/* ÉTAPE 1 : PROFIL CLIENT (OBLIGATOIRE selon standard) */}
               {step === 1 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-1">👤 Votre profil fiscal</h2>
+                <h2 className="text-lg font-bold mb-1 flex items-center gap-2"><User className="w-5 h-5" /> Votre profil fiscal</h2>
                 <p className="text-sm text-gray-500 mb-6">Ces informations permettent de calculer l'impact RÉEL sur votre IR et IFI</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="form-group"><label>Situation familiale</label><select value={situationFamiliale} onChange={e=>setSituationFamiliale(e.target.value as SituationFamiliale)}><option value="CELIBATAIRE">Célibataire</option><option value="MARIE_PACSE">Marié / Pacsé</option><option value="VEUF">Veuf</option></select></div>
@@ -383,7 +385,7 @@ export default function DenormandiePage() {
 
               {/* ÉTAPE 2 : BIEN ANCIEN */}
               {step === 2 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">🏠 Bien ancien</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Home className="w-5 h-5" /> Bien ancien</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="form-group"><label>Date d'acquisition</label><input type="month" value={dateAcquisition} onChange={e=>setDateAcquisition(e.target.value)}/></div>
                   <div className="form-group"><label>Prix d'acquisition (€)</label><input type="number" value={prixAcquisition} onChange={e=>setPrixAcquisition(+e.target.value)}/></div>
@@ -397,12 +399,12 @@ export default function DenormandiePage() {
                   </select><span className="form-hint">Zones B2 possibles via agrément préfectoral.</span></div>
                   <div className="form-group flex items-center gap-2 pt-6"><input type="checkbox" checked={communeEligible} onChange={e=>setCommuneEligible(e.target.checked)} className="w-5 h-5"/><label>Commune Action Cœur de Ville / ORT</label></div>
                 </div>
-                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-blue-800 mb-2">🏛️ Communes éligibles Denormandie</h4><ul className="text-sm text-blue-700 space-y-1">{COMMUNES_ELIGIBLES.map((c,i) => <li key={i}>• {c}</li>)}</ul></div>
+                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><Landmark className="w-4 h-4" /> Communes éligibles Denormandie</h4><ul className="text-sm text-blue-700 space-y-1">{COMMUNES_ELIGIBLES.map((c,i) => <li key={i}>• {c}</li>)}</ul></div>
               </div>}
 
               {/* ÉTAPE 3 : TRAVAUX */}
               {step === 3 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">🔧 Travaux (min. 25% du coût total)</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Wrench className="w-5 h-5" /> Travaux (min. 25% du coût total)</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="form-group"><label>Travaux total (€)</label><input type="number" value={travauxTotal} onChange={e=>setTravauxTotal(+e.target.value)}/></div>
                   <div className="form-group"><label>Dont rénovation énergétique (€)</label><input type="number" value={travauxRenovEnergetique} onChange={e=>setTravauxRenovEnergetique(+e.target.value)}/></div>
@@ -419,14 +421,14 @@ export default function DenormandiePage() {
 
               {/* ÉTAPE 4 : FINANCEMENT */}
               {step === 4 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">💳 Financement</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><CreditCard className="w-5 h-5" /> Financement</h2>
                 
                 {/* Option achat comptant */}
                 <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6">
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input type="checkbox" checked={sansFinancement} onChange={(e) => { setSansFinancement(e.target.checked); if (e.target.checked) setApport(investTotal) }} className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"/>
                     <div>
-                      <span className="font-semibold text-slate-800">💵 Achat au comptant (sans financement)</span>
+                      <span className="font-semibold text-slate-800 flex items-center gap-2"><Wallet className="w-4 h-4" /> Achat au comptant (sans financement)</span>
                       <p className="text-sm text-slate-500">Cochez cette case si le client ne passe pas par un crédit immobilier</p>
                     </div>
                   </label>
@@ -434,7 +436,7 @@ export default function DenormandiePage() {
                 
                 {sansFinancement ? (
                   <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6 text-center">
-                    <div className="text-4xl mb-3">💰</div>
+                    <Wallet className="w-9 h-9 text-emerald-600 mb-3" />
                     <h3 className="font-bold text-emerald-800 text-lg mb-2">Achat au comptant</h3>
                     <p className="text-emerald-700">Investissement total : <strong className="text-xl">{fmtEur(investTotal)}</strong></p>
                   </div>
@@ -457,7 +459,7 @@ export default function DenormandiePage() {
 
               {/* ÉTAPE 5 : REVENUS LOCATIFS */}
               {step === 5 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">💰 Revenus locatifs</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Wallet className="w-5 h-5" /> Revenus locatifs</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="form-group"><label>Loyer mensuel (€)</label><input type="number" value={loyerMensuel} onChange={e=>setLoyerMensuel(+e.target.value)}/><span className={`form-hint ${loyerMensuel > loyerMaxMensuel ? 'text-red-500' : 'text-green-600'}`}>Max zone {zone}: {fmtEur(loyerMaxMensuel)}</span></div>
                   <div className="form-group"><label>Vacance (semaines/an)</label><input type="number" value={vacanceSemaines} onChange={e=>setVacanceSemaines(+e.target.value)} min={0} max={52}/></div>
@@ -472,7 +474,7 @@ export default function DenormandiePage() {
 
               {/* ÉTAPE 6 : CHARGES */}
               {step === 6 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-1">📋 Charges déductibles</h2>
+                <h2 className="text-lg font-bold mb-1 flex items-center gap-2"><FileText className="w-5 h-5" /> Charges déductibles</h2>
                 <p className="text-sm text-gray-500 mb-6">Charges non récupérables déductibles des revenus fonciers</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="form-group"><label>Taxe foncière (€)</label><input type="number" value={taxeFonciere} onChange={e=>setTaxeFonciere(+e.target.value)}/></div>
@@ -488,7 +490,7 @@ export default function DenormandiePage() {
 
               {/* ÉTAPE 7 : PROJECTION */}
               {step === 7 && <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold mb-4">🏛️ Engagement et Projection</h2>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Landmark className="w-5 h-5" /> Engagement et Projection</h2>
                 <h3 className="font-semibold text-slate-700 mb-3">Durée d'engagement</h3>
                 <div className="grid grid-cols-3 gap-4 mb-6">
                   {([6, 9, 12] as DureeEngagement[]).map(d => {
@@ -518,7 +520,7 @@ export default function DenormandiePage() {
                   <div><span className="text-gray-500">Réduction totale</span><div className="font-bold text-lg text-blue-600">{fmtEur(Math.round(reductionTotale))}</div></div>
                   <div><span className="text-gray-500">Réduction/an</span><div className="font-bold text-lg text-emerald-600">{fmtEur(Math.round(reductionAnnuelle))}</div></div>
                 </div>
-                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-blue-800 mb-2">⚠️ Obligations Denormandie</h4><ul className="text-sm text-blue-700 space-y-1">
+                <div className="pedagogy-box mt-4"><h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Obligations Denormandie</h4><ul className="text-sm text-blue-700 space-y-1">
                   <li>• Location nue à usage de résidence principale</li>
                   <li>• Respect des plafonds de loyer ({fmtEur(loyerMaxMensuel)}/mois max) et ressources locataires</li>
                   <li>• Location dans les 12 mois suivant l'achèvement des travaux</li>
@@ -529,7 +531,7 @@ export default function DenormandiePage() {
 
               <div className="flex justify-between mt-8">
                 <button onClick={()=>setStep(Math.max(1,step-1))} disabled={step===1} className="btn-secondary disabled:opacity-50">← Précédent</button>
-                {step < 7 ? <button onClick={()=>setStep(step+1)} className="btn-primary">Suivant →</button> : <button onClick={lancerSimulation} disabled={loading || !travauxEligibles || !communeEligible} className="btn-primary disabled:opacity-50">{loading ? '⏳' : '🧮 Analyser'}</button>}
+                {step < 7 ? <button onClick={()=>setStep(step+1)} className="btn-primary">Suivant →</button> : <button onClick={lancerSimulation} disabled={loading || !travauxEligibles || !communeEligible} className="btn-primary disabled:opacity-50">{loading ? 'Calcul...' : 'Analyser'}</button>}
               </div>
             </div>
           ) : synthese && (
@@ -576,7 +578,7 @@ export default function DenormandiePage() {
                   </div>
                 </div>
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h4 className="font-semibold text-blue-800 mb-2">📊 Comprendre la fiscalité Denormandie</h4>
+                  <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Comprendre la fiscalité Denormandie</h4>
                   <div className="text-sm text-blue-700 space-y-1">
                     <p>• <strong>Réduction d'impôt</strong> : Le Denormandie offre une réduction directe d'IR de {fmtEur(synthese.reductionAnnuelle)}/an, soit {fmtPct(synthese.tauxReduction)} du prix plafonné à {fmtEur(synthese.prixPlafonne)}.</p>
                     <p>• <strong>Avantage vs Pinel</strong> : Permet l'ancien avec travaux (min 25%), zones B2/C éligibles, prix d'achat souvent inférieur, potentiel de plus-value travaux.</p>
@@ -621,7 +623,7 @@ export default function DenormandiePage() {
                   </div>
                 </div>
                 <div className="mt-4 p-3 bg-slate-50 border border-slate-200 rounded-lg">
-                  <h4 className="font-semibold text-slate-700 mb-2">📈 Analyse de l'opération Denormandie</h4>
+                  <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2"><TrendingUp className="w-4 h-4" /> Analyse de l'opération Denormandie</h4>
                   <div className="text-sm text-slate-600 space-y-1">
                     <p>• <strong>Rendement brut {fmtPct(synthese.rendBrut)}</strong> : {safeNumber(synthese.rendBrut) > 5 ? 'Performance correcte pour un investissement dans l\'ancien rénové.' : 'Rendement limité par les plafonds de loyer Denormandie.'}</p>
                     <p>• <strong>TRI {fmtPct(synthese.tri)}</strong> : Intègre tous les flux (loyers, charges, impôts, réduction, plus-value travaux). {safeNumber(synthese.tri) > 5 ? 'Performance satisfaisante.' : 'Performance modeste.'}</p>
@@ -749,7 +751,7 @@ export default function DenormandiePage() {
                 </div>
                 
                 <div className="bg-blue-50 border-l-4 border-blue-500 rounded-r-lg p-4">
-                  <h4 className="font-bold text-blue-800 mb-2">📚 Avantage Denormandie sur la plus-value</h4>
+                  <h4 className="font-bold text-blue-800 mb-2 flex items-center gap-2"><BookOpen className="w-4 h-4" /> Avantage Denormandie sur la plus-value</h4>
                   <div className="text-sm text-blue-700 space-y-1">
                     <p>• <strong>Travaux intégrés</strong> : Les {fmtEur(travauxTotal)} de travaux sont ajoutés au prix d'acquisition, réduisant la plus-value imposable.</p>
                     <p>• <strong>Abattements</strong> : Après {dureeEngagement + 3} ans, abattement IR de {synthese.pvCalc?.abattementIR || 0}% et PS de {synthese.pvCalc?.abattementPS || 0}%.</p>
@@ -807,7 +809,7 @@ export default function DenormandiePage() {
                           <td className="py-1.5 px-1 text-right text-amber-600">{fmtEur(safeNumber(p.impotIR) + safeNumber(p.ps))}</td>
                           <td className={`py-1.5 px-1 text-right font-semibold ${safeNumber(p.cfApres) >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{fmtSignedEur(p.cfApres)}</td>
                           <td className="py-1.5 px-1 text-right text-blue-600 font-medium">{fmtEur(p.capNet)}</td>
-                          {showDetailedTable && <td className="py-1.5 px-1 text-center">{p.enEngagement ? '✅' : '❌'}</td>}
+                          {showDetailedTable && <td className="py-1.5 px-1 text-center">{p.enEngagement ? 'Oui' : 'Non'}</td>}
                         </tr>
                       ))}
                     </tbody>
@@ -836,7 +838,7 @@ export default function DenormandiePage() {
               {/* AVIS PROFESSIONNEL AVEC SCORE GLOBAL */}
               {/* ═══════════════════════════════════════════════════════════════════════════ */}
               <div className="sim-card">
-                <h3 className="font-bold mb-6 text-xl text-slate-800">🎯 Synthèse et avis professionnel</h3>
+                <h3 className="font-bold mb-6 text-xl text-slate-800 flex items-center gap-2"><Target className="w-5 h-5" /> Synthèse et avis professionnel</h3>
                 
                 {(() => {
                   const levier = safeNumber(synthese.capFinal) / apport
@@ -934,7 +936,7 @@ export default function DenormandiePage() {
                         
                         {showScoreDetail && (
                           <div className="mt-3 bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm">
-                            <h5 className="font-bold text-slate-700 mb-3">📊 Méthode de calcul du score Denormandie</h5>
+                            <h5 className="font-bold text-slate-700 mb-3 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Méthode de calcul du score Denormandie</h5>
                             <p className="text-slate-600 mb-3">Score calculé sur 5 critères : TRI (2.5 pts), Cash-flow (2 pts), Réduction IR (2 pts), Levier (1.5 pts), Rendement (1.5 pts).</p>
                             <p className="text-slate-600">Avantage Denormandie : rendement potentiellement supérieur au Pinel grâce aux prix d'achat plus bas dans l'ancien et à la plus-value travaux.</p>
                           </div>
@@ -945,30 +947,30 @@ export default function DenormandiePage() {
                 })()}
                 
                 <div className="bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-200 rounded-xl p-4">
-                  <h4 className="font-bold text-blue-800 mb-3">💼 Avis professionnel</h4>
+                  <h4 className="font-bold text-blue-800 mb-3 flex items-center gap-2"><Briefcase className="w-5 h-5" /> Avis professionnel</h4>
                   <div className="text-sm text-blue-700 space-y-3">
                     {safeNumber(synthese.tri) > 5 && safeNumber(synthese.cfMoyMois) >= -200 ? (
                       <>
-                        <p><strong>✅ Opération intéressante</strong> : Avec un TRI de {fmtPct(synthese.tri)} et une réduction d'impôt de {fmtEur(synthese.reductionTotale)}, le Denormandie dans l'ancien rénové offre un meilleur potentiel que le Pinel neuf.</p>
+                        <p><strong>Opération intéressante</strong> : Avec un TRI de {fmtPct(synthese.tri)} et une réduction d'impôt de {fmtEur(synthese.reductionTotale)}, le Denormandie dans l'ancien rénové offre un meilleur potentiel que le Pinel neuf.</p>
                         <p>Les travaux ({fmtPct(partTravaux)} du coût) valorisent le bien, améliorent sa performance énergétique et réduisent la plus-value imposable à la revente.</p>
                       </>
                     ) : safeNumber(synthese.cfMoyMois) >= -500 ? (
                       <>
-                        <p><strong>⚖️ Opération à évaluer</strong> : Le TRI de {fmtPct(synthese.tri)} est correct. La réduction de {fmtEur(synthese.reductionAnnuelle)}/an convient à un TMI {tmi}%.</p>
+                        <p><strong>Opération à évaluer</strong> : Le TRI de {fmtPct(synthese.tri)} est correct. La réduction de {fmtEur(synthese.reductionAnnuelle)}/an convient à un TMI {tmi}%.</p>
                         <p>Vérifiez que l'effort de {fmtEur(Math.abs(safeNumber(synthese.cfMoyMois)))}/mois est supportable sur {dureeEngagement} ans et que la commune a un réel potentiel de revitalisation.</p>
                       </>
                     ) : (
                       <>
-                        <p><strong>⚠️ Opération à reconsidérer</strong> : L'effort de {fmtEur(Math.abs(safeNumber(synthese.cfMoyMois)))}/mois est élevé malgré la réduction.</p>
+                        <p><strong>Opération à reconsidérer</strong> : L'effort de {fmtEur(Math.abs(safeNumber(synthese.cfMoyMois)))}/mois est élevé malgré la réduction.</p>
                         <p>Vérifiez le potentiel locatif et la qualité de l'emplacement. Le Denormandie est plus risqué en zone peu dynamique.</p>
                       </>
                     )}
-                    <p className="text-blue-500 text-xs mt-2"><em>✅ Le dispositif Denormandie est valable jusqu'au 31/12/2027 (CGI art. 199 novovicies).</em></p>
+                    <p className="text-blue-500 text-xs mt-2"><em>Le dispositif Denormandie est valable jusqu'au 31/12/2027 (CGI art. 199 novovicies).</em></p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-center gap-4"><button onClick={() => setShowResults(false)} className="btn-primary">🔄 Nouvelle simulation</button></div>
+              <div className="flex justify-center gap-4"><button onClick={() => setShowResults(false)} className="btn-primary flex items-center gap-2"><RefreshCw className="w-4 h-4" /> Nouvelle simulation</button></div>
             </div>
           )}
         </main>

@@ -10,7 +10,7 @@ import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { getPrismaClient } from '@/app/_common/lib/prisma'
 import { taxOptimizationSchema } from '@/app/_common/lib/validation-schemas'
 import { ZodError } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 // ============================================================================
 // GET /api/advisor/clients/[id]/tax-optimizations
 // Récupère toutes les optimisations fiscales d'un client
@@ -64,7 +64,7 @@ export async function GET(
 
     return NextResponse.json({ data: optimizations }, { status: 200 })
   } catch (error: any) {
-    console.error(
+    logger.error(
       'GET /api/advisor/clients/[id]/tax-optimizations error:',
       error
     )
@@ -133,7 +133,7 @@ export async function POST(
 
     return NextResponse.json({ data: optimization }, { status: 201 })
   } catch (error: any) {
-    console.error(
+    logger.error(
       'POST /api/advisor/clients/[id]/tax-optimizations error:',
       error
     )

@@ -20,10 +20,23 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, fullWidth, asChild = false, loading, disabled, leftIcon, rightIcon, children, 'aria-label': ariaLabel, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'button'
-    
+    // When asChild, Slot requires exactly ONE React element child.
+    // We must not inject extra siblings (icons, loader) alongside children.
+    if (asChild) {
+      return (
+        <Slot
+          className={cn(buttonVariants({ variant, size, fullWidth, className }))}
+          ref={ref}
+          aria-label={ariaLabel}
+          {...props}
+        >
+          {children}
+        </Slot>
+      )
+    }
+
     return (
-      <Comp
+      <button
         className={cn(buttonVariants({ variant, size, fullWidth, className }))}
         ref={ref}
         disabled={disabled || loading}
@@ -42,7 +55,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {!loading && rightIcon && (
           <span className="ml-2 shrink-0" aria-hidden="true">{rightIcon}</span>
         )}
-      </Comp>
+      </button>
     )
   }
 )

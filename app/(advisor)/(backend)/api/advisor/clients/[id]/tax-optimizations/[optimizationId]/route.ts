@@ -10,7 +10,7 @@ import { requireAuth } from '@/app/_common/lib/auth-helpers'
 import { prisma } from '@/app/_common/lib/prisma'
 import { taxOptimizationSchema } from '@/app/_common/lib/validation-schemas'
 import { ZodError } from 'zod'
-
+import { logger } from '@/app/_common/lib/logger'
 // ============================================================================
 // GET /api/advisor/clients/[id]/tax-optimizations/[optimizationId]
 // Récupère une optimisation fiscale spécifique
@@ -48,7 +48,7 @@ export async function GET(
 
     return NextResponse.json({ data: optimization }, { status: 200 })
   } catch (error: any) {
-    console.error(
+    logger.error(
       'GET /api/advisor/clients/[id]/tax-optimizations/[optimizationId] error:',
       error
     )
@@ -135,7 +135,7 @@ export async function PATCH(
 
     return NextResponse.json({ data: optimization }, { status: 200 })
   } catch (error: any) {
-    console.error(
+    logger.error(
       'PATCH /api/advisor/clients/[id]/tax-optimizations/[optimizationId] error:',
       error
     )
@@ -208,7 +208,7 @@ export async function DELETE(
       { status: 200 }
     )
   } catch (error: any) {
-    console.error(
+    logger.error(
       'DELETE /api/advisor/clients/[id]/tax-optimizations/[optimizationId] error:',
       error
     )

@@ -35,7 +35,7 @@ import {
   BAREME_DEMEMBREMENT,
 } from '../_shared/constants'
 import { scpiInputSchema, type SCPIInput } from '../_shared/validators'
-
+import { logger } from '@/app/_common/lib/logger'
 // ══════════════════════════════════════════════════════════════════════════════
 // FONCTION DE SIMULATION SCPI
 // ══════════════════════════════════════════════════════════════════════════════
@@ -165,7 +165,7 @@ function simulerSCPI(input: SCPIInput) {
     // Fiscalité revenus France (IR + PS)
     const baseImposableFrance = Math.max(0, distributionFrance - interetsDeductibles)
     const irFrance = baseImposableFrance * (tmi / 100)
-    const psFrance = baseImposableFrance * PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL
+    const psFrance = baseImposableFrance * PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL
 
     // Revenus étrangers : crédit d'impôt (conventionné)
     // Simplifié : crédit d'impôt = taux moyen d'imposition × revenus étrangers
@@ -228,7 +228,7 @@ function simulerSCPI(input: SCPIInput) {
   // 7. INDICATEURS DE PERFORMANCE
   // ─────────────────────────────────────────────────────────────────────────────
   const rendementBrut = input.tauxDistribution
-  const rendementNet = rendementBrut - (rendementBrut * tmi / 100) - (rendementBrut * PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL)
+  const rendementNet = rendementBrut - (rendementBrut * tmi / 100) - (rendementBrut * PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL)
   const cashFlowMoyen = cashFlowCumule / input.dureeDetention
   
   // Capital final = valeur de revente - capital restant dû (SCPI: pas de frais revente ni impôt PV direct)
@@ -338,7 +338,7 @@ function generateAlertesSCPI(
   if (tmi >= 41) {
     alertes.push({
       type: 'warning',
-      message: `⚠️ TMI ${tmi}% : forte imposition des revenus (${Math.round(tmi + PRELEVEMENTS_SOCIAUX.TAUX_GLOBAL * 100)}% avec PS). Considérez la nue-propriété ou l'assurance-vie.`,
+      message: `⚠️ TMI ${tmi}% : forte imposition des revenus (${Math.round(tmi + PRELEVEMENTS_SOCIAUX.FONCIER.TAUX_GLOBAL * 100)}% avec PS). Considérez la nue-propriété ou l'assurance-vie.`,
     })
   }
 
@@ -388,7 +388,7 @@ export async function POST(request: NextRequest) {
         400
       )
     }
-    console.error('Erreur simulateur SCPI:', error)
+    logger.error('Erreur simulateur SCPI:', { error: error instanceof Error ? error.message : String(error) })
     return createErrorResponse('Erreur lors de la simulation', 500)
   }
 }
