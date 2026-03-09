@@ -1499,6 +1499,7 @@ export interface CreateEmailTemplateRequest {
   tags?: string[]
   notes?: string
   isSystem?: boolean
+  isActive?: boolean
 }
 
 export interface UpdateEmailTemplateRequest {

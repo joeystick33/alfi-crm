@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/_common/components/ui/Card'
 import { Button } from '@/app/_common/components/ui/Button'
 import { Badge } from '@/app/_common/components/ui/Badge'
@@ -77,6 +78,7 @@ const INITIAL_ACTION_FORM = {
 }
 
 export default function ActionsCommercialesPage() {
+  const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<any>({ segments: [], actions: [], summary: null })
@@ -212,7 +214,7 @@ export default function ActionsCommercialesPage() {
             {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCcw className="h-3.5 w-3.5" />}
             Rafraîchir
           </Button>
-          <Button onClick={() => openCreateModal()} className="gap-2">
+          <Button onClick={() => router.push('/dashboard/clients/actions/nouvelle')} className="gap-2">
             <UserPlus className="h-4 w-4" />
             Nouvelle campagne
           </Button>
