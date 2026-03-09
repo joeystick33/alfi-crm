@@ -5,20 +5,6 @@
 
 import { Card, CardContent } from '@/app/_common/components/ui/Card';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { ReactNode } from 'react';
-
-type MetricStatus = 'positive' | 'success' | 'negative' | 'danger' | 'warning' | 'neutral' | 'info';
-
-interface MetricCardProps {
-  icon?: ReactNode;
-  label: string;
-  value: string | number;
-  trend?: number;
-  status?: MetricStatus;
-  subtitle?: string;
-  className?: string;
-  animated?: boolean;
-}
 
 export function MetricCard({ 
   icon, 
@@ -29,8 +15,8 @@ export function MetricCard({
   subtitle,
   className = '',
   animated = true,
-}: MetricCardProps) {
-  const statusColors: Record<MetricStatus, string> = {
+}) {
+  const statusColors = {
     positive: 'text-green-600',
     success: 'text-green-600',
     negative: 'text-red-600',
@@ -41,14 +27,13 @@ export function MetricCard({
   };
 
   const getTrendIcon = () => {
-    if (trend === undefined || trend === null) return null;
+    if (!trend) return null;
     if (trend > 0) return <TrendingUp className="w-4 h-4" />;
     if (trend < 0) return <TrendingDown className="w-4 h-4" />;
     return <Minus className="w-4 h-4" />;
   };
 
   const getTrendColor = () => {
-    if (trend === undefined || trend === null) return 'text-gray-600';
     if (trend > 0) return 'text-green-600';
     if (trend < 0) return 'text-red-600';
     return 'text-gray-600';
@@ -57,8 +42,8 @@ export function MetricCard({
   return (
     <Card 
       className={`
-        hover:shadow-lg transition-all duration-300
-        ${animated ? 'animate-in fade-in duration-500' : ''}
+        hover-lift transition-smooth
+        ${animated ? 'animate-fade-in' : ''}
         ${className}
       `}
     >
@@ -89,5 +74,3 @@ export function MetricCard({
     </Card>
   );
 }
-
-export default MetricCard;

@@ -1,13 +1,7 @@
-import Image, { ImageProps } from 'next/image';
+import Image from 'next/image';
 import { useState } from 'react';
 
-interface LazyImageProps extends Omit<ImageProps, 'onLoadingComplete'> {
-  src: string;
-  alt: string;
-  className?: string;
-}
-
-export function LazyImage({ src, alt, className = '', ...props }: LazyImageProps) {
+export default function LazyImage({ src, alt, className = '', ...props }) {
   const [isLoading, setIsLoading] = useState(true);
 
   return (
@@ -18,7 +12,7 @@ export function LazyImage({ src, alt, className = '', ...props }: LazyImageProps
       <Image
         src={src}
         alt={alt}
-        onLoad={() => setIsLoading(false)}
+        onLoadingComplete={() => setIsLoading(false)}
         loading="lazy"
         quality={85}
         className={`transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
@@ -27,5 +21,3 @@ export function LazyImage({ src, alt, className = '', ...props }: LazyImageProps
     </div>
   );
 }
-
-export default LazyImage;

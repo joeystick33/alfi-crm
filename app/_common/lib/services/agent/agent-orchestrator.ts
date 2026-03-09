@@ -962,3 +962,218 @@ function extractKeyFacts(query: string, response: string, toolResults: ToolResul
 
   return facts
 }
+
+// ============================================================================
+// FUNCTION CALLING — Native OpenAI/Anthropic tool_use integration
+// ============================================================================
+
+import {
+  getOpenAITools,
+  parseOpenAIToolCall,
+  buildToolPromptFallback,
+} from './function-calling'
+
+/**
+ * Enhanced generateFn type that supports native function calling.
+ * When the LLM supports tools, it returns tool_calls alongside content.
+ */
+export interface FunctionCallingGenerateFn {
+  (
+    systemPrompt: string,
+    messages: Array<{ role: string; content: string }>,
+    tools?: ReturnType<typeof getOpenAITools>,
+  ): Promise<{
+    content: string
+    toolCalls?: Array<{ function: { name: string; arguments: string } }>
+  }>
+}
+
+/**
+ * Run agent with native function calling support.
+ *
+ * Uses OpenAI-compatible tool schemas so the LLM selects and parameterizes
+ * tools natively (no regex parsing). Falls back to regex/prompt-based
+ * approach if the provider doesn't support function calling.
+ */
+export async function runAgentWithFunctionCalling(
+  query: string,
+  generateFn: FunctionCallingGenerateFn,
+  options: AgentOptions & { supportsToolUse?: boolean },
+): Promise<AgentResponse> {
+  // If provider doesn't support native tool use, fall back to regex-based agent
+  if (!options.supportsToolUse) {
+    const fallbackFn = async (sys: string, msgs: Array<{ role: string; content: string }>) => {
+      const result = await generateFn(sys, msgs)
+      return result.content
+    }
+    return runAgent(query, fallbackFn, options)
+  }
+
+  const totalStart = Date.now()
+  const metrics: AgentMetrics = {
+    intentClassificationMs: 0,
+    memoryLoadMs: 0,
+    toolExecutionMs: 0,
+    ragRetrievalMs: 0,
+    llmGenerationMs: 0,
+    totalMs: 0,
+  }
+
+  const memoryService = new AgentMemoryService(options.cabinetId, options.userId)
+  const toolContext: ToolContext = {
+    cabinetId: options.cabinetId,
+    userId: options.userId,
+    clientId: options.clientId,
+  }
+
+  // ── 1. Load memory ──
+  const memoryStart = Date.now()
+  const [activeInstructions, relevantMemories, recentConversations] = await Promise.all([
+    memoryService.getActiveInstructions(),
+    memoryService.search(query, 5),
+    memoryService.getRecentConversations(3, options.clientId),
+  ])
+
+  let clientMemories: AgentMemoryEntry[] = []
+  if (options.clientId) {
+    clientMemories = await memoryService.getClientMemories(options.clientId)
+  }
+
+  const allMemories = [...activeInstructions, ...relevantMemories, ...clientMemories]
+  const uniqueMemories = Array.from(new Map(allMemories.map(m => [m.id, m])).values())
+  metrics.memoryLoadMs = Date.now() - memoryStart
+
+  // ── 2. RAG context ──
+  let ragContext: RAGContext | null = null
+  let brainContext = ''
+  const ragStart = Date.now()
+  try {
+    ragContext = await retrieveRAGContext(query, {
+      clientContext: options.clientId ? `Contexte client ID: ${options.clientId}` : undefined,
+    })
+  } catch (e) {
+    logger.warn(`[Agent] RAG failed: ${e instanceof Error ? e.message : 'unknown'}`)
+  }
+  try {
+    const domains = detectRelevantDomains(query)
+    const brainResult = auraBrain.search(query, domains, 3)
+    if (brainResult.knowledge.length > 0) {
+      brainContext = auraBrain.enrichRAGContext(query)
+    }
+  } catch (e) {
+    logger.warn(`[Agent] Brain search failed: ${e instanceof Error ? e.message : 'unknown'}`)
+  }
+  metrics.ragRetrievalMs = Date.now() - ragStart
+
+  // ── 3. Build system prompt (sans la section outils, le LLM les a nativement) ──
+  const systemPrompt = buildAgentSystemPrompt({
+    memories: uniqueMemories,
+    memoryService,
+    conversationSummaries: recentConversations,
+    toolResults: [],
+    ragContext,
+    brainContext,
+    intent: { type: 'question', confidence: 1 },
+    pendingActions: [],
+    pageContext: options.pageContext,
+  })
+
+  // ── 4. Call LLM with native tools ──
+  const llmStart = Date.now()
+  const messages = [
+    ...(options.history || []).slice(-6).map(m => ({ role: m.role, content: m.content })),
+    { role: 'user', content: query },
+  ]
+
+  const tools = getOpenAITools()
+  const llmResult = await generateFn(systemPrompt, messages, tools)
+  metrics.llmGenerationMs = Date.now() - llmStart
+
+  // ── 5. Execute tool calls returned by the LLM ──
+  const actions: AgentActionInfo[] = []
+  const toolResults: ToolResult[] = []
+  const toolStart = Date.now()
+
+  if (llmResult.toolCalls && llmResult.toolCalls.length > 0) {
+    for (const tc of llmResult.toolCalls) {
+      const parsed = parseOpenAIToolCall(tc)
+      const toolDef = TOOL_DEFINITIONS.find(t => t.name === parsed.toolName)
+
+      if (!toolDef) continue
+
+      if (toolDef.requiresConfirmation && !options.autoExecute) {
+        actions.push({
+          toolName: parsed.toolName,
+          status: 'pending_confirmation',
+          message: `Action proposée : ${toolDef.description}`,
+          data: parsed.params,
+          requiresConfirmation: true,
+        })
+      } else {
+        const result = await executeTool(parsed.toolName, parsed.params, toolContext, query)
+        toolResults.push(result)
+        actions.push({
+          toolName: parsed.toolName,
+          status: result.success ? 'executed' : 'failed',
+          message: result.message,
+          data: result.data,
+          requiresConfirmation: false,
+          navigationUrl: result.navigationUrl,
+        })
+      }
+    }
+  }
+  metrics.toolExecutionMs = Date.now() - toolStart
+
+  // ── 6. If tools were executed, re-generate with results ──
+  let response = llmResult.content
+  if (toolResults.length > 0 && toolResults.some(r => r.success && r.data)) {
+    const toolResultsContext = toolResults.map(r => {
+      const dataStr = r.data ? JSON.stringify(r.data, null, 2) : ''
+      const truncated = dataStr.length > 2000 ? dataStr.slice(0, 2000) + '...' : dataStr
+      return `[${r.toolName}] ${r.message}\n${truncated}`
+    }).join('\n\n')
+
+    const regenMessages = [
+      ...messages,
+      { role: 'assistant', content: response || 'Je vais chercher les informations.' },
+      { role: 'user', content: `Résultats des outils :\n\n${toolResultsContext}\n\nIntègre ces données dans ta réponse.` },
+    ]
+
+    try {
+      const regenResult = await generateFn(systemPrompt, regenMessages)
+      response = regenResult.content
+    } catch (e) {
+      logger.warn('[Agent] Re-generation failed: ' + (e instanceof Error ? e.message : 'unknown'))
+    }
+  }
+
+  // ── 7. Save conversation ──
+  try {
+    const topics = extractTopics(query, response)
+    const keyFacts = extractKeyFacts(query, response, toolResults)
+    await memoryService.saveConversationSummary(
+      `Utilisateur: ${query.slice(0, 200)}... → Agent: ${response.slice(0, 200)}...`,
+      topics,
+      keyFacts,
+      (options.history?.length || 0) + 2,
+      options.clientId,
+    )
+  } catch (e) {
+    logger.warn('[Agent] Failed to save conversation summary: ' + (e instanceof Error ? e.message : 'unknown'))
+  }
+
+  metrics.totalMs = Date.now() - totalStart
+
+  return {
+    content: response,
+    actions,
+    ragSources: ragContext?.sources,
+    memoriesUsed: uniqueMemories.length,
+    instructionsApplied: activeInstructions.length,
+    metrics,
+  }
+}
+
+// Re-export function-calling utilities for consumers
+export { getOpenAITools, getAnthropicTools, buildToolPromptFallback } from './function-calling'

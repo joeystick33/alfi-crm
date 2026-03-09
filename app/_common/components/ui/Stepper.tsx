@@ -1,17 +1,6 @@
 import { Check } from 'lucide-react';
 
-interface Step {
-  label: string;
-  description?: string;
-}
-
-interface StepperProps {
-  steps?: Step[];
-  currentStep?: number;
-  onStepClick?: (index: number) => void;
-}
-
-export function Stepper({ steps = [], currentStep = 0, onStepClick }: StepperProps) {
+export function Stepper({ steps = [], currentStep = 0, onStepClick }: { steps?: { label: string; description?: string }[]; currentStep?: number; onStepClick?: (index: number) => void }) {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between">
@@ -81,5 +70,3 @@ export function Stepper({ steps = [], currentStep = 0, onStepClick }: StepperPro
     </div>
   );
 }
-
-export default Stepper;

@@ -146,11 +146,6 @@ body {
   }
 }
 
-/* Animations fluides */
-* {
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 /* Fix pour les modals */
 .modal-overlay {
   position: fixed !important;

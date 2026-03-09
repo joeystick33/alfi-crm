@@ -54,6 +54,8 @@
     "playwright.config.ts",
     "e2e/**/*",
     "tests/**/*",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    "_tooling/**/*",
+    "scripts/**/*"
   ]
 }

@@ -39,7 +39,7 @@ export const viewport: Viewport = {
   viewportFit: "cover", // Handles notch
 };
 
-import { CommandPalette } from "@/app/_common/components/ui/CommandPalette";
+import CommandPalette from "@/app/_common/components/ui/CommandPalette";
 
 export default function RootLayout({
   children,

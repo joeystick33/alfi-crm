@@ -1,115 +1,147 @@
-"use client"
+// @ts-nocheck
+'use client';
 
-import * as React from "react"
-import { useRouter } from "next/navigation"
-import { Command as CommandPrimitive } from "cmdk"
-import { Search, Calculator, User, LayoutDashboard, FileText, Settings, Moon, Sun, CreditCard } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { cn } from '@/app/_common/lib/utils';
 
-export function CommandPalette() {
-    const router = useRouter()
-    const [open, setOpen] = React.useState(false)
-
-    React.useEffect(() => {
-        const down = (e: KeyboardEvent) => {
-            if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-                e.preventDefault()
-                setOpen((open) => !open)
-            }
+const CommandPalette = ({
+  isOpen,
+  onClose,
+  commands = [],
+  placeholder = 'Rechercher une commande...'
+}: {
+  isOpen?: boolean
+  onClose?: () => void
+  commands?: Array<{ label: string; keywords?: string[]; action?: () => void; icon?: React.ReactNode }>
+  placeholder?: string
+}) => {
+  const [search, setSearch] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const inputRef = useRef(null);
+  
+  const filteredCommands = commands.filter(cmd =>
+    cmd.label.toLowerCase().includes(search.toLowerCase()) ||
+    cmd.keywords?.some(k => k.toLowerCase().includes(search.toLowerCase()))
+  );
+  
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isOpen]);
+  
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!isOpen) return;
+      
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedIndex(prev => 
+          prev < filteredCommands.length - 1 ? prev + 1 : prev
+        );
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedIndex(prev => prev > 0 ? prev - 1 : 0);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (filteredCommands[selectedIndex]) {
+          filteredCommands[selectedIndex].action();
+          onClose();
         }
-        document.addEventListener("keydown", down)
-        return () => document.removeEventListener("keydown", down)
-    }, [])
-
-    const runCommand = React.useCallback((command: () => unknown) => {
-        setOpen(false)
-        command()
-    }, [])
-
-    return (
-        <AnimatePresence>
-            {open && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
-                    onClick={() => setOpen(false)}
+      } else if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, filteredCommands, selectedIndex, onClose]);
+  
+  if (!isOpen) return null;
+  
+  const content = (
+    <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-[20vh]">
+      <div 
+        className="fixed inset-0 bg-black/50 animate-in fade-in duration-200"
+        onClick={onClose}
+      />
+      
+      <div className={cn(
+        'relative w-full max-w-2xl mx-4',
+        'bg-white rounded-xl shadow-2xl',
+        'animate-in zoom-in-95 duration-200'
+      )}>
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200">
+          <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            ref={inputRef}
+            type="text"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setSelectedIndex(0);
+            }}
+            placeholder={placeholder}
+            className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder:text-gray-400"
+          />
+          <kbd className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 border border-gray-200 rounded">
+            ESC
+          </kbd>
+        </div>
+        
+        <div className="max-h-96 overflow-y-auto scrollbar-thin">
+          {filteredCommands.length === 0 ? (
+            <div className="px-4 py-8 text-center text-gray-500">
+              Aucune commande trouvée
+            </div>
+          ) : (
+            <div className="py-2">
+              {filteredCommands.map((cmd, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    cmd.action();
+                    onClose();
+                  }}
+                  className={cn(
+                    'w-full flex items-center gap-3 px-4 py-3',
+                    'text-left transition-colors',
+                    index === selectedIndex
+                      ? 'bg-primary-50 text-primary-700'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  )}
                 >
-                    <motion.div
-                        initial={{ scale: 0.95, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.95, opacity: 0 }}
-                        className="w-full max-w-2xl overflow-hidden rounded-xl border border-white/10 bg-[#0F111A] shadow-2xl shadow-indigo-500/10"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <CommandPrimitive className="flex h-full w-full flex-col overflow-hidden rounded-xl bg-transparent text-slate-100">
-                            <div className="flex items-center border-b border-white/5 px-4" cmdk-input-wrapper="">
-                                <Search className="mr-2 h-5 w-5 shrink-0 text-slate-500" />
-                                <CommandPrimitive.Input
-                                    placeholder="Rechercher un client, une page, un outil..."
-                                    className="flex h-12 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
-                                    autoFocus
-                                />
-                            </div>
-                            <CommandPrimitive.List className="max-h-[300px] overflow-y-auto overflow-x-hidden p-2">
-                                <CommandPrimitive.Empty className="py-6 text-center text-sm text-slate-500">
-                                    Aucun résultat trouvé.
-                                </CommandPrimitive.Empty>
+                  {cmd.icon && (
+                    <span className="text-xl">{cmd.icon}</span>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{cmd.label}</div>
+                    {cmd.description && (
+                      <div className="text-xs text-gray-500 truncate">
+                        {cmd.description}
+                      </div>
+                    )}
+                  </div>
+                  {cmd.shortcut && (
+                    <kbd className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 border border-gray-200 rounded">
+                      {cmd.shortcut}
+                    </kbd>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+  
+  return typeof window !== 'undefined' 
+    ? createPortal(content, document.body)
+    : null;
+};
 
-                                <CommandPrimitive.Group heading="Navigation Rapide" className="text-xs font-medium text-slate-500 px-2 py-1.5 mb-2">
-                                    <Item icon={LayoutDashboard} onSelect={() => runCommand(() => router.push('/dashboard'))}>
-                                        Tableau de bord
-                                    </Item>
-                                    <Item icon={User} onSelect={() => runCommand(() => router.push('/dashboard/clients'))}>
-                                        Clients & Prospects
-                                    </Item>
-                                    <Item icon={FileText} onSelect={() => runCommand(() => router.push('/dashboard/documents'))}>
-                                        Documents
-                                    </Item>
-                                    <Item icon={CreditCard} onSelect={() => runCommand(() => router.push('/dashboard/patrimoine'))}>
-                                        Patrimoine
-                                    </Item>
-                                </CommandPrimitive.Group>
-
-                                <CommandPrimitive.Group heading="Outils & Simulateurs" className="text-xs font-medium text-slate-500 px-2 py-1.5 mb-2">
-                                    <Item icon={Calculator} onSelect={() => runCommand(() => router.push('/dashboard/simulators/pinel'))}>
-                                        Simulateur Pinel
-                                    </Item>
-                                    <Item icon={Calculator} onSelect={() => runCommand(() => router.push('/dashboard/simulators/assurance-vie'))}>
-                                        Simulateur Assurance Vie
-                                    </Item>
-                                    <Item icon={Calculator} onSelect={() => runCommand(() => router.push('/dashboard/simulators/sci'))}>
-                                        Simulateur SCI
-                                    </Item>
-                                </CommandPrimitive.Group>
-
-                                <CommandPrimitive.Group heading="Système" className="text-xs font-medium text-slate-500 px-2 py-1.5 mb-2">
-                                    <Item icon={Settings} onSelect={() => runCommand(() => router.push('/settings'))}>
-                                        Paramètres
-                                    </Item>
-                                    <Item icon={Moon} onSelect={() => runCommand(() => { })}>
-                                        Thème Sombre (Actif)
-                                    </Item>
-                                </CommandPrimitive.Group>
-
-                            </CommandPrimitive.List>
-                        </CommandPrimitive>
-                    </motion.div>
-                </motion.div>
-            )}
-        </AnimatePresence>
-    )
-}
-
-function Item({ children, icon: Icon, onSelect }: { children: React.ReactNode; icon: any; onSelect: () => void }) {
-    return (
-        <CommandPrimitive.Item
-            onSelect={onSelect}
-            className="relative flex cursor-default select-none items-center rounded-lg px-2 py-2 text-sm outline-none bg-transparent hover:bg-white/5 aria-selected:bg-white/10 aria-selected:text-white text-slate-300 transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-        >
-            <Icon className="mr-2 h-4 w-4" />
-            <span>{children}</span>
-        </CommandPrimitive.Item>
-    )
-}
+export default CommandPalette;

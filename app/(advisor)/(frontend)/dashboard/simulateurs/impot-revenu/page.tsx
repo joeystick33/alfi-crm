@@ -1,7 +1,7 @@
  
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { SimulatorGate } from '@/app/_common/components/FeatureGate'
@@ -34,6 +34,14 @@ const fmtEur = (n: number) => Math.round(n).toLocaleString('fr-FR') + ' €'
 const fmtPct = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' %'
 
 export default function SimulateurIRPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" /></div>}>
+      <SimulateurIRContent />
+    </Suspense>
+  )
+}
+
+function SimulateurIRContent() {
   const router = useRouter()
   const { isFromDossier, returnUrl, saveSimulationToDossier } = useDossierSimulation()
   const [step, setStep] = useState(1)
